@@ -1,0 +1,21 @@
+name: "eInk Layout Manager"
+version: "edge"
+slug: "eink_layout_manager"
+image: "ghcr.io/stuart-c/{arch}-eink_layout_manager"
+description: "Manage multiple eInk displays with advanced layouts via OpenDisplay"
+arch:
+  - aarch64
+  - amd64
+  - armv7
+init: false
+map:
+  - share:rw
+panel_icon: "mdi:tablet-dashboard"
+panel_title: "eInk Displays"
+ingress: true
+ingress_port: 8099
+host_network: false
+options:
+  log_level: "info"
+schema:
+  log_level: "match(^info|debug|warning|error$)"
