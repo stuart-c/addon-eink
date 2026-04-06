@@ -15,4 +15,4 @@ jobs:
       - name: Build Addon
         uses: home-assistant/builder@master
         with:
-          args: --amd64 --target /data/addon --docker-hub ghcr.io/stuart-c
+          args: --amd64 --target /data/addon --test
