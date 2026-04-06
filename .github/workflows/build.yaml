@@ -8,12 +8,16 @@ on:
   release:
     types: [published]
 
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
 jobs:
-  build:
+  version:
+    name: Bump Version
+    if: github.event_name == 'release'
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      packages: write
     steps:
       - name: Generate GitHub App Token
         id: app-token
@@ -22,13 +26,13 @@ jobs:
           app-id: ${{ vars.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
-      - uses: actions/checkout@v6
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           token: ${{ steps.app-token.outputs.token }}
           ref: main
 
       - name: Bump Version in config.yaml
-        if: github.event_name == 'release'
         run: |
           VERSION="${{ github.event.release.tag_name }}"
           VERSION="${VERSION#v}"
@@ -39,7 +43,19 @@ jobs:
           git commit -m "chore: bump addon version to $VERSION"
           git push origin HEAD:refs/heads/main
 
-      - name: Log in to GitHub Container Registry
+  build:
+    name: Build Addon
+    needs: version
+    if: always() && (needs.version.result == 'success' || needs.version.result == 'skipped')
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: ["aarch64", "amd64"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
         if: github.event_name == 'release'
         uses: docker/login-action@v4
         with:
@@ -47,14 +63,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and Push Addon
-        if: github.event_name == 'release'
+      - name: Build Addon
         uses: home-assistant/builder@master
         with:
-          args: --amd64 --aarch64 --target /data/eink_layout_manager --docker-hub ghcr.io/stuart-c
-
-      - name: Test Build Addon
-        if: github.event_name != 'release'
-        uses: home-assistant/builder@master
-        with:
-          args: --amd64 --aarch64 --target /data/eink_layout_manager --test
+          args: |
+            --${{ matrix.arch }} \
+            --target /data/eink_layout_manager \
+            --image "ghcr.io/${{ github.repository_owner }}/{arch}-eink_layout_manager" \
+            ${{ github.event_name == 'release' && (format('--docker-hub ghcr.io/{0}', github.repository_owner)) || '--test' }}
