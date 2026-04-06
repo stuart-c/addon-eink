@@ -24,10 +24,10 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: home-assistant/builder@master
         with:
-          args: --all --target /data/eink_layout_manager --docker-hub ghcr.io/stuart-c
+          args: --amd64 --aarch64 --armv7 --target /data/eink_layout_manager --docker-hub ghcr.io/stuart-c
 
       - name: Test Build Addon
         if: github.ref != 'refs/heads/main'
         uses: home-assistant/builder@master
         with:
-          args: --all --target /data/eink_layout_manager --test
+          args: --amd64 --aarch64 --armv7 --target /data/eink_layout_manager --test
