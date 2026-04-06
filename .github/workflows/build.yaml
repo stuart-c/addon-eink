@@ -43,31 +43,61 @@ jobs:
           git commit -m "chore: bump addon version to $VERSION"
           git push origin HEAD:refs/heads/main
 
-  build:
-    name: Build Addon
+  prepare:
+    name: Prepare Build Matrix
     needs: version
     if: always() && (needs.version.result == 'success' || needs.version.result == 'skipped')
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        arch: ["aarch64", "amd64"]
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Login to GitHub Container Registry
-        if: github.event_name == 'release'
-        uses: docker/login-action@v4
+      - name: Prepare multi-arch matrix
+        id: matrix
+        uses: home-assistant/builder/actions/prepare-multi-arch-matrix@master
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          architectures: '["amd64", "aarch64"]'
 
-      - name: Build Addon
-        uses: home-assistant/builder@master
+  build:
+    name: Build Addon (${{ matrix.arch }})
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build image
+        uses: home-assistant/builder/actions/build-image@master
         with:
-          args: |
-            --${{ matrix.arch }} \
-            --target /data/eink_layout_manager \
-            --image "ghcr.io/${{ github.repository_owner }}/{arch}-eink_layout_manager" \
-            ${{ github.event_name == 'release' && (format('--docker-hub ghcr.io/{0}', github.repository_owner)) || '--test' }}
+          arch: ${{ matrix.arch }}
+          context: eink_layout_manager
+          image: ghcr.io/${{ github.repository_owner }}/${{ matrix.arch }}-eink_layout_manager
+          image-tags: |
+            ${{ github.event.release.tag_name || 'dev' }}
+            latest
+          version: ${{ github.event.release.tag_name || 'dev' }}
+          push: ${{ github.event_name == 'release' }}
+          cosign: "false"
+          container-registry-username: ${{ github.actor }}
+          container-registry-password: ${{ secrets.GITHUB_TOKEN }}
+
+  publish:
+    name: Publish Multi-Arch Manifest
+    needs: [prepare, build]
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish multi-arch manifest
+        uses: home-assistant/builder/actions/publish-multi-arch-manifest@master
+        with:
+          architectures: ${{ needs.prepare.outputs.matrix }}
+          image-name: eink_layout_manager
+          image-tags: |
+            ${{ github.event.release.tag_name }}
+            latest
+          cosign: "false"
+          container-registry-password: ${{ secrets.GITHUB_TOKEN }}
