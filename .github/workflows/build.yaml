@@ -12,7 +12,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build Addon
+      - name: Log in to GitHub Container Registry
+        if: github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push Addon
+        if: github.ref == 'refs/heads/main'
         uses: home-assistant/builder@master
         with:
-          args: --amd64 --target /data/addon --test
+          args: --all --target /data/eink_layout_manager --docker-hub ghcr.io/stuart-c
+
+      - name: Test Build Addon
+        if: github.ref != 'refs/heads/main'
+        uses: home-assistant/builder@master
+        with:
+          args: --all --target /data/eink_layout_manager --test
