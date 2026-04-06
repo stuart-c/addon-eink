@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+env/
+.git/
+.github/
+README.md
+LICENSE
+agent_docs/
+repository.json
