@@ -21,14 +21,14 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r addon/app/requirements.txt
-          pip install -r addon/app/requirements_test.txt
+          pip install -r eink_layout_manager/app/requirements.txt
+          pip install -r eink_layout_manager/app/requirements_test.txt
 
       - name: Run linting
         run: |
-          black --check addon/app
-          flake8 addon/app
+          black --check eink_layout_manager/app
+          flake8 eink_layout_manager/app
 
       - name: Run tests
         run: |
-          PYTHONPATH=addon pytest addon/app/tests/
+          PYTHONPATH=eink_layout_manager pytest eink_layout_manager/app/tests/
