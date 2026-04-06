@@ -17,8 +17,7 @@ jobs:
     steps:
       - uses: release-drafter/release-drafter@v6
         with:
-          # (Optional) specify config name to use, defaults to release-drafter.yml
-          # config-name: release-drafter-config.yml
           disable-autolabeler: false
+          commitish: ${{ github.sha }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
