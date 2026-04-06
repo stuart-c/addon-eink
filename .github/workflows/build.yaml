@@ -70,11 +70,11 @@ jobs:
           context: eink_layout_manager
           image: ghcr.io/${{ github.repository_owner }}/${{ matrix.arch }}-eink-layout-manager
           image-tags: |
-            ${{ github.event.release.tag_name || 'dev' }}
+            ${{ github.event.release.tag_name || (github.event_name == 'pull_request' && format('pr-{0}', github.event.number)) || 'dev' }}
             latest
-          version: ${{ github.event.release.tag_name || 'dev' }}
+          version: ${{ github.event.release.tag_name || (github.event_name == 'pull_request' && format('pr-{0}', github.event.number)) || 'dev' }}
           build-args: BUILD_FROM=${{ matrix.build_from }}
-          push: ${{ github.event_name == 'release' }}
+          push: ${{ github.event_name == 'release' || github.event_name == 'pull_request' || github.ref == 'refs/heads/main' }}
           cosign: "false"
           container-registry-username: ${{ github.actor }}
           container-registry-password: ${{ secrets.GITHUB_TOKEN }}
@@ -82,7 +82,7 @@ jobs:
   publish:
     name: Publish Multi-Arch Manifest
     needs: build
-    if: github.event_name == 'release'
+    if: github.event_name == 'release' || github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Publish multi-arch manifest
@@ -91,7 +91,7 @@ jobs:
           architectures: '["amd64", "aarch64"]'
           image-name: eink-layout-manager
           image-tags: |
-            ${{ github.event.release.tag_name }}
+            ${{ github.event.release.tag_name || (github.event_name == 'pull_request' && format('pr-{0}', github.event.number)) || 'dev' }}
             latest
           cosign: "false"
           container-registry-password: ${{ secrets.GITHUB_TOKEN }}
