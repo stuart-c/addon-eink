@@ -5,15 +5,34 @@ on:
     branches:
       - main
   pull_request:
+  release:
+    types: [published]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Bump Version in config.yaml
+        if: github.event_name == 'release'
+        run: |
+          VERSION="${{ github.event.release.tag_name }}"
+          VERSION="${VERSION#v}"
+          sed -i "s/^version:.*/version: \"$VERSION\"/" eink_layout_manager/config.yaml
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add eink_layout_manager/config.yaml
+          git commit -m "chore: bump addon version to $VERSION"
+          git push
 
       - name: Log in to GitHub Container Registry
-        if: github.ref == 'refs/heads/main'
+        if: github.event_name == 'release'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -21,13 +40,13 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and Push Addon
-        if: github.ref == 'refs/heads/main'
+        if: github.event_name == 'release'
         uses: home-assistant/builder@master
         with:
           args: --amd64 --aarch64 --target /data/eink_layout_manager --docker-hub ghcr.io/stuart-c
 
       - name: Test Build Addon
-        if: github.ref != 'refs/heads/main'
+        if: github.event_name != 'release'
         uses: home-assistant/builder@master
         with:
           args: --amd64 --aarch64 --target /data/eink_layout_manager --test
