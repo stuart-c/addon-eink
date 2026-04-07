@@ -10,15 +10,25 @@ export class LayoutBox extends LitElement {
       position: absolute;
       box-sizing: border-box;
       border: 2px solid #03a9f4;
-      background-color: rgba(3, 169, 244, 0.1);
+      background-color: var(--box-bg, rgba(3, 169, 244, 0.1));
       cursor: move;
       user-select: none;
       touch-action: none;
+      transition: border-color 0.2s, background-color 0.2s;
     }
     :host([selected]) {
       border-color: #ff9800;
       background-color: rgba(255, 152, 0, 0.1);
       z-index: 10;
+    }
+    :host([invalid]) {
+      border-color: #f44336;
+      background-color: rgba(244, 67, 54, 0.1);
+      animation: pulse 1s infinite alternate;
+    }
+    @keyframes pulse {
+      from { box-shadow: 0 0 5px rgba(244, 67, 54, 0.5); }
+      to { box-shadow: 0 0 15px rgba(244, 67, 54, 0.8); }
     }
     .resize-handle {
       position: absolute;
@@ -30,16 +40,23 @@ export class LayoutBox extends LitElement {
       bottom: -5px;
       cursor: nwse-resize;
     }
+    :host([invalid]) .resize-handle {
+      border-color: #f44336;
+    }
     .label {
       position: absolute;
       top: -20px;
       left: 0;
-      font-size: 12px;
-      background: #03a9f4;
+      font-size: 11px;
+      background: #333;
       color: white;
       padding: 0 4px;
       white-space: nowrap;
       pointer-events: none;
+      border-radius: 2px 2px 0 0;
+    }
+    :host([invalid]) .label {
+      background: #f44336;
     }
   `;
 
@@ -49,12 +66,14 @@ export class LayoutBox extends LitElement {
     width: { type: Number },
     height: { type: Number },
     name: { type: String },
+    colour: { type: String },
     selected: { type: Boolean, reflect: true },
+    invalid: { type: Boolean, reflect: true },
   };
 
   render() {
     return html`
-      <div class="label">${this.name}</div>
+      <div class="label">${this.name} ${this.invalid ? '(Overlap!)' : ''}</div>
       <div class="resize-handle"></div>
       <slot></slot>
     `;
@@ -69,6 +88,17 @@ export class LayoutBox extends LitElement {
     }
     if (changedProperties.has('height')) {
       this.style.height = `${this.height}px`;
+    }
+    if (changedProperties.has('colour')) {
+      const colorMap = {
+        'WHITE': 'rgba(255, 255, 255, 0.8)',
+        'BLACK': 'rgba(0, 0, 0, 0.1)',
+        'RED': 'rgba(255, 0, 0, 0.1)',
+        'YELLOW': 'rgba(255, 255, 0, 0.1)',
+        'GREEN': 'rgba(0, 255, 0, 0.1)',
+        'BLUE': 'rgba(0, 0, 255, 0.1)',
+      };
+      this.style.setProperty('--box-bg', colorMap[this.colour] || 'rgba(3, 169, 244, 0.1)');
     }
   }
 }
