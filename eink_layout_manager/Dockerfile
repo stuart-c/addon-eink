@@ -15,26 +15,29 @@ RUN \
     pip3 wheel --no-cache-dir --wheel-dir /tmp/wheels -r /tmp/requirements.txt
 
 
-# Stage 2: Lint stage
-FROM builder AS linter
+# Stage 2: Test & Lint stage
+FROM builder AS tester
 
-# Install linting tools
+# Install test and linting dependencies
+COPY app/requirements_test.txt /tmp/
 RUN \
-    pip3 install --no-cache-dir \
-        black==26.3.1 \
-        flake8==7.3.0
+    pip3 install --no-cache-dir -r /tmp/requirements_test.txt
 
 COPY app /app
 
-# Run linting; the build will fail if linting fails
+# Run all quality checks; the build will fail if any fail
 RUN \
     black --check /app && \
-    flake8 /app
+    flake8 /app && \
+    PYTHONPATH=/ pytest /app/tests/
 
 
 # Stage 3: Runner stage (Final)
 ARG BUILD_FROM="ghcr.io/home-assistant/amd64-base-python:3.12-alpine3.19"
-FROM $BUILD_FROM
+FROM $BUILD_FROM AS runner
+# Ensure the build fails if the tester stage fails
+COPY --from=tester /app /app_verified
+RUN rm -rf /app_verified
 
 # Install runtime libraries only (no headers or build tools)
 RUN \
