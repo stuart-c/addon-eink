@@ -96,7 +96,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: eink_layout_manager
-          push: true
+          push: ${{ github.event_name != 'pull_request' }}
           tags: |
             ghcr.io/${{ github.repository_owner }}/eink-layout-manager:${{ needs.prepare.outputs.version }}-${{ matrix.arch }}
             ghcr.io/${{ github.repository_owner }}/eink-layout-manager:${{ needs.prepare.outputs.tag }}-${{ matrix.arch }}
@@ -111,7 +111,7 @@ jobs:
   publish:
     name: Publish Multi-Arch Manifest
     needs: [prepare, build]
-    if: always() && (needs.build.result == 'success')
+    if: always() && (needs.build.result == 'success') && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Login to GHCR
