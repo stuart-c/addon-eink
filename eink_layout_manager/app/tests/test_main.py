@@ -1,4 +1,3 @@
-import json
 import os
 import pytest
 from app.main import init_app, get_storage_path, load_schema
@@ -16,6 +15,7 @@ def app(tmp_path):
 
 
 # --- Helper Tests ---
+
 
 def test_get_storage_path(tmp_path):
     """Test get_storage_path correctly creates and returns the directory."""
@@ -36,6 +36,7 @@ def test_load_schema():
 
 
 # --- Handler Tests ---
+
 
 @pytest.mark.asyncio
 async def test_ping(aiohttp_client, app):
@@ -71,7 +72,7 @@ async def test_create_and_get_item(aiohttp_client, app):
         "height_px": 250,
         "colour_type": "BWR",
         "frame": {"thickness_mm": 2, "colour": "#000000"},
-        "mat": {"thickness_mm": 5, "colour": "#FFFFFF"}
+        "mat": {"thickness_mm": 5, "colour": "#FFFFFF"},
     }
 
     # Create
@@ -97,9 +98,11 @@ async def test_create_item_duplicate(aiohttp_client, app):
     data = {
         "id": "dup",
         "name": "Duplicate",
-        "width_mm": 10, "height_mm": 10,
-        "width_px": 10, "height_px": 10,
-        "colour_type": "MONO"
+        "width_mm": 10,
+        "height_mm": 10,
+        "width_px": 10,
+        "height_px": 10,
+        "colour_type": "MONO",
     }
     await client.post("/api/display_type", json=data)
     resp = await client.post("/api/display_type", json=data)
@@ -125,9 +128,11 @@ async def test_update_item(aiohttp_client, app):
     data = {
         "id": "update_me",
         "name": "Original",
-        "width_mm": 10, "height_mm": 10,
-        "width_px": 10, "height_px": 10,
-        "colour_type": "MONO"
+        "width_mm": 10,
+        "height_mm": 10,
+        "width_px": 10,
+        "height_px": 10,
+        "colour_type": "MONO",
     }
     await client.post("/api/display_type", json=data)
 
@@ -153,9 +158,11 @@ async def test_delete_item(aiohttp_client, app):
     data = {
         "id": "del_me",
         "name": "Delete",
-        "width_mm": 10, "height_mm": 10,
-        "width_px": 10, "height_px": 10,
-        "colour_type": "MONO"
+        "width_mm": 10,
+        "height_mm": 10,
+        "width_px": 10,
+        "height_px": 10,
+        "colour_type": "MONO",
     }
     await client.post("/api/display_type", json=data)
 
@@ -179,9 +186,11 @@ async def test_not_found(aiohttp_client, app):
     valid_data = {
         "id": "non_existent",
         "name": "Non-existent",
-        "width_mm": 10, "height_mm": 10,
-        "width_px": 10, "height_px": 10,
-        "colour_type": "MONO"
+        "width_mm": 10,
+        "height_mm": 10,
+        "width_px": 10,
+        "height_px": 10,
+        "colour_type": "MONO",
     }
     resp = await client.put("/api/display_type/non_existent", json=valid_data)
     assert resp.status == 404
