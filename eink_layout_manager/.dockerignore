@@ -10,3 +10,11 @@ README.md
 LICENSE
 agent_docs/
 repository.json
+
+# Local build artifacts
+**/node_modules/
+**/static_dist/
+
+# OS-specific
+.DS_Store
+Thumbs.db

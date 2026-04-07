@@ -29,6 +29,7 @@ def load_schema(name):
 
 # --- Middlewares ---
 
+
 @web.middleware
 async def request_logger_middleware(request, handler):
     """Log every incoming request for debugging."""
