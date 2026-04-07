@@ -84,6 +84,7 @@ export class LayoutEditor extends LitElement {
               box.y += event.dy;
               target.x = box.x;
               target.y = box.y;
+              this._validateLayout();
               this._requestUpdate();
             }
           },
@@ -114,12 +115,36 @@ export class LayoutEditor extends LitElement {
               box.height = event.rect.height;
               target.width = box.width;
               target.height = box.height;
+              this._validateLayout();
               this._requestUpdate();
             }
           },
           end: () => this._emitChange()
         }
       });
+  }
+
+  _validateLayout() {
+    // Reset validity
+    this.boxes.forEach(b => b.invalid = false);
+
+    // Check for overlaps
+    for (let i = 0; i < this.boxes.length; i++) {
+      for (let j = i + 1; j < this.boxes.length; j++) {
+        const b1 = this.boxes[i];
+        const b2 = this.boxes[j];
+
+        if (
+          b1.x < b2.x + b2.width &&
+          b1.x + b1.width > b2.x &&
+          b1.y < b2.y + b2.height &&
+          b1.y + b1.height > b2.y
+        ) {
+          b1.invalid = true;
+          b2.invalid = true;
+        }
+      }
+    }
   }
 
   _requestUpdate() {
@@ -151,7 +176,9 @@ export class LayoutEditor extends LitElement {
             .width="${box.width}"
             .height="${box.height}"
             .name="${box.name}"
+            .colour="${box.colour}"
             ?selected="${this._selectedId === box.id}"
+            ?invalid="${box.invalid}"
             @mousedown="${() => this._handleBoxSelect(box.id)}"
           ></layout-box>
         `)}
