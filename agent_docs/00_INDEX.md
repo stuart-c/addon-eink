@@ -4,6 +4,7 @@ This directory contains resources for AI agents to continue the development of t
 
 - `01_ARCHITECTURE.md` - High-level overview of the application and its integration with Home Assistant.
 - `02_OPEN_QUESTIONS.md` - Living document of design questions requiring clarification from the user.
+- `03_DEVELOPMENT.md` - Detailed development process and decision log.
 
 ## Agent Workflow Guidelines
 
