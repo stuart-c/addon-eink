@@ -63,7 +63,8 @@ async def save_item(request):
 
     # Validation
     try:
-        schema_name = "display_type" if resource_type == "display_type" else "layout"
+        is_display = resource_type == "display_type"
+        schema_name = "display_type" if is_display else "layout"
         schema = load_schema(schema_name)
         validate(instance=data, schema=schema)
     except FileNotFoundError:
