@@ -2,8 +2,8 @@ ARG BUILD_FROM="ghcr.io/home-assistant/amd64-base-python:3.12-alpine3.19"
 
 # Stage 0: Node.js Frontend Build
 FROM node:20-alpine AS node-builder
-WORKDIR /build
-COPY app/static /build/
+WORKDIR /app/static
+COPY app/static .
 RUN npm install && npm run build
 
 # Stage 1: Build stage
@@ -64,7 +64,7 @@ COPY rootfs /
 COPY app /app
 
 # Copy built frontend assets from node-builder
-COPY --from=node-builder /build/static_dist /app/static_dist
+COPY --from=node-builder /app/static_dist /app/static_dist
 
 # Cleanup development/test files to keep image small
 RUN rm -rf /app/tests /app/requirements_test.txt
