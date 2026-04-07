@@ -19,6 +19,12 @@ jobs:
   prune:
     name: Prune Untagged Images
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package:
+          - eink-layout-manager
+          - eink-layout-manager/amd64
+          - eink-layout-manager/aarch64
     steps:
       - name: Generate GitHub App Token
         id: app-token
@@ -27,11 +33,11 @@ jobs:
           app-id: ${{ vars.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
-      - name: Prune Untagged Images
+      - name: Prune Untagged Images (${{ matrix.package }})
         uses: vlaurin/action-ghcr-prune@v0.6.0
         with:
           token: ${{ steps.app-token.outputs.token }}
-          container: eink-layout-manager
+          container: ${{ matrix.package }}
           prune-untagged: true
           keep-last: 5
           keep-younger-than: 7
