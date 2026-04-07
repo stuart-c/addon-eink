@@ -190,9 +190,16 @@ def init_app():
     # Health check
     app.router.add_get("/ping", ping)
 
-    # Placeholder for static Lit frontend files
-    # if os.path.exists('static'):
-    #     app.router.add_static('/', 'static/')
+    # Static Lit frontend files
+    static_dist = os.path.join(os.path.dirname(__file__), "static_dist")
+    if os.path.exists(static_dist):
+        # Serve index.html at the root
+        async def index(request):
+            return web.FileResponse(os.path.join(static_dist, "index.html"))
+
+        app.router.add_get("/", index)
+        # Serve other static files (assets, etc.)
+        app.router.add_static("/", static_dist)
 
     return app
 
