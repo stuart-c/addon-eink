@@ -4,6 +4,9 @@
 		"dockerfile": "Dockerfile",
 		"context": ".."
 	},
+	"features": {
+		"ghcr.io/devcontainers/features/node:1": {}
+	},
 	"customizations": {
 		"vscode": {
 			"extensions": [
@@ -24,5 +27,6 @@
 			}
 		}
 	},
-	"remoteUser": "vscode"
+	"remoteUser": "vscode",
+	"postCreateCommand": "cd eink_layout_manager/app/static && npm install"
 }
