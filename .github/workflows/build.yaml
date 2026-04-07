@@ -98,8 +98,8 @@ jobs:
           context: eink_layout_manager
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
-            ghcr.io/${{ github.repository_owner }}/eink-layout-manager:${{ needs.prepare.outputs.version }}-${{ matrix.arch }}
-            ghcr.io/${{ github.repository_owner }}/eink-layout-manager:${{ needs.prepare.outputs.tag }}-${{ matrix.arch }}
+            ghcr.io/${{ github.repository_owner }}/eink-layout-manager/${{ matrix.arch }}:${{ needs.prepare.outputs.version }}
+            ghcr.io/${{ github.repository_owner }}/eink-layout-manager/${{ matrix.arch }}:${{ needs.prepare.outputs.tag }}
           build-args: |
             BUILD_FROM=${{ matrix.build_from }}
             BUILD_ARCH=${{ matrix.arch }}
@@ -130,5 +130,5 @@ jobs:
           docker buildx imagetools create \
             --tag ${REPO}:${VERSION} \
             --tag ${REPO}:${TAG} \
-            ${REPO}:${VERSION}-amd64 \
-            ${REPO}:${VERSION}-aarch64
+            ${REPO}/amd64:${VERSION} \
+            ${REPO}/aarch64:${VERSION}
