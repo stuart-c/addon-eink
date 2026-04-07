@@ -14,8 +14,21 @@ permissions:
   id-token: write
 
 jobs:
+  prepare:
+    name: Prepare Version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - id: version
+        run: |
+          VERSION="${{ github.event.release.tag_name || github.event.pull_request.head.sha || github.sha }}"
+          VERSION="${VERSION#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
   version:
     name: Bump Version
+    needs: prepare
     if: github.event_name == 'release'
     runs-on: ubuntu-latest
     steps:
@@ -34,8 +47,7 @@ jobs:
 
       - name: Bump Version in config.yaml
         run: |
-          VERSION="${{ github.event.release.tag_name }}"
-          VERSION="${VERSION#v}"
+          VERSION="${{ needs.prepare.outputs.version }}"
           sed -i "s/^version:.*/version: \"$VERSION\"/" eink_layout_manager/config.yaml
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -45,7 +57,7 @@ jobs:
 
   build:
     name: Build Addon (${{ matrix.arch }})
-    needs: version
+    needs: [prepare, version]
     if: always() && (needs.version.result == 'success' || needs.version.result == 'skipped')
     runs-on: ubuntu-latest
     strategy:
@@ -70,9 +82,9 @@ jobs:
           context: eink_layout_manager
           image: ghcr.io/${{ github.repository_owner }}/${{ matrix.arch }}-eink-layout-manager
           image-tags: |
-            ${{ github.event.release.tag_name || (github.event_name == 'pull_request' && 'test-pr') || 'latest' }}
+            ${{ needs.prepare.outputs.version }}
             latest
-          version: ${{ github.event.release.tag_name || (github.event_name == 'pull_request' && 'test-pr') || 'latest' }}
+          version: ${{ needs.prepare.outputs.version }}
           build-args: BUILD_FROM=${{ matrix.build_from }}
           push: true
           cosign: "false"
@@ -81,7 +93,7 @@ jobs:
 
   publish:
     name: Publish Multi-Arch Manifest
-    needs: build
+    needs: [prepare, build]
     if: always() && (needs.build.result == 'success')
     runs-on: ubuntu-latest
     steps:
@@ -91,7 +103,7 @@ jobs:
           architectures: '["amd64", "aarch64"]'
           image-name: eink-layout-manager
           image-tags: |
-            ${{ github.event.release.tag_name || (github.event_name == 'pull_request' && 'test-pr') || 'latest' }}
+            ${{ needs.prepare.outputs.version }}
             latest
           cosign: "false"
           container-registry-password: ${{ secrets.GITHUB_TOKEN }}
