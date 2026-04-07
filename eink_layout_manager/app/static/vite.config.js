@@ -13,6 +13,10 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:8099',
         changeOrigin: true,
+      },
+      '/ping': {
+        target: 'http://localhost:8099',
+        changeOrigin: true,
       }
     }
   }

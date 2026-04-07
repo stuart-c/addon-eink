@@ -1,17 +1,12 @@
 /**
  * API client for communicating with the addon backend.
- * Handles communication with /api/layout and /api/display_type.
+ * Generic client using the /api/{resource_type} structure.
  */
 export class HaApiClient {
   constructor() {
-    // In HA Addon environment, the backend is on the same host/port during Ingress
-    // During dev, Vite proxy handles the /api prefix
     this.baseUrl = '';
   }
 
-  /**
-   * General fetch wrapper with error handling.
-   */
   async _fetch(endpoint, options = {}) {
     const url = `${this.baseUrl}${endpoint}`;
     const response = await fetch(url, {
@@ -27,7 +22,6 @@ export class HaApiClient {
       throw new Error(error.message || `API Error: ${response.status}`);
     }
 
-    // DELETE might return 200 with status deleted, but we check if content exists
     if (response.status === 204 || response.headers.get('content-length') === '0') {
       return null;
     }
@@ -35,65 +29,41 @@ export class HaApiClient {
     return response.json();
   }
 
-  // --- Layouts ---
+  // --- Generic CRUD ---
 
-  async getLayouts() {
-    return this._fetch('/api/layout');
+  async getCollection(resourceType) {
+    return this._fetch(`/api/${resourceType}`);
   }
 
-  async getLayout(id) {
-    return this._fetch(`/api/layout/${id}`);
+  async getItem(resourceType, id) {
+    return this._fetch(`/api/${resourceType}/${id}`);
   }
 
-  async createLayout(layout) {
-    return this._fetch('/api/layout', {
+  async createItem(resourceType, data) {
+    return this._fetch(`/api/${resourceType}`, {
       method: 'POST',
-      body: JSON.stringify(layout),
+      body: JSON.stringify(data),
     });
   }
 
-  async updateLayout(id, layout) {
-    return this._fetch(`/api/layout/${id}`, {
+  async updateItem(resourceType, id, data) {
+    return this._fetch(`/api/${resourceType}/${id}`, {
       method: 'PUT',
-      body: JSON.stringify(layout),
+      body: JSON.stringify(data),
     });
   }
 
-  async deleteLayout(id) {
-    return this._fetch(`/api/layout/${id}`, {
+  async deleteItem(resourceType, id) {
+    return this._fetch(`/api/${resourceType}/${id}`, {
       method: 'DELETE',
     });
   }
 
-  // --- Display Types ---
+  // --- Legacy Proxies ---
 
-  async getDisplayTypes() {
-    return this._fetch('/api/display_type');
-  }
-
-  async getDisplayType(id) {
-    return this._fetch(`/api/display_type/${id}`);
-  }
-
-  async createDisplayType(displayType) {
-    return this._fetch('/api/display_type', {
-      method: 'POST',
-      body: JSON.stringify(displayType),
-    });
-  }
-
-  async updateDisplayType(id, displayType) {
-    return this._fetch(`/api/display_type/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(displayType),
-    });
-  }
-
-  async deleteDisplayType(id) {
-    return this._fetch(`/api/display_type/${id}`, {
-      method: 'DELETE',
-    });
-  }
+  async getLayouts() { return this.getCollection('layout'); }
+  async updateLayout(id, layout) { return this.updateItem('layout', id, layout); }
+  async getDisplayTypes() { return this.getCollection('display_type'); }
 
   // --- Health ---
 
@@ -107,5 +77,4 @@ export class HaApiClient {
   }
 }
 
-// Export a singleton instance
 export const api = new HaApiClient();
