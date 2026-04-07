@@ -1,5 +1,5 @@
 # Stage 1: Build stage
-ARG BUILD_FROM
+ARG BUILD_FROM="ghcr.io/home-assistant/amd64-base-python:3.12-alpine3.19"
 FROM $BUILD_FROM AS builder
 
 # Install build dependencies
@@ -33,7 +33,7 @@ RUN \
 
 
 # Stage 3: Runner stage (Final)
-ARG BUILD_FROM
+ARG BUILD_FROM="ghcr.io/home-assistant/amd64-base-python:3.12-alpine3.19"
 FROM $BUILD_FROM
 
 # Install runtime libraries only (no headers or build tools)
