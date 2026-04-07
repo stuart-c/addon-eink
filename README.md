@@ -16,4 +16,9 @@ Alternatively, add it manually:
 
 ## Development
 
-See the [Agent Documentation](agent_docs/00_INDEX.md) for more details.
+The recommended way to develop for this repository is using **VS Code Dev Containers**. This ensures a consistent environment with all dependencies and tools pre-configured.
+
+1. Open the repository in VS Code.
+2. Click **"Reopen in Container"** when prompted.
+
+For detailed development processes and architectural overview, see the [Agent Documentation](agent_docs/00_INDEX.md).
