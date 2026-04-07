@@ -1,5 +1,12 @@
-# Stage 1: Build stage
 ARG BUILD_FROM="ghcr.io/home-assistant/amd64-base-python:3.12-alpine3.19"
+
+# Stage 0: Node.js Frontend Build
+FROM node:20-alpine AS node-builder
+WORKDIR /app/static
+COPY app/static .
+RUN npm install && npm run build
+
+# Stage 1: Build stage
 FROM $BUILD_FROM AS builder
 
 # Install build dependencies
@@ -33,7 +40,6 @@ RUN \
 
 
 # Stage 3: Runner stage (Final)
-ARG BUILD_FROM="ghcr.io/home-assistant/amd64-base-python:3.12-alpine3.19"
 FROM $BUILD_FROM AS runner
 # Ensure the build fails if the tester stage fails
 COPY --from=tester /app /app_verified
@@ -56,6 +62,9 @@ COPY rootfs /
 
 # Copy application
 COPY app /app
+
+# Copy built frontend assets from node-builder
+COPY --from=node-builder /app/static_dist /app/static_dist
 
 # Cleanup development/test files to keep image small
 RUN rm -rf /app/tests /app/requirements_test.txt
