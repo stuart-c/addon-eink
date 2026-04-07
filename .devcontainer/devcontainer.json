@@ -1,0 +1,28 @@
+{
+	"name": "eInk Layout Manager",
+	"build": {
+		"dockerfile": "Dockerfile",
+		"context": ".."
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-python.python",
+				"ms-python.debugpy",
+				"ms-python.vscode-python-envs"
+			],
+			"settings": {
+				"python.defaultInterpreterPath": "/usr/local/bin/python",
+				"python.testing.pytestEnabled": true,
+				"python.testing.pytestArgs": [
+					"eink_layout_manager/app/tests"
+				],
+				"editor.formatOnSave": true,
+				"python.analysis.extraPaths": [
+					"eink_layout_manager"
+				]
+			}
+		}
+	},
+	"remoteUser": "vscode"
+}
