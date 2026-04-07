@@ -1,25 +1,28 @@
 version: 2
 updates:
-  # Maintain Python dependencies
-  - package-ecosystem: "pip"
-    directory: "/eink_layout_manager/app"
-    schedule:
-      interval: "weekly"
-    commit-message:
-      prefix: "chore(deps)"
-
-  # Maintain GitHub Actions dependencies
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
-    commit-message:
-      prefix: "ci(deps)"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
 
-  # Maintain Docker bases within the Addon
   - package-ecosystem: "docker"
     directory: "/eink_layout_manager"
     schedule:
       interval: "weekly"
-    commit-message:
-      prefix: "chore(deps)"
+    groups:
+      docker-dependencies:
+        patterns:
+          - "*"
+
+  - package-ecosystem: "pip"
+    directory: "/eink_layout_manager/app"
+    schedule:
+      interval: "weekly"
+    groups:
+      python-dependencies:
+        patterns:
+          - "*"
