@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Layout",
+  "description": "An arrangement of eInk displays on a grid",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "canvas_width_mm": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "canvas_height_mm": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "display_type_id": {
+            "type": "string"
+          },
+          "x_mm": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "y_mm": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "orientation": {
+            "type": "integer",
+            "enum": [0, 90]
+          }
+        },
+        "required": ["display_type_id", "x_mm", "y_mm", "orientation"]
+      }
+    }
+  },
+  "required": ["id", "name", "canvas_width_mm", "canvas_height_mm", "items"]
+}

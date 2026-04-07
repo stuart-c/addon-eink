@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DisplayType",
+  "description": "Hardware template for an eInk display device",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for this display type"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human readable name for the hardware"
+    },
+    "width_mm": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "height_mm": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "width_px": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "height_px": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "colour_type": {
+      "type": "string",
+      "enum": ["bw", "bwr", "bwy", "7colour"]
+    },
+    "frame": {
+      "type": "object",
+      "properties": {
+        "thickness_mm": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "colour": {
+          "type": "string",
+          "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
+        }
+      },
+      "required": ["thickness_mm", "colour"]
+    },
+    "mat": {
+      "type": "object",
+      "properties": {
+        "horizontal_mm": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "vertical_mm": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "colour": {
+          "type": "string",
+          "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
+        }
+      },
+      "required": ["horizontal_mm", "vertical_mm", "colour"]
+    }
+  },
+  "required": ["id", "name", "width_mm", "height_mm", "width_px", "height_px", "colour_type"]
+}
