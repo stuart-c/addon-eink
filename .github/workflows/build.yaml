@@ -73,21 +73,40 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Build image
-        uses: home-assistant/builder/actions/build-image@master
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
         with:
-          arch: ${{ matrix.arch }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
           context: eink_layout_manager
-          image: ghcr.io/${{ github.repository_owner }}/${{ matrix.arch }}-eink-layout-manager
-          image-tags: |
-            ${{ needs.prepare.outputs.version }}
-            latest
-          version: ${{ needs.prepare.outputs.version }}
-          build-args: BUILD_FROM=${{ matrix.build_from }}
           push: true
-          cosign: "false"
-          container-registry-username: ${{ github.actor }}
-          container-registry-password: ${{ secrets.GITHUB_TOKEN }}
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.arch }}-eink-layout-manager:${{ needs.prepare.outputs.version }}
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.arch }}-eink-layout-manager:latest
+          build-args: |
+            BUILD_FROM=${{ matrix.build_from }}
+            BUILD_ARCH=${{ matrix.arch }}
+            BUILD_VERSION=${{ needs.prepare.outputs.version }}
+          labels: |
+            io.hass.arch=${{ matrix.arch }}
+            io.hass.version=${{ needs.prepare.outputs.version }}
+            io.hass.type=addon
+            io.hass.name=eInk Layout Manager
+            org.opencontainers.image.title=eInk Layout Manager
+            org.opencontainers.image.description=Manage multiple eInk displays with advanced layouts via OpenDisplay
+            org.opencontainers.image.vendor=stuart-c
+            org.opencontainers.image.authors=stuart-c
+            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.version=${{ needs.prepare.outputs.version }}
+          outputs: type=image,compression=gzip,compression-level=9,force-compression=true
 
   publish:
     name: Publish Multi-Arch Manifest
@@ -95,13 +114,21 @@ jobs:
     if: always() && (needs.build.result == 'success')
     runs-on: ubuntu-latest
     steps:
-      - name: Publish multi-arch manifest
-        uses: home-assistant/builder/actions/publish-multi-arch-manifest@master
+      - name: Login to GHCR
+        uses: docker/login-action@v3
         with:
-          architectures: '["amd64", "aarch64"]'
-          image-name: eink-layout-manager
-          image-tags: |
-            ${{ needs.prepare.outputs.version }}
-            latest
-          cosign: "false"
-          container-registry-password: ${{ secrets.GITHUB_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create manifest list and push
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          REPO="ghcr.io/${{ github.repository_owner }}"
+          IMAGE="${REPO}/eink-layout-manager"
+          
+          docker buildx imagetools create \
+            --tag ${IMAGE}:${VERSION} \
+            --tag ${IMAGE}:latest \
+            ${REPO}/amd64-eink-layout-manager:${VERSION} \
+            ${REPO}/aarch64-eink-layout-manager:${VERSION}
