@@ -30,7 +30,7 @@
     },
     "colour_type": {
       "type": "string",
-      "enum": ["bw", "bwr", "bwy", "7colour"]
+      "enum": ["MONO", "BWR", "BWY", "BWRY", "BWGBRY", "GRAYSCALE_4"]
     },
     "frame": {
       "type": "object",
@@ -49,6 +49,10 @@
     "mat": {
       "type": "object",
       "properties": {
+        "thickness_mm": {
+          "type": "integer",
+          "minimum": 0
+        },
         "horizontal_mm": {
           "type": "integer",
           "minimum": 0
@@ -62,7 +66,15 @@
           "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
         }
       },
-      "required": ["horizontal_mm", "vertical_mm", "colour"]
+      "required": ["colour"],
+      "oneOf": [
+        {
+          "required": ["thickness_mm"]
+        },
+        {
+          "required": ["horizontal_mm", "vertical_mm"]
+        }
+      ]
     }
   },
   "required": ["id", "name", "width_mm", "height_mm", "width_px", "height_px", "colour_type"]

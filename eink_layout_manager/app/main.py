@@ -84,7 +84,9 @@ async def create_item(request):
     file_path = os.path.join(storage_path, f"{item_id}.json")
 
     if os.path.exists(file_path):
-        return web.json_response({"error": "Resource already exists"}, status=409)
+        return web.json_response(
+            {"error": "Resource already exists"}, status=409
+        )
 
     with open(file_path, "w") as f:
         json.dump(data, f, indent=2)
