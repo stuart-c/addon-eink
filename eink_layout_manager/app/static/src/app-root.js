@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import './components/layout-editor.js';
+import './components/display-type-dialog.js';
 import { api } from './services/HaApiClient.js';
 
 export class AppRoot extends LitElement {
@@ -10,7 +11,7 @@ export class AppRoot extends LitElement {
       height: 100vh;
       width: 100vw;
       overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
     header {
       background-color: #03a9f4;
@@ -20,6 +21,7 @@ export class AppRoot extends LitElement {
       justify-content: space-between;
       align-items: center;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      z-index: 10;
     }
     main {
       flex: 1;
@@ -27,22 +29,51 @@ export class AppRoot extends LitElement {
       background-color: #f0f2f5;
     }
     .sidebar {
-      width: 300px;
+      width: 320px;
       background-color: white;
       border-right: 1px solid #ddd;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar-section {
       padding: 1rem;
+      border-bottom: 1px solid #eee;
+      flex: 1;
       overflow-y: auto;
     }
+    .sidebar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    h3 { margin: 0; font-size: 0.9rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+    
+    .list-item {
+      padding: 0.75rem;
+      border: 1px solid #eee;
+      border-radius: 6px;
+      margin-bottom: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+    .list-item:hover { border-color: #03a9f4; background: #f0faff; }
+    .list-item.selected { border-color: #03a9f4; background: #e1f5fe; box-shadow: 0 2px 8px rgba(3,169,244,0.1); }
+    
     .editor-container {
       flex: 1;
       position: relative;
+      display: flex;
+      flex-direction: column;
     }
     .toolbar {
-      padding: 0.5rem 1rem;
+      padding: 0.75rem 1.5rem;
       background: white;
       border-bottom: 1px solid #ddd;
       display: flex;
-      gap: 1rem;
+      justify-content: space-between;
+      align-items: center;
     }
     button {
       background: #03a9f4;
@@ -51,17 +82,17 @@ export class AppRoot extends LitElement {
       padding: 0.5rem 1rem;
       border-radius: 4px;
       cursor: pointer;
+      font-weight: 600;
     }
-    button:hover {
-      background: #0288d1;
-    }
+    button:hover { background: #0288d1; }
+    button.secondary { background: white; color: #03a9f4; border: 1px solid #03a9f4; }
   `;
 
   static properties = {
     _connected: { type: Boolean },
-    _layouts: { type: Array },
+    _displayTypes: { type: Array },
     _activeLayout: { type: Object },
-    _selectedBoxId: { type: String },
+    _selectedItemId: { type: String },
     _saving: { type: Boolean },
     _message: { type: String },
   };
@@ -69,181 +100,176 @@ export class AppRoot extends LitElement {
   constructor() {
     super();
     this._connected = false;
-    this._layouts = [];
-    this._selectedBoxId = null;
+    this._displayTypes = [];
+    this._selectedItemId = null;
     this._saving = false;
     this._message = '';
     this._activeLayout = {
-      id: 'preview',
-      name: 'Preview Layout',
-      width_px: 800,
-      height_px: 480,
-      boxes: [
-        { id: '1', name: 'Header', x: 20, y: 20, width: 760, height: 60, colour: 'BLACK' },
-        { id: '2', name: 'Status', x: 20, y: 100, width: 200, height: 300, colour: 'BLACK' }
-      ]
+      id: 'default',
+      name: 'Main Layout',
+      canvas_width_mm: 500,
+      canvas_height_mm: 500,
+      items: []
     };
   }
 
-  firstUpdated() {
-    this._checkBackend();
+  async firstUpdated() {
+    await this._checkBackend();
+    await this._fetchData();
   }
 
   async _checkBackend() {
     this._connected = await api.ping();
   }
 
-  _handleAddBox() {
+  async _fetchData() {
+    try {
+      this._displayTypes = await api.getCollection('display_type');
+      // If we had layouts, we'd fetch them here
+    } catch (e) {
+      console.error('Fetch failed', e);
+    }
+  }
+
+  _handleAddDisplayType() {
+    this.shadowRoot.querySelector('display-type-dialog').show();
+  }
+
+  _handleEditDisplayType(dt) {
+    this.shadowRoot.querySelector('display-type-dialog').show(dt);
+  }
+
+  async _onSaveDisplayType(e) {
+    const dt = e.detail.displayType;
+    try {
+       if (this._displayTypes.find(t => t.id === dt.id)) {
+         await api.updateItem('display_type', dt.id, dt);
+       } else {
+         await api.createItem('display_type', dt);
+       }
+       await this._fetchData();
+       this._showMessage('Display type saved!', 'success');
+    } catch (err) {
+       this._showMessage(`Error: ${err.message}`, 'error');
+    }
+  }
+
+  _addItemToLayout(dt) {
     const id = Math.random().toString(36).substr(2, 9);
-    const newBox = {
+    const newItem = {
       id,
-      name: `Box ${this._activeLayout.boxes.length + 1}`,
-      x: 300,
-      y: 200,
-      width: 100,
-      height: 100,
-      colour: 'BLACK'
+      display_type_id: dt.id,
+      x_mm: 50,
+      y_mm: 50,
+      orientation: 0
     };
-    this._activeLayout.boxes = [...this._activeLayout.boxes, newBox];
-    this._selectedBoxId = id;
+    this._activeLayout.items = [...this._activeLayout.items, newItem];
+    this._selectedItemId = id;
     this.requestUpdate();
   }
 
-  _handleDeleteBox(id) {
-    this._activeLayout.boxes = this._activeLayout.boxes.filter(b => b.id !== id);
-    if (this._selectedBoxId === id) this._selectedBoxId = null;
-    this.requestUpdate();
-  }
-
-  _updateBox(id, updates) {
-    const box = this._activeLayout.boxes.find(b => b.id === id);
-    if (box) {
-      Object.assign(box, updates);
-      this._activeLayout.boxes = [...this._activeLayout.boxes];
+  _updateItem(id, updates) {
+    const item = this._activeLayout.items.find(i => i.id === id);
+    if (item) {
+      Object.assign(item, updates);
+      this._activeLayout.items = [...this._activeLayout.items];
       this.requestUpdate();
     }
   }
 
-  async _handleSave() {
-    const hasInvalid = this._activeLayout.boxes.some(b => b.invalid);
-    if (hasInvalid) {
-      this._showMessage('Cannot save: Layout has overlaps.', 'error');
-      return;
+  _handleRotate(id) {
+    const item = this._activeLayout.items.find(i => i.id === id);
+    if (item) {
+      this._updateItem(id, { orientation: item.orientation === 0 ? 90 : 0 });
     }
+  }
 
+  async _handleSaveLayout() {
     this._saving = true;
     try {
-      // In a real app, we'd use the actual ID
-      await api.updateLayout('preview', this._activeLayout);
-      this._showMessage('Layout saved successfully!', 'success');
+      await api.updateItem('layout', this._activeLayout.id, this._activeLayout);
+      this._showMessage('Layout saved!', 'success');
     } catch (e) {
-      this._showMessage(`Failed to save: ${e.message}`, 'error');
+      this._showMessage(`Failed: ${e.message}`, 'error');
     } finally {
       this._saving = false;
     }
   }
 
-  _showMessage(text, type) {
+  _showMessage(text) {
     this._message = text;
-    this.requestUpdate();
-    setTimeout(() => {
-      this._message = '';
-      this.requestUpdate();
-    }, 3000);
+    setTimeout(() => { this._message = ''; }, 3000);
   }
 
   render() {
-    const selectedBox = this._activeLayout.boxes.find(b => b.id === this._selectedBoxId);
-    const hasInvalid = this._activeLayout.boxes.some(b => b.invalid);
-
     return html`
       <header>
         <div><strong>eInk Layout Manager</strong></div>
         <div style="display: flex; gap: 1rem; align-items: center;">
-          ${this._message ? html`<span style="font-size: 14px;">${this._message}</span>` : ''}
-          <button @click="${this._handleSave}" ?disabled="${this._saving || hasInvalid}" style="background: #white; color: #03a9f4;">
+          ${this._message ? html`<span>${this._message}</span>` : ''}
+          <button @click="${this._handleSaveLayout}" ?disabled="${this._saving}">
             ${this._saving ? 'Saving...' : 'Save Layout'}
           </button>
-          <span>Status: ${this._connected ? 'Connected' : 'Offline'}</span>
+          <span style="font-size: 12px; opacity: 0.8;">Backend: ${this._connected ? 'Online' : 'Offline'}</span>
         </div>
       </header>
 
       <main>
         <div class="sidebar">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <h3 style="margin: 0;">Objects</h3>
-            <button @click="${this._handleAddBox}" style="padding: 4px 8px; font-size: 12px;">+ Add</button>
-          </div>
-          
-          ${this._activeLayout.boxes.map(box => html`
-            <div 
-              class="layout-card" 
-              style="
-                margin-bottom: 0.5rem; 
-                padding: 0.5rem; 
-                border: 1px solid ${this._selectedBoxId === box.id ? '#ff9800' : '#eee'};
-                background: ${box.invalid ? '#fff4f4' : 'transparent'};
-                cursor: pointer;
-              "
-              @click="${() => this._selectedBoxId = box.id}"
-            >
-              <div style="display: flex; justify-content: space-between;">
-                <strong>${box.name}</strong>
-                <span style="font-size: 12px; color: #666;">${Math.round(box.width)}x${Math.round(box.height)}</span>
-              </div>
-              ${this._selectedBoxId === box.id ? html`
-                <div style="margin-top: 1rem; border-top: 1px solid #eee; padding-top: 0.5rem;">
-                  <div style="margin-bottom: 0.5rem;">
-                    <label style="display: block; font-size: 10px; color: #999;">NAME</label>
-                    <input 
-                      style="width: 100%; box-sizing: border-box;"
-                      .value="${box.name}"
-                      @input="${(e) => this._updateBox(box.id, { name: e.target.value })}"
-                    >
-                  </div>
-                  <div style="margin-bottom: 0.5rem;">
-                    <label style="display: block; font-size: 10px; color: #999;">COLOUR</label>
-                    <div style="display: flex; gap: 4px; margin-top: 4px;">
-                      ${['BLACK', 'WHITE', 'RED'].map(c => html`
-                        <div 
-                          style="
-                            width: 20px; height: 20px; border-radius: 50%; border: 1px solid #ccc;
-                            background-color: ${c === 'RED' ? 'red' : c === 'BLACK' ? 'black' : 'white'};
-                            cursor: pointer;
-                            box-shadow: ${box.colour === c ? '0 0 0 2px #ff9800' : 'none'};
-                          "
-                          @click="${() => this._updateBox(box.id, { colour: c })}"
-                        ></div>
-                      `)}
-                    </div>
-                  </div>
-                  <button 
-                    @click="${() => this._handleDeleteBox(box.id)}"
-                    style="background: #f44336; font-size: 10px; padding: 2px 6px;"
-                  >Delete Object</button>
-                </div>
-              ` : ''}
+          <div class="sidebar-section">
+            <div class="sidebar-header">
+              <h3>Display Types</h3>
+              <button class="secondary" style="padding: 2px 8px; font-size: 11px;" @click="${this._handleAddDisplayType}">+ New</button>
             </div>
-          `)}
+            ${this._displayTypes.map(dt => html`
+              <div class="list-item" @dblclick="${() => this._handleEditDisplayType(dt)}" @click="${() => this._addItemToLayout(dt)}">
+                <div style="display: flex; justify-content: space-between;">
+                  <strong>${dt.name}</strong>
+                  <span style="font-size: 11px; color: #888;">${dt.width_mm}x${dt.height_mm}mm</span>
+                </div>
+              </div>
+            `)}
+          </div>
+
+          <div class="sidebar-section" style="flex: 2;">
+            <h3>Layout Items</h3>
+            ${this._activeLayout.items.map(item => {
+              const dt = this._displayTypes.find(t => t.id === item.display_type_id);
+              return html`
+                <div class="list-item ${this._selectedItemId === item.id ? 'selected' : ''}" @click="${() => this._selectedItemId = item.id}">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                      <strong>${dt?.name || 'Unknown'}</strong>
+                      <div style="font-size: 11px; color: #666;">Pos: ${item.x_mm}, ${item.y_mm} | Rot: ${item.orientation}°</div>
+                    </div>
+                    <button class="secondary" style="padding: 4px; font-size: 10px;" @click="${(e) => { e.stopPropagation(); this._handleRotate(item.id); }}">Rotate</button>
+                  </div>
+                </div>
+              `;
+            })}
+          </div>
         </div>
 
         <div class="editor-container">
           <div class="toolbar">
-            <span>Editor: ${this._activeLayout.name}</span>
-            <span style="color: #666; font-size: 12px;">(5px Grid Snapping Enabled)</span>
+            <span><strong>${this._activeLayout.name}</strong></span>
+            <div style="font-size: 12px; color: #666;">
+              Canvas: ${this._activeLayout.canvas_width_mm}x${this._activeLayout.canvas_height_mm}mm
+            </div>
           </div>
           <layout-editor
-            .width_px="${this._activeLayout.width_px}"
-            .height_px="${this._activeLayout.height_px}"
-            .boxes="${this._activeLayout.boxes}"
-            ._selectedId="${this._selectedBoxId}"
-            @layout-changed="${(e) => {
-              this._activeLayout.boxes = e.detail.boxes;
-              this.requestUpdate();
-            }}"
+            .width_mm="${this._activeLayout.canvas_width_mm}"
+            .height_mm="${this._activeLayout.canvas_height_mm}"
+            .items="${this._activeLayout.items}"
+            .displayTypes="${this._displayTypes}"
+            .selectedId="${this._selectedItemId}"
+            @item-moved="${(e) => this._updateItem(e.detail.id, { x_mm: e.detail.x, y_mm: e.detail.y })}"
+            @select-item="${(e) => this._selectedItemId = e.detail.id}"
           ></layout-editor>
         </div>
       </main>
+
+      <display-type-dialog @save="${this._onSaveDisplayType}"></display-type-dialog>
     `;
   }
 }

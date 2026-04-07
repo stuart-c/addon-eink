@@ -4,7 +4,7 @@ import './layout-box.js';
 
 /**
  * The main layout editor workspace.
- * Manages the display area and interaction logic for layout boxes.
+ * Manages the arrangement of eInk display instances.
  */
 export class LayoutEditor extends LitElement {
   static styles = css`
@@ -20,7 +20,7 @@ export class LayoutEditor extends LitElement {
       justify-content: center;
       align-items: flex-start;
     }
-    .display-container {
+    .canvas {
       background-color: white;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       position: relative;
@@ -28,31 +28,30 @@ export class LayoutEditor extends LitElement {
     }
     .grid-overlay {
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      top: 0; left: 0; right: 0; bottom: 0;
       pointer-events: none;
       background-image: 
         linear-gradient(to right, #f0f0f0 1px, transparent 1px),
         linear-gradient(to bottom, #f0f0f0 1px, transparent 1px);
-      background-size: 20px 20px;
+      background-size: 10px 10px;
     }
   `;
 
   static properties = {
-    width_px: { type: Number },
-    height_px: { type: Number },
-    boxes: { type: Array },
-    _selectedId: { type: String },
+    width_mm: { type: Number },
+    height_mm: { type: Number },
+    items: { type: Array },
+    displayTypes: { type: Array },
+    selectedId: { type: String },
   };
 
   constructor() {
     super();
-    this.width_px = 800;
-    this.height_px = 480;
-    this.boxes = [];
-    this._selectedId = null;
+    this.width_mm = 500;
+    this.height_mm = 500;
+    this.items = [];
+    this.displayTypes = [];
+    this.selectedId = null;
   }
 
   firstUpdated() {
@@ -77,111 +76,96 @@ export class LayoutEditor extends LitElement {
           move: (event) => {
             const target = event.target;
             const id = target.getAttribute('data-id');
-            const box = this.boxes.find(b => b.id === id);
+            const item = this.items.find(i => i.id === id);
             
-            if (box) {
-              box.x += event.dx;
-              box.y += event.dy;
-              target.x = box.x;
-              target.y = box.y;
+            if (item) {
+              item.x_mm += event.dx;
+              item.y_mm += event.dy;
+              target.x = item.x_mm;
+              target.y = item.y_mm;
               this._validateLayout();
               this._requestUpdate();
             }
           },
-          end: () => this._emitChange()
-        }
-      })
-      .resizable({
-        edges: { right: '.resize-handle', bottom: '.resize-handle' },
-        modifiers: [
-          interact.modifiers.restrictEdges({
-            outer: 'parent'
-          }),
-          interact.modifiers.restrictSize({
-            min: { width: 20, height: 20 }
-          }),
-          interact.modifiers.snapSize({
-            targets: [interact.snappers.grid({ x: 5, y: 5 })]
-          })
-        ],
-        listeners: {
-          move: (event) => {
-            const target = event.target;
-            const id = target.getAttribute('data-id');
-            const box = this.boxes.find(b => b.id === id);
-
-            if (box) {
-              box.width = event.rect.width;
-              box.height = event.rect.height;
-              target.width = box.width;
-              target.height = box.height;
-              this._validateLayout();
-              this._requestUpdate();
-            }
-          },
-          end: () => this._emitChange()
+          end: (event) => {
+             const id = event.target.getAttribute('data-id');
+             const item = this.items.find(i => i.id === id);
+             if (item) {
+                this.dispatchEvent(new CustomEvent('item-moved', {
+                  detail: { id, x: item.x_mm, y: item.y_mm },
+                  bubbles: true,
+                  composed: true
+                }));
+             }
+          }
         }
       });
+      // Resizable is removed as displays have fixed hardware sizes
   }
 
   _validateLayout() {
     // Reset validity
-    this.boxes.forEach(b => b.invalid = false);
+    this.items.forEach(i => i.invalid = false);
 
     // Check for overlaps
-    for (let i = 0; i < this.boxes.length; i++) {
-      for (let j = i + 1; j < this.boxes.length; j++) {
-        const b1 = this.boxes[i];
-        const b2 = this.boxes[j];
+    for (let i = 0; i < this.items.length; i++) {
+      for (let j = i + 1; j < this.items.length; j++) {
+        const item1 = this.items[i];
+        const item2 = this.items[j];
+        const dt1 = this.displayTypes.find(t => t.id === item1.display_type_id);
+        const dt2 = this.displayTypes.find(t => t.id === item2.display_type_id);
+
+        if (!dt1 || !dt2) continue;
+
+        const w1 = item1.orientation === 90 ? dt1.height_mm : dt1.width_mm;
+        const h1 = item1.orientation === 90 ? dt1.width_mm : dt1.height_mm;
+        const w2 = item2.orientation === 90 ? dt2.height_mm : dt2.width_mm;
+        const h2 = item2.orientation === 90 ? dt2.width_mm : dt2.height_mm;
 
         if (
-          b1.x < b2.x + b2.width &&
-          b1.x + b1.width > b2.x &&
-          b1.y < b2.y + b2.height &&
-          b1.y + b1.height > b2.y
+          item1.x_mm < item2.x_mm + w2 &&
+          item1.x_mm + w1 > item2.x_mm &&
+          item1.y_mm < item2.y_mm + h2 &&
+          item1.y_mm + h1 > item2.y_mm
         ) {
-          b1.invalid = true;
-          b2.invalid = true;
+          item1.invalid = true;
+          item2.invalid = true;
         }
       }
     }
   }
 
   _requestUpdate() {
-    this.boxes = [...this.boxes];
+    this.items = [...this.items];
     this.requestUpdate();
   }
 
-  _emitChange() {
-    this.dispatchEvent(new CustomEvent('layout-changed', {
-      detail: { boxes: this.boxes },
-      bubbles: true,
-      composed: true
-    }));
-  }
-
   _handleBoxSelect(id) {
-    this._selectedId = id;
+    this.dispatchEvent(new CustomEvent('select-item', { detail: { id } }));
   }
 
   render() {
     return html`
-      <div class="display-container" style="width: ${this.width_px}px; height: ${this.height_px}px;">
+      <div class="canvas" style="width: ${this.width_mm}px; height: ${this.height_mm}px;">
         <div class="grid-overlay"></div>
-        ${this.boxes.map(box => html`
-          <layout-box
-            data-id="${box.id}"
-            .x="${box.x}"
-            .y="${box.y}"
-            .width="${box.width}"
-            .height="${box.height}"
-            .name="${box.name}"
-            .colour="${box.colour}"
-            ?selected="${this._selectedId === box.id}"
-            ?invalid="${box.invalid}"
-            @mousedown="${() => this._handleBoxSelect(box.id)}"
-          ></layout-box>
-        `)}
+        ${this.items.map(item => {
+          const dt = this.displayTypes.find(t => t.id === item.display_type_id);
+          if (!dt) return '';
+          return html`
+            <layout-box
+              data-id="${item.id}"
+              .x="${item.x_mm}"
+              .y="${item.y_mm}"
+              .width="${dt.width_mm}"
+              .height="${dt.height_mm}"
+              .orientation="${item.orientation}"
+              .name="${dt.name}"
+              ?selected="${this.selectedId === item.id}"
+              ?invalid="${item.invalid}"
+              @mousedown="${() => this._handleBoxSelect(item.id)}"
+            ></layout-box>
+          `;
+        })}
       </div>
     `;
   }

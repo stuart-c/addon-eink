@@ -1,7 +1,7 @@
 import { LitElement, html, css } from 'lit';
 
 /**
- * A draggable/resizable box within the layout editor.
+ * Represents a single fixed-size display instance on the layout.
  */
 export class LayoutBox extends LitElement {
   static styles = css`
@@ -9,54 +9,41 @@ export class LayoutBox extends LitElement {
       display: block;
       position: absolute;
       box-sizing: border-box;
-      border: 2px solid #03a9f4;
-      background-color: var(--box-bg, rgba(3, 169, 244, 0.1));
+      border: 2px solid #333;
+      background-color: rgba(255, 255, 255, 0.9);
       cursor: move;
-      user-select: none;
-      touch-action: none;
-      transition: border-color 0.2s, background-color 0.2s;
+      transition: box-shadow 0.2s, border-color 0.2s, transform 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
     :host([selected]) {
-      border-color: #ff9800;
-      background-color: rgba(255, 152, 0, 0.1);
+      border-color: #03a9f4;
+      box-shadow: 0 0 0 2px rgba(3,169,244,0.3);
       z-index: 10;
     }
     :host([invalid]) {
       border-color: #f44336;
       background-color: rgba(244, 67, 54, 0.1);
-      animation: pulse 1s infinite alternate;
-    }
-    @keyframes pulse {
-      from { box-shadow: 0 0 5px rgba(244, 67, 54, 0.5); }
-      to { box-shadow: 0 0 15px rgba(244, 67, 54, 0.8); }
-    }
-    .resize-handle {
-      position: absolute;
-      width: 10px;
-      height: 10px;
-      background-color: #fff;
-      border: 1px solid #03a9f4;
-      right: -5px;
-      bottom: -5px;
-      cursor: nwse-resize;
-    }
-    :host([invalid]) .resize-handle {
-      border-color: #f44336;
     }
     .label {
-      position: absolute;
-      top: -20px;
-      left: 0;
-      font-size: 11px;
-      background: #333;
-      color: white;
-      padding: 0 4px;
-      white-space: nowrap;
+      font-size: 10px;
+      font-weight: 700;
+      color: #333;
+      text-align: center;
       pointer-events: none;
-      border-radius: 2px 2px 0 0;
+      word-break: break-all;
+      padding: 4px;
     }
-    :host([invalid]) .label {
-      background: #f44336;
+    .orientation-marker {
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      font-size: 8px;
+      color: #999;
     }
   `;
 
@@ -65,11 +52,26 @@ export class LayoutBox extends LitElement {
     y: { type: Number },
     width: { type: Number },
     height: { type: Number },
+    orientation: { type: Number }, // 0 or 90
     name: { type: String },
-    colour: { type: String },
     selected: { type: Boolean, reflect: true },
-    invalid: { type: Boolean, reflect: true },
+    invalid: { type: Boolean, reflect: true }
   };
+
+  updated(changedProperties) {
+    if (changedProperties.has('x') || changedProperties.has('y') || changedProperties.has('orientation') || changedProperties.has('width') || changedProperties.has('height')) {
+      this.style.left = `${this.x}px`;
+      this.style.top = `${this.y}px`;
+      // Visually swap w/h if rotated 90 degrees
+      if (this.orientation === 90) {
+        this.style.width = `${this.height}px`;
+        this.style.height = `${this.width}px`;
+      } else {
+        this.style.width = `${this.width}px`;
+        this.style.height = `${this.height}px`;
+      }
+    }
+  }
 
   render() {
     return html`
