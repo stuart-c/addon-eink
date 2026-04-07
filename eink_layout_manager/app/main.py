@@ -204,7 +204,7 @@ def init_app():
     app.router.add_delete(f"{api_prefix}/{{id}}", delete_item)
 
     # Health check
-    app.router.add_get("/ping", ping)
+    app.router.add_get("/api/ping", ping)
 
     # Static Lit frontend files
     static_dist = os.path.join(os.path.dirname(__file__), "static_dist")

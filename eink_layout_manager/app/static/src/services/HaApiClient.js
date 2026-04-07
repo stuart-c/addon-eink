@@ -32,29 +32,29 @@ export class HaApiClient {
   // --- Generic CRUD ---
 
   async getCollection(resourceType) {
-    return this._fetch(`/api/${resourceType}`);
+    return this._fetch(`api/${resourceType}`);
   }
 
   async getItem(resourceType, id) {
-    return this._fetch(`/api/${resourceType}/${id}`);
+    return this._fetch(`api/${resourceType}/${id}`);
   }
 
   async createItem(resourceType, data) {
-    return this._fetch(`/api/${resourceType}`, {
+    return this._fetch(`api/${resourceType}`, {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
   async updateItem(resourceType, id, data) {
-    return this._fetch(`/api/${resourceType}/${id}`, {
+    return this._fetch(`api/${resourceType}/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
   }
 
   async deleteItem(resourceType, id) {
-    return this._fetch(`/api/${resourceType}/${id}`, {
+    return this._fetch(`api/${resourceType}/${id}`, {
       method: 'DELETE',
     });
   }
@@ -69,7 +69,8 @@ export class HaApiClient {
 
   async ping() {
     try {
-      const response = await fetch(`${this.baseUrl}/ping`);
+      // Use relative path to correctly inherit ingress subpath
+      const response = await fetch(`${this.baseUrl}api/ping`);
       return response.ok;
     } catch (e) {
       return false;
