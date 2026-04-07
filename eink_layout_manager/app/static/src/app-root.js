@@ -1,85 +1,140 @@
 import { LitElement, html, css } from 'lit';
+import './components/layout-editor.js';
 import { api } from './services/HaApiClient.js';
 
 export class AppRoot extends LitElement {
   static styles = css`
     :host {
-      display: block;
-      padding: 2rem;
-      max-width: 800px;
-      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
-    h1 {
-      color: #03a9f4;
+    header {
+      background-color: #03a9f4;
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    .status {
-      padding: 0.5rem;
-      margin-bottom: 1rem;
-      border-radius: 4px;
+    main {
+      flex: 1;
+      display: flex;
+      background-color: #f0f2f5;
     }
-    .connected {
-      background-color: #e8f5e9;
-      color: #2e7d32;
-    }
-    .error {
-      background-color: #ffebee;
-      color: #c62828;
-    }
-    .layout-card {
-      border: 1px solid #ddd;
+    .sidebar {
+      width: 300px;
+      background-color: white;
+      border-right: 1px solid #ddd;
       padding: 1rem;
-      margin-bottom: 0.5rem;
-      border-radius: 8px;
+      overflow-y: auto;
+    }
+    .editor-container {
+      flex: 1;
+      position: relative;
+    }
+    .toolbar {
+      padding: 0.5rem 1rem;
+      background: white;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      gap: 1rem;
+    }
+    button {
+      background: #03a9f4;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0288d1;
     }
   `;
 
   static properties = {
     _connected: { type: Boolean },
     _layouts: { type: Array },
+    _activeLayout: { type: Object },
   };
 
   constructor() {
     super();
     this._connected = false;
     this._layouts = [];
+    this._activeLayout = {
+      id: 'preview',
+      name: 'Preview Layout',
+      width_px: 800,
+      height_px: 480,
+      boxes: [
+        { id: '1', name: 'Header', x: 20, y: 20, width: 760, height: 60, colour: 'BLACK' },
+        { id: '2', name: 'Status', x: 20, y: 100, width: 200, height: 300, colour: 'BLACK' }
+      ]
+    };
   }
 
   firstUpdated() {
     this._checkBackend();
-    this._loadLayouts();
   }
 
   async _checkBackend() {
     this._connected = await api.ping();
   }
 
-  async _loadLayouts() {
-    try {
-      this._layouts = await api.getLayouts();
-    } catch (e) {
-      console.error('Failed to load layouts', e);
-    }
+  _handleAddBox() {
+    const id = Math.random().toString(36).substr(2, 9);
+    const newBox = {
+      id,
+      name: `Box ${this._activeLayout.boxes.length + 1}`,
+      x: 300,
+      y: 200,
+      width: 100,
+      height: 100,
+      colour: 'BLACK'
+    };
+    this._activeLayout.boxes = [...this._activeLayout.boxes, newBox];
+    this.requestUpdate();
   }
 
   render() {
     return html`
-      <h1>eInk Layout Manager</h1>
-      
-      <div class="status ${this._connected ? 'connected' : 'error'}">
-        Backend Status: ${this._connected ? 'Connected' : 'Disconnected'}
-      </div>
+      <header>
+        <div><strong>eInk Layout Manager</strong></div>
+        <div>Status: ${this._connected ? 'Connected' : 'Offline'}</div>
+      </header>
 
-      <section>
-        <h2>Recent Layouts</h2>
-        ${this._layouts.length === 0 
-          ? html`<p>No layouts found.</p>`
-          : this._layouts.map(layout => html`
-              <div class="layout-card">
-                <strong>${layout.name}</strong> (${layout.width_px}x${layout.height_px})
-              </div>
-            `)
-        }
-      </section>
+      <main>
+        <div class="sidebar">
+          <h3>Objects</h3>
+          ${this._activeLayout.boxes.map(box => html`
+            <div style="margin-bottom: 0.5rem; padding: 0.5rem; border: 1px solid #eee;">
+              ${box.name} (${Math.round(box.x)}, ${Math.round(box.y)})
+            </div>
+          `)}
+          <button @click="${this._handleAddBox}">Add Box</button>
+        </div>
+
+        <div class="editor-container">
+          <div class="toolbar">
+            <span>Editor: ${this._activeLayout.name}</span>
+          </div>
+          <layout-editor
+            .width_px="${this._activeLayout.width_px}"
+            .height_px="${this._activeLayout.height_px}"
+            .boxes="${this._activeLayout.boxes}"
+            @layout-changed="${(e) => {
+              this._activeLayout.boxes = e.detail.boxes;
+              this.requestUpdate();
+            }}"
+          ></layout-editor>
+        </div>
+      </main>
     `;
   }
 }
