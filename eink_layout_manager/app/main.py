@@ -5,17 +5,22 @@ from aiohttp import web
 from jsonschema import validate, ValidationError
 
 # Base directory for data persistence
-DATA_DIR = os.environ.get("DATA_DIR", "/data")
 SCHEMAS_DIR = os.path.join(os.path.dirname(__file__), "schemas")
 
 
 def get_storage_path(resource_type):
-    path = os.path.join(DATA_DIR, resource_type)
+    """
+    Get the filesystem path for a specific resource type.
+    Creates the directory if it does not exist.
+    """
+    data_dir = os.environ.get("DATA_DIR", "/data")
+    path = os.path.join(data_dir, resource_type)
     os.makedirs(path, exist_ok=True)
     return path
 
 
 def load_schema(name):
+    """Load a JSON schema from the schemas directory."""
     schema_path = os.path.join(SCHEMAS_DIR, f"{name}.json")
     with open(schema_path, "r") as f:
         return json.load(f)
@@ -24,24 +29,30 @@ def load_schema(name):
 # --- Handlers ---
 
 
-async def handle_ping(request):
+async def ping(request):
+    """Health check endpoint. Returns 'pong'."""
     return web.Response(text="pong")
 
 
 async def get_collection(request):
+    """Fetch all resources for a specific collection type."""
     resource_type = request.match_info["resource_type"]
     storage_path = get_storage_path(resource_type)
 
     items = []
-    for filename in sorted(os.listdir(storage_path)):
-        if filename.endswith(".json"):
-            with open(os.path.join(storage_path, filename), "r") as f:
-                items.append(json.load(f))
-
+    if os.path.exists(storage_path):
+        for filename in os.listdir(storage_path):
+            if filename.endswith(".json"):
+                with open(os.path.join(storage_path, filename), "r") as f:
+                    try:
+                        items.append(json.load(f))
+                    except json.JSONDecodeError:
+                        continue
     return web.json_response(items)
 
 
 async def get_item(request):
+    """Fetch a single resource by ID."""
     resource_type = request.match_info["resource_type"]
     item_id = request.match_info["id"]
     storage_path = get_storage_path(resource_type)
@@ -55,6 +66,7 @@ async def get_item(request):
 
 
 async def create_item(request):
+    """Create a new resource. Returns 409 if ID already exists."""
     resource_type = request.match_info["resource_type"]
     try:
         data = await request.json()
@@ -95,6 +107,7 @@ async def create_item(request):
 
 
 async def update_item(request):
+    """Update an existing resource by ID."""
     resource_type = request.match_info["resource_type"]
     item_id = request.match_info["id"]
 
@@ -140,26 +153,29 @@ async def update_item(request):
 
 
 async def delete_item(request):
+    """Permanently delete a resource by ID."""
     resource_type = request.match_info["resource_type"]
     item_id = request.match_info["id"]
     storage_path = get_storage_path(resource_type)
     file_path = os.path.join(storage_path, f"{item_id}.json")
 
-    if os.path.exists(file_path):
-        os.remove(file_path)
-        return web.Response(status=204)
+    if not os.path.exists(file_path):
+        return web.json_response({"error": "Not Found"}, status=404)
 
-    return web.json_response({"error": "Not Found"}, status=404)
+    os.remove(file_path)
+    return web.json_response({"status": "deleted"})
 
 
 # --- App Init ---
 
 
 def init_app():
+    """Initialize the aiohttp application with routes and storage setup."""
     app = web.Application()
 
-    # Health check
-    app.router.add_get("/ping", handle_ping)
+    # Data directory setup
+    os.makedirs(get_storage_path("display_type"), exist_ok=True)
+    os.makedirs(get_storage_path("layout"), exist_ok=True)
 
     # RESTful API
     # Valid resource types: display_type, layout
@@ -170,6 +186,9 @@ def init_app():
     app.router.add_post(f"{api_prefix}", create_item)
     app.router.add_put(f"{api_prefix}/{{id}}", update_item)
     app.router.add_delete(f"{api_prefix}/{{id}}", delete_item)
+
+    # Health check
+    app.router.add_get("/ping", ping)
 
     # Placeholder for static Lit frontend files
     # if os.path.exists('static'):
