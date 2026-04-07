@@ -1,5 +1,6 @@
 import json
 import os
+import traceback
 
 from aiohttp import web
 from jsonschema import validate, ValidationError
@@ -24,6 +25,20 @@ def load_schema(name):
     schema_path = os.path.join(SCHEMAS_DIR, f"{name}.json")
     with open(schema_path, "r") as f:
         return json.load(f)
+
+
+# --- Middlewares ---
+
+@web.middleware
+async def request_logger_middleware(request, handler):
+    """Log every incoming request for debugging."""
+    print(f"REQUEST: {request.method} {request.path}")
+    try:
+        return await handler(request)
+    except Exception as e:
+        print(f"EXCEPTION in {request.path}: {str(e)}")
+        traceback.print_exc()
+        raise
 
 
 # --- Handlers ---
@@ -171,7 +186,7 @@ async def delete_item(request):
 
 def init_app():
     """Initialize the aiohttp application with routes and storage setup."""
-    app = web.Application()
+    app = web.Application(middlewares=[request_logger_middleware])
 
     # Data directory setup
     os.makedirs(get_storage_path("display_type"), exist_ok=True)
