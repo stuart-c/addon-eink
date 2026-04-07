@@ -19,12 +19,19 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
     steps:
       - id: version
         run: |
           VERSION="${{ github.event.release.tag_name || github.event.pull_request.head.sha || github.sha }}"
           VERSION="${VERSION#v}"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            echo "tag=latest" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=dev" >> "$GITHUB_OUTPUT"
+          fi
 
   version:
     name: Bump Version
@@ -90,7 +97,7 @@ jobs:
           push: true
           tags: |
             ghcr.io/${{ github.repository_owner }}/eink-layout-manager:${{ needs.prepare.outputs.version }}-${{ matrix.arch }}
-            ghcr.io/${{ github.repository_owner }}/eink-layout-manager:latest-${{ matrix.arch }}
+            ghcr.io/${{ github.repository_owner }}/eink-layout-manager:${{ needs.prepare.outputs.tag }}-${{ matrix.arch }}
           build-args: |
             BUILD_FROM=${{ matrix.build_from }}
             BUILD_ARCH=${{ matrix.arch }}
@@ -113,10 +120,11 @@ jobs:
       - name: Create manifest list and push
         run: |
           VERSION="${{ needs.prepare.outputs.version }}"
+          TAG="${{ needs.prepare.outputs.tag }}"
           REPO="ghcr.io/${{ github.repository_owner }}/eink-layout-manager"
           
           docker buildx imagetools create \
             --tag ${REPO}:${VERSION} \
-            --tag ${REPO}:latest \
+            --tag ${REPO}:${TAG} \
             ${REPO}:${VERSION}-amd64 \
             ${REPO}:${VERSION}-aarch64
