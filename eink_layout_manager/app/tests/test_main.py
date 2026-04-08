@@ -197,3 +197,56 @@ async def test_not_found(aiohttp_client, app):
 
     resp = await client.delete("/api/display_type/non_existent")
     assert resp.status == 404
+
+
+@pytest.mark.asyncio
+async def test_delete_display_type_protection(aiohttp_client, app):
+    """Test that a display type cannot be deleted if used in a layout."""
+    client = await aiohttp_client(app)
+
+    # 1. Create a display type
+    dt_data = {
+        "id": "protected_dt",
+        "name": "Protected",
+        "width_mm": 10,
+        "height_mm": 10,
+        "width_px": 10,
+        "height_px": 10,
+        "colour_type": "MONO",
+    }
+    resp = await client.post("/api/display_type", json=dt_data)
+    assert resp.status == 201
+
+    # 2. Create a layout referencing it
+    layout_data = {
+        "id": "using_layout",
+        "name": "Using Layout",
+        "canvas_width_mm": 100,
+        "canvas_height_mm": 100,
+        "items": [
+            {
+                "display_type_id": "protected_dt",
+                "x_mm": 0,
+                "y_mm": 0,
+                "orientation": 0,
+            }
+        ],
+    }
+    resp = await client.post("/api/layout", json=layout_data)
+    assert resp.status == 201
+
+    # 3. Attempt to delete display type (should fail)
+    resp = await client.delete("/api/display_type/protected_dt")
+    assert resp.status == 400
+    result = await resp.json()
+    assert "Conflict" in result["error"]
+    assert "Using Layout" in result["message"]
+
+    # 4. Delete the layout
+    resp = await client.delete("/api/layout/using_layout")
+    assert resp.status == 200
+
+    # 5. Attempt to delete display type again (should succeed)
+    resp = await client.delete("/api/display_type/protected_dt")
+    assert resp.status == 200
+    assert (await resp.json())["status"] == "deleted"
