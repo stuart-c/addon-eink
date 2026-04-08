@@ -170,6 +170,43 @@ export class AppRoot extends LitElement {
       from { transform: translateY(-10px); opacity: 0; }
       to { transform: translateY(0); opacity: 1; }
     }
+
+    .material-icons {
+      font-family: 'Material Icons';
+      font-weight: normal;
+      font-style: normal;
+      font-size: 20px;
+      line-height: 1;
+      letter-spacing: normal;
+      text-transform: none;
+      display: inline-block;
+      white-space: nowrap;
+      word-wrap: normal;
+      direction: ltr;
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+    }
+
+    button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    header button {
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      border-radius: 50%;
+    }
+
+    .sidebar button.secondary {
+      padding: 4px;
+      border-radius: 4px;
+      min-width: 24px;
+      height: 24px;
+    }
   `;
 
   static properties = {
@@ -390,15 +427,15 @@ export class AppRoot extends LitElement {
     return html`
       <header>
         <div><strong>eInk Layout Manager</strong></div>
-        <div style="display: flex; gap: 1rem; align-items: center;">
-          ${this._message ? html`<span>${this._message}</span>` : ''}
-          <button class="secondary" @click="${this._handleEditLayout}">
-            Settings
+        <div style="display: flex; gap: 0.75rem; align-items: center;">
+          ${this._message ? html`<span style="font-size: 13px; background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px;">${this._message}</span>` : ''}
+          <button class="secondary" @click="${this._handleEditLayout}" title="Layout Settings">
+            <span class="material-icons">settings</span>
           </button>
-          <button @click="${this._handleSaveLayout}" ?disabled="${this._saving}">
-            ${this._saving ? 'Saving...' : 'Save Layout'}
+          <button @click="${this._handleSaveLayout}" ?disabled="${this._saving}" title="${this._saving ? 'Saving...' : 'Save Layout'}">
+            <span class="material-icons">${this._saving ? 'sync' : 'save'}</span>
           </button>
-          <span style="font-size: 12px; opacity: 0.8;">Backend: ${this._connected ? 'Online' : 'Offline'}</span>
+          <span style="font-size: 11px; opacity: 0.8; margin-left: 0.5rem;">${this._connected ? 'Online' : 'Offline'}</span>
         </div>
       </header>
 
@@ -407,7 +444,9 @@ export class AppRoot extends LitElement {
           <div class="sidebar-section">
             <div class="sidebar-header">
               <h3>Display Types</h3>
-              <button class="secondary" style="padding: 2px 8px; font-size: 11px;" @click="${this._handleAddDisplayType}">+ New</button>
+              <button class="secondary" style="padding: 0; width: 24px; height: 24px;" @click="${this._handleAddDisplayType}" title="Add New Display Type">
+                <span class="material-icons" style="font-size: 18px;">add</span>
+              </button>
             </div>
             ${this._displayTypes.map(dt => html`
               <div class="list-item" @dblclick="${() => this._handleEditDisplayType(dt)}">
@@ -417,8 +456,12 @@ export class AppRoot extends LitElement {
                     <div style="font-size: 11px; color: #888;">${dt.width_mm}x${dt.height_mm}mm</div>
                   </div>
                   <div style="display: flex; gap: 4px;">
-                    <button class="secondary" style="padding: 4px 8px; font-size: 10px;" @click="${(e) => { e.stopPropagation(); this._addItemToLayout(dt); }}">Add</button>
-                    <button @click="${(e) => { e.stopPropagation(); this._handleEditDisplayType(dt); }}" class="secondary" style="padding: 4px 8px; font-size: 10px;">Edit</button>
+                    <button class="secondary" title="Add to Layout" @click="${(e) => { e.stopPropagation(); this._addItemToLayout(dt); }}">
+                      <span class="material-icons" style="font-size: 16px;">add_box</span>
+                    </button>
+                    <button class="secondary" title="Edit Properties" @click="${(e) => { e.stopPropagation(); this._handleEditDisplayType(dt); }}">
+                      <span class="material-icons" style="font-size: 16px;">edit</span>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -441,8 +484,12 @@ export class AppRoot extends LitElement {
                       <div style="font-size: 11px; color: #666;">Pos: ${item.x_mm}, ${item.y_mm} | Rot: ${item.orientation}°</div>
                     </div>
                     <div style="display: flex; gap: 4px;">
-                      <button class="secondary" style="padding: 4px; font-size: 10px;" @click="${(e) => { e.stopPropagation(); this._handleRotate(item.id); }}">Rotate</button>
-                      <button class="secondary" style="padding: 4px; font-size: 10px;" @click="${(e) => { e.stopPropagation(); this._handleEditItem(item.id); }}">Settings</button>
+                      <button class="secondary" title="Rotate" @click="${(e) => { e.stopPropagation(); this._handleRotate(item.id); }}">
+                        <span class="material-icons" style="font-size: 16px;">rotate_right</span>
+                      </button>
+                      <button class="secondary" title="Settings" @click="${(e) => { e.stopPropagation(); this._handleEditItem(item.id); }}">
+                        <span class="material-icons" style="font-size: 16px;">settings</span>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -467,7 +514,8 @@ export class AppRoot extends LitElement {
                 `)}
                 <div class="dropdown-divider"></div>
                 <div class="dropdown-item action" @click="${this._handleCreateLayout}">
-                  + Create new layout...
+                  <span class="material-icons" style="font-size: 16px; margin-right: 8px;">add</span>
+                  Create new layout...
                 </div>
               </div>
             </div>
