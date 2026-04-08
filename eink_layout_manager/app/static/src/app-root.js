@@ -88,33 +88,128 @@ export class AppRoot extends LitElement {
     }
     button:hover { background: #0288d1; }
     button.secondary { background: white; color: #03a9f4; border: 1px solid #03a9f4; }
+
+    /* Dropdown Styles */
+    .dropdown {
+      position: relative;
+      display: inline-block;
+    }
+    .dropdown-trigger {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+    .dropdown-trigger:hover {
+      background: #f0f2f5;
+    }
+    .dropdown-trigger span {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #333;
+    }
+    .dropdown-trigger .chevron {
+      font-size: 0.8rem;
+      color: #666;
+      transition: transform 0.2s;
+    }
+    .dropdown-trigger.active .chevron {
+      transform: rotate(180deg);
+    }
+    .dropdown-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: white;
+      min-width: 220px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      border: 1px solid #eee;
+      border-radius: 8px;
+      margin-top: 0.5rem;
+      z-index: 100;
+      overflow: hidden;
+      display: none;
+    }
+    .dropdown-menu.show {
+      display: block;
+      animation: slideIn 0.2s ease;
+    }
+    .dropdown-item {
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: #444;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background 0.2s;
+    }
+    .dropdown-item:hover {
+      background: #f0faff;
+      color: #03a9f4;
+    }
+    .dropdown-item.selected {
+      background: #e1f5fe;
+      color: #03a9f4;
+      font-weight: 600;
+    }
+    .dropdown-divider {
+      height: 1px;
+      background: #eee;
+      margin: 4px 0;
+    }
+    .dropdown-item.action {
+      color: #03a9f4;
+      font-weight: 600;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateY(-10px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
   `;
 
   static properties = {
     _connected: { type: Boolean },
     _displayTypes: { type: Array },
+    _layouts: { type: Array },
     _activeLayout: { type: Object },
     _selectedItemId: { type: String },
     _saving: { type: Boolean },
     _message: { type: String },
     _mousePos: { type: Object },
+    _showLayoutMenu: { type: Boolean },
   };
 
   constructor() {
     super();
     this._connected = false;
     this._displayTypes = [];
+    this._layouts = [];
     this._selectedItemId = null;
     this._saving = false;
     this._message = '';
-    this._activeLayout = {
-      id: 'default',
-      name: 'Main Layout',
-      canvas_width_mm: 500,
-      canvas_height_mm: 500,
-      items: []
-    };
+    this._showLayoutMenu = false;
+    this._activeLayout = null;
     this._mousePos = { x: null, y: null };
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    this._handleGlobalClick = (e) => {
+      if (this._showLayoutMenu && !e.composedPath().some(el => el.classList?.contains('dropdown'))) {
+        this._showLayoutMenu = false;
+      }
+    };
+    window.addEventListener('click', this._handleGlobalClick);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    window.removeEventListener('click', this._handleGlobalClick);
   }
 
   async firstUpdated() {
@@ -129,7 +224,28 @@ export class AppRoot extends LitElement {
   async _fetchData() {
     try {
       this._displayTypes = await api.getCollection('display_type');
-      // If we had layouts, we'd fetch them here
+      this._layouts = await api.getCollection('layout');
+      
+      if (this._layouts.length > 0) {
+        if (!this._activeLayout) {
+          this._activeLayout = this._layouts[0];
+        } else {
+          const fresh = this._layouts.find(l => l.id === this._activeLayout.id);
+          if (fresh) this._activeLayout = fresh;
+        }
+      } else {
+        const defaultLayout = {
+          id: 'default',
+          name: 'Main Layout',
+          canvas_width_mm: 500,
+          canvas_height_mm: 500,
+          grid_snap_mm: 5,
+          items: []
+        };
+        this._activeLayout = defaultLayout;
+        this._layouts = [defaultLayout];
+        await api.createItem('layout', defaultLayout);
+      }
     } catch (e) {
       console.error('Fetch failed', e);
     }
@@ -147,10 +263,49 @@ export class AppRoot extends LitElement {
     this.shadowRoot.querySelector('layout-settings-dialog').show(this._activeLayout);
   }
 
-  _onSaveLayoutSettings(e) {
-    this._activeLayout = { ...this._activeLayout, ...e.detail.settings };
-    this.requestUpdate();
-    this._showMessage('Settings applied', 'success');
+  _handleCreateLayout() {
+    const newLayout = {
+      name: 'New Layout',
+      canvas_width_mm: 500,
+      canvas_height_mm: 500,
+      grid_snap_mm: 5,
+      items: []
+    };
+    this.shadowRoot.querySelector('layout-settings-dialog').show(newLayout);
+    this._showLayoutMenu = false;
+  }
+
+  _handleSwitchLayout(layout) {
+    this._activeLayout = layout;
+    this._selectedItemId = null;
+    this._showLayoutMenu = false;
+  }
+
+  async _onSaveLayoutSettings(e) {
+    const settings = e.detail.settings;
+    if (!settings.id) {
+      settings.id = Math.random().toString(36).substr(2, 9);
+      try {
+        await api.createItem('layout', settings);
+        this._activeLayout = settings;
+        await this._fetchData();
+        this._showMessage('New layout created', 'success');
+      } catch (err) {
+        this._showMessage(`Error: ${err.message}`, 'error');
+      }
+    } else {
+      const updated = { ...this._activeLayout, ...settings };
+      this._activeLayout = updated;
+      
+      const index = this._layouts.findIndex(l => l.id === settings.id);
+      if (index !== -1) {
+        this._layouts[index] = updated;
+        this._layouts = [...this._layouts];
+      }
+      
+      this.requestUpdate();
+      this._showMessage('Settings applied', 'success');
+    }
   }
 
   async _onSaveDisplayType(e) {
@@ -262,7 +417,7 @@ export class AppRoot extends LitElement {
 
           <div class="sidebar-section" style="flex: 2;">
             <h3>Layout Items</h3>
-            ${this._activeLayout.items.map(item => {
+            ${this._activeLayout?.items.map(item => {
               const dt = this._displayTypes.find(t => t.id === item.display_type_id);
               return html`
                 <div 
@@ -282,15 +437,32 @@ export class AppRoot extends LitElement {
                   </div>
                 </div>
               `;
-            })}
+            }) || ''}
           </div>
         </div>
 
         <div class="editor-container">
           <div class="toolbar">
-            <span><strong>${this._activeLayout.name}</strong></span>
+            <div class="dropdown">
+              <div class="dropdown-trigger ${this._showLayoutMenu ? 'active' : ''}" @click="${() => this._showLayoutMenu = !this._showLayoutMenu}">
+                <span>${this._activeLayout?.name || 'Loading...'}</span>
+                <div class="chevron">▼</div>
+              </div>
+              <div class="dropdown-menu ${this._showLayoutMenu ? 'show' : ''}">
+                ${this._layouts.map(l => html`
+                  <div class="dropdown-item ${this._activeLayout?.id === l.id ? 'selected' : ''}" @click="${() => this._handleSwitchLayout(l)}">
+                    ${l.name}
+                    ${this._activeLayout?.id === l.id ? html`✓` : ''}
+                  </div>
+                `)}
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item action" @click="${this._handleCreateLayout}">
+                  + Create new layout...
+                </div>
+              </div>
+            </div>
             <div style="font-size: 12px; color: #666; display: flex; align-items: center; gap: 1rem;">
-              <span>Canvas: ${this._activeLayout.canvas_width_mm}x${this._activeLayout.canvas_height_mm}mm</span>
+              <span>Canvas: ${this._activeLayout?.canvas_width_mm}x${this._activeLayout?.canvas_height_mm}mm</span>
               ${this._mousePos?.x !== null ? html`
                 <span style="padding-left: 1rem; border-left: 1px solid #ddd; color: #03a9f4; font-weight: 600;">
                   X: ${this._mousePos.x}mm, Y: ${this._mousePos.y}mm
@@ -299,10 +471,11 @@ export class AppRoot extends LitElement {
             </div>
           </div>
           <layout-editor
-            .width_mm="${this._activeLayout.canvas_width_mm}"
-            .height_mm="${this._activeLayout.canvas_height_mm}"
-            .gridSnap="${this._activeLayout.grid_snap_mm || 5}"
-            .items="${this._activeLayout.items}"
+            ?hidden="${!this._activeLayout}"
+            .width_mm="${this._activeLayout?.canvas_width_mm}"
+            .height_mm="${this._activeLayout?.canvas_height_mm}"
+            .gridSnap="${this._activeLayout?.grid_snap_mm || 5}"
+            .items="${this._activeLayout?.items || []}"
             .displayTypes="${this._displayTypes}"
             .selectedId="${this._selectedItemId}"
             @item-moved="${(e) => this._updateItem(e.detail.id, { x_mm: e.detail.x, y_mm: e.detail.y })}"
