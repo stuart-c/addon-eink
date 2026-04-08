@@ -482,6 +482,7 @@ export class AppRoot extends LitElement {
             @select-item="${(e) => this._selectedItemId = e.detail.id}"
             @edit-item="${(e) => this._handleEditItem(e.detail.id)}"
             @mouse-move="${(e) => this._mousePos = e.detail}"
+            @rotate-item="${(e) => this._handleRotate(e.detail.id)}"
           ></layout-editor>
         </div>
       </main>

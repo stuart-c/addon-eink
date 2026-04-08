@@ -17,7 +17,7 @@ export class LayoutBox extends LitElement {
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      overflow: hidden;
+      overflow: visible;
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
     :host([selected]) {
@@ -34,9 +34,9 @@ export class LayoutBox extends LitElement {
       font-weight: 700;
       color: #333;
       text-align: center;
-      pointer-events: none;
       word-break: break-all;
       padding: 4px;
+      margin-bottom: 2px;
     }
     .orientation-marker {
       position: absolute;
@@ -44,6 +44,45 @@ export class LayoutBox extends LitElement {
       left: 4px;
       font-size: 8px;
       color: #999;
+    }
+    .actions {
+      position: absolute;
+      top: -15px;
+      right: -15px;
+      display: flex;
+      gap: 12px;
+      opacity: 0;
+      transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      background: white;
+      padding: 6px 10px;
+      border-radius: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+      z-index: 50;
+      visibility: hidden;
+      transform: scale(0.8);
+    }
+    :host(:hover) .actions {
+      opacity: 1;
+      visibility: visible;
+      transform: scale(1);
+    }
+    .action-icon {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #555;
+      transition: color 0.2s, transform 0.1s;
+      width: 24px;
+      height: 24px;
+    }
+    .action-icon:hover {
+      color: #03a9f4;
+      transform: scale(1.2);
+    }
+    .material-icons {
+      font-size: 18px;
+      user-select: none;
     }
   `;
 
@@ -94,10 +133,25 @@ export class LayoutBox extends LitElement {
     }));
   }
 
+  _handleRotateClick(e) {
+    e.stopPropagation();
+    this.dispatchEvent(new CustomEvent('item-rotate', {
+      bubbles: true,
+      composed: true
+    }));
+  }
+
   render() {
     return html`
       <div class="label" @dblclick="${this._handleDoubleClick}">${this.name} ${this.invalid ? '(Overlap!)' : ''}</div>
-      <div class="resize-handle"></div>
+      <div class="actions">
+        <div class="action-icon" title="Open Settings" @click="${this._handleDoubleClick}">
+          <span class="material-icons">settings</span>
+        </div>
+        <div class="action-icon" title="Rotate" @click="${this._handleRotateClick}">
+          <span class="material-icons">rotate_right</span>
+        </div>
+      </div>
       <slot></slot>
     `;
   }
