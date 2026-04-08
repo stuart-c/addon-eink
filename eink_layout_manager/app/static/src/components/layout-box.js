@@ -59,9 +59,11 @@ export class LayoutBox extends LitElement {
   };
 
   updated(changedProperties) {
-    if (changedProperties.has('x') || changedProperties.has('y') || changedProperties.has('orientation') || changedProperties.has('width') || changedProperties.has('height')) {
-      this.style.left = `${this.x}px`;
-      this.style.top = `${this.y}px`;
+    if (changedProperties.has('x') || changedProperties.has('y')) {
+      this.style.transform = `translate(${this.x}px, ${this.y}px)`;
+    }
+
+    if (changedProperties.has('orientation') || changedProperties.has('width') || changedProperties.has('height')) {
       // Visually swap w/h if rotated 90 degrees
       if (this.orientation === 90) {
         this.style.width = `${this.height}px`;
@@ -71,26 +73,7 @@ export class LayoutBox extends LitElement {
         this.style.height = `${this.height}px`;
       }
     }
-  }
 
-  render() {
-    return html`
-      <div class="label">${this.name} ${this.invalid ? '(Overlap!)' : ''}</div>
-      <div class="resize-handle"></div>
-      <slot></slot>
-    `;
-  }
-
-  updated(changedProperties) {
-    if (changedProperties.has('x') || changedProperties.has('y')) {
-      this.style.transform = `translate(${this.x}px, ${this.y}px)`;
-    }
-    if (changedProperties.has('width')) {
-      this.style.width = `${this.width}px`;
-    }
-    if (changedProperties.has('height')) {
-      this.style.height = `${this.height}px`;
-    }
     if (changedProperties.has('colour')) {
       const colorMap = {
         'WHITE': 'rgba(255, 255, 255, 0.8)',
@@ -102,6 +85,14 @@ export class LayoutBox extends LitElement {
       };
       this.style.setProperty('--box-bg', colorMap[this.colour] || 'rgba(3, 169, 244, 0.1)');
     }
+  }
+
+  render() {
+    return html`
+      <div class="label">${this.name} ${this.invalid ? '(Overlap!)' : ''}</div>
+      <div class="resize-handle"></div>
+      <slot></slot>
+    `;
   }
 }
 

@@ -172,6 +172,7 @@ export class LayoutEditor extends LitElement {
               ?selected="${this.selectedId === item.id}"
               ?invalid="${item.invalid}"
               @mousedown="${() => this._handleBoxSelect(item.id)}"
+              @dblclick="${() => this.dispatchEvent(new CustomEvent('edit-item', { detail: { id: item.id } }))}"
             ></layout-box>
           `;
         })}
