@@ -186,6 +186,55 @@ export class DisplayTypeDialog extends LitElement {
     .radio-option input {
       width: auto;
     }
+    .swatch-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+      margin-bottom: 8px;
+    }
+    .swatch {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 1px solid #ddd;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .swatch:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      border-color: #03a9f4;
+    }
+    .swatch.selected {
+      border: 2px solid #03a9f4;
+      box-shadow: 0 0 0 2px rgba(3, 169, 244, 0.2);
+    }
+    .color-input-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #f8f9fa;
+      padding: 6px;
+      border-radius: 8px;
+      border: 1px solid #eee;
+    }
+    input[type="color"] {
+      width: 40px;
+      height: 34px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+      padding: 2px;
+    }
+    .hex-value {
+      font-family: 'JetBrains Mono', 'Roboto Mono', monospace;
+      font-size: 13px;
+      color: #555;
+      text-transform: uppercase;
+      font-weight: 600;
+      flex: 1;
+    }
   `;
 
   static properties = {
@@ -194,6 +243,13 @@ export class DisplayTypeDialog extends LitElement {
     _frameType: { state: true },
     _matType: { state: true }
   };
+
+  _PRESETS = [
+    { name: 'White', color: '#ffffff' },
+    { name: 'Black', color: '#000000' },
+    { name: 'Brown', color: '#5d4037' },
+    { name: 'Silver', color: '#c0c0c0' }
+  ];
 
   _getDefaultDisplayType() {
     return {
@@ -319,6 +375,32 @@ export class DisplayTypeDialog extends LitElement {
     `;
   }
 
+  _renderColorPicker(label, value, onUpdate) {
+    return html`
+      <div class="form-group">
+        <label>${label}</label>
+        <div class="swatch-group">
+          ${this._PRESETS.map(p => html`
+            <div 
+              class="swatch ${value.toLowerCase() === p.color.toLowerCase() ? 'selected' : ''}" 
+              style="background: ${p.color}"
+              title="${p.name}"
+              @click="${() => onUpdate(p.color)}"
+            ></div>
+          `)}
+        </div>
+        <div class="color-input-container">
+          <input 
+            type="color" 
+            .value="${value}" 
+            @input="${e => onUpdate(e.target.value)}"
+          >
+          <div class="hex-value">${value}</div>
+        </div>
+      </div>
+    `;
+  }
+
   render() {
     return html`
       <dialog>
@@ -390,10 +472,7 @@ export class DisplayTypeDialog extends LitElement {
                     <label>Thickness (mm)</label>
                     <input type="number" .value="${this.displayType.frame.thickness_mm}" @input="${e => this.displayType.frame.thickness_mm = parseInt(e.target.value)}">
                   </div>
-                  <div class="form-group">
-                    <label>Frame Color</label>
-                    <input type="color" .value="${this.displayType.frame.colour}" @input="${e => this.displayType.frame.colour = e.target.value}">
-                  </div>
+                  ${this._renderColorPicker('Frame Color', this.displayType.frame.colour, (c) => { this.displayType.frame.colour = c; this.requestUpdate(); })}
                 </div>
               ` : ''}
 
@@ -428,10 +507,7 @@ export class DisplayTypeDialog extends LitElement {
                       <input type="number" .value="${this.displayType.mat.vertical_mm || 0}" @input="${e => { this.displayType.mat.vertical_mm = parseInt(e.target.value); delete this.displayType.mat.thickness_mm; }}">
                     </div>
                   `}
-                  <div class="form-group">
-                    <label>Mat Color</label>
-                    <input type="color" .value="${this.displayType.mat.colour}" @input="${e => this.displayType.mat.colour = e.target.value}">
-                  </div>
+                  ${this._renderColorPicker('Mat Color', this.displayType.mat.colour, (c) => { this.displayType.mat.colour = c; this.requestUpdate(); })}
                 </div>
               ` : ''}
 
