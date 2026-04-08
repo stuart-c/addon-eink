@@ -204,7 +204,8 @@ export class AppRoot extends LitElement {
       border-radius: 50%;
     }
 
-    .sidebar button.secondary {
+    .sidebar button.secondary,
+    .sidebar button.danger {
       padding: 4px;
       border-radius: 4px;
       min-width: 24px;
