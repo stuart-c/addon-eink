@@ -182,6 +182,11 @@ export class LayoutEditor extends LitElement {
     }));
   }
 
+  _handleBoxRotate(id) {
+    this.dispatchEvent(new CustomEvent('rotate-item', { detail: { id } }));
+  }
+  }
+
   render() {
     const gridSize = this.gridSnap < 5 ? 10 : this.gridSnap;
     return html`
@@ -208,6 +213,7 @@ export class LayoutEditor extends LitElement {
               ?invalid="${item.invalid}"
               @mousedown="${() => this._handleBoxSelect(item.id)}"
               @item-edit="${() => this._handleBoxEdit(item.id)}"
+              @item-rotate="${() => this._handleBoxRotate(item.id)}"
             ></layout-box>
           `;
         })}
