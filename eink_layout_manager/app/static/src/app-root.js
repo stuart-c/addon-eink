@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import './components/layout-editor.js';
 import './components/display-type-dialog.js';
+import './components/item-settings-dialog.js';
 import { api } from './services/HaApiClient.js';
 
 export class AppRoot extends LitElement {
@@ -184,6 +185,18 @@ export class AppRoot extends LitElement {
     }
   }
 
+  _handleEditItem(id) {
+    const item = this._activeLayout.items.find(i => i.id === id);
+    if (item) {
+      this.shadowRoot.querySelector('item-settings-dialog').show(item, this._displayTypes);
+    }
+  }
+
+  _onSaveItemSettings(e) {
+    this._updateItem(e.detail.id, e.detail.updates);
+    this._showMessage('Item settings updated', 'success');
+  }
+
   async _handleSaveLayout() {
     this._saving = true;
     try {
@@ -265,11 +278,13 @@ export class AppRoot extends LitElement {
             .selectedId="${this._selectedItemId}"
             @item-moved="${(e) => this._updateItem(e.detail.id, { x_mm: e.detail.x, y_mm: e.detail.y })}"
             @select-item="${(e) => this._selectedItemId = e.detail.id}"
+            @edit-item="${(e) => this._handleEditItem(e.detail.id)}"
           ></layout-editor>
         </div>
       </main>
 
       <display-type-dialog @save="${this._onSaveDisplayType}"></display-type-dialog>
+      <item-settings-dialog @save="${this._onSaveItemSettings}"></item-settings-dialog>
     `;
   }
 }
