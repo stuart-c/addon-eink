@@ -30,10 +30,3 @@ Run the script from the **project root directory**:
 5.  **Logs**: Starts following the container logs in your terminal. **Press `Ctrl+C` to stop the logs and shut down the container.**
 
 
-### Stopping the container
-
-If you want to stop the container after use:
-
-```bash
-docker stop eink-layout-manager-dev
-```
