@@ -66,15 +66,13 @@ async def test_create_and_get_item(aiohttp_client, app):
     display_data = {
         "id": "epd_2in13",
         "name": "2.13 inch EPD",
-        "width_mm": 50,
-        "height_mm": 100,
-        "panel_width_mm": 25,
-        "panel_height_mm": 50,
+        "width_mm": 25,
+        "height_mm": 50,
         "width_px": 122,
         "height_px": 250,
         "colour_type": "BWR",
-        "frame": {"border_width_mm": 5, "colour": "#000000"},
-        "mat": {"colour": "#FFFFFF"},
+        "frame": {"thickness_mm": 2, "colour": "#000000"},
+        "mat": {"thickness_mm": 5, "colour": "#FFFFFF"},
     }
 
     # Create
@@ -100,15 +98,11 @@ async def test_create_item_duplicate(aiohttp_client, app):
     data = {
         "id": "dup",
         "name": "Duplicate",
-        "width_mm": 50,
-        "height_mm": 50,
-        "panel_width_mm": 10,
-        "panel_height_mm": 10,
+        "width_mm": 10,
+        "height_mm": 10,
         "width_px": 10,
         "height_px": 10,
         "colour_type": "MONO",
-        "frame": {"border_width_mm": 5, "colour": "#000000"},
-        "mat": {"colour": "#FFFFFF"},
     }
     await client.post("/api/display_type", json=data)
     resp = await client.post("/api/display_type", json=data)
@@ -134,15 +128,11 @@ async def test_update_item(aiohttp_client, app):
     data = {
         "id": "update_me",
         "name": "Original",
-        "width_mm": 50,
-        "height_mm": 50,
-        "panel_width_mm": 10,
-        "panel_height_mm": 10,
+        "width_mm": 10,
+        "height_mm": 10,
         "width_px": 10,
         "height_px": 10,
         "colour_type": "MONO",
-        "frame": {"border_width_mm": 5, "colour": "#000000"},
-        "mat": {"colour": "#FFFFFF"},
     }
     await client.post("/api/display_type", json=data)
 
@@ -168,15 +158,11 @@ async def test_delete_item(aiohttp_client, app):
     data = {
         "id": "del_me",
         "name": "Delete",
-        "width_mm": 50,
-        "height_mm": 50,
-        "panel_width_mm": 10,
-        "panel_height_mm": 10,
+        "width_mm": 10,
+        "height_mm": 10,
         "width_px": 10,
         "height_px": 10,
         "colour_type": "MONO",
-        "frame": {"border_width_mm": 5, "colour": "#000000"},
-        "mat": {"colour": "#FFFFFF"},
     }
     await client.post("/api/display_type", json=data)
 
@@ -200,15 +186,11 @@ async def test_not_found(aiohttp_client, app):
     valid_data = {
         "id": "non_existent",
         "name": "Non-existent",
-        "width_mm": 50,
-        "height_mm": 50,
-        "panel_width_mm": 10,
-        "panel_height_mm": 10,
+        "width_mm": 10,
+        "height_mm": 10,
         "width_px": 10,
         "height_px": 10,
         "colour_type": "MONO",
-        "frame": {"border_width_mm": 5, "colour": "#000000"},
-        "mat": {"colour": "#FFFFFF"},
     }
     resp = await client.put("/api/display_type/non_existent", json=valid_data)
     assert resp.status == 404
@@ -226,20 +208,14 @@ async def test_delete_display_type_protection(aiohttp_client, app):
     dt_data = {
         "id": "protected_dt",
         "name": "Protected",
-        "width_mm": 30,
-        "height_mm": 60,
-        "panel_width_mm": 25,
-        "panel_height_mm": 50,
-        "width_px": 100,
-        "height_px": 200,
+        "width_mm": 10,
+        "height_mm": 10,
+        "width_px": 10,
+        "height_px": 10,
         "colour_type": "MONO",
-        "frame": {"border_width_mm": 2, "colour": "#000000"},
-        "mat": {"colour": "#FFFFFF"},
     }
     resp = await client.post("/api/display_type", json=dt_data)
-    assert (
-        resp.status == 201
-    ), f"Expected 201 for display_type creation, got {resp.status}"
+    assert resp.status == 201
 
     # 2. Create a layout referencing it
     layout_data = {
@@ -257,17 +233,11 @@ async def test_delete_display_type_protection(aiohttp_client, app):
         ],
     }
     resp = await client.post("/api/layout", json=layout_data)
-    assert resp.status == 201, f"Expected 201 for layout creation, got {resp.status}"
-
-    # Verify display type exists before delete attempt
-    resp = await client.get("/api/display_type/protected_dt")
-    assert resp.status == 200, "Display type should exist before delete attempt"
+    assert resp.status == 201
 
     # 3. Attempt to delete display type (should fail)
     resp = await client.delete("/api/display_type/protected_dt")
-    assert (
-        resp.status == 400
-    ), f"Expected 400 Conflict for protected display type, got {resp.status}"
+    assert resp.status == 400
     result = await resp.json()
     assert "Conflict" in result["error"]
     assert "Using Layout" in result["message"]
