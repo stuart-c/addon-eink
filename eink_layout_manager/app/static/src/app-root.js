@@ -445,6 +445,12 @@ export class AppRoot extends LitElement {
     setTimeout(() => { this._message = ''; }, 3000);
   }
 
+  _handleLayoutResized(e) {
+    this._activeLayout.canvas_width_mm = e.detail.width;
+    this._activeLayout.canvas_height_mm = e.detail.height;
+    this.requestUpdate();
+  }
+
   render() {
     return html`
       <header>
@@ -569,6 +575,7 @@ export class AppRoot extends LitElement {
             @mouse-move="${(e) => this._mousePos = e.detail}"
             @rotate-item="${(e) => this._handleRotate(e.detail.id)}"
             @item-delete="${(e) => this._handleDeleteItem(e.detail.id)}"
+            @layout-resized="${this._handleLayoutResized}"
           ></layout-editor>
         </div>
       </main>

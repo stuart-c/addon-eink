@@ -14,17 +14,35 @@ export class LayoutEditor extends LitElement {
       height: 100%;
       background-color: #f5f5f5;
       overflow: auto;
-      padding: 2rem;
       box-sizing: border-box;
       display: flex;
       justify-content: center;
       align-items: flex-start;
+      padding: 40px;
+    }
+    .viewport {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      width: 100%;
+      height: 100%;
+    }
+    .canvas-wrapper {
+      transform-origin: top center;
+      transition: transform 0.2s ease-out;
+      display: flex;
+      justify-content: center;
     }
     .canvas {
       background-color: white;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
       position: relative;
       border: 1px solid #ccc;
+      box-sizing: content-box; /* Match physical mm exactly */
+    }
+    .canvas.resizing {
+      border-color: #03a9f4;
+      box-shadow: 0 0 0 2px rgba(3, 169, 244, 0.2), 0 10px 30px rgba(0, 0, 0, 0.15);
     }
     .grid-overlay {
       position: absolute;
@@ -35,6 +53,17 @@ export class LayoutEditor extends LitElement {
         linear-gradient(to bottom, #f0f0f0 1px, transparent 1px);
       background-size: var(--grid-size, 10px) var(--grid-size, 10px);
     }
+    /* Resize handles hints */
+    .canvas::after {
+      content: '';
+      position: absolute;
+      right: -5px; bottom: -5px;
+      width: 15px; height: 15px;
+      cursor: nwse-resize;
+      background: linear-gradient(135deg, transparent 50%, #ccc 50%, #ccc 60%, transparent 60%, transparent 70%, #ccc 70%);
+      opacity: 0.5;
+    }
+    .canvas:hover::after { opacity: 1; }
   `;
 
   static properties = {
@@ -44,6 +73,7 @@ export class LayoutEditor extends LitElement {
     items: { type: Array },
     displayTypes: { type: Array },
     selectedId: { type: String },
+    _scale: { type: Number, state: true }
   };
 
   constructor() {
@@ -54,11 +84,24 @@ export class LayoutEditor extends LitElement {
     this.items = [];
     this.displayTypes = [];
     this.selectedId = null;
+    this._scale = 1;
+    this._resizeObserver = new ResizeObserver(() => this._updateScale());
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    this._resizeObserver.observe(this);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this._resizeObserver.disconnect();
   }
 
   firstUpdated() {
     this._setupInteractions();
     this._validateLayout();
+    this._updateScale();
   }
 
   updated(changedProperties) {
@@ -66,9 +109,29 @@ export class LayoutEditor extends LitElement {
       this._setupInteractions();
       this._validateLayout();
     }
+    if (changedProperties.has('width_mm') || changedProperties.has('height_mm')) {
+      this._updateScale();
+    }
+  }
+
+  _updateScale() {
+    const padding = 80;
+    const availableWidth = this.offsetWidth - padding;
+    const availableHeight = this.offsetHeight - padding;
+    
+    if (availableWidth > 0 && availableHeight > 0) {
+      const scaleX = availableWidth / this.width_mm;
+      const scaleY = availableHeight / this.height_mm;
+      this._scale = Math.min(scaleX, scaleY, 1.5); // Max 1.5x zoom
+    }
   }
 
   _setupInteractions() {
+    // Clear existing interactions to avoid duplicates on re-init
+    interact(this.shadowRoot.querySelector('.canvas')).unset();
+    interact('layout-box', { context: this.shadowRoot }).unset();
+
+    // Layout boxes dragging
     interact('layout-box', { context: this.shadowRoot })
       .draggable({
         modifiers: [
@@ -89,11 +152,13 @@ export class LayoutEditor extends LitElement {
             const item = this.items.find(i => i.id === id);
             
             if (item) {
-              // Calculate raw new position
-              const rawX = item.x_mm + event.dx;
-              const rawY = item.y_mm + event.dy;
+              // Apply scale to deltas
+              const dx = event.dx / this._scale;
+              const dy = event.dy / this._scale;
+
+              const rawX = item.x_mm + dx;
+              const rawY = item.y_mm + dy;
               
-              // Force snap to grid and ensure integer values
               item.x_mm = Math.round(rawX / this.gridSnap) * this.gridSnap;
               item.y_mm = Math.round(rawY / this.gridSnap) * this.gridSnap;
 
@@ -116,15 +181,58 @@ export class LayoutEditor extends LitElement {
           }
         }
       });
-      // Resizable is removed as displays have fixed hardware sizes
+
+    // Canvas resizing
+    interact(this.shadowRoot.querySelector('.canvas'))
+      .resizable({
+        edges: { right: true, bottom: true, left: false, top: false },
+        modifiers: [
+          interact.modifiers.snap({
+            targets: [interact.snappers.grid({ x: this.gridSnap, y: this.gridSnap })],
+            range: Infinity,
+            relativePoints: [{ x: 0, y: 0 }]
+          }),
+          interact.modifiers.restrictSize({
+            min: { width: 100, height: 100 }
+          })
+        ],
+        listeners: {
+          start: () => {
+            this.shadowRoot.querySelector('.canvas').classList.add('resizing');
+          },
+          move: (event) => {
+            // Apply scale to dimension change
+            this.width_mm = Math.round(event.rect.width / this._scale / this.gridSnap) * this.gridSnap;
+            this.height_mm = Math.round(event.rect.height / this._scale / this.gridSnap) * this.gridSnap;
+            this._validateLayout();
+          },
+          end: () => {
+            this.shadowRoot.querySelector('.canvas').classList.remove('resizing');
+            this.dispatchEvent(new CustomEvent('layout-resized', {
+              detail: { width: this.width_mm, height: this.height_mm },
+              bubbles: true,
+              composed: true
+            }));
+          }
+        }
+      });
   }
 
   _validateLayout() {
-    // Reset validity
     this.items.forEach(i => i.invalid = false);
 
-    // Check for overlaps
     for (let i = 0; i < this.items.length; i++) {
+      const item1 = this.items[i];
+      const dt1 = this.displayTypes.find(t => t.id === item1.display_type_id);
+      if (!dt1) continue;
+
+      const w1 = item1.orientation === 90 ? dt1.height_mm : dt1.width_mm;
+      const h1 = item1.orientation === 90 ? dt1.width_mm : dt1.height_mm;
+
+      // Check boundary overlap
+      if (item1.x_mm < 0 || item1.y_mm < 0 || item1.x_mm + w1 > this.width_mm || item1.y_mm + h1 > this.height_mm) {
+        item1.invalid = true;
+      }
       for (let j = i + 1; j < this.items.length; j++) {
         const item1 = this.items[i];
         const item2 = this.items[j];
@@ -165,9 +273,10 @@ export class LayoutEditor extends LitElement {
   }
 
   _handleMouseMove(e) {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const rect = this.shadowRoot.querySelector('.canvas').getBoundingClientRect();
+    // Correct mouse position for scale
+    const x = (e.clientX - rect.left) / this._scale;
+    const y = (e.clientY - rect.top) / this._scale;
     
     this.dispatchEvent(new CustomEvent('mouse-move', {
       detail: { x: Math.round(x), y: Math.round(y) },
@@ -191,34 +300,38 @@ export class LayoutEditor extends LitElement {
   render() {
     const gridSize = this.gridSnap < 5 ? 10 : this.gridSnap;
     return html`
-      <div 
-        class="canvas" 
-        style="width: ${this.width_mm}px; height: ${this.height_mm}px; --grid-size: ${gridSize}px;"
-        @mousemove="${this._handleMouseMove}"
-        @mouseleave="${this._handleMouseLeave}"
-      >
-        <div class="grid-overlay"></div>
-        ${this.items.map(item => {
-          const dt = this.displayTypes.find(t => t.id === item.display_type_id);
-          if (!dt) return '';
-          return html`
-            <layout-box
-              data-id="${item.id}"
-              .x="${item.x_mm}"
-              .y="${item.y_mm}"
-              .width="${dt.width_mm}"
-              .height="${dt.height_mm}"
-              .orientation="${item.orientation}"
-              .name="${dt.name}"
-              ?selected="${this.selectedId === item.id}"
-              ?invalid="${item.invalid}"
-              @mousedown="${() => this._handleBoxSelect(item.id)}"
-              @item-edit="${() => this._handleBoxEdit(item.id)}"
-              @item-rotate="${() => this._handleBoxRotate(item.id)}"
-              @item-delete="${() => this.dispatchEvent(new CustomEvent('item-delete', { detail: { id: item.id } }))}"
-            ></layout-box>
-          `;
-        })}
+      <div class="viewport">
+        <div class="canvas-wrapper" style="transform: scale(${this._scale});">
+          <div 
+            class="canvas" 
+            style="width: ${this.width_mm}px; height: ${this.height_mm}px; --grid-size: ${gridSize}px;"
+            @mousemove="${this._handleMouseMove}"
+            @mouseleave="${this._handleMouseLeave}"
+          >
+            <div class="grid-overlay"></div>
+            ${this.items.map(item => {
+              const dt = this.displayTypes.find(t => t.id === item.display_type_id);
+              if (!dt) return '';
+              return html`
+                <layout-box
+                  data-id="${item.id}"
+                  .x="${item.x_mm}"
+                  .y="${item.y_mm}"
+                  .width="${dt.width_mm}"
+                  .height="${dt.height_mm}"
+                  .orientation="${item.orientation}"
+                  .name="${dt.name}"
+                  ?selected="${this.selectedId === item.id}"
+                  ?invalid="${item.invalid}"
+                  @mousedown="${() => this._handleBoxSelect(item.id)}"
+                  @item-edit="${() => this._handleBoxEdit(item.id)}"
+                  @item-rotate="${() => this._handleBoxRotate(item.id)}"
+                  @item-delete="${() => this.dispatchEvent(new CustomEvent('item-delete', { detail: { id: item.id } }))}"
+                ></layout-box>
+              `;
+            })}
+          </div>
+        </div>
       </div>
     `;
   }
