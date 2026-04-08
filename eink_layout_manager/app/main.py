@@ -221,6 +221,7 @@ def init_app():
 
 
 if __name__ == "__main__":
-    port = int(os.environ.get("INGRESS_PORT", 8099))
+    port_env = os.environ.get("INGRESS_PORT")
+    port = int(port_env) if port_env and port_env.strip() else 8099
     app = init_app()
     web.run_app(app, port=port)
