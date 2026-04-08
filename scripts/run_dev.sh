@@ -12,6 +12,19 @@ if [ ! -d "eink_layout_manager" ]; then
     exit 1
 fi
 
+# Cleanup function
+cleanup() {
+    echo ""
+    echo "🛑 Stopping and removing container..."
+    docker stop $CONTAINER_NAME > /dev/null 2>&1
+    docker rm $CONTAINER_NAME > /dev/null 2>&1
+    exit
+}
+
+# Trap SIGINT (Ctrl+C)
+trap cleanup SIGINT
+
+
 # Check if Docker is running
 if ! docker info > /dev/null 2>&1; then
     echo "Error: Docker is not running. Please start Docker and try again."
@@ -51,5 +64,5 @@ else
   echo "ℹ️ Could not detect browser opener (xdg-open/open). Please navigate to http://localhost:$PORT manually."
 fi
 
-echo "📑 Following logs (Ctrl+C to stop, container will keep running in background)"
+echo "📑 Following logs (Ctrl+C to stop container and exit)"
 docker logs -f $CONTAINER_NAME
