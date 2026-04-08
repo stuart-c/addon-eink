@@ -23,15 +23,19 @@ export class LayoutEditor extends LitElement {
     .viewport {
       display: flex;
       justify-content: center;
-      align-items: flex-start;
+      align-items: center;
       width: 100%;
       height: 100%;
+      min-height: 0;
+    }
+    .scaling-container {
+      display: block;
+      position: relative;
+      flex-shrink: 0;
     }
     .canvas-wrapper {
-      transform-origin: top center;
-      transition: transform 0.2s ease-out;
-      display: flex;
-      justify-content: center;
+      transform-origin: top left;
+      transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .canvas {
       background-color: white;
@@ -115,14 +119,16 @@ export class LayoutEditor extends LitElement {
   }
 
   _updateScale() {
+    const rect = this.getBoundingClientRect();
     const padding = 80;
-    const availableWidth = this.offsetWidth - padding;
-    const availableHeight = this.offsetHeight - padding;
+    const availableWidth = Math.max(0, rect.width - padding);
+    const availableHeight = Math.max(0, rect.height - padding);
     
     if (availableWidth > 0 && availableHeight > 0) {
       const scaleX = availableWidth / this.width_mm;
       const scaleY = availableHeight / this.height_mm;
-      this._scale = Math.min(scaleX, scaleY, 1.5); // Max 1.5x zoom
+      // Auto-scale to fill available area, up to 4x zoom for large screens
+      this._scale = Math.min(scaleX, scaleY, 4);
     }
   }
 
@@ -301,40 +307,42 @@ export class LayoutEditor extends LitElement {
     const gridSize = this.gridSnap < 5 ? 10 : this.gridSnap;
     return html`
       <div class="viewport">
-        <div class="canvas-wrapper" style="transform: scale(${this._scale});">
-          <div 
-            class="canvas" 
-            style="width: ${this.width_mm}px; height: ${this.height_mm}px; --grid-size: ${gridSize}px;"
-            @mousemove="${this._handleMouseMove}"
-            @mouseleave="${this._handleMouseLeave}"
-          >
-            <div class="grid-overlay"></div>
-            ${this.items.map(item => {
-              const dt = this.displayTypes.find(t => t.id === item.display_type_id);
-              if (!dt) return '';
-              return html`
-                <layout-box
-                  data-id="${item.id}"
-                  .x="${item.x_mm}"
-                  .y="${item.y_mm}"
-                  .width="${dt.width_mm}"
-                  .height="${dt.height_mm}"
-                  .orientation="${item.orientation}"
-                  .name="${dt.name}"
-                  .border_width_mm="${dt.frame?.border_width_mm || 0}"
-                  .panel_width_mm="${dt.panel_width_mm}"
-                  .panel_height_mm="${dt.panel_height_mm}"
-                  .frame_colour="${dt.frame?.colour}"
-                  .mat_colour="${dt.mat?.colour}"
-                  ?selected="${this.selectedId === item.id}"
-                  ?invalid="${item.invalid}"
-                  @mousedown="${() => this._handleBoxSelect(item.id)}"
-                  @item-edit="${() => this._handleBoxEdit(item.id)}"
-                  @item-rotate="${() => this._handleBoxRotate(item.id)}"
-                  @item-delete="${() => this.dispatchEvent(new CustomEvent('item-delete', { detail: { id: item.id } }))}"
-                ></layout-box>
-              `;
-            })}
+        <div class="scaling-container" style="width: ${this.width_mm * this._scale}px; height: ${this.height_mm * this._scale}px;">
+          <div class="canvas-wrapper" style="transform: scale(${this._scale});">
+            <div 
+              class="canvas" 
+              style="width: ${this.width_mm}px; height: ${this.height_mm}px; --grid-size: ${gridSize}px;"
+              @mousemove="${this._handleMouseMove}"
+              @mouseleave="${this._handleMouseLeave}"
+            >
+              <div class="grid-overlay"></div>
+              ${this.items.map(item => {
+                const dt = this.displayTypes.find(t => t.id === item.display_type_id);
+                if (!dt) return '';
+                return html`
+                  <layout-box
+                    data-id="${item.id}"
+                    .x="${item.x_mm}"
+                    .y="${item.y_mm}"
+                    .width="${dt.width_mm}"
+                    .height="${dt.height_mm}"
+                    .orientation="${item.orientation}"
+                    .name="${dt.name}"
+                    .border_width_mm="${dt.frame?.border_width_mm || 0}"
+                    .panel_width_mm="${dt.panel_width_mm}"
+                    .panel_height_mm="${dt.panel_height_mm}"
+                    .frame_colour="${dt.frame?.colour}"
+                    .mat_colour="${dt.mat?.colour}"
+                    ?selected="${this.selectedId === item.id}"
+                    ?invalid="${item.invalid}"
+                    @mousedown="${() => this._handleBoxSelect(item.id)}"
+                    @item-edit="${() => this._handleBoxEdit(item.id)}"
+                    @item-rotate="${() => this._handleBoxRotate(item.id)}"
+                    @item-delete="${() => this.dispatchEvent(new CustomEvent('item-delete', { detail: { id: item.id } }))}"
+                  ></layout-box>
+                `;
+              })}
+            </div>
           </div>
         </div>
       </div>
