@@ -185,7 +185,6 @@ export class LayoutEditor extends LitElement {
   _handleBoxRotate(id) {
     this.dispatchEvent(new CustomEvent('rotate-item', { detail: { id } }));
   }
-  }
 
   render() {
     const gridSize = this.gridSnap < 5 ? 10 : this.gridSnap;

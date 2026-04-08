@@ -34,7 +34,6 @@ export class LayoutBox extends LitElement {
       font-weight: 700;
       color: #333;
       text-align: center;
-      pointer-events: none;
       word-break: break-all;
       padding: 4px;
       margin-bottom: 2px;
@@ -47,18 +46,25 @@ export class LayoutBox extends LitElement {
       color: #999;
     }
     .actions {
+      position: absolute;
+      top: -15px;
+      right: -15px;
       display: flex;
       gap: 12px;
       opacity: 0;
-      transition: opacity 0.2s ease;
-      background: rgba(255, 255, 255, 0.9);
-      padding: 4px 8px;
+      transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      background: white;
+      padding: 6px 10px;
       border-radius: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      z-index: 5;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+      z-index: 50;
+      visibility: hidden;
+      transform: scale(0.8);
     }
     :host(:hover) .actions {
       opacity: 1;
+      visibility: visible;
+      transform: scale(1);
     }
     .action-icon {
       cursor: pointer;
