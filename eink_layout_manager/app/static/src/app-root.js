@@ -2,6 +2,7 @@ import { LitElement, html, css } from 'lit';
 import './components/layout-editor.js';
 import './components/display-type-dialog.js';
 import './components/item-settings-dialog.js';
+import './components/layout-settings-dialog.js';
 import { api } from './services/HaApiClient.js';
 
 export class AppRoot extends LitElement {
@@ -110,6 +111,7 @@ export class AppRoot extends LitElement {
       name: 'Main Layout',
       canvas_width_mm: 500,
       canvas_height_mm: 500,
+      grid_snap_mm: 5,
       items: []
     };
   }
@@ -138,6 +140,16 @@ export class AppRoot extends LitElement {
 
   _handleEditDisplayType(dt) {
     this.shadowRoot.querySelector('display-type-dialog').show(dt);
+  }
+
+  _handleEditLayout() {
+    this.shadowRoot.querySelector('layout-settings-dialog').show(this._activeLayout);
+  }
+
+  _onSaveLayoutSettings(e) {
+    this._activeLayout = { ...this._activeLayout, ...e.detail.settings };
+    this.requestUpdate();
+    this._showMessage('Settings applied', 'success');
   }
 
   async _onSaveDisplayType(e) {
@@ -220,6 +232,9 @@ export class AppRoot extends LitElement {
         <div><strong>eInk Layout Manager</strong></div>
         <div style="display: flex; gap: 1rem; align-items: center;">
           ${this._message ? html`<span>${this._message}</span>` : ''}
+          <button class="secondary" @click="${this._handleEditLayout}">
+            Settings
+          </button>
           <button @click="${this._handleSaveLayout}" ?disabled="${this._saving}">
             ${this._saving ? 'Saving...' : 'Save Layout'}
           </button>
@@ -273,6 +288,7 @@ export class AppRoot extends LitElement {
           <layout-editor
             .width_mm="${this._activeLayout.canvas_width_mm}"
             .height_mm="${this._activeLayout.canvas_height_mm}"
+            .gridSnap="${this._activeLayout.grid_snap_mm || 5}"
             .items="${this._activeLayout.items}"
             .displayTypes="${this._displayTypes}"
             .selectedId="${this._selectedItemId}"
@@ -285,6 +301,7 @@ export class AppRoot extends LitElement {
 
       <display-type-dialog @save="${this._onSaveDisplayType}"></display-type-dialog>
       <item-settings-dialog @save="${this._onSaveItemSettings}"></item-settings-dialog>
+      <layout-settings-dialog @save="${this._onSaveLayoutSettings}"></layout-settings-dialog>
     `;
   }
 }
