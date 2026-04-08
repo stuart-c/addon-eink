@@ -84,7 +84,7 @@ export class LayoutBox extends LitElement {
       font-family: 'Material Icons';
       font-weight: normal;
       font-style: normal;
-      font-size: 18px;
+      font-size: 16px;
       line-height: 1;
       letter-spacing: normal;
       text-transform: none;
