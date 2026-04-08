@@ -58,11 +58,13 @@ export class LayoutEditor extends LitElement {
 
   firstUpdated() {
     this._setupInteractions();
+    this._validateLayout();
   }
 
   updated(changedProperties) {
-    if (changedProperties.has('gridSnap')) {
+    if (changedProperties.has('gridSnap') || changedProperties.has('items')) {
       this._setupInteractions();
+      this._validateLayout();
     }
   }
 
