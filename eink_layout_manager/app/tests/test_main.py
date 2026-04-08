@@ -237,16 +237,24 @@ async def test_delete_display_type_protection(aiohttp_client, app):
         "mat": {"colour": "#FFFFFF"},
     }
     resp = await client.post("/api/display_type", json=dt_data)
-    assert resp.status == 201, f"Expected 201 for display_type creation, got {resp.status}"
+    assert (
+        resp.status == 201
+    ), f"Expected 201 for display_type creation, got {resp.status}"
 
     # 2. Create a layout referencing it
     layout_data = {
         "id": "using_layout",
         "name": "Using Layout",
-        "canvas_width_mm": 100, "canvas_height_mm": 100,
+        "canvas_width_mm": 100,
+        "canvas_height_mm": 100,
         "items": [
-            {"display_type_id": "protected_dt", "x_mm": 0, "y_mm": 0, "orientation": 0}
-        ]
+            {
+                "display_type_id": "protected_dt",
+                "x_mm": 0,
+                "y_mm": 0,
+                "orientation": 0,
+            }
+        ],
     }
     resp = await client.post("/api/layout", json=layout_data)
     assert resp.status == 201, f"Expected 201 for layout creation, got {resp.status}"
@@ -257,7 +265,9 @@ async def test_delete_display_type_protection(aiohttp_client, app):
 
     # 3. Attempt to delete display type (should fail)
     resp = await client.delete("/api/display_type/protected_dt")
-    assert resp.status == 400, f"Expected 400 Conflict for protected display type, got {resp.status}"
+    assert (
+        resp.status == 400
+    ), f"Expected 400 Conflict for protected display type, got {resp.status}"
     result = await resp.json()
     assert "Conflict" in result["error"]
     assert "Using Layout" in result["message"]
