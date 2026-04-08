@@ -48,6 +48,7 @@ When a PR is created:
 3. **Monitor CI Checks:** Use `gh pr checks <pr-number> --watch` to monitor the GitHub Actions status.
 4. **Mandatory Passing Builds:** Never merge or request a final review until all CI builds (including linting and build tests) are passing.
 5. **Post-Approval Action:** Once a PR is approved, merge it and verify that the final build completes successfully.
+6. **Task Completion:** Always provide the URL for the generated Pull Request to the user once the task is finished.
 
 ## Recent Design Decisions
 
