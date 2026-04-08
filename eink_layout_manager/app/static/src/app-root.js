@@ -33,10 +33,12 @@ export class AppRoot extends LitElement {
     }
     .sidebar {
       width: 320px;
+      flex-shrink: 0;
       background-color: white;
       border-right: 1px solid #ddd;
       display: flex;
       flex-direction: column;
+      height: 100%;
     }
     .sidebar-section {
       padding: 1rem;
@@ -66,6 +68,7 @@ export class AppRoot extends LitElement {
     
     .editor-container {
       flex: 1;
+      min-width: 0;
       position: relative;
       display: flex;
       flex-direction: column;

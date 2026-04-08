@@ -15,9 +15,6 @@ export class LayoutEditor extends LitElement {
       background-color: #f5f5f5;
       overflow: auto;
       box-sizing: border-box;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
       padding: 40px;
     }
     .viewport {
