@@ -462,12 +462,14 @@ export class AppRoot extends LitElement {
               </div>
             </div>
             <div style="font-size: 12px; color: #666; display: flex; align-items: center; gap: 1rem;">
-              <span>Canvas: ${this._activeLayout?.canvas_width_mm}x${this._activeLayout?.canvas_height_mm}mm</span>
               ${this._mousePos?.x !== null ? html`
-                <span style="padding-left: 1rem; border-left: 1px solid #ddd; color: #03a9f4; font-weight: 600;">
+                <span style="color: #03a9f4; font-weight: 600;">
                   X: ${this._mousePos.x}mm, Y: ${this._mousePos.y}mm
                 </span>
               ` : ''}
+              <span style="${this._mousePos?.x !== null ? 'padding-left: 1rem; border-left: 1px solid #ddd;' : ''}">
+                Canvas: ${this._activeLayout?.canvas_width_mm}x${this._activeLayout?.canvas_height_mm}mm
+              </span>
             </div>
           </div>
           <layout-editor
