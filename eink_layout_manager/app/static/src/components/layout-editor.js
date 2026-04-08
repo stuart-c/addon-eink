@@ -33,13 +33,14 @@ export class LayoutEditor extends LitElement {
       background-image: 
         linear-gradient(to right, #f0f0f0 1px, transparent 1px),
         linear-gradient(to bottom, #f0f0f0 1px, transparent 1px);
-      background-size: 10px 10px;
+      background-size: var(--grid-size, 10px) var(--grid-size, 10px);
     }
   `;
 
   static properties = {
     width_mm: { type: Number },
     height_mm: { type: Number },
+    gridSnap: { type: Number },
     items: { type: Array },
     displayTypes: { type: Array },
     selectedId: { type: String },
@@ -49,6 +50,7 @@ export class LayoutEditor extends LitElement {
     super();
     this.width_mm = 500;
     this.height_mm = 500;
+    this.gridSnap = 5;
     this.items = [];
     this.displayTypes = [];
     this.selectedId = null;
@@ -56,6 +58,12 @@ export class LayoutEditor extends LitElement {
 
   firstUpdated() {
     this._setupInteractions();
+  }
+
+  updated(changedProperties) {
+    if (changedProperties.has('gridSnap')) {
+      this._setupInteractions();
+    }
   }
 
   _setupInteractions() {
@@ -67,7 +75,7 @@ export class LayoutEditor extends LitElement {
             endOnly: true
           }),
           interact.modifiers.snap({
-            targets: [interact.snappers.grid({ x: 5, y: 5 })],
+            targets: [interact.snappers.grid({ x: this.gridSnap, y: this.gridSnap })],
             range: Infinity,
             relativePoints: [{ x: 0, y: 0 }]
           })
@@ -145,8 +153,9 @@ export class LayoutEditor extends LitElement {
   }
 
   render() {
+    const gridSize = this.gridSnap < 5 ? 10 : this.gridSnap;
     return html`
-      <div class="canvas" style="width: ${this.width_mm}px; height: ${this.height_mm}px;">
+      <div class="canvas" style="width: ${this.width_mm}px; height: ${this.height_mm}px; --grid-size: ${gridSize}px;">
         <div class="grid-overlay"></div>
         ${this.items.map(item => {
           const dt = this.displayTypes.find(t => t.id === item.display_type_id);
