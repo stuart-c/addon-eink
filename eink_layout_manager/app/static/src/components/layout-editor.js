@@ -87,8 +87,14 @@ export class LayoutEditor extends LitElement {
             const item = this.items.find(i => i.id === id);
             
             if (item) {
-              item.x_mm += event.dx;
-              item.y_mm += event.dy;
+              // Calculate raw new position
+              const rawX = item.x_mm + event.dx;
+              const rawY = item.y_mm + event.dy;
+              
+              // Force snap to grid and ensure integer values
+              item.x_mm = Math.round(rawX / this.gridSnap) * this.gridSnap;
+              item.y_mm = Math.round(rawY / this.gridSnap) * this.gridSnap;
+
               target.x = item.x_mm;
               target.y = item.y_mm;
               this._validateLayout();
