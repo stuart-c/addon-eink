@@ -89,6 +89,8 @@ export class AppRoot extends LitElement {
     }
     button:hover { background: #0288d1; }
     button.secondary { background: white; color: #03a9f4; border: 1px solid #03a9f4; }
+    button.danger { background: white; color: #f44336; border: 1px solid #f44336; }
+    button.danger:hover { background: #fff1f0; border-color: #f5222d; color: #f5222d; }
 
     /* Dropdown Styles */
     .dropdown {
@@ -361,6 +363,35 @@ export class AppRoot extends LitElement {
     }
   }
 
+  async _handleDeleteDisplayType(dt) {
+    // 1. Holistic Usage Check (including active unsaved layout)
+    const isInActive = this._activeLayout?.items.some(i => i.display_type_id === dt.id);
+    const isInAnySaved = this._layouts.some(l => l.items.some(i => i.display_type_id === dt.id));
+    
+    if (isInActive || isInAnySaved) {
+      this._showMessage(`Cannot delete "${dt.name}": It is currently in use by a layout.`, 'error');
+      return;
+    }
+
+    // 2. Confirmation
+    const confirmed = await this.shadowRoot.querySelector('confirm-dialog').show({
+      title: 'Delete Display Type?',
+      message: `Are you sure you want to permanently remove "${dt.name}"? This action cannot be undone.`,
+      confirmText: 'Delete',
+      type: 'danger'
+    });
+
+    if (confirmed) {
+      try {
+        await api.deleteItem('display_type', dt.id);
+        await this._fetchData();
+        this._showMessage(`Display type "${dt.name}" deleted.`, 'success');
+      } catch (err) {
+        this._showMessage(`Failed to delete: ${err.message}`, 'error');
+      }
+    }
+  }
+
   _addItemToLayout(dt) {
     const id = Math.random().toString(36).substr(2, 9);
     const newItem = {
@@ -489,6 +520,9 @@ export class AppRoot extends LitElement {
                     </button>
                     <button class="secondary" title="Edit Properties" @click="${(e) => { e.stopPropagation(); this._handleEditDisplayType(dt); }}">
                       <span class="material-icons" style="font-size: 16px;">edit</span>
+                    </button>
+                    <button class="danger" title="Delete Display Type" @click="${(e) => { e.stopPropagation(); this._handleDeleteDisplayType(dt); }}">
+                      <span class="material-icons" style="font-size: 16px;">delete_outline</span>
                     </button>
                   </div>
                 </div>
