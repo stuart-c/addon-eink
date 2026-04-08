@@ -257,6 +257,10 @@ async def test_delete_display_type_protection(aiohttp_client, app):
     resp = await client.post("/api/layout", json=layout_data)
     assert resp.status == 201
 
+    # Verify display type exists before delete attempt
+    resp = await client.get("/api/display_type/protected_dt")
+    assert resp.status == 200, "Display type should exist before delete"
+
     # 3. Attempt to delete display type (should fail)
     resp = await client.delete("/api/display_type/protected_dt")
     assert resp.status == 400
