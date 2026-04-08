@@ -97,6 +97,7 @@ export class AppRoot extends LitElement {
     _selectedItemId: { type: String },
     _saving: { type: Boolean },
     _message: { type: String },
+    _mousePos: { type: Object },
   };
 
   constructor() {
@@ -111,9 +112,9 @@ export class AppRoot extends LitElement {
       name: 'Main Layout',
       canvas_width_mm: 500,
       canvas_height_mm: 500,
-      grid_snap_mm: 5,
       items: []
     };
+    this._mousePos = { x: null, y: null };
   }
 
   async firstUpdated() {
@@ -288,8 +289,13 @@ export class AppRoot extends LitElement {
         <div class="editor-container">
           <div class="toolbar">
             <span><strong>${this._activeLayout.name}</strong></span>
-            <div style="font-size: 12px; color: #666;">
-              Canvas: ${this._activeLayout.canvas_width_mm}x${this._activeLayout.canvas_height_mm}mm
+            <div style="font-size: 12px; color: #666; display: flex; align-items: center; gap: 1rem;">
+              <span>Canvas: ${this._activeLayout.canvas_width_mm}x${this._activeLayout.canvas_height_mm}mm</span>
+              ${this._mousePos?.x !== null ? html`
+                <span style="padding-left: 1rem; border-left: 1px solid #ddd; color: #03a9f4; font-weight: 600;">
+                  X: ${this._mousePos.x}mm, Y: ${this._mousePos.y}mm
+                </span>
+              ` : ''}
             </div>
           </div>
           <layout-editor
@@ -302,6 +308,7 @@ export class AppRoot extends LitElement {
             @item-moved="${(e) => this._updateItem(e.detail.id, { x_mm: e.detail.x, y_mm: e.detail.y })}"
             @select-item="${(e) => this._selectedItemId = e.detail.id}"
             @edit-item="${(e) => this._handleEditItem(e.detail.id)}"
+            @mouse-move="${(e) => this._mousePos = e.detail}"
           ></layout-editor>
         </div>
       </main>
