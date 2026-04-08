@@ -366,6 +366,10 @@ export class AppRoot extends LitElement {
   }
 
   async _handleSaveLayout() {
+    if (this._activeLayout.items.some(i => i.invalid)) {
+      this._showMessage('Cannot save: Displays are overlapping!', 'error');
+      return;
+    }
     this._saving = true;
     try {
       await api.updateItem('layout', this._activeLayout.id, this._activeLayout);
@@ -406,10 +410,16 @@ export class AppRoot extends LitElement {
               <button class="secondary" style="padding: 2px 8px; font-size: 11px;" @click="${this._handleAddDisplayType}">+ New</button>
             </div>
             ${this._displayTypes.map(dt => html`
-              <div class="list-item" @dblclick="${() => this._handleEditDisplayType(dt)}" @click="${() => this._addItemToLayout(dt)}">
-                <div style="display: flex; justify-content: space-between;">
-                  <strong>${dt.name}</strong>
-                  <span style="font-size: 11px; color: #888;">${dt.width_mm}x${dt.height_mm}mm</span>
+              <div class="list-item" @dblclick="${() => this._handleEditDisplayType(dt)}">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <strong>${dt.name}</strong>
+                    <div style="font-size: 11px; color: #888;">${dt.width_mm}x${dt.height_mm}mm</div>
+                  </div>
+                  <div style="display: flex; gap: 4px;">
+                    <button class="secondary" style="padding: 4px 8px; font-size: 10px;" @click="${(e) => { e.stopPropagation(); this._addItemToLayout(dt); }}">Add</button>
+                    <button @click="${(e) => { e.stopPropagation(); this._handleEditDisplayType(dt); }}" class="secondary" style="padding: 4px 8px; font-size: 10px;">Edit</button>
+                  </div>
                 </div>
               </div>
             `)}
