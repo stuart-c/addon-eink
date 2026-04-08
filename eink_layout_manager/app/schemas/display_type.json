@@ -14,11 +14,23 @@
     },
     "width_mm": {
       "type": "integer",
-      "minimum": 1
+      "minimum": 1,
+      "description": "Frame outer width"
     },
     "height_mm": {
       "type": "integer",
-      "minimum": 1
+      "minimum": 1,
+      "description": "Frame outer height"
+    },
+    "panel_width_mm": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Display panel active area width"
+    },
+    "panel_height_mm": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Display panel active area height"
     },
     "width_px": {
       "type": "integer",
@@ -35,7 +47,7 @@
     "frame": {
       "type": "object",
       "properties": {
-        "thickness_mm": {
+        "border_width_mm": {
           "type": "integer",
           "minimum": 0
         },
@@ -44,38 +56,18 @@
           "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
         }
       },
-      "required": ["thickness_mm", "colour"]
+      "required": ["border_width_mm", "colour"]
     },
     "mat": {
       "type": "object",
       "properties": {
-        "thickness_mm": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "horizontal_mm": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "vertical_mm": {
-          "type": "integer",
-          "minimum": 0
-        },
         "colour": {
           "type": "string",
           "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
         }
       },
-      "required": ["colour"],
-      "oneOf": [
-        {
-          "required": ["thickness_mm"]
-        },
-        {
-          "required": ["horizontal_mm", "vertical_mm"]
-        }
-      ]
+      "required": ["colour"]
     }
   },
-  "required": ["id", "name", "width_mm", "height_mm", "width_px", "height_px", "colour_type"]
+  "required": ["id", "name", "width_mm", "height_mm", "panel_width_mm", "panel_height_mm", "width_px", "height_px", "colour_type", "frame", "mat"]
 }

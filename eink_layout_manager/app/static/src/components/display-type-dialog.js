@@ -235,6 +235,42 @@ export class DisplayTypeDialog extends LitElement {
       font-weight: 600;
       flex: 1;
     }
+
+    .summary-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.5rem;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      font-size: 12px;
+    }
+    .summary-table th, .summary-table td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .summary-table th {
+      background: #f8f9fa;
+      color: #666;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      width: 40%;
+    }
+    .summary-table tr:last-child td, .summary-table tr:last-child th {
+      border-bottom: none;
+    }
+    .summary-table .val {
+      font-weight: 600;
+      color: #333;
+    }
+    .summary-table .unit {
+      color: #aaa;
+      margin-left: 2px;
+      font-weight: normal;
+    }
   `;
 
   static properties = {
@@ -255,13 +291,15 @@ export class DisplayTypeDialog extends LitElement {
     return {
       id: '',
       name: 'New Display',
-      width_mm: 158,
-      height_mm: 98,
+      width_mm: 300,
+      height_mm: 200,
+      panel_width_mm: 158,
+      panel_height_mm: 98,
       width_px: 800,
       height_px: 480,
       colour_type: 'MONO',
-      frame: { thickness_mm: 5, colour: '#000000' },
-      mat: { thickness_mm: 10, colour: '#ffffff' }
+      frame: { border_width_mm: 15, colour: '#000000' },
+      mat: { colour: '#ffffff' }
     };
   }
 
@@ -269,20 +307,9 @@ export class DisplayTypeDialog extends LitElement {
     if (displayType) {
       this.displayType = JSON.parse(JSON.stringify(displayType));
       this.isNew = false;
-      
-      this._frameType = this.displayType.frame ? 'standard' : 'none';
-      if (!this.displayType.mat) {
-        this._matType = 'none';
-      } else if (this.displayType.mat.horizontal_mm !== undefined) {
-        this._matType = 'custom';
-      } else {
-        this._matType = 'uniform';
-      }
     } else {
       this.displayType = this._getDefaultDisplayType();
       this.isNew = true;
-      this._frameType = 'standard';
-      this._matType = 'uniform';
     }
     this.renderRoot.querySelector('dialog').showModal();
   }
@@ -299,71 +326,42 @@ export class DisplayTypeDialog extends LitElement {
        this.displayType.id = this.displayType.name.toLowerCase().replace(/\s+/g, '_');
     }
 
-    // Sanitize Frame based on UI selection
-    if (this._frameType === 'none') {
-      delete this.displayType.frame;
-    }
-
-    // Sanitize Mat based on UI selection
-    if (this._matType === 'none') {
-      delete this.displayType.mat;
-    } else if (this._matType === 'uniform') {
-      // Ensure only uniform properties exist
-      const { thickness_mm, colour } = this.displayType.mat;
-      this.displayType.mat = { thickness_mm, colour };
-    } else if (this._matType === 'custom') {
-      // Ensure only custom properties exist
-      const { horizontal_mm, vertical_mm, colour } = this.displayType.mat;
-      this.displayType.mat = { horizontal_mm, vertical_mm, colour };
-    }
-
     this.dispatchEvent(new CustomEvent('save', { detail: { displayType: this.displayType } }));
     this.close();
   }
 
   _renderPreview() {
-    const dWidth = this.displayType.width_mm || 0;
-    const dHeight = this.displayType.height_mm || 0;
+    const frameW = this.displayType.width_mm || 0;
+    const frameH = this.displayType.height_mm || 0;
+    const border = this.displayType.frame?.border_width_mm || 0;
+    const panelW = this.displayType.panel_width_mm || 0;
+    const panelH = this.displayType.panel_height_mm || 0;
 
-    let matTop = 0, matBottom = 0, matLeft = 0, matRight = 0;
-    if (this._matType === 'uniform') {
-      matTop = matBottom = matLeft = matRight = (this.displayType.mat?.thickness_mm || 0);
-    } else if (this._matType === 'custom') {
-      matTop = matBottom = (this.displayType.mat?.vertical_mm || 0);
-      matLeft = matRight = (this.displayType.mat?.horizontal_mm || 0);
-    }
+    const matW = frameW - (2 * border);
+    const matH = frameH - (2 * border);
+    
+    const matL = (matW - panelW) / 2;
+    const matT = (matH - panelH) / 2;
 
-    const frameThickness = this._frameType === 'standard' ? (this.displayType.frame?.thickness_mm || 0) : 0;
-
-    const totalWidth = dWidth + matLeft + matRight + (frameThickness * 2);
-    const totalHeight = dHeight + matTop + matBottom + (frameThickness * 2);
-
-    const maxPreviewDim = 260; 
-    const scale = totalWidth > 0 && totalHeight > 0 
-      ? maxPreviewDim / Math.max(totalWidth, totalHeight) 
+    const maxPreviewDim = 240; 
+    const scale = frameW > 0 && frameH > 0 
+      ? maxPreviewDim / Math.max(frameW, frameH) 
       : 1;
 
-    const assemblyStyle = `width: ${totalWidth * scale}px; height: ${totalHeight * scale}px;`;
-    
-    const frameStyle = this._frameType === 'standard' 
-      ? `width: 100%; height: 100%; background: ${this.displayType.frame.colour};`
-      : 'display: none;';
-
-    const matStyle = this._matType !== 'none'
-      ? `
-        top: ${frameThickness * scale}px; 
-        left: ${frameThickness * scale}px; 
-        width: ${(dWidth + matLeft + matRight) * scale}px; 
-        height: ${(dHeight + matTop + matBottom) * scale}px; 
-        background: ${this.displayType.mat.colour};
-      `
-      : 'display: none;';
-
+    const assemblyStyle = `width: ${frameW * scale}px; height: ${frameH * scale}px;`;
+    const frameStyle = `width: 100%; height: 100%; background: ${this.displayType.frame?.colour || '#000'};`;
+    const matStyle = `
+      top: ${border * scale}px; 
+      left: ${border * scale}px; 
+      width: ${matW * scale}px; 
+      height: ${matH * scale}px; 
+      background: ${this.displayType.mat?.colour || '#fff'};
+    `;
     const displayStyle = `
-      top: ${(frameThickness + matTop) * scale}px; 
-      left: ${(frameThickness + matLeft) * scale}px; 
-      width: ${dWidth * scale}px; 
-      height: ${dHeight * scale}px;
+      top: ${(border + matT) * scale}px; 
+      left: ${(border + matL) * scale}px; 
+      width: ${panelW * scale}px; 
+      height: ${panelH * scale}px;
     `;
 
     return html`
@@ -402,6 +400,17 @@ export class DisplayTypeDialog extends LitElement {
   }
 
   render() {
+    const frameW = this.displayType.width_mm || 0;
+    const frameH = this.displayType.height_mm || 0;
+    const border = this.displayType.frame?.border_width_mm || 0;
+    const panelW = this.displayType.panel_width_mm || 0;
+    const panelH = this.displayType.panel_height_mm || 0;
+
+    const matW = frameW - (2 * border);
+    const matH = frameH - (2 * border);
+    const cutoutX = (matW - panelW) / 2;
+    const cutoutY = (matH - panelH) / 2;
+
     return html`
       <dialog>
         <div class="container">
@@ -412,7 +421,7 @@ export class DisplayTypeDialog extends LitElement {
           <div class="main-layout">
             <form @submit="${this._handleSubmit}" @input="${() => this.requestUpdate()}">
               <div class="form-group">
-                <label>Name</label>
+                <label>Identifier/Name</label>
                 <input 
                   type="text" 
                   required 
@@ -420,25 +429,43 @@ export class DisplayTypeDialog extends LitElement {
                   @input="${e => this.displayType.name = e.target.value}"
                 >
               </div>
-              
+
+              <!-- Device Dimensions Section -->
+              <div class="section-header">Device Dimensions</div>
               <div class="row">
                 <div class="form-group">
-                  <label>Width (mm)</label>
+                  <label>Frame Outer Width (mm)</label>
                   <input type="number" required .value="${this.displayType.width_mm}" @input="${e => this.displayType.width_mm = parseInt(e.target.value)}">
                 </div>
                 <div class="form-group">
-                  <label>Height (mm)</label>
+                  <label>Frame Outer Height (mm)</label>
                   <input type="number" required .value="${this.displayType.height_mm}" @input="${e => this.displayType.height_mm = parseInt(e.target.value)}">
                 </div>
               </div>
 
               <div class="row">
                 <div class="form-group">
-                  <label>Width (px)</label>
+                  <label>Display Panel Width (mm)</label>
+                  <input type="number" required .value="${this.displayType.panel_width_mm}" @input="${e => this.displayType.panel_width_mm = parseInt(e.target.value)}">
+                </div>
+                <div class="form-group">
+                  <label>Display Panel Height (mm)</label>
+                  <input type="number" required .value="${this.displayType.panel_height_mm}" @input="${e => this.displayType.panel_height_mm = parseInt(e.target.value)}">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Frame Border Width (mm)</label>
+                <input type="number" required .value="${this.displayType.frame.border_width_mm}" @input="${e => this.displayType.frame.border_width_mm = parseInt(e.target.value)}">
+              </div>
+
+              <div class="row">
+                <div class="form-group">
+                  <label>Resolution Width (px)</label>
                   <input type="number" required .value="${this.displayType.width_px}" @input="${e => this.displayType.width_px = parseInt(e.target.value)}">
                 </div>
                 <div class="form-group">
-                  <label>Height (px)</label>
+                  <label>Resolution Height (px)</label>
                   <input type="number" required .value="${this.displayType.height_px}" @input="${e => this.displayType.height_px = parseInt(e.target.value)}">
                 </div>
               </div>
@@ -455,61 +482,11 @@ export class DisplayTypeDialog extends LitElement {
                 </select>
               </div>
 
-              <!-- Frame Section -->
-              <div class="section-header">Frame Settings</div>
-              <div class="radio-group">
-                <label class="radio-option">
-                  <input type="radio" name="frameType" value="none" ?checked="${this._frameType === 'none'}" @change="${() => { this._frameType = 'none'; this.requestUpdate(); }}"> None
-                </label>
-                <label class="radio-option">
-                  <input type="radio" name="frameType" value="standard" ?checked="${this._frameType === 'standard'}" @change="${() => { this._frameType = 'standard'; if (!this.displayType.frame) this.displayType.frame = { thickness_mm: 5, colour: '#000000' }; this.requestUpdate(); }}"> Standard
-                </label>
+              <div class="section-header">Aesthetics</div>
+              <div class="row">
+                ${this._renderColorPicker('Frame Color', this.displayType.frame.colour, (c) => { this.displayType.frame.colour = c; this.requestUpdate(); })}
+                ${this._renderColorPicker('Mat Color', this.displayType.mat.colour, (c) => { this.displayType.mat.colour = c; this.requestUpdate(); })}
               </div>
-
-              ${this._frameType === 'standard' ? html`
-                <div class="row">
-                  <div class="form-group">
-                    <label>Thickness (mm)</label>
-                    <input type="number" .value="${this.displayType.frame.thickness_mm}" @input="${e => this.displayType.frame.thickness_mm = parseInt(e.target.value)}">
-                  </div>
-                  ${this._renderColorPicker('Frame Color', this.displayType.frame.colour, (c) => { this.displayType.frame.colour = c; this.requestUpdate(); })}
-                </div>
-              ` : ''}
-
-              <!-- Mat Section -->
-              <div class="section-header">Mat Settings</div>
-              <div class="radio-group">
-                <label class="radio-option">
-                  <input type="radio" name="matType" value="none" ?checked="${this._matType === 'none'}" @change="${() => { this._matType = 'none'; this.requestUpdate(); }}"> None
-                </label>
-                <label class="radio-option">
-                  <input type="radio" name="matType" value="uniform" ?checked="${this._matType === 'uniform'}" @change="${() => { this._matType = 'uniform'; if (!this.displayType.mat) this.displayType.mat = { thickness_mm: 10, colour: '#ffffff' }; this.requestUpdate(); }}"> Uniform
-                </label>
-                <label class="radio-option">
-                  <input type="radio" name="matType" value="custom" ?checked="${this._matType === 'custom'}" @change="${() => { this._matType = 'custom'; if (!this.displayType.mat) this.displayType.mat = { horizontal_mm: 10, vertical_mm: 10, colour: '#ffffff' }; this.requestUpdate(); }}"> Custom
-                </label>
-              </div>
-
-              ${this._matType !== 'none' ? html`
-                <div class="row">
-                  ${this._matType === 'uniform' ? html`
-                    <div class="form-group">
-                      <label>Thickness (mm)</label>
-                      <input type="number" .value="${this.displayType.mat.thickness_mm || 0}" @input="${e => { this.displayType.mat.thickness_mm = parseInt(e.target.value); delete this.displayType.mat.horizontal_mm; delete this.displayType.mat.vertical_mm; }}">
-                    </div>
-                  ` : html`
-                    <div class="form-group">
-                      <label>Horizontal (mm)</label>
-                      <input type="number" .value="${this.displayType.mat.horizontal_mm || 0}" @input="${e => { this.displayType.mat.horizontal_mm = parseInt(e.target.value); delete this.displayType.mat.thickness_mm; }}">
-                    </div>
-                    <div class="form-group">
-                      <label>Vertical (mm)</label>
-                      <input type="number" .value="${this.displayType.mat.vertical_mm || 0}" @input="${e => { this.displayType.mat.vertical_mm = parseInt(e.target.value); delete this.displayType.mat.thickness_mm; }}">
-                    </div>
-                  `}
-                  ${this._renderColorPicker('Mat Color', this.displayType.mat.colour, (c) => { this.displayType.mat.colour = c; this.requestUpdate(); })}
-                </div>
-              ` : ''}
 
               <div style="display: none;">
                 <button id="real-submit" type="submit"></button>
@@ -517,19 +494,24 @@ export class DisplayTypeDialog extends LitElement {
             </form>
 
             <div class="preview-column">
-              <div class="preview-label">Live Preview</div>
+              <div class="preview-label">Visual Layout</div>
               <div class="preview-canvas">
                 ${this._renderPreview()}
               </div>
-              <div class="preview-label">
-                ${this.displayType.width_mm} x ${this.displayType.height_mm} mm
-              </div>
+              
+              <div class="preview-label" style="margin-top: 1rem;">Dimension Summary</div>
+              <table class="summary-table">
+                <tr><th>Overall Frame</th><td><span class="val">${frameW} x ${frameH}</span><span class="unit">mm</span></td></tr>
+                <tr><th>Mat (Aperture)</th><td><span class="val">${matW.toFixed(1)} x ${matH.toFixed(1)}</span><span class="unit">mm</span></td></tr>
+                <tr><th>Display Panel</th><td><span class="val">${panelW} x ${panelH}</span><span class="unit">mm</span></td></tr>
+                <tr><th>Cutout Position</th><td><span class="val">${cutoutX.toFixed(1)} x ${cutoutY.toFixed(1)}</span><span class="unit">mm</span></td></tr>
+              </table>
             </div>
           </div>
 
           <footer>
             <button type="button" class="secondary" @click="${this.close}">Cancel</button>
-            <button type="button" class="primary" @click="${() => this.shadowRoot.getElementById('real-submit').click()}">Save Parameters</button>
+            <button type="button" class="primary" @click="${() => this.shadowRoot.getElementById('real-submit').click()}">Save Display Type</button>
           </footer>
         </div>
       </dialog>
