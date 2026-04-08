@@ -152,6 +152,10 @@ export class LayoutEditor extends LitElement {
     this.dispatchEvent(new CustomEvent('select-item', { detail: { id } }));
   }
 
+  _handleBoxEdit(id) {
+    this.dispatchEvent(new CustomEvent('edit-item', { detail: { id } }));
+  }
+
   render() {
     const gridSize = this.gridSnap < 5 ? 10 : this.gridSnap;
     return html`
@@ -172,7 +176,7 @@ export class LayoutEditor extends LitElement {
               ?selected="${this.selectedId === item.id}"
               ?invalid="${item.invalid}"
               @mousedown="${() => this._handleBoxSelect(item.id)}"
-              @dblclick="${() => this.dispatchEvent(new CustomEvent('edit-item', { detail: { id: item.id } }))}"
+              @item-edit="${() => this._handleBoxEdit(item.id)}"
             ></layout-box>
           `;
         })}

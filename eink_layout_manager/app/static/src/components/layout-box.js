@@ -87,9 +87,16 @@ export class LayoutBox extends LitElement {
     }
   }
 
+  _handleDoubleClick(e) {
+    this.dispatchEvent(new CustomEvent('item-edit', { 
+      bubbles: true, 
+      composed: true 
+    }));
+  }
+
   render() {
     return html`
-      <div class="label">${this.name} ${this.invalid ? '(Overlap!)' : ''}</div>
+      <div class="label" @dblclick="${this._handleDoubleClick}">${this.name} ${this.invalid ? '(Overlap!)' : ''}</div>
       <div class="resize-handle"></div>
       <slot></slot>
     `;

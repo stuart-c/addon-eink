@@ -264,13 +264,20 @@ export class AppRoot extends LitElement {
             ${this._activeLayout.items.map(item => {
               const dt = this._displayTypes.find(t => t.id === item.display_type_id);
               return html`
-                <div class="list-item ${this._selectedItemId === item.id ? 'selected' : ''}" @click="${() => this._selectedItemId = item.id}">
+                <div 
+                  class="list-item ${this._selectedItemId === item.id ? 'selected' : ''}" 
+                  @click="${() => this._selectedItemId = item.id}"
+                  @dblclick="${() => this._handleEditItem(item.id)}"
+                >
                   <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div>
                       <strong>${dt?.name || 'Unknown'}</strong>
                       <div style="font-size: 11px; color: #666;">Pos: ${item.x_mm}, ${item.y_mm} | Rot: ${item.orientation}°</div>
                     </div>
-                    <button class="secondary" style="padding: 4px; font-size: 10px;" @click="${(e) => { e.stopPropagation(); this._handleRotate(item.id); }}">Rotate</button>
+                    <div style="display: flex; gap: 4px;">
+                      <button class="secondary" style="padding: 4px; font-size: 10px;" @click="${(e) => { e.stopPropagation(); this._handleRotate(item.id); }}">Rotate</button>
+                      <button class="secondary" style="padding: 4px; font-size: 10px;" @click="${(e) => { e.stopPropagation(); this._handleEditItem(item.id); }}">Settings</button>
+                    </div>
                   </div>
                 </div>
               `;
