@@ -105,7 +105,14 @@ export class LayoutBox extends LitElement {
     orientation: { type: Number }, // 0 or 90
     name: { type: String },
     selected: { type: Boolean, reflect: true },
-    invalid: { type: Boolean, reflect: true }
+    invalid: { type: Boolean, reflect: true },
+    
+    // Hardware details
+    border_width_mm: { type: Number },
+    panel_width_mm: { type: Number },
+    panel_height_mm: { type: Number },
+    frame_colour: { type: String },
+    mat_colour: { type: String }
   };
 
   updated(changedProperties) {
@@ -124,16 +131,9 @@ export class LayoutBox extends LitElement {
       }
     }
 
-    if (changedProperties.has('colour')) {
-      const colorMap = {
-        'WHITE': 'rgba(255, 255, 255, 0.8)',
-        'BLACK': 'rgba(0, 0, 0, 0.1)',
-        'RED': 'rgba(255, 0, 0, 0.1)',
-        'YELLOW': 'rgba(255, 255, 0, 0.1)',
-        'GREEN': 'rgba(0, 255, 0, 0.1)',
-        'BLUE': 'rgba(0, 0, 255, 0.1)',
-      };
-      this.style.setProperty('--box-bg', colorMap[this.colour] || 'rgba(3, 169, 244, 0.1)');
+    if (changedProperties.has('frame_colour')) {
+      this.style.borderColor = this.frame_colour || '#333';
+      this.style.backgroundColor = this.frame_colour || '#333';
     }
   }
 
@@ -161,8 +161,56 @@ export class LayoutBox extends LitElement {
   }
 
   render() {
+    const border = this.border_width_mm || 0;
+    const matW = this.width - (2 * border);
+    const matH = this.height - (2 * border);
+    const panelW = this.panel_width_mm || 0;
+    const panelH = this.panel_height_mm || 0;
+    
+    // Centering within the mat
+    const cutoutX = (matW - panelW) / 2;
+    const cutoutY = (matH - panelH) / 2;
+
     return html`
-      <div class="label" @dblclick="${this._handleDoubleClick}">${this.name} ${this.invalid ? '(Overlap!)' : ''}</div>
+      <!-- Mat Layer -->
+      <div 
+        class="mat" 
+        style="
+          position: absolute;
+          top: ${border}px;
+          left: ${border}px;
+          width: ${matW}px;
+          height: ${matH}px;
+          background-color: ${this.mat_colour || '#fff'};
+          overflow: hidden;
+        "
+      >
+        <!-- Display Panel Layer -->
+        <div 
+          class="panel" 
+          style="
+            position: absolute;
+            top: ${cutoutY}px;
+            left: ${cutoutX}px;
+            width: ${panelW}px;
+            height: ${panelH}px;
+            background-color: #eee;
+            border: 1px dashed #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          "
+        >
+          <div class="label" style="font-size: 8px; opacity: 0.5;">
+            ${this.orientation === 90 ? 'Rotated' : ''}
+          </div>
+        </div>
+      </div>
+
+      <div class="label" @dblclick="${this._handleDoubleClick}" style="z-index: 2; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">
+        ${this.name} ${this.invalid ? '(Overlap!)' : ''}
+      </div>
+
       <div class="actions">
         <div class="action-icon" title="Open Settings" @click="${this._handleDoubleClick}">
           <span class="material-icons">settings</span>
