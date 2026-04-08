@@ -86,7 +86,11 @@ export class LayoutEditor extends LitElement {
     this.displayTypes = [];
     this.selectedId = null;
     this._scale = 1;
-    this._resizeObserver = new ResizeObserver(() => this._updateScale());
+    this._resizeObserver = new ResizeObserver((entries) => {
+      if (entries[0]) {
+        this._updateScale(entries[0].contentRect);
+      }
+    });
   }
 
   connectedCallback() {
@@ -115,8 +119,13 @@ export class LayoutEditor extends LitElement {
     }
   }
 
-  _updateScale() {
-    const rect = this.getBoundingClientRect();
+  _updateScale(rect = null) {
+    // If no rect provided, fallback to current element dimensions
+    if (!rect) {
+      const bcr = this.getBoundingClientRect();
+      rect = { width: bcr.width, height: bcr.height };
+    }
+
     const padding = 80;
     const availableWidth = Math.max(0, rect.width - padding);
     const availableHeight = Math.max(0, rect.height - padding);
@@ -125,7 +134,12 @@ export class LayoutEditor extends LitElement {
       const scaleX = availableWidth / this.width_mm;
       const scaleY = availableHeight / this.height_mm;
       // Auto-scale to fill available area, up to 4x zoom for large screens
-      this._scale = Math.min(scaleX, scaleY, 4);
+      const newScale = Math.min(scaleX, scaleY, 4);
+      
+      // Only update if change is significant to avoid sub-pixel jitter
+      if (Math.abs(this._scale - newScale) > 0.001) {
+        this._scale = newScale;
+      }
     }
   }
 
@@ -207,6 +221,9 @@ export class LayoutEditor extends LitElement {
             // Apply scale to dimension change
             this.width_mm = Math.round(event.rect.width / this._scale / this.gridSnap) * this.gridSnap;
             this.height_mm = Math.round(event.rect.height / this._scale / this.gridSnap) * this.gridSnap;
+            
+            // Explicitly trigger scale update during drag to maintain fit-to-screen
+            this._updateScale();
             this._validateLayout();
           },
           end: () => {
