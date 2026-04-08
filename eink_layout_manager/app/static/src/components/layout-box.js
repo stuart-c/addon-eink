@@ -152,6 +152,14 @@ export class LayoutBox extends LitElement {
     }));
   }
 
+  _handleDeleteClick(e) {
+    e.stopPropagation();
+    this.dispatchEvent(new CustomEvent('item-delete', {
+      bubbles: true,
+      composed: true
+    }));
+  }
+
   render() {
     return html`
       <div class="label" @dblclick="${this._handleDoubleClick}">${this.name} ${this.invalid ? '(Overlap!)' : ''}</div>
@@ -161,6 +169,9 @@ export class LayoutBox extends LitElement {
         </div>
         <div class="action-icon" title="Rotate" @click="${this._handleRotateClick}">
           <span class="material-icons">rotate_right</span>
+        </div>
+        <div class="action-icon" title="Delete" style="color: #f44336;" @click="${this._handleDeleteClick}">
+          <span class="material-icons">delete_outline</span>
         </div>
       </div>
       <slot></slot>

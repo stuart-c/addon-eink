@@ -3,6 +3,7 @@ import './components/layout-editor.js';
 import './components/display-type-dialog.js';
 import './components/item-settings-dialog.js';
 import './components/layout-settings-dialog.js';
+import './components/confirm-dialog.js';
 import { api } from './services/HaApiClient.js';
 
 export class AppRoot extends LitElement {
@@ -402,6 +403,27 @@ export class AppRoot extends LitElement {
     this._showMessage('Item settings updated', 'success');
   }
 
+  async _handleDeleteItem(id) {
+    const item = this._activeLayout.items.find(i => i.id === id);
+    const dt = this._displayTypes.find(t => t.id === item?.display_type_id);
+    
+    const confirmed = await this.shadowRoot.querySelector('confirm-dialog').show({
+      title: 'Delete display?',
+      message: `Are you sure you want to remove the "${dt?.name || 'unknown'}" display from this layout?`,
+      confirmText: 'Delete',
+      type: 'danger'
+    });
+
+    if (confirmed) {
+      this._activeLayout.items = this._activeLayout.items.filter(i => i.id !== id);
+      if (this._selectedItemId === id) {
+        this._selectedItemId = null;
+      }
+      this.requestUpdate();
+      this._showMessage('Item deleted', 'success');
+    }
+  }
+
   async _handleSaveLayout() {
     if (this._activeLayout.items.some(i => i.invalid)) {
       this._showMessage('Cannot save: Displays are overlapping!', 'error');
@@ -490,6 +512,9 @@ export class AppRoot extends LitElement {
                       <button class="secondary" title="Settings" @click="${(e) => { e.stopPropagation(); this._handleEditItem(item.id); }}">
                         <span class="material-icons" style="font-size: 16px;">settings</span>
                       </button>
+                      <button class="secondary" title="Delete" style="color: #f44336;" @click="${(e) => { e.stopPropagation(); this._handleDeleteItem(item.id); }}">
+                        <span class="material-icons" style="font-size: 16px;">delete_outline</span>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -543,6 +568,7 @@ export class AppRoot extends LitElement {
             @edit-item="${(e) => this._handleEditItem(e.detail.id)}"
             @mouse-move="${(e) => this._mousePos = e.detail}"
             @rotate-item="${(e) => this._handleRotate(e.detail.id)}"
+            @item-delete="${(e) => this._handleDeleteItem(e.detail.id)}"
           ></layout-editor>
         </div>
       </main>
@@ -550,6 +576,7 @@ export class AppRoot extends LitElement {
       <display-type-dialog @save="${this._onSaveDisplayType}"></display-type-dialog>
       <item-settings-dialog @save="${this._onSaveItemSettings}"></item-settings-dialog>
       <layout-settings-dialog @save="${this._onSaveLayoutSettings}"></layout-settings-dialog>
+      <confirm-dialog></confirm-dialog>
     `;
   }
 }

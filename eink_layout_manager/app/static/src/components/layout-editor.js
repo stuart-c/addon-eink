@@ -215,6 +215,7 @@ export class LayoutEditor extends LitElement {
               @mousedown="${() => this._handleBoxSelect(item.id)}"
               @item-edit="${() => this._handleBoxEdit(item.id)}"
               @item-rotate="${() => this._handleBoxRotate(item.id)}"
+              @item-delete="${() => this.dispatchEvent(new CustomEvent('item-delete', { detail: { id: item.id } }))}"
             ></layout-box>
           `;
         })}
