@@ -16,7 +16,7 @@ This script pulls the latest multi-arch development Docker image and starts a co
 Run the script from the **project root directory**:
 
 ```bash
-bash scripts/run_dev.sh
+./scripts/run_dev.sh
 ```
 
 ### What it does:
@@ -27,7 +27,8 @@ bash scripts/run_dev.sh
     - **Port**: Maps host port `8099` to container port `8099`.
     - **Persistence**: Maps `./dev_data` in the project root to `/data` in the container. Any layouts or display types created will be saved here.
 4.  **Browser**: Automatically attempts to open `http://localhost:8099` in your default browser.
-5.  **Logs**: Starts following the container logs in your terminal. You can safely press `Ctrl+C` to stop viewing the logs without stopping the container.
+5.  **Logs**: Starts following the container logs in your terminal. **Press `Ctrl+C` to stop the logs and shut down the container.**
+
 
 ### Stopping the container
 
