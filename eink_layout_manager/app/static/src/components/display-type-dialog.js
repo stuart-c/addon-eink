@@ -62,18 +62,42 @@ export class DisplayTypeDialog extends LitElement {
     }
     .primary { background: #03a9f4; color: white; }
     .secondary { background: #eee; }
+    
+    .section-header {
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+      padding-bottom: 4px;
+      border-bottom: 1px dashed #ddd;
+      font-size: 14px;
+      font-weight: bold;
+      color: #333;
+    }
+    .radio-group {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .radio-option {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      text-transform: none;
+      font-weight: normal;
+      color: #333;
+    }
+    .radio-option input {
+      width: auto;
+    }
   `;
 
   static properties = {
     displayType: { type: Object },
-    isNew: { type: Boolean }
+    isNew: { type: Boolean },
+    _frameType: { state: true },
+    _matType: { state: true }
   };
-
-  constructor() {
-    super();
-    this.displayType = this._getDefaultDisplayType();
-    this.isNew = true;
-  }
 
   _getDefaultDisplayType() {
     return {
@@ -93,9 +117,20 @@ export class DisplayTypeDialog extends LitElement {
     if (displayType) {
       this.displayType = JSON.parse(JSON.stringify(displayType));
       this.isNew = false;
+      
+      this._frameType = this.displayType.frame ? 'standard' : 'none';
+      if (!this.displayType.mat) {
+        this._matType = 'none';
+      } else if (this.displayType.mat.horizontal_mm !== undefined) {
+        this._matType = 'custom';
+      } else {
+        this._matType = 'uniform';
+      }
     } else {
       this.displayType = this._getDefaultDisplayType();
       this.isNew = true;
+      this._frameType = 'standard';
+      this._matType = 'uniform';
     }
     this.renderRoot.querySelector('dialog').showModal();
   }
@@ -106,9 +141,30 @@ export class DisplayTypeDialog extends LitElement {
 
   _handleSubmit(e) {
     e.preventDefault();
+    
+    // Auto-generate ID if missing
     if (this.isNew && !this.displayType.id) {
        this.displayType.id = this.displayType.name.toLowerCase().replace(/\s+/g, '_');
     }
+
+    // Sanitize Frame based on UI selection
+    if (this._frameType === 'none') {
+      delete this.displayType.frame;
+    }
+
+    // Sanitize Mat based on UI selection
+    if (this._matType === 'none') {
+      delete this.displayType.mat;
+    } else if (this._matType === 'uniform') {
+      // Ensure only uniform properties exist
+      const { thickness_mm, colour } = this.displayType.mat;
+      this.displayType.mat = { thickness_mm, colour };
+    } else if (this._matType === 'custom') {
+      // Ensure only custom properties exist
+      const { horizontal_mm, vertical_mm, colour } = this.displayType.mat;
+      this.displayType.mat = { horizontal_mm, vertical_mm, colour };
+    }
+
     this.dispatchEvent(new CustomEvent('save', { detail: { displayType: this.displayType } }));
     this.close();
   }
@@ -165,16 +221,67 @@ export class DisplayTypeDialog extends LitElement {
               </select>
             </div>
 
-            <div class="row">
-              <div class="form-group">
-                <label>Frame (mm)</label>
-                <input type="number" .value="${this.displayType.frame.thickness_mm}" @input="${e => this.displayType.frame.thickness_mm = parseInt(e.target.value)}">
-              </div>
-              <div class="form-group">
-                <label>Frame Color</label>
-                <input type="color" .value="${this.displayType.frame.colour}" @input="${e => this.displayType.frame.colour = e.target.value}">
-              </div>
+            <!-- Frame Section -->
+            <div class="section-header">Frame Settings</div>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input type="radio" name="frameType" value="none" ?checked="${this._frameType === 'none'}" @change="${() => this._frameType = 'none'}"> None
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="frameType" value="standard" ?checked="${this._frameType === 'standard'}" @change="${() => { this._frameType = 'standard'; if (!this.displayType.frame) this.displayType.frame = { thickness_mm: 5, colour: '#000000' }}}"> Standard
+              </label>
             </div>
+
+            ${this._frameType === 'standard' ? html`
+              <div class="row">
+                <div class="form-group">
+                  <label>Thickness (mm)</label>
+                  <input type="number" .value="${this.displayType.frame.thickness_mm}" @input="${e => this.displayType.frame.thickness_mm = parseInt(e.target.value)}">
+                </div>
+                <div class="form-group">
+                  <label>Frame Color</label>
+                  <input type="color" .value="${this.displayType.frame.colour}" @input="${e => this.displayType.frame.colour = e.target.value}">
+                </div>
+              </div>
+            ` : ''}
+
+            <!-- Mat Section -->
+            <div class="section-header">Mat Settings</div>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input type="radio" name="matType" value="none" ?checked="${this._matType === 'none'}" @change="${() => this._matType = 'none'}"> None
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="matType" value="uniform" ?checked="${this._matType === 'uniform'}" @change="${() => { this._matType = 'uniform'; if (!this.displayType.mat) this.displayType.mat = { thickness_mm: 10, colour: '#ffffff' }}}"> Uniform
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="matType" value="custom" ?checked="${this._matType === 'custom'}" @change="${() => { this._matType = 'custom'; if (!this.displayType.mat) this.displayType.mat = { horizontal_mm: 10, vertical_mm: 10, colour: '#ffffff' }}}"> Custom
+              </label>
+            </div>
+
+            ${this._matType !== 'none' ? html`
+              <div class="row">
+                ${this._matType === 'uniform' ? html`
+                  <div class="form-group">
+                    <label>Thickness (mm)</label>
+                    <input type="number" .value="${this.displayType.mat.thickness_mm || 0}" @input="${e => { this.displayType.mat.thickness_mm = parseInt(e.target.value); delete this.displayType.mat.horizontal_mm; delete this.displayType.mat.vertical_mm; }}">
+                  </div>
+                ` : html`
+                  <div class="form-group">
+                    <label>Horizontal (mm)</label>
+                    <input type="number" .value="${this.displayType.mat.horizontal_mm || 0}" @input="${e => { this.displayType.mat.horizontal_mm = parseInt(e.target.value); delete this.displayType.mat.thickness_mm; }}">
+                  </div>
+                  <div class="form-group">
+                    <label>Vertical (mm)</label>
+                    <input type="number" .value="${this.displayType.mat.vertical_mm || 0}" @input="${e => { this.displayType.mat.vertical_mm = parseInt(e.target.value); delete this.displayType.mat.thickness_mm; }}">
+                  </div>
+                `}
+                <div class="form-group">
+                  <label>Mat Color</label>
+                  <input type="color" .value="${this.displayType.mat.colour}" @input="${e => this.displayType.mat.colour = e.target.value}">
+                </div>
+              </div>
+            ` : ''}
 
             <footer>
               <button type="button" class="secondary" @click="${this.close}">Cancel</button>
