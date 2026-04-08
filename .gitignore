@@ -215,3 +215,6 @@ yarn-debug.log*
 yarn-error.log*
 .pnp*
 .pnp.js
+
+# Development data
+dev_data/
