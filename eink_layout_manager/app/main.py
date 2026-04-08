@@ -178,6 +178,28 @@ async def delete_item(request):
     if not os.path.exists(file_path):
         return web.json_response({"error": "Not Found"}, status=404)
 
+    # Referential Integrity: Don't delete display_type if it's used in any layout
+    if resource_type == "display_type":
+        layout_path = get_storage_path("layout")
+        if os.path.exists(layout_path):
+            for filename in os.listdir(layout_path):
+                if filename.endswith(".json"):
+                    with open(os.path.join(layout_path, filename), "r") as f:
+                        try:
+                            layout_data = json.load(f)
+                            # Check every item in this layout
+                            for item in layout_data.get("items", []):
+                                if item.get("display_type_id") == item_id:
+                                    return web.json_response(
+                                        {
+                                            "error": "Conflict",
+                                            "message": f"Display type is in use by layout '{layout_data.get('name', filename)}'"
+                                        },
+                                        status=400
+                                    )
+                        except (json.JSONDecodeError, KeyError):
+                            continue
+
     os.remove(file_path)
     return web.json_response({"status": "deleted"})
 
