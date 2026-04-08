@@ -156,10 +156,35 @@ export class LayoutEditor extends LitElement {
     this.dispatchEvent(new CustomEvent('edit-item', { detail: { id } }));
   }
 
+  _handleMouseMove(e) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    this.dispatchEvent(new CustomEvent('mouse-move', {
+      detail: { x: Math.round(x), y: Math.round(y) },
+      bubbles: true,
+      composed: true
+    }));
+  }
+
+  _handleMouseLeave() {
+    this.dispatchEvent(new CustomEvent('mouse-move', {
+      detail: { x: null, y: null },
+      bubbles: true,
+      composed: true
+    }));
+  }
+
   render() {
     const gridSize = this.gridSnap < 5 ? 10 : this.gridSnap;
     return html`
-      <div class="canvas" style="width: ${this.width_mm}px; height: ${this.height_mm}px; --grid-size: ${gridSize}px;">
+      <div 
+        class="canvas" 
+        style="width: ${this.width_mm}px; height: ${this.height_mm}px; --grid-size: ${gridSize}px;"
+        @mousemove="${this._handleMouseMove}"
+        @mouseleave="${this._handleMouseLeave}"
+      >
         <div class="grid-overlay"></div>
         ${this.items.map(item => {
           const dt = this.displayTypes.find(t => t.id === item.display_type_id);
