@@ -38,7 +38,6 @@ export class AppRoot extends LitElement {
       background-color: #f0f2f5;
       overflow: hidden;
     }
-    }
     .editor-container {
       flex: 1;
       min-width: 0;
