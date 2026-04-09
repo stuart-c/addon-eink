@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import traceback
 
 from aiohttp import web
@@ -14,10 +15,36 @@ def get_storage_path(resource_type):
     Get the filesystem path for a specific resource type.
     Creates the directory if it does not exist.
     """
+    # Security: Whitelist allowed resource types to prevent arbitrary directory creation
+    allowed_types = {"display_type", "layout"}
+    if resource_type not in allowed_types:
+        raise ValueError(f"Invalid resource type: {resource_type}")
+
     data_dir = os.environ.get("DATA_DIR", "/data")
     path = os.path.join(data_dir, resource_type)
     os.makedirs(path, exist_ok=True)
     return path
+
+
+def validate_id(item_id):
+    """
+    Validate and sanitise a resource ID to prevent path traversal.
+    Returns the sanitised ID if valid, otherwise raises ValueError.
+    """
+    if not item_id or not isinstance(item_id, str):
+        raise ValueError("Invalid ID: Must be a non-empty string")
+
+    # Security: Ensure the ID doesn't contain path traversal characters
+    # and matches our expected format (alphanumeric, hyphens, underscores)
+    if not re.match(r"^[a-zA-Z0-9\-_]+$", item_id):
+        raise ValueError(f"Invalid ID format: {item_id}")
+
+    # Extra safety: use os.path.basename to ensure no directory components remain
+    sanitised_id = os.path.basename(item_id)
+    if not sanitised_id or sanitised_id != item_id:
+        raise ValueError(f"Invalid ID (potential traversal): {item_id}")
+
+    return sanitised_id
 
 
 def load_schema(name):
@@ -53,13 +80,20 @@ async def ping(request):
 async def get_collection(request):
     """Fetch all resources for a specific collection type."""
     resource_type = request.match_info["resource_type"]
-    storage_path = get_storage_path(resource_type)
+    try:
+        storage_path = get_storage_path(resource_type)
+    except ValueError as e:
+        return web.json_response({"error": str(e)}, status=400)
 
     items = []
     if os.path.exists(storage_path):
         for filename in os.listdir(storage_path):
             if filename.endswith(".json"):
-                with open(os.path.join(storage_path, filename), "r") as f:
+                file_path = os.path.join(storage_path, filename)
+                # Ensure we only open files within the intended directory
+                if os.path.dirname(file_path) != storage_path:
+                    continue
+                with open(file_path, "r") as f:
                     try:
                         items.append(json.load(f))
                     except json.JSONDecodeError:
@@ -71,7 +105,12 @@ async def get_item(request):
     """Fetch a single resource by ID."""
     resource_type = request.match_info["resource_type"]
     item_id = request.match_info["id"]
-    storage_path = get_storage_path(resource_type)
+    try:
+        storage_path = get_storage_path(resource_type)
+        item_id = validate_id(item_id)
+    except ValueError as e:
+        return web.json_response({"error": str(e)}, status=400)
+
     file_path = os.path.join(storage_path, f"{item_id}.json")
 
     if not os.path.exists(file_path):
@@ -108,7 +147,12 @@ async def create_item(request):
     if not item_id:
         return web.json_response({"error": "Missing 'id' field"}, status=400)
 
-    storage_path = get_storage_path(resource_type)
+    try:
+        storage_path = get_storage_path(resource_type)
+        item_id = validate_id(item_id)
+    except ValueError as e:
+        return web.json_response({"error": str(e)}, status=400)
+
     file_path = os.path.join(storage_path, f"{item_id}.json")
 
     if os.path.exists(file_path):
@@ -156,7 +200,12 @@ async def update_item(request):
             {"error": "Validation failed", "message": e.message}, status=400
         )
 
-    storage_path = get_storage_path(resource_type)
+    try:
+        storage_path = get_storage_path(resource_type)
+        item_id = validate_id(item_id)
+    except ValueError as e:
+        return web.json_response({"error": str(e)}, status=400)
+
     file_path = os.path.join(storage_path, f"{item_id}.json")
 
     if not os.path.exists(file_path):
@@ -172,7 +221,12 @@ async def delete_item(request):
     """Permanently delete a resource by ID."""
     resource_type = request.match_info["resource_type"]
     item_id = request.match_info["id"]
-    storage_path = get_storage_path(resource_type)
+    try:
+        storage_path = get_storage_path(resource_type)
+        item_id = validate_id(item_id)
+    except ValueError as e:
+        return web.json_response({"error": str(e)}, status=400)
+
     file_path = os.path.join(storage_path, f"{item_id}.json")
 
     if not os.path.exists(file_path):
@@ -180,11 +234,15 @@ async def delete_item(request):
 
     # Referential Integrity: Don't delete display_type if used in any layout
     if resource_type == "display_type":
-        layout_path = get_storage_path("layout")
+        try:
+            layout_path = get_storage_path("layout")
+        except ValueError as e:
+            return web.json_response({"error": str(e)}, status=400)
         if os.path.exists(layout_path):
             for filename in os.listdir(layout_path):
                 if filename.endswith(".json"):
-                    with open(os.path.join(layout_path, filename), "r") as f:
+                    file_path_layout = os.path.join(layout_path, filename)
+                    with open(file_path_layout, "r") as f:
                         try:
                             layout_data = json.load(f)
                             # Check every item in this layout
@@ -216,8 +274,11 @@ def init_app():
     app = web.Application(middlewares=[request_logger_middleware])
 
     # Data directory setup
-    os.makedirs(get_storage_path("display_type"), exist_ok=True)
-    os.makedirs(get_storage_path("layout"), exist_ok=True)
+    try:
+        os.makedirs(get_storage_path("display_type"), exist_ok=True)
+        os.makedirs(get_storage_path("layout"), exist_ok=True)
+    except ValueError as e:
+        print(f"Error initialising storage: {str(e)}")
 
     # RESTful API
     # Valid resource types: display_type, layout
