@@ -91,7 +91,8 @@ async def get_collection(request):
     if os.path.exists(storage_path):
         for filename in os.listdir(storage_path):
             if filename.endswith(".json"):
-                # Security: Validate the base ID to break the taint from os.listdir
+                # Security: Validate the base ID to break the
+                # taint from os.listdir
                 item_id = filename[:-5]
                 try:
                     validate_id(item_id)
