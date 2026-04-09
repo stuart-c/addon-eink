@@ -2,6 +2,7 @@ import os
 import pytest
 from app.main import init_app, get_storage_path, load_schema
 
+
 @pytest.fixture
 def app(tmp_path):
     """
@@ -12,7 +13,9 @@ def app(tmp_path):
     os.environ["DATA_DIR"] = str(tmp_path)
     return init_app()
 
+
 # --- Helper Tests ---
+
 
 def test_get_storage_path(tmp_path):
     """Test get_storage_path correctly creates and returns the directory."""
@@ -20,6 +23,7 @@ def test_get_storage_path(tmp_path):
     path = get_storage_path("display_type")
     assert path == os.path.join(str(tmp_path), "display_type")
     assert os.path.exists(path)
+
 
 def test_load_schema():
     """Test load_schema returns a valid schema dict."""
@@ -30,7 +34,9 @@ def test_load_schema():
     with pytest.raises(FileNotFoundError):
         load_schema("non_existent_schema")
 
+
 # --- Handler Tests ---
+
 
 @pytest.mark.asyncio
 async def test_ping(aiohttp_client, app):
@@ -40,6 +46,7 @@ async def test_ping(aiohttp_client, app):
     assert resp.status == 200
     assert await resp.text() == "pong"
 
+
 @pytest.mark.asyncio
 async def test_get_collection_empty(aiohttp_client, app):
     """Test GET /api/{resource_type} with no data."""
@@ -48,6 +55,7 @@ async def test_get_collection_empty(aiohttp_client, app):
         resp = await client.get(f"/api/{resource}")
         assert resp.status == 200
         assert await resp.json() == []
+
 
 @pytest.mark.asyncio
 async def test_create_and_get_item(aiohttp_client, app):
@@ -84,6 +92,7 @@ async def test_create_and_get_item(aiohttp_client, app):
     assert resp.status == 200
     assert await resp.json() == [display_data]
 
+
 @pytest.mark.asyncio
 async def test_create_item_duplicate(aiohttp_client, app):
     """Test creating an item that already exists (409)."""
@@ -105,6 +114,7 @@ async def test_create_item_duplicate(aiohttp_client, app):
     resp = await client.post("/api/display_type", json=data)
     assert resp.status == 409
 
+
 @pytest.mark.asyncio
 async def test_create_item_invalid_schema(aiohttp_client, app):
     """Test schema validation during creation."""
@@ -115,6 +125,7 @@ async def test_create_item_invalid_schema(aiohttp_client, app):
     assert resp.status == 400
     result = await resp.json()
     assert "Validation failed" in result["error"]
+
 
 @pytest.mark.asyncio
 async def test_update_item(aiohttp_client, app):
@@ -140,6 +151,7 @@ async def test_update_item(aiohttp_client, app):
     assert resp.status == 200
     assert (await resp.json())["name"] == "Updated"
 
+
 @pytest.mark.asyncio
 async def test_update_item_id_mismatch(aiohttp_client, app):
     """Test update with ID mismatch between URL and body."""
@@ -147,6 +159,7 @@ async def test_update_item_id_mismatch(aiohttp_client, app):
     data = {"id": "wrong_id", "name": "Name"}
     resp = await client.put("/api/display_type/correct_id", json=data)
     assert resp.status == 400
+
 
 @pytest.mark.asyncio
 async def test_delete_item(aiohttp_client, app):
@@ -175,11 +188,12 @@ async def test_delete_item(aiohttp_client, app):
     resp = await client.get("/api/display_type/del_me")
     assert resp.status == 404
 
+
 @pytest.mark.asyncio
 async def test_not_found(aiohttp_client, app):
     """Test 404 for non-existent resources."""
     client = await aiohttp_client(app)
-    resp = await client.get("/api/display_type/non_existent")
+    resp = await client.get("/api/display_type/ non_existent")
     assert resp.status == 404
 
     # Valid schema but non-existent ID
@@ -201,6 +215,7 @@ async def test_not_found(aiohttp_client, app):
 
     resp = await client.delete("/api/display_type/non_existent")
     assert resp.status == 404
+
 
 @pytest.mark.asyncio
 async def test_delete_display_type_protection(aiohttp_client, app):
