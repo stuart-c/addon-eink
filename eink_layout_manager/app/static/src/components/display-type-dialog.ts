@@ -353,15 +353,15 @@ export class DisplayTypeDialog extends LitElement {
   private _getDefaultDisplayType(): DisplayType {
     return {
       id: '',
-      name: 'New Display',
-      width_mm: 300,
-      height_mm: 200,
-      panel_width_mm: 158,
-      panel_height_mm: 98,
-      width_px: 800,
-      height_px: 480,
+      name: '',
+      width_mm: 0,
+      height_mm: 0,
+      panel_width_mm: 0,
+      panel_height_mm: 0,
+      width_px: 0,
+      height_px: 0,
       colour_type: 'MONO',
-      frame: { border_width_mm: 15, colour: '#000000' },
+      frame: { border_width_mm: 0, colour: '#000000' },
       mat: { colour: '#ffffff' }
     };
   }
@@ -369,9 +369,6 @@ export class DisplayTypeDialog extends LitElement {
   async show(displayType: DisplayType | null = null) {
     if (displayType) {
       this.displayType = JSON.parse(JSON.stringify(displayType));
-      this.isNew = false;
-    } else if (this.displayTypes.length > 0) {
-      this.displayType = JSON.parse(JSON.stringify(this.displayTypes[0]));
       this.isNew = false;
     } else {
       this.displayType = this._getDefaultDisplayType();
