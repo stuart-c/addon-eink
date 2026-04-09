@@ -328,7 +328,7 @@ export class LayoutEditor extends LitElement {
           <div class="canvas-wrapper" style="transform: scale(${this._scale});">
             <div 
               class="canvas" 
-              style="width: ${this.width_mm}px; height: ${this.height_mm}px; --grid-size: ${gridSize}px;"
+              style="width: ${this.width_mm}px; height: ${this.height_mm}px; --grid-size: ${gridSize}px; --editor-scale: ${this._scale};"
               @mousemove="${this._handleMouseMove}"
               @mouseleave="${this._handleMouseLeave}"
             >
