@@ -88,8 +88,9 @@ async def get_collection(request):
         return web.json_response({"error": str(e)}, status=400)
 
     items = []
-    if os.path.exists(storage_path):
-        for filename in os.listdir(storage_path):
+    storage_real = os.path.realpath(storage_path)
+    if os.path.exists(storage_real):
+        for filename in os.listdir(storage_real):
             if filename.endswith(".json"):
                 # Security: Validate the base ID to break the
                 # taint from os.listdir
@@ -99,11 +100,12 @@ async def get_collection(request):
                 except ValueError:
                     continue
 
-                file_path = os.path.join(storage_path, filename)
+                file_path = os.path.join(storage_real, filename)
+                file_real = os.path.realpath(file_path)
                 # Ensure we only open files within the intended directory
-                if os.path.dirname(file_path) != storage_path:
+                if os.path.commonpath([storage_real, file_real]) != storage_real:
                     continue
-                with open(file_path, "r") as f:
+                with open(file_real, "r") as f:
                     try:
                         items.append(json.load(f))
                     except json.JSONDecodeError:
