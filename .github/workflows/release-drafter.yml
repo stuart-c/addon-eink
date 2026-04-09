@@ -20,6 +20,5 @@ jobs:
       - uses: release-drafter/release-drafter@v7
         with:
           disable-autolabeler: false
-          commitish: ${{ github.sha }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
