@@ -1,9 +1,11 @@
 import { LitElement, html, css } from 'lit';
-import { commonStyles } from '../../styles/common-styles.js';
+import { customElement, property } from 'lit/decorators.js';
+import { commonStyles } from '../../styles/common-styles';
 
 /**
  * A shared base component for all dialogs to provide consistent styling and behavior.
  */
+@customElement('base-dialog')
 export class BaseDialog extends LitElement {
   static styles = [
     commonStyles,
@@ -56,16 +58,14 @@ export class BaseDialog extends LitElement {
     `
   ];
 
-  static properties = {
-    title: { type: String },
-  };
+  @property({ type: String }) title = '';
 
   show() {
-    this.renderRoot.querySelector('dialog').showModal();
+    (this.renderRoot.querySelector('dialog') as HTMLDialogElement).showModal();
   }
 
   close() {
-    this.renderRoot.querySelector('dialog').close();
+    (this.renderRoot.querySelector('dialog') as HTMLDialogElement).close();
   }
 
   render() {
@@ -87,4 +87,8 @@ export class BaseDialog extends LitElement {
   }
 }
 
-customElements.define('base-dialog', BaseDialog);
+declare global {
+  interface HTMLElementTagNameMap {
+    'base-dialog': BaseDialog;
+  }
+}

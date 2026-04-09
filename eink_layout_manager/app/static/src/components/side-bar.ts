@@ -1,6 +1,9 @@
 import { LitElement, html, css } from 'lit';
-import { commonStyles } from '../styles/common-styles.js';
+import { customElement, property } from 'lit/decorators.js';
+import { commonStyles } from '../styles/common-styles';
+import { DisplayType, Layout } from '../services/HaApiClient';
 
+@customElement('side-bar')
 export class SideBar extends LitElement {
   static styles = [
     commonStyles,
@@ -61,13 +64,11 @@ export class SideBar extends LitElement {
     `
   ];
 
-  static properties = {
-    displayTypes: { type: Array },
-    activeLayout: { type: Object },
-    selectedItemId: { type: String },
-  };
+  @property({ type: Array }) displayTypes: DisplayType[] = [];
+  @property({ type: Object }) activeLayout: Layout | null = null;
+  @property({ type: String }) selectedItemId: string | null = null;
 
-  _dispatch(name, detail) {
+  private _dispatch(name: string, detail?: any) {
     this.dispatchEvent(new CustomEvent(name, { detail, bubbles: true, composed: true }));
   }
 
@@ -88,13 +89,13 @@ export class SideBar extends LitElement {
                 <span class="item-meta">${dt.width_mm}x${dt.height_mm}mm</span>
               </div>
               <div class="item-actions">
-                <button class="secondary" title="Add to Layout" @click="${(e) => { e.stopPropagation(); this._dispatch('add-item-to-layout', dt); }}">
+                <button class="secondary" title="Add to Layout" @click="${(e: Event) => { e.stopPropagation(); this._dispatch('add-item-to-layout', dt); }}">
                   <span class="material-icons" style="font-size: 16px;">add_box</span>
                 </button>
-                <button class="secondary" title="Edit Properties" @click="${(e) => { e.stopPropagation(); this._dispatch('edit-display-type', dt); }}">
+                <button class="secondary" title="Edit Properties" @click="${(e: Event) => { e.stopPropagation(); this._dispatch('edit-display-type', dt); }}">
                   <span class="material-icons" style="font-size: 16px;">edit</span>
                 </button>
-                <button class="danger" title="Delete" @click="${(e) => { e.stopPropagation(); this._dispatch('delete-display-type', dt); }}">
+                <button class="danger" title="Delete" @click="${(e: Event) => { e.stopPropagation(); this._dispatch('delete-display-type', dt); }}">
                   <span class="material-icons" style="font-size: 16px;">delete_outline</span>
                 </button>
               </div>
@@ -119,23 +120,27 @@ export class SideBar extends LitElement {
                   <span class="item-meta">Pos: ${item.x_mm}, ${item.y_mm} | Rot: ${item.orientation}°</span>
                 </div>
                 <div class="item-actions">
-                  <button class="secondary" title="Rotate" @click="${(e) => { e.stopPropagation(); this._dispatch('rotate-item', { id: item.id }); }}">
+                  <button class="secondary" title="Rotate" @click="${(e: Event) => { e.stopPropagation(); this._dispatch('rotate-item', { id: item.id }); }}">
                     <span class="material-icons" style="font-size: 16px;">rotate_right</span>
                   </button>
-                  <button class="secondary" title="Settings" @click="${(e) => { e.stopPropagation(); this._dispatch('edit-item', { id: item.id }); }}">
+                  <button class="secondary" title="Settings" @click="${(e: Event) => { e.stopPropagation(); this._dispatch('edit-item', { id: item.id }); }}">
                     <span class="material-icons" style="font-size: 16px;">settings</span>
                   </button>
-                  <button class="secondary" title="Delete" style="color: var(--danger-colour);" @click="${(e) => { e.stopPropagation(); this._dispatch('delete-item', { id: item.id }); }}">
+                  <button class="secondary" title="Delete" style="color: var(--danger-colour);" @click="${(e: Event) => { e.stopPropagation(); this._dispatch('delete-item', { id: item.id }); }}">
                     <span class="material-icons" style="font-size: 16px;">delete_outline</span>
                   </button>
                 </div>
               </div>
             </div>
           `;
-        })}
+        }) || ''}
       </div>
     `;
   }
 }
 
-customElements.define('side-bar', SideBar);
+declare global {
+  interface HTMLElementTagNameMap {
+    'side-bar': SideBar;
+  }
+}

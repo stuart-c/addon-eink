@@ -1,4 +1,5 @@
-import { api } from '../services/HaApiClient.js';
+import { ReactiveController, ReactiveControllerHost } from 'lit';
+import { api, DisplayType, Layout, LayoutItem } from '../services/HaApiClient';
 
 /**
  * A Lit Reactive Controller to manage the application state:
@@ -7,18 +8,17 @@ import { api } from '../services/HaApiClient.js';
  * - Active Layout selection
  * - Backend connectivity
  */
-export class HaStateController {
-  constructor(host) {
-    this.host = host;
+export class HaStateController implements ReactiveController {
+  public connected = false;
+  public displayTypes: DisplayType[] = [];
+  public layouts: Layout[] = [];
+  public activeLayout: Layout | null = null;
+  public selectedItemId: string | null = null;
+  public message = '';
+  public isSaving = false;
+
+  constructor(private host: ReactiveControllerHost) {
     this.host.addController(this);
-    
-    this.connected = false;
-    this.displayTypes = [];
-    this.layouts = [];
-    this.activeLayout = null;
-    this.selectedItemId = null;
-    this.message = '';
-    this.isSaving = false;
   }
 
   async hostConnected() {
@@ -30,28 +30,28 @@ export class HaStateController {
     if (!this.connected) return;
 
     try {
-      this.displayTypes = await api.getCollection('display_type');
-      this.layouts = await api.getCollection('layout');
+      this.displayTypes = await api.getCollection<DisplayType>('display_type');
+      this.layouts = await api.getCollection<Layout>('layout');
       
       if (this.layouts.length > 0) {
         if (!this.activeLayout) {
           this.activeLayout = this.layouts[0];
         } else {
-          const fresh = this.layouts.find(l => l.id === this.activeLayout.id);
+          const fresh = this.layouts.find(l => l.id === this.activeLayout?.id);
           if (fresh) this.activeLayout = fresh;
         }
       } else {
         await this.createDefaultLayout();
       }
       this.host.requestUpdate();
-    } catch (e) {
+    } catch (e: any) {
       console.error('Fetch failed', e);
       this.showMessage(`Fetch failed: ${e.message}`, 'error');
     }
   }
 
-  async createDefaultLayout() {
-    const defaultLayout = {
+  private async createDefaultLayout() {
+    const defaultLayout: Layout = {
       id: 'default',
       name: 'Main Layout',
       canvas_width_mm: 500,
@@ -74,7 +74,7 @@ export class HaStateController {
       await api.updateItem('layout', this.activeLayout.id, this.activeLayout);
       this.showMessage('Layout saved!', 'success');
       await this.refresh();
-    } catch (e) {
+    } catch (e: any) {
       this.showMessage(`Failed to save: ${e.message}`, 'error');
     } finally {
       this.isSaving = false;
@@ -82,7 +82,7 @@ export class HaStateController {
     }
   }
 
-  async deleteDisplayType(dt) {
+  async deleteDisplayType(dt: DisplayType): Promise<boolean> {
     const isInUse = this.layouts.some(l => l.items.some(i => i.display_type_id === dt.id));
     if (isInUse) {
       this.showMessage(`Cannot delete "${dt.name}": It is in use.`, 'error');
@@ -94,13 +94,13 @@ export class HaStateController {
       await this.refresh();
       this.showMessage(`Display type "${dt.name}" deleted.`, 'success');
       return true;
-    } catch (e) {
+    } catch (e: any) {
       this.showMessage(`Failed to delete: ${e.message}`, 'error');
       return false;
     }
   }
 
-  showMessage(text, type = 'info') {
+  showMessage(text: string, type: 'info' | 'success' | 'error' = 'info') {
     this.message = text;
     this.host.requestUpdate();
     setTimeout(() => {
@@ -109,19 +109,19 @@ export class HaStateController {
     }, 3000);
   }
 
-  switchLayout(layout) {
+  switchLayout(layout: Layout) {
     this.activeLayout = layout;
     this.selectedItemId = null;
     this.host.requestUpdate();
   }
 
-  updateActiveLayout(updates) {
+  updateActiveLayout(updates: Partial<Layout>) {
     if (!this.activeLayout) return;
     Object.assign(this.activeLayout, updates);
     this.host.requestUpdate();
   }
 
-  updateItem(itemId, updates) {
+  updateItem(itemId: string, updates: Partial<LayoutItem>) {
     if (!this.activeLayout) return;
     const item = this.activeLayout.items.find(i => i.id === itemId);
     if (item) {

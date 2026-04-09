@@ -1,6 +1,9 @@
 import { LitElement, html, css } from 'lit';
-import { commonStyles } from '../styles/common-styles.js';
+import { customElement, property, state } from 'lit/decorators.js';
+import { commonStyles } from '../styles/common-styles';
+import { Layout } from '../services/HaApiClient';
 
+@customElement('app-toolbar')
 export class AppToolbar extends LitElement {
   static styles = [
     commonStyles,
@@ -13,7 +16,10 @@ export class AppToolbar extends LitElement {
         justify-content: space-between;
         align-items: center;
       }
-      .dropdown { position: relative; display: inline-block; }
+      .dropdown {
+        position: relative;
+        display: inline-block;
+      }
       .dropdown-trigger {
         cursor: pointer;
         display: flex;
@@ -23,7 +29,7 @@ export class AppToolbar extends LitElement {
         border-radius: var(--border-radius);
         transition: background 0.2s;
       }
-      .dropdown-trigger:hover { background: var(--bg-light); }
+      .dropdown-trigger:hover { background: #f0f2f5; }
       .dropdown-trigger span { font-size: 1.1rem; font-weight: 700; color: #333; }
       .dropdown-trigger .chevron { font-size: 0.8rem; color: #666; transition: transform 0.2s; }
       .dropdown-trigger.active .chevron { transform: rotate(180deg); }
@@ -42,8 +48,10 @@ export class AppToolbar extends LitElement {
         overflow: hidden;
         display: none;
       }
-      .dropdown-menu.show { display: block; animation: slideIn 0.2s ease; }
-      
+      .dropdown-menu.show {
+        display: block;
+        animation: slideIn 0.2s ease;
+      }
       .dropdown-item {
         padding: 0.75rem 1rem;
         cursor: pointer;
@@ -59,9 +67,9 @@ export class AppToolbar extends LitElement {
       .dropdown-divider { height: 1px; background: #eee; margin: 4px 0; }
       .dropdown-item.action { color: var(--primary-colour); font-weight: 600; }
 
-      .stats { font-size: 12px; color: #666; display: flex; align-items: center; gap: 1rem; }
-      .pos-highlight { color: var(--primary-colour); font-weight: 600; }
-      .divider { padding-left: 1rem; border-left: 1px solid #ddd; }
+      .mouse-info { font-size: 12px; color: #666; display: flex; align-items: center; gap: 1rem; }
+      .pos-value { color: var(--primary-colour); font-weight: 600; }
+      .canvas-dim { padding-left: 1rem; border-left: 1px solid #ddd; }
 
       @keyframes slideIn {
         from { transform: translateY(-10px); opacity: 0; }
@@ -70,34 +78,32 @@ export class AppToolbar extends LitElement {
     `
   ];
 
-  static properties = {
-    layouts: { type: Array },
-    activeLayout: { type: Object },
-    mousePos: { type: Object },
-    _showMenu: { type: Boolean, state: true },
-  };
+  @property({ type: Array }) layouts: Layout[] = [];
+  @property({ type: Object }) activeLayout: Layout | null = null;
+  @property({ type: Object }) mousePos: { x: number | null, y: number | null } = { x: null, y: null };
 
-  constructor() {
-    super();
-    this._showMenu = false;
-    this._handleGlobalClick = (e) => {
-      if (this._showMenu && !e.composedPath().some(el => el.classList?.contains('dropdown'))) {
-        this._showMenu = false;
-      }
-    };
-  }
+  @state() private _showMenu = false;
+
+  private _handleGlobalClick?: (e: MouseEvent) => void;
 
   connectedCallback() {
     super.connectedCallback();
+    this._handleGlobalClick = (e: MouseEvent) => {
+      if (this._showMenu && !e.composedPath().some(el => (el as HTMLElement).classList?.contains('dropdown'))) {
+        this._showMenu = false;
+      }
+    };
     window.addEventListener('click', this._handleGlobalClick);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    window.removeEventListener('click', this._handleGlobalClick);
+    if (this._handleGlobalClick) {
+      window.removeEventListener('click', this._handleGlobalClick);
+    }
   }
 
-  _dispatch(name, detail) {
+  private _dispatch(name: string, detail?: any) {
     this.dispatchEvent(new CustomEvent(name, { detail, bubbles: true, composed: true }));
     this._showMenu = false;
   }
@@ -105,7 +111,7 @@ export class AppToolbar extends LitElement {
   render() {
     return html`
       <div class="dropdown">
-        <div class="dropdown-trigger ${this._showMenu ? 'active' : ''}" @click="${(e) => { e.stopPropagation(); this._showMenu = !this._showMenu; }}">
+        <div class="dropdown-trigger ${this._showMenu ? 'active' : ''}" @click="${() => this._showMenu = !this._showMenu}">
           <span>${this.activeLayout?.name || 'Loading...'}</span>
           <div class="chevron">▼</div>
         </div>
@@ -123,12 +129,12 @@ export class AppToolbar extends LitElement {
           </div>
         </div>
       </div>
-      
-      <div class="stats">
-        ${this.mousePos?.x !== null ? html`
-          <span class="pos-highlight">X: ${this.mousePos.x}mm, Y: ${this.mousePos.y}mm</span>
+
+      <div class="mouse-info">
+        ${this.mousePos.x !== null ? html`
+          <span class="pos-value">X: ${this.mousePos.x}mm, Y: ${this.mousePos.y}mm</span>
         ` : ''}
-        <span class="${this.mousePos?.x !== null ? 'divider' : ''}">
+        <span class="canvas-dim">
           Canvas: ${this.activeLayout?.canvas_width_mm}x${this.activeLayout?.canvas_height_mm}mm
         </span>
       </div>
@@ -136,4 +142,8 @@ export class AppToolbar extends LitElement {
   }
 }
 
-customElements.define('app-toolbar', AppToolbar);
+declare global {
+  interface HTMLElementTagNameMap {
+    'app-toolbar': AppToolbar;
+  }
+}

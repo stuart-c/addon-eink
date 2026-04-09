@@ -1,7 +1,12 @@
-import { LitElement, html, css } from 'lit';
-import './shared/hardware-preview.js';
-import { commonStyles } from '../styles/common-styles.js';
+import { LitElement, html, css, PropertyValues } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
+import './shared/hardware-preview';
+import { commonStyles } from '../styles/common-styles';
 
+/**
+ * Represents a single fixed-size display instance on the layout.
+ */
+@customElement('layout-box')
 export class LayoutBox extends LitElement {
   static styles = [
     commonStyles,
@@ -59,23 +64,23 @@ export class LayoutBox extends LitElement {
     `
   ];
 
-  static properties = {
-    x: { type: Number },
-    y: { type: Number },
-    width: { type: Number },
-    height: { type: Number },
-    orientation: { type: Number },
-    name: { type: String },
-    selected: { type: Boolean, reflect: true },
-    invalid: { type: Boolean, reflect: true },
-    border_width_mm: { type: Number },
-    panel_width_mm: { type: Number },
-    panel_height_mm: { type: Number },
-    frame_colour: { type: String },
-    mat_colour: { type: String }
-  };
+  @property({ type: Number }) x = 0;
+  @property({ type: Number }) y = 0;
+  @property({ type: Number }) width = 0;
+  @property({ type: Number }) height = 0;
+  @property({ type: Number }) orientation = 0; // 0 or 90
+  @property({ type: String }) name = '';
+  @property({ type: Boolean, reflect: true }) selected = false;
+  @property({ type: Boolean, reflect: true }) invalid = false;
+  
+  // Hardware details
+  @property({ type: Number }) border_width_mm = 0;
+  @property({ type: Number }) panel_width_mm = 0;
+  @property({ type: Number }) panel_height_mm = 0;
+  @property({ type: String }) frame_colour = '';
+  @property({ type: String }) mat_colour = '';
 
-  updated(changedProperties) {
+  protected updated(changedProperties: PropertyValues) {
     if (changedProperties.has('x') || changedProperties.has('y')) {
       this.style.transform = `translate(${this.x}px, ${this.y}px)`;
     }
@@ -86,7 +91,7 @@ export class LayoutBox extends LitElement {
     }
   }
 
-  _dispatch(name) {
+  private _dispatch(name: string) {
     this.dispatchEvent(new CustomEvent(name, { bubbles: true, composed: true }));
   }
 
@@ -112,10 +117,10 @@ export class LayoutBox extends LitElement {
           <div class="action-icon" title="Settings" @click="${() => this._dispatch('item-edit')}">
             <span class="material-icons" style="font-size: 16px;">settings</span>
           </div>
-          <div class="action-icon" title="Rotate" @click="${(e) => { e.stopPropagation(); this._dispatch('item-rotate'); }}">
+          <div class="action-icon" title="Rotate" @click="${(e: Event) => { e.stopPropagation(); this._dispatch('item-rotate'); }}">
             <span class="material-icons" style="font-size: 16px;">rotate_right</span>
           </div>
-          <div class="action-icon delete" title="Delete" @click="${(e) => { e.stopPropagation(); this._dispatch('item-delete'); }}">
+          <div class="action-icon delete" title="Delete" @click="${(e: Event) => { e.stopPropagation(); this._dispatch('item-delete'); }}">
             <span class="material-icons" style="font-size: 16px;">delete_outline</span>
           </div>
         </div>
@@ -123,4 +128,9 @@ export class LayoutBox extends LitElement {
     `;
   }
 }
-customElements.define('layout-box', LayoutBox);
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'layout-box': LayoutBox;
+  }
+}
