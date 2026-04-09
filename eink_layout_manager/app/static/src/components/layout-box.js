@@ -45,9 +45,9 @@ export class LayoutBox extends LitElement {
         background: white; padding: 6px 10px; border-radius: 20px;
         box-shadow: var(--shadow-medium); z-index: 50;
         transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        transform: scale(0.8);
+        transform: scale(calc(0.8 / var(--editor-scale, 1)));
       }
-      :host(:hover) .actions { opacity: 1; visibility: visible; transform: scale(1); }
+      :host(:hover) .actions { opacity: 1; visibility: visible; transform: scale(calc(1 / var(--editor-scale, 1))); }
       
       .action-icon {
         cursor: pointer; color: #555; width: 24px; height: 24px;
