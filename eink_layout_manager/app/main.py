@@ -7,7 +7,8 @@ from aiohttp import web
 from jsonschema import validate, ValidationError
 
 # Base directory for data persistence
-SCHEMAS_DIR = os.path.join(os.path.dirname(__file__), "schemas")
+# Base directory for data persistence
+SCHEMAS_DIR = os.path.realpath(os.path.join(os.path.dirname(__file__), "schemas"))
 
 
 def get_storage_path(resource_type):
@@ -22,9 +23,17 @@ def get_storage_path(resource_type):
         raise ValueError(f"Invalid resource type: {resource_type}")
 
     data_dir = os.environ.get("DATA_DIR", "/data")
+    data_root_canonical = os.path.realpath(data_dir)
+
     path = os.path.join(data_dir, resource_type)
-    os.makedirs(path, exist_ok=True)
-    return path
+    real_path = os.path.realpath(path)
+
+    # Security: Canonical path validation (Good pattern)
+    if not real_path.startswith(data_root_canonical):
+        raise ValueError(f"Invalid storage path (traversal): {path}")
+
+    os.makedirs(real_path, exist_ok=True)
+    return real_path
 
 
 def validate_id(item_id):
@@ -88,26 +97,16 @@ async def get_collection(request):
         return web.json_response({"error": str(e)}, status=400)
 
     items = []
-    storage_real = os.path.realpath(storage_path)
-    if os.path.exists(storage_real):
-        for filename in os.listdir(storage_real):
+    if os.path.exists(storage_path):
+        for filename in os.listdir(storage_path):
             if filename.endswith(".json"):
-                # Security: Validate the base ID to break the
-                # taint from os.listdir
-                item_id = filename[:-5]
-                try:
-                    validate_id(item_id)
-                except ValueError:
+                # Security: Construct and verify canonical path for each file
+                file_path = os.path.join(storage_path, filename)
+                file_real = os.path.realpath(file_path)
+
+                if not file_real.startswith(storage_path):
                     continue
 
-                file_path = os.path.join(storage_real, filename)
-                file_real = os.path.realpath(file_path)
-                # Ensure we only open files within the intended directory
-                if (
-                    os.path.commonpath([storage_real, file_real])
-                    != storage_real
-                ):
-                    continue
                 with open(file_real, "r") as f:
                     try:
                         items.append(json.load(f))
@@ -127,11 +126,16 @@ async def get_item(request):
         return web.json_response({"error": str(e)}, status=400)
 
     file_path = os.path.join(storage_path, f"{item_id}.json")
+    file_real = os.path.realpath(file_path)
 
-    if not os.path.exists(file_path):
+    # Security: Canonical path validation
+    if not file_real.startswith(storage_path):
+        return web.json_response({"error": "Access Denied"}, status=403)
+
+    if not os.path.exists(file_real):
         return web.json_response({"error": "Not Found"}, status=404)
 
-    with open(file_path, "r") as f:
+    with open(file_real, "r") as f:
         return web.json_response(json.load(f))
 
 
@@ -169,13 +173,18 @@ async def create_item(request):
         return web.json_response({"error": str(e)}, status=400)
 
     file_path = os.path.join(storage_path, f"{item_id}.json")
+    file_real = os.path.realpath(file_path)
 
-    if os.path.exists(file_path):
+    # Security: Canonical path validation
+    if not file_real.startswith(storage_path):
+        return web.json_response({"error": "Access Denied"}, status=403)
+
+    if os.path.exists(file_real):
         return web.json_response(
             {"error": "Resource already exists"}, status=409
         )
 
-    with open(file_path, "w") as f:
+    with open(file_real, "w") as f:
         json.dump(data, f, indent=2)
 
     return web.json_response(data, status=201)
@@ -222,11 +231,16 @@ async def update_item(request):
         return web.json_response({"error": str(e)}, status=400)
 
     file_path = os.path.join(storage_path, f"{item_id}.json")
+    file_real = os.path.realpath(file_path)
 
-    if not os.path.exists(file_path):
+    # Security: Canonical path validation
+    if not file_real.startswith(storage_path):
+        return web.json_response({"error": "Access Denied"}, status=403)
+
+    if not os.path.exists(file_real):
         return web.json_response({"error": "Not Found"}, status=404)
 
-    with open(file_path, "w") as f:
+    with open(file_real, "w") as f:
         json.dump(data, f, indent=2)
 
     return web.json_response(data, status=200)
@@ -243,8 +257,13 @@ async def delete_item(request):
         return web.json_response({"error": str(e)}, status=400)
 
     file_path = os.path.join(storage_path, f"{item_id}.json")
+    file_real = os.path.realpath(file_path)
 
-    if not os.path.exists(file_path):
+    # Security: Canonical path validation
+    if not file_real.startswith(storage_path):
+        return web.json_response({"error": "Access Denied"}, status=403)
+
+    if not os.path.exists(file_real):
         return web.json_response({"error": "Not Found"}, status=404)
 
     # Referential Integrity: Don't delete display_type if used in any layout
@@ -256,8 +275,13 @@ async def delete_item(request):
         if os.path.exists(layout_path):
             for filename in os.listdir(layout_path):
                 if filename.endswith(".json"):
+                    # Security: Canonical path check for each layout item
                     file_path_layout = os.path.join(layout_path, filename)
-                    with open(file_path_layout, "r") as f:
+                    file_real_layout = os.path.realpath(file_path_layout)
+                    if not file_real_layout.startswith(layout_path):
+                        continue
+
+                    with open(file_real_layout, "r") as f:
                         try:
                             layout_data = json.load(f)
                             # Check every item in this layout
@@ -277,7 +301,7 @@ async def delete_item(request):
                         except (json.JSONDecodeError, KeyError):
                             continue
 
-    os.remove(file_path)
+    os.remove(file_real)
     return web.json_response({"status": "deleted"})
 
 
