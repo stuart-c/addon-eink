@@ -2,6 +2,7 @@ import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { live } from 'lit/directives/live.js';
 import { DisplayType } from '../services/HaApiClient';
+import { commonStyles } from '../styles/common-styles';
 import './shared/hardware-preview';
 
 /**
@@ -9,7 +10,9 @@ import './shared/hardware-preview';
  */
 @customElement('display-type-dialog')
 export class DisplayTypeDialog extends LitElement {
-  static styles = css`
+  static styles = [
+    commonStyles,
+    css`
     dialog {
       border: none;
       border-radius: 12px;
@@ -36,7 +39,8 @@ export class DisplayTypeDialog extends LitElement {
       border-bottom: 1px solid #eee;
     }
     h2 { margin: 0; font-size: 1.1rem; color: #333; text-transform: uppercase; letter-spacing: 0.5px; }
-    
+    .main-layout {
+      display: grid;
       grid-template-columns: 220px 1fr 340px;
       grid-template-rows: 1fr;
       flex: 1;
@@ -291,7 +295,8 @@ export class DisplayTypeDialog extends LitElement {
       margin-left: 2px;
       font-weight: normal;
     }
-  `;
+    `
+  ];
 
   @property({ type: Object }) displayType!: DisplayType;
   @property({ type: Array }) displayTypes: DisplayType[] = [];
