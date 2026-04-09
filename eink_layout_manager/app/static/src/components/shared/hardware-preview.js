@@ -1,0 +1,86 @@
+import { LitElement, html, css } from 'lit';
+
+/**
+ * A shared component for rendering the physical display assembly:
+ * Frame -> Mat -> Display Panel
+ */
+export class HardwarePreview extends LitElement {
+  static styles = css`
+    :host {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .preview-layer {
+      position: absolute;
+      box-shadow: 4px 4px 10px rgba(0,0,0,0.15);
+      transition: all 0.2s ease-out;
+    }
+    .preview-frame { z-index: 10; border-radius: 2px; }
+    .preview-mat { z-index: 20; border-radius: 1px; }
+    .preview-display { 
+      z-index: 30; 
+      background: #fff; 
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+  `;
+
+  static properties = {
+    width_mm: { type: Number },
+    height_mm: { type: Number },
+    border_width_mm: { type: Number },
+    panel_width_mm: { type: Number },
+    panel_height_mm: { type: Number },
+    frame_colour: { type: String },
+    mat_colour: { type: String },
+    scale: { type: Number }, // Pixels per mm
+  };
+
+  constructor() {
+    super();
+    this.scale = 1;
+    this.frame_colour = '#000';
+    this.mat_colour = '#fff';
+  }
+
+  render() {
+    const frameW = this.width_mm || 0;
+    const frameH = this.height_mm || 0;
+    const border = this.border_width_mm || 0;
+    const panelW = this.panel_width_mm || 0;
+    const panelH = this.panel_height_mm || 0;
+
+    const matW = frameW - (2 * border);
+    const matH = frameH - (2 * border);
+    
+    const matL = (matW - panelW) / 2;
+    const matT = (matH - panelH) / 2;
+
+    const assemblyStyle = `width: ${frameW * this.scale}px; height: ${frameH * this.scale}px;`;
+    const frameStyle = `width: 100%; height: 100%; background: ${this.frame_colour};`;
+    const matStyle = `
+      top: ${border * this.scale}px; 
+      left: ${border * this.scale}px; 
+      width: ${matW * this.scale}px; 
+      height: ${matH * this.scale}px; 
+      background: ${this.mat_colour};
+    `;
+    const displayStyle = `
+      top: ${(border + matT) * this.scale}px; 
+      left: ${(border + matL) * this.scale}px; 
+      width: ${panelW * this.scale}px; 
+      height: ${panelH * this.scale}px;
+    `;
+
+    return html`
+      <div class="assembly" style="${assemblyStyle}">
+        <div class="preview-layer preview-frame" style="${frameStyle}"></div>
+        <div class="preview-layer preview-mat" style="${matStyle}"></div>
+        <div class="preview-layer preview-display" style="${displayStyle}"></div>
+      </div>
+    `;
+  }
+}
+
+customElements.define('hardware-preview', HardwarePreview);
