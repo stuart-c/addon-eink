@@ -19,7 +19,7 @@ We utilize **VS Code Dev Containers** to provide a consistent, reproducible deve
 
 ## Workflow Patterns
 
-All agents and contributors must follow the mandatory workflow defined in the [Agent Workflow Guide](../agents.md).
+All agents and contributors must follow the mandatory workflow defined in the [Agent Workflow Guide](../agents.md). This includes using the `.worktrees/` directory for all parallel feature development.
 
 ### Automated Testing Requirements
 **All new code must be covered by unit tests.** 
