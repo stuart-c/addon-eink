@@ -1,185 +1,91 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { Layout } from '../services/HaApiClient';
+import './shared/base-dialog';
+import { commonStyles } from '../styles/common-styles';
+import { BaseDialog } from './shared/base-dialog';
 
 /**
  * A dialog component for configuring layout settings like canvas size and grid snapping.
  */
 @customElement('layout-settings-dialog')
 export class LayoutSettingsDialog extends LitElement {
-  static styles = css`
-    dialog {
-      border: none;
-      border-radius: 12px;
-      padding: 0;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-      width: 450px;
-      max-width: 90vw;
-      font-family: inherit;
-    }
-    dialog::backdrop {
-      background: rgba(0, 0, 0, 0.4);
-      backdrop-filter: blur(4px);
-    }
-    .container {
-      padding: 2rem;
-    }
-    header {
-      margin-bottom: 2rem;
-      border-bottom: 1px solid #eee;
-      padding-bottom: 1rem;
-    }
-    h2 { margin: 0; font-size: 1.5rem; color: #333; }
-    .form-group {
-      margin-bottom: 1.5rem;
-    }
-    label {
-      display: block;
-      font-size: 11px;
-      font-weight: 700;
-      color: #888;
-      margin-bottom: 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    input, select {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      box-sizing: border-box;
-      font-size: 14px;
-      transition: border-color 0.2s;
-    }
-    input:focus {
-        outline: none;
-        border-color: #03a9f4;
-    }
-    .row {
-      display: flex;
-      gap: 1.5rem;
-    }
-    .row > * { flex: 1; }
-    
-    .segmented-control {
-      display: flex;
-      background: #f0f2f5;
-      padding: 4px;
-      border-radius: 8px;
-    }
-    .segment {
-      flex: 1;
-      text-align: center;
-      padding: 8px;
-      cursor: pointer;
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: 500;
-      color: #666;
-      transition: all 0.2s;
-    }
-    .segment:hover {
-      color: #333;
-    }
-    .segment.selected {
-      background: white;
-      color: #03a9f4;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
+  static styles = [
+    commonStyles,
+    css`
+      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    `
+  ];
 
-    footer {
-      margin-top: 2.5rem;
-      display: flex;
-      justify-content: flex-end;
-      gap: 1rem;
-    }
-    button {
-      padding: 10px 20px;
-      border-radius: 6px;
-      cursor: pointer;
-      border: none;
-      font-weight: 600;
-      font-size: 14px;
-      transition: all 0.2s;
-    }
-    .primary { background: #03a9f4; color: white; }
-    .primary:hover { background: #0288d1; }
-    .secondary { background: #f0f2f5; color: #444; }
-    .secondary:hover { background: #e4e6e9; }
-  `;
+  @property({ type: Object }) settings: Partial<Layout> | null = null;
 
-  @property({ type: Object }) layout: Partial<Layout> = {
-    name: '',
-    canvas_width_mm: 500,
-    canvas_height_mm: 500,
-    grid_snap_mm: 5
-  };
-
-  show(layout: Layout) {
-    this.layout = JSON.parse(JSON.stringify(layout));
-    this.shadowRoot?.querySelector('dialog')?.showModal();
-  }
-
-  close() {
-    this.shadowRoot?.querySelector('dialog')?.close();
+  show(settings: Layout) {
+    this.settings = JSON.parse(JSON.stringify(settings));
+    (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).show();
   }
 
   private _handleSubmit(e: Event) {
     e.preventDefault();
-    this.dispatchEvent(new CustomEvent('save', { detail: { settings: this.layout } }));
-    this.close();
+    this.dispatchEvent(new CustomEvent('save', { detail: { settings: this.settings } }));
+    (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).close();
   }
 
   render() {
+    if (!this.settings) return html``;
+
     return html`
-      <dialog>
-        <div class="container">
-          <header>
-            <h2>Layout Settings</h2>
-          </header>
-          <form @submit="${this._handleSubmit}">
+      <base-dialog title="Layout Settings">
+        <form id="layout-form" @submit="${this._handleSubmit}">
+          <div class="form-group">
+            <label>Layout Name</label>
+            <input 
+              type="text" 
+              required 
+              .value="${this.settings.name || ''}" 
+              @input="${(e: any) => this.settings ? this.settings.name = e.target.value : null}"
+            >
+          </div>
+
+          <div class="grid">
             <div class="form-group">
-              <label>Layout Name</label>
+              <label>Canvas Width (mm)</label>
               <input 
-                type="text" 
+                type="number" 
                 required 
-                .value="${this.layout.name || ''}"
-                @input="${(e: any) => this.layout.name = e.target.value}"
+                .value="${this.settings.canvas_width_mm?.toString() || ''}" 
+                @input="${(e: any) => this.settings ? this.settings.canvas_width_mm = parseInt(e.target.value) : null}"
               >
             </div>
-            
-            <div class="row">
-              <div class="form-group">
-                <label>Canvas Width (mm)</label>
-                <input type="number" required .value="${this.layout.canvas_width_mm?.toString() || ''}" @input="${(e: any) => this.layout.canvas_width_mm = parseInt(e.target.value)}">
-              </div>
-              <div class="form-group">
-                <label>Canvas Height (mm)</label>
-                <input type="number" required .value="${this.layout.canvas_height_mm?.toString() || ''}" @input="${(e: any) => this.layout.canvas_height_mm = parseInt(e.target.value)}">
-              </div>
-            </div>
-
             <div class="form-group">
-              <label>Grid Snapping</label>
-              <div class="segmented-control">
-                ${[1, 5, 10, 20].map(snap => html`
-                  <div 
-                    class="segment ${this.layout.grid_snap_mm === snap ? 'selected' : ''}" 
-                    @click="${() => { this.layout.grid_snap_mm = snap; this.requestUpdate(); }}"
-                  >
-                    ${snap}mm
-                  </div>
-                `)}
-              </div>
+              <label>Canvas Height (mm)</label>
+              <input 
+                type="number" 
+                required 
+                .value="${this.settings.canvas_height_mm?.toString() || ''}" 
+                @input="${(e: any) => this.settings ? this.settings.canvas_height_mm = parseInt(e.target.value) : null}"
+              >
             </div>
+          </div>
 
-            <footer>
-              <button type="button" class="secondary" @click="${this.close}">Cancel</button>
-              <button type="submit" class="primary">Apply Settings</button>
-            </footer>
-          </form>
+          <div class="form-group">
+            <label>Grid Snap (mm)</label>
+            <input 
+              type="number" 
+              required 
+              step="1" 
+              min="1" 
+              max="50" 
+              .value="${this.settings.grid_snap_mm?.toString() || ''}" 
+              @input="${(e: any) => this.settings ? this.settings.grid_snap_mm = parseInt(e.target.value) : null}"
+            >
+          </div>
+        </form>
+
+        <div slot="footer">
+          <button class="secondary" @click="${() => (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).close()}">Cancel</button>
+          <button class="primary" @click="${() => (this.shadowRoot?.getElementById('layout-form') as HTMLFormElement).requestSubmit()}">Save Settings</button>
         </div>
-      </dialog>
+      </base-dialog>
     `;
   }
 }

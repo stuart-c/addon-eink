@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
 import { DisplayType } from '../services/HaApiClient';
+import './shared/hardware-preview';
 
 /**
  * A dialog component for creating and editing eInk Display Types.
@@ -66,27 +67,6 @@ export class DisplayTypeDialog extends LitElement {
       box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
       position: relative;
       overflow: hidden;
-    }
-
-    .hardware-assembly {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-    }
-
-    .preview-layer {
-      position: absolute;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-      transition: all 0.2s ease-out;
-    }
-
-    .preview-frame { z-index: 10; border-radius: 2px; }
-    .preview-mat { z-index: 20; border-radius: 1px; }
-    .preview-display { 
-      z-index: 30; 
-      background: #fff; 
-      border: 1px solid rgba(0,0,0,0.1);
     }
 
     .preview-label {
@@ -160,34 +140,6 @@ export class DisplayTypeDialog extends LitElement {
       color: #000;
       text-transform: uppercase;
       letter-spacing: 1px;
-    }
-    .radio-group {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 1.25rem;
-      background: #f8f9fa;
-      padding: 4px;
-      border-radius: 8px;
-    }
-    .radio-option {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      font-size: 13px;
-      padding: 8px;
-      cursor: pointer;
-      border-radius: 6px;
-      transition: background 0.2s;
-    }
-    .radio-option:has(input:checked) {
-      background: #fff;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      color: #03a9f4;
-    }
-    .radio-option input {
-      width: auto;
     }
     .swatch-group {
       display: flex;
@@ -331,49 +283,6 @@ export class DisplayTypeDialog extends LitElement {
     this.close();
   }
 
-  private _renderPreview() {
-    const frameW = this.displayType.width_mm || 0;
-    const frameH = this.displayType.height_mm || 0;
-    const border = this.displayType.frame?.border_width_mm || 0;
-    const panelW = this.displayType.panel_width_mm || 0;
-    const panelH = this.displayType.panel_height_mm || 0;
-
-    const matW = frameW - (2 * border);
-    const matH = frameH - (2 * border);
-    
-    const matL = (matW - panelW) / 2;
-    const matT = (matH - panelH) / 2;
-
-    const maxPreviewDim = 240; 
-    const scale = frameW > 0 && frameH > 0 
-      ? maxPreviewDim / Math.max(frameW, frameH) 
-      : 1;
-
-    const assemblyStyle = `width: ${frameW * scale}px; height: ${frameH * scale}px;`;
-    const frameStyle = `width: 100%; height: 100%; background: ${this.displayType.frame?.colour || '#000'};`;
-    const matStyle = `
-      top: ${border * scale}px; 
-      left: ${border * scale}px; 
-      width: ${matW * scale}px; 
-      height: ${matH * scale}px; 
-      background: ${this.displayType.mat?.colour || '#fff'};
-    `;
-    const displayStyle = `
-      top: ${(border + matT) * scale}px; 
-      left: ${(border + matL) * scale}px; 
-      width: ${panelW * scale}px; 
-      height: ${panelH * scale}px;
-    `;
-
-    return html`
-      <div class="hardware-assembly" style="${assemblyStyle}">
-        <div class="preview-layer preview-frame" style="${frameStyle}"></div>
-        <div class="preview-layer preview-mat" style="${matStyle}"></div>
-        <div class="preview-layer preview-display" style="${displayStyle}"></div>
-      </div>
-    `;
-  }
-
   private _renderColourPicker(label: string, value: string, onUpdate: (colour: string) => void) {
     return html`
       <div class="form-group">
@@ -413,6 +322,11 @@ export class DisplayTypeDialog extends LitElement {
     const matH = frameH - (2 * border);
     const cutoutX = (matW - panelW) / 2;
     const cutoutY = (matH - panelH) / 2;
+
+    const maxPreviewDim = 240; 
+    const scale = frameW > 0 && frameH > 0 
+      ? maxPreviewDim / Math.max(frameW, frameH) 
+      : 1;
 
     return html`
       <dialog>
@@ -499,7 +413,16 @@ export class DisplayTypeDialog extends LitElement {
             <div class="preview-column">
               <div class="preview-label">Visual Layout</div>
               <div class="preview-canvas">
-                ${this._renderPreview()}
+                <hardware-preview
+                  .width_mm="${this.displayType.width_mm}"
+                  .height_mm="${this.displayType.height_mm}"
+                  .border_width_mm="${this.displayType.frame.border_width_mm}"
+                  .panel_width_mm="${this.displayType.panel_width_mm}"
+                  .panel_height_mm="${this.displayType.panel_height_mm}"
+                  .frame_colour="${this.displayType.frame.colour}"
+                  .mat_colour="${this.displayType.mat.colour}"
+                  .scale="${scale}"
+                ></hardware-preview>
               </div>
               
               <div class="preview-label" style="margin-top: 1rem;">Dimension Summary</div>
