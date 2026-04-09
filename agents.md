@@ -30,6 +30,7 @@ Example: `feat/add-layout-scaling` or `fix/broken-sidebar-link`.
 
 ## 3. Git Worktrees for Parallel Work
 It is vitally important that git worktrees are used to allow multiple agents to work in parallel without overlap.
+- **The main directory must only ever contain the `main` branch.**
 - **All feature branch worktrees MUST reside in the `.worktrees/` directory.**
 - Never checkout a feature branch in the core repository directory.
 - Use `git worktree add .worktrees/<branch-name> <branch-name>` to create a new workspace for your task.
