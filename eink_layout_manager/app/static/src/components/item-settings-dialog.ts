@@ -98,7 +98,7 @@ export class ItemSettingsDialog extends LitElement {
           </div>
         </form>
 
-        <div slot="footer">
+        <div slot="footer" style="display: flex; width: 100%; gap: 1rem;">
           <button class="danger" style="margin-right: auto;" @click="${this._handleDelete}">Delete</button>
           <button class="secondary" @click="${() => (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).close()}">Cancel</button>
           <button class="primary" @click="${() => (this.shadowRoot?.getElementById('item-form') as HTMLFormElement).requestSubmit()}">Apply</button>
