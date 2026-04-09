@@ -212,7 +212,7 @@ async def delete_item(request):
 
 
 def init_app():
-    """Initialize the aiohttp application with routes and storage setup."""
+    """Initialise the aiohttp application with routes and storage setup."""
     app = web.Application(middlewares=[request_logger_middleware])
 
     # Data directory setup
