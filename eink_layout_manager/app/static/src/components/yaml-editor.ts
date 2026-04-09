@@ -24,6 +24,9 @@ export class YamlEditor extends LitElement {
         color: #d4d4d4;
         font-family: 'Fira Code', 'Monaco', 'Consolas', 'Courier New', monospace;
       }
+      :host([hidden]) {
+        display: none !important;
+      }
       .editor-container {
         flex: 1;
         position: relative;
