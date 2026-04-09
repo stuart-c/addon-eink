@@ -1,11 +1,14 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, PropertyValues } from 'lit';
+import { customElement, property, state } from 'lit/decorators.js';
 import interact from 'interactjs';
-import './layout-box.js';
+import './layout-box';
+import { DisplayType, LayoutItem } from '../services/HaApiClient';
 
 /**
  * The main layout editor workspace.
  * Manages the arrangement of eInk display instances.
  */
+@customElement('layout-editor')
 export class LayoutEditor extends LitElement {
   static styles = css`
     :host {
@@ -50,8 +53,8 @@ export class LayoutEditor extends LitElement {
       top: 0; left: 0; right: 0; bottom: 0;
       pointer-events: none;
       background-image: 
-        linear-gradient(to right, #f0f0f0 1px, transparent 1px),
-        linear-gradient(to bottom, #f0f0f0 1px, transparent 1px);
+      linear-gradient(to right, #f0f0f0 1px, transparent 1px),
+      linear-gradient(to bottom, #f0f0f0 1px, transparent 1px);
       background-size: var(--grid-size, 10px) var(--grid-size, 10px);
     }
     /* Resize handles hints */
@@ -67,25 +70,19 @@ export class LayoutEditor extends LitElement {
     .canvas:hover::after { opacity: 1; }
   `;
 
-  static properties = {
-    width_mm: { type: Number },
-    height_mm: { type: Number },
-    gridSnap: { type: Number },
-    items: { type: Array },
-    displayTypes: { type: Array },
-    selectedId: { type: String },
-    _scale: { type: Number, state: true }
-  };
+  @property({ type: Number }) width_mm = 500;
+  @property({ type: Number }) height_mm = 500;
+  @property({ type: Number }) gridSnap = 5;
+  @property({ type: Array }) items: LayoutItem[] = [];
+  @property({ type: Array }) displayTypes: DisplayType[] = [];
+  @property({ type: String }) selectedId: string | null = null;
+  
+  @state() private _scale = 1;
+
+  private _resizeObserver: ResizeObserver;
 
   constructor() {
     super();
-    this.width_mm = 500;
-    this.height_mm = 500;
-    this.gridSnap = 5;
-    this.items = [];
-    this.displayTypes = [];
-    this.selectedId = null;
-    this._scale = 1;
     this._resizeObserver = new ResizeObserver((entries) => {
       if (entries[0]) {
         this._updateScale(entries[0].contentRect);
@@ -103,13 +100,13 @@ export class LayoutEditor extends LitElement {
     this._resizeObserver.disconnect();
   }
 
-  firstUpdated() {
+  protected firstUpdated() {
     this._setupInteractions();
     this._validateLayout();
     this._updateScale();
   }
 
-  updated(changedProperties) {
+  protected updated(changedProperties: PropertyValues) {
     if (changedProperties.has('gridSnap') || changedProperties.has('items')) {
       this._setupInteractions();
       this._validateLayout();
@@ -119,7 +116,7 @@ export class LayoutEditor extends LitElement {
     }
   }
 
-  _updateScale(rect = null) {
+  private _updateScale(rect: DOMRectReadOnly | Partial<DOMRectReadOnly> | null = null) {
     // If no rect provided, fallback to current element dimensions
     if (!rect) {
       const bcr = this.getBoundingClientRect();
@@ -127,8 +124,8 @@ export class LayoutEditor extends LitElement {
     }
 
     const padding = 80;
-    const availableWidth = Math.max(0, rect.width - padding);
-    const availableHeight = Math.max(0, rect.height - padding);
+    const availableWidth = Math.max(0, (rect.width || 0) - padding);
+    const availableHeight = Math.max(0, (rect.height || 0) - padding);
     
     if (availableWidth > 0 && availableHeight > 0) {
       const scaleX = availableWidth / this.width_mm;
@@ -143,13 +140,16 @@ export class LayoutEditor extends LitElement {
     }
   }
 
-  _setupInteractions() {
+  private _setupInteractions() {
+    const canvas = this.shadowRoot?.querySelector('.canvas') as HTMLElement;
+    if (!canvas) return;
+
     // Clear existing interactions to avoid duplicates on re-init
-    interact(this.shadowRoot.querySelector('.canvas')).unset();
-    interact('layout-box', { context: this.shadowRoot }).unset();
+    interact(canvas).unset();
+    interact('layout-box', { context: this.shadowRoot as any }).unset();
 
     // Layout boxes dragging
-    interact('layout-box', { context: this.shadowRoot })
+    interact('layout-box', { context: this.shadowRoot as any })
       .draggable({
         modifiers: [
           interact.modifiers.restrictRect({
@@ -163,7 +163,7 @@ export class LayoutEditor extends LitElement {
           })
         ],
         listeners: {
-          move: (event) => {
+          move: (event: any) => {
             const target = event.target;
             const id = target.getAttribute('data-id');
             const item = this.items.find(i => i.id === id);
@@ -182,10 +182,10 @@ export class LayoutEditor extends LitElement {
               target.x = item.x_mm;
               target.y = item.y_mm;
               this._validateLayout();
-              this._requestUpdate();
+              this._triggerRequestUpdate();
             }
           },
-          end: (event) => {
+          end: (event: any) => {
              const id = event.target.getAttribute('data-id');
              const item = this.items.find(i => i.id === id);
              if (item) {
@@ -200,7 +200,7 @@ export class LayoutEditor extends LitElement {
       });
 
     // Canvas resizing
-    interact(this.shadowRoot.querySelector('.canvas'))
+    interact(canvas)
       .resizable({
         edges: { right: true, bottom: true, left: false, top: false },
         modifiers: [
@@ -215,9 +215,9 @@ export class LayoutEditor extends LitElement {
         ],
         listeners: {
           start: () => {
-            this.shadowRoot.querySelector('.canvas').classList.add('resizing');
+            canvas.classList.add('resizing');
           },
-          move: (event) => {
+          move: (event: any) => {
             // Apply scale to dimension change
             this.width_mm = Math.round(event.rect.width / this._scale / this.gridSnap) * this.gridSnap;
             this.height_mm = Math.round(event.rect.height / this._scale / this.gridSnap) * this.gridSnap;
@@ -227,7 +227,7 @@ export class LayoutEditor extends LitElement {
             this._validateLayout();
           },
           end: () => {
-            this.shadowRoot.querySelector('.canvas').classList.remove('resizing');
+            canvas.classList.remove('resizing');
             this.dispatchEvent(new CustomEvent('layout-resized', {
               detail: { width: this.width_mm, height: this.height_mm },
               bubbles: true,
@@ -238,7 +238,7 @@ export class LayoutEditor extends LitElement {
       });
   }
 
-  _validateLayout() {
+  private _validateLayout() {
     this.items.forEach(i => i.invalid = false);
 
     for (let i = 0; i < this.items.length; i++) {
@@ -254,46 +254,49 @@ export class LayoutEditor extends LitElement {
         item1.invalid = true;
       }
       for (let j = i + 1; j < this.items.length; j++) {
-        const item1 = this.items[i];
+        const item1_check = this.items[i];
         const item2 = this.items[j];
-        const dt1 = this.displayTypes.find(t => t.id === item1.display_type_id);
+        const dt1_check = this.displayTypes.find(t => t.id === item1_check.display_type_id);
         const dt2 = this.displayTypes.find(t => t.id === item2.display_type_id);
 
-        if (!dt1 || !dt2) continue;
+        if (!dt1_check || !dt2) continue;
 
-        const w1 = item1.orientation === 90 ? dt1.height_mm : dt1.width_mm;
-        const h1 = item1.orientation === 90 ? dt1.width_mm : dt1.height_mm;
+        const w1_check = item1_check.orientation === 90 ? dt1_check.height_mm : dt1_check.width_mm;
+        const h1_check = item1_check.orientation === 90 ? dt1_check.width_mm : dt1_check.height_mm;
         const w2 = item2.orientation === 90 ? dt2.height_mm : dt2.width_mm;
         const h2 = item2.orientation === 90 ? dt2.width_mm : dt2.height_mm;
 
         if (
-          item1.x_mm < item2.x_mm + w2 &&
-          item1.x_mm + w1 > item2.x_mm &&
-          item1.y_mm < item2.y_mm + h2 &&
-          item1.y_mm + h1 > item2.y_mm
+          item1_check.x_mm < item2.x_mm + w2 &&
+          item1_check.x_mm + w1_check > item2.x_mm &&
+          item1_check.y_mm < item2.y_mm + h2 &&
+          item1_check.y_mm + h1_check > item2.y_mm
         ) {
-          item1.invalid = true;
+          item1_check.invalid = true;
           item2.invalid = true;
         }
       }
     }
   }
 
-  _requestUpdate() {
+  private _triggerRequestUpdate() {
     this.items = [...this.items];
     this.requestUpdate();
   }
 
-  _handleBoxSelect(id) {
+  private _handleBoxSelect(id: string) {
     this.dispatchEvent(new CustomEvent('select-item', { detail: { id } }));
   }
 
-  _handleBoxEdit(id) {
+  private _handleBoxEdit(id: string) {
     this.dispatchEvent(new CustomEvent('edit-item', { detail: { id } }));
   }
 
-  _handleMouseMove(e) {
-    const rect = this.shadowRoot.querySelector('.canvas').getBoundingClientRect();
+  private _handleMouseMove(e: MouseEvent) {
+    const canvas = this.shadowRoot?.querySelector('.canvas');
+    if (!canvas) return;
+    
+    const rect = canvas.getBoundingClientRect();
     // Correct mouse position for scale
     const x = (e.clientX - rect.left) / this._scale;
     const y = (e.clientY - rect.top) / this._scale;
@@ -305,7 +308,7 @@ export class LayoutEditor extends LitElement {
     }));
   }
 
-  _handleMouseLeave() {
+  private _handleMouseLeave() {
     this.dispatchEvent(new CustomEvent('mouse-move', {
       detail: { x: null, y: null },
       bubbles: true,
@@ -313,7 +316,7 @@ export class LayoutEditor extends LitElement {
     }));
   }
 
-  _handleBoxRotate(id) {
+  private _handleBoxRotate(id: string) {
     this.dispatchEvent(new CustomEvent('rotate-item', { detail: { id } }));
   }
 
@@ -364,4 +367,8 @@ export class LayoutEditor extends LitElement {
   }
 }
 
-customElements.define('layout-editor', LayoutEditor);
+declare global {
+  interface HTMLElementTagNameMap {
+    'layout-editor': LayoutEditor;
+  }
+}

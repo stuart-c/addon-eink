@@ -10,9 +10,12 @@
   },
   "dependencies": {
     "interactjs": "^1.10.27",
-    "lit": "^3.1.2"
+    "lit": "^3.1.2",
+    "tslib": "^2.6.2"
   },
   "devDependencies": {
+    "typescript": "^5.4.2",
+    "@types/node": "^20.11.24",
     "vite": "^5.2.0"
   }
 }

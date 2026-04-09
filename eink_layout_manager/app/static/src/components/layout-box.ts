@@ -1,8 +1,10 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, PropertyValues } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
 
 /**
  * Represents a single fixed-size display instance on the layout.
  */
+@customElement('layout-box')
 export class LayoutBox extends LitElement {
   static styles = css`
     :host {
@@ -97,25 +99,23 @@ export class LayoutBox extends LitElement {
     }
   `;
 
-  static properties = {
-    x: { type: Number },
-    y: { type: Number },
-    width: { type: Number },
-    height: { type: Number },
-    orientation: { type: Number }, // 0 or 90
-    name: { type: String },
-    selected: { type: Boolean, reflect: true },
-    invalid: { type: Boolean, reflect: true },
-    
-    // Hardware details
-    border_width_mm: { type: Number },
-    panel_width_mm: { type: Number },
-    panel_height_mm: { type: Number },
-    frame_colour: { type: String },
-    mat_colour: { type: String }
-  };
+  @property({ type: Number }) x = 0;
+  @property({ type: Number }) y = 0;
+  @property({ type: Number }) width = 0;
+  @property({ type: Number }) height = 0;
+  @property({ type: Number }) orientation = 0; // 0 or 90
+  @property({ type: String }) name = '';
+  @property({ type: Boolean, reflect: true }) selected = false;
+  @property({ type: Boolean, reflect: true }) invalid = false;
+  
+  // Hardware details
+  @property({ type: Number }) border_width_mm = 0;
+  @property({ type: Number }) panel_width_mm = 0;
+  @property({ type: Number }) panel_height_mm = 0;
+  @property({ type: String }) frame_colour = '';
+  @property({ type: String }) mat_colour = '';
 
-  updated(changedProperties) {
+  protected updated(changedProperties: PropertyValues) {
     if (changedProperties.has('x') || changedProperties.has('y')) {
       this.style.transform = `translate(${this.x}px, ${this.y}px)`;
     }
@@ -137,14 +137,14 @@ export class LayoutBox extends LitElement {
     }
   }
 
-  _handleDoubleClick(e) {
+  private _handleDoubleClick() {
     this.dispatchEvent(new CustomEvent('item-edit', { 
       bubbles: true, 
       composed: true 
     }));
   }
 
-  _handleRotateClick(e) {
+  private _handleRotateClick(e: Event) {
     e.stopPropagation();
     this.dispatchEvent(new CustomEvent('item-rotate', {
       bubbles: true,
@@ -152,7 +152,7 @@ export class LayoutBox extends LitElement {
     }));
   }
 
-  _handleDeleteClick(e) {
+  private _handleDeleteClick(e: Event) {
     e.stopPropagation();
     this.dispatchEvent(new CustomEvent('item-delete', {
       bubbles: true,
@@ -227,4 +227,8 @@ export class LayoutBox extends LitElement {
   }
 }
 
-customElements.define('layout-box', LayoutBox);
+declare global {
+  interface HTMLElementTagNameMap {
+    'layout-box': LayoutBox;
+  }
+}

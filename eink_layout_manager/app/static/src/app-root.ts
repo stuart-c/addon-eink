@@ -1,11 +1,18 @@
 import { LitElement, html, css } from 'lit';
-import './components/layout-editor.js';
-import './components/display-type-dialog.js';
-import './components/item-settings-dialog.js';
-import './components/layout-settings-dialog.js';
-import './components/confirm-dialog.js';
-import { api } from './services/HaApiClient.js';
+import { customElement, property, state, query } from 'lit/decorators.js';
+import './components/layout-editor';
+import './components/display-type-dialog';
+import './components/item-settings-dialog';
+import './components/layout-settings-dialog';
+import './components/confirm-dialog';
+import { api, DisplayType, Layout, LayoutItem } from './services/HaApiClient';
 
+import { DisplayTypeDialog } from './components/display-type-dialog';
+import { ItemSettingsDialog } from './components/item-settings-dialog';
+import { LayoutSettingsDialog } from './components/layout-settings-dialog';
+import { ConfirmDialog } from './components/confirm-dialog';
+
+@customElement('app-root')
 export class AppRoot extends LitElement {
   static styles = css`
     :host {
@@ -216,35 +223,27 @@ export class AppRoot extends LitElement {
     }
   `;
 
-  static properties = {
-    _connected: { type: Boolean },
-    _displayTypes: { type: Array },
-    _layouts: { type: Array },
-    _activeLayout: { type: Object },
-    _selectedItemId: { type: String },
-    _saving: { type: Boolean },
-    _message: { type: String },
-    _mousePos: { type: Object },
-    _showLayoutMenu: { type: Boolean },
-  };
+  @state() private _connected = false;
+  @state() private _displayTypes: DisplayType[] = [];
+  @state() private _layouts: Layout[] = [];
+  @state() private _activeLayout: Layout | null = null;
+  @state() private _selectedItemId: string | null = null;
+  @state() private _saving = false;
+  @state() private _message = '';
+  @state() private _mousePos: { x: number | null, y: number | null } = { x: null, y: null };
+  @state() private _showLayoutMenu = false;
 
-  constructor() {
-    super();
-    this._connected = false;
-    this._displayTypes = [];
-    this._layouts = [];
-    this._selectedItemId = null;
-    this._saving = false;
-    this._message = '';
-    this._showLayoutMenu = false;
-    this._activeLayout = null;
-    this._mousePos = { x: null, y: null };
-  }
+  @query('display-type-dialog') private _displayTypeDialog!: DisplayTypeDialog;
+  @query('item-settings-dialog') private _itemDialog!: ItemSettingsDialog;
+  @query('layout-settings-dialog') private _layoutSettingsDialog!: LayoutSettingsDialog;
+  @query('confirm-dialog') private _confirmDialog!: ConfirmDialog;
+
+  private _handleGlobalClick?: (e: MouseEvent) => void;
 
   connectedCallback() {
     super.connectedCallback();
-    this._handleGlobalClick = (e) => {
-      if (this._showLayoutMenu && !e.composedPath().some(el => el.classList?.contains('dropdown'))) {
+    this._handleGlobalClick = (e: MouseEvent) => {
+      if (this._showLayoutMenu && !e.composedPath().some(el => (el as HTMLElement).classList?.contains('dropdown'))) {
         this._showLayoutMenu = false;
       }
     };
@@ -253,7 +252,9 @@ export class AppRoot extends LitElement {
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    window.removeEventListener('click', this._handleGlobalClick);
+    if (this._handleGlobalClick) {
+      window.removeEventListener('click', this._handleGlobalClick);
+    }
   }
 
   async firstUpdated() {
@@ -261,24 +262,24 @@ export class AppRoot extends LitElement {
     await this._fetchData();
   }
 
-  async _checkBackend() {
+  private async _checkBackend() {
     this._connected = await api.ping();
   }
 
-  async _fetchData() {
+  private async _fetchData() {
     try {
-      this._displayTypes = await api.getCollection('display_type');
-      this._layouts = await api.getCollection('layout');
+      this._displayTypes = await api.getCollection<DisplayType>('display_type');
+      this._layouts = await api.getCollection<Layout>('layout');
       
       if (this._layouts.length > 0) {
         if (!this._activeLayout) {
           this._activeLayout = this._layouts[0];
         } else {
-          const fresh = this._layouts.find(l => l.id === this._activeLayout.id);
+          const fresh = this._layouts.find(l => l.id === this._activeLayout?.id);
           if (fresh) this._activeLayout = fresh;
         }
       } else {
-        const defaultLayout = {
+        const defaultLayout: Layout = {
           id: 'default',
           name: 'Main Layout',
           canvas_width_mm: 500,
@@ -295,37 +296,39 @@ export class AppRoot extends LitElement {
     }
   }
 
-  _handleAddDisplayType() {
-    this.shadowRoot.querySelector('display-type-dialog').show();
+  private _handleAddDisplayType() {
+    this._displayTypeDialog.show();
   }
 
-  _handleEditDisplayType(dt) {
-    this.shadowRoot.querySelector('display-type-dialog').show(dt);
+  private _handleEditDisplayType(dt: DisplayType) {
+    this._displayTypeDialog.show(dt);
   }
 
-  _handleEditLayout() {
-    this.shadowRoot.querySelector('layout-settings-dialog').show(this._activeLayout);
+  private _handleEditLayout() {
+    if (this._activeLayout) {
+      this._layoutSettingsDialog.show(this._activeLayout);
+    }
   }
 
-  _handleCreateLayout() {
-    const newLayout = {
+  private _handleCreateLayout() {
+    const newLayout: Partial<Layout> = {
       name: 'New Layout',
       canvas_width_mm: 500,
       canvas_height_mm: 500,
       grid_snap_mm: 5,
       items: []
     };
-    this.shadowRoot.querySelector('layout-settings-dialog').show(newLayout);
+    this._layoutSettingsDialog.show(newLayout as Layout);
     this._showLayoutMenu = false;
   }
 
-  _handleSwitchLayout(layout) {
+  private _handleSwitchLayout(layout: Layout) {
     this._activeLayout = layout;
     this._selectedItemId = null;
     this._showLayoutMenu = false;
   }
 
-  async _onSaveLayoutSettings(e) {
+  private async _onSaveLayoutSettings(e: CustomEvent) {
     const settings = e.detail.settings;
     if (!settings.id) {
       settings.id = Math.random().toString(36).substr(2, 9);
@@ -333,12 +336,12 @@ export class AppRoot extends LitElement {
         await api.createItem('layout', settings);
         this._activeLayout = settings;
         await this._fetchData();
-        this._showMessage('New layout created', 'success');
-      } catch (err) {
-        this._showMessage(`Error: ${err.message}`, 'error');
+        this._showMessage('New layout created');
+      } catch (err: any) {
+        this._showMessage(`Error: ${err.message}`);
       }
     } else {
-      const updated = { ...this._activeLayout, ...settings };
+      const updated = { ...this._activeLayout, ...settings } as Layout;
       this._activeLayout = updated;
       
       const index = this._layouts.findIndex(l => l.id === settings.id);
@@ -348,11 +351,11 @@ export class AppRoot extends LitElement {
       }
       
       this.requestUpdate();
-      this._showMessage('Settings applied', 'success');
+      this._showMessage('Settings applied');
     }
   }
 
-  async _onSaveDisplayType(e) {
+  private async _onSaveDisplayType(e: CustomEvent) {
     const dt = e.detail.displayType;
     try {
        if (this._displayTypes.find(t => t.id === dt.id)) {
@@ -361,24 +364,22 @@ export class AppRoot extends LitElement {
          await api.createItem('display_type', dt);
        }
        await this._fetchData();
-       this._showMessage('Display type saved!', 'success');
-    } catch (err) {
-       this._showMessage(`Error: ${err.message}`, 'error');
+       this._showMessage('Display type saved!');
+    } catch (err: any) {
+       this._showMessage(`Error: ${err.message}`);
     }
   }
 
-  async _handleDeleteDisplayType(dt) {
-    // 1. Holistic Usage Check (including active unsaved layout)
+  private async _handleDeleteDisplayType(dt: DisplayType) {
     const isInActive = this._activeLayout?.items.some(i => i.display_type_id === dt.id);
     const isInAnySaved = this._layouts.some(l => l.items.some(i => i.display_type_id === dt.id));
     
     if (isInActive || isInAnySaved) {
-      this._showMessage(`Cannot delete "${dt.name}": It is currently in use by a layout.`, 'error');
+      this._showMessage(`Cannot delete "${dt.name}": It is currently in use by a layout.`);
       return;
     }
 
-    // 2. Confirmation
-    const confirmed = await this.shadowRoot.querySelector('confirm-dialog').show({
+    const confirmed = await this._confirmDialog.show({
       title: 'Delete Display Type?',
       message: `Are you sure you want to permanently remove "${dt.name}"? This action cannot be undone.`,
       confirmText: 'Delete',
@@ -389,16 +390,17 @@ export class AppRoot extends LitElement {
       try {
         await api.deleteItem('display_type', dt.id);
         await this._fetchData();
-        this._showMessage(`Display type "${dt.name}" deleted.`, 'success');
-      } catch (err) {
-        this._showMessage(`Failed to delete: ${err.message}`, 'error');
+        this._showMessage(`Display type "${dt.name}" deleted.`);
+      } catch (err: any) {
+        this._showMessage(`Failed to delete: ${err.message}`);
       }
     }
   }
 
-  _addItemToLayout(dt) {
+  private _addItemToLayout(dt: DisplayType) {
+    if (!this._activeLayout) return;
     const id = Math.random().toString(36).substr(2, 9);
-    const newItem = {
+    const newItem: LayoutItem = {
       id,
       display_type_id: dt.id,
       x_mm: 50,
@@ -410,7 +412,8 @@ export class AppRoot extends LitElement {
     this.requestUpdate();
   }
 
-  _updateItem(id, updates) {
+  private _updateItem(id: string, updates: Partial<LayoutItem>) {
+    if (!this._activeLayout) return;
     const item = this._activeLayout.items.find(i => i.id === id);
     if (item) {
       Object.assign(item, updates);
@@ -419,30 +422,33 @@ export class AppRoot extends LitElement {
     }
   }
 
-  _handleRotate(id) {
+  private _handleRotate(id: string) {
+    if (!this._activeLayout) return;
     const item = this._activeLayout.items.find(i => i.id === id);
     if (item) {
       this._updateItem(id, { orientation: item.orientation === 0 ? 90 : 0 });
     }
   }
 
-  _handleEditItem(id) {
+  private _handleEditItem(id: string) {
+    if (!this._activeLayout) return;
     const item = this._activeLayout.items.find(i => i.id === id);
     if (item) {
-      this.shadowRoot.querySelector('item-settings-dialog').show(item, this._displayTypes);
+      this._itemDialog.show(item, this._displayTypes);
     }
   }
 
-  _onSaveItemSettings(e) {
+  private _onSaveItemSettings(e: CustomEvent) {
     this._updateItem(e.detail.id, e.detail.updates);
-    this._showMessage('Item settings updated', 'success');
+    this._showMessage('Item settings updated');
   }
 
-  async _handleDeleteItem(id) {
+  private async _handleDeleteItem(id: string) {
+    if (!this._activeLayout) return;
     const item = this._activeLayout.items.find(i => i.id === id);
     const dt = this._displayTypes.find(t => t.id === item?.display_type_id);
     
-    const confirmed = await this.shadowRoot.querySelector('confirm-dialog').show({
+    const confirmed = await this._confirmDialog.show({
       title: 'Delete display?',
       message: `Are you sure you want to remove the "${dt?.name || 'unknown'}" display from this layout?`,
       confirmText: 'Delete',
@@ -455,32 +461,34 @@ export class AppRoot extends LitElement {
         this._selectedItemId = null;
       }
       this.requestUpdate();
-      this._showMessage('Item deleted', 'success');
+      this._showMessage('Item deleted');
     }
   }
 
-  async _handleSaveLayout() {
+  private async _handleSaveLayout() {
+    if (!this._activeLayout) return;
     if (this._activeLayout.items.some(i => i.invalid)) {
-      this._showMessage('Cannot save: Displays are overlapping!', 'error');
+      this._showMessage('Cannot save: Displays are overlapping!');
       return;
     }
     this._saving = true;
     try {
       await api.updateItem('layout', this._activeLayout.id, this._activeLayout);
-      this._showMessage('Layout saved!', 'success');
-    } catch (e) {
-      this._showMessage(`Failed: ${e.message}`, 'error');
+      this._showMessage('Layout saved!');
+    } catch (e: any) {
+      this._showMessage(`Failed: ${e.message}`);
     } finally {
       this._saving = false;
     }
   }
 
-  _showMessage(text) {
+  private _showMessage(text: string) {
     this._message = text;
     setTimeout(() => { this._message = ''; }, 3000);
   }
 
-  _handleLayoutResized(e) {
+  private _handleLayoutResized(e: CustomEvent) {
+    if (!this._activeLayout) return;
     this._activeLayout.canvas_width_mm = e.detail.width;
     this._activeLayout.canvas_height_mm = e.detail.height;
     this.requestUpdate();
@@ -519,13 +527,13 @@ export class AppRoot extends LitElement {
                     <div style="font-size: 11px; color: #888;">${dt.width_mm}x${dt.height_mm}mm</div>
                   </div>
                   <div style="display: flex; gap: 4px;">
-                    <button class="secondary" title="Add to Layout" @click="${(e) => { e.stopPropagation(); this._addItemToLayout(dt); }}">
+                    <button class="secondary" title="Add to Layout" @click="${(e: Event) => { e.stopPropagation(); this._addItemToLayout(dt); }}">
                       <span class="material-icons" style="font-size: 16px;">add_box</span>
                     </button>
-                    <button class="secondary" title="Edit Properties" @click="${(e) => { e.stopPropagation(); this._handleEditDisplayType(dt); }}">
+                    <button class="secondary" title="Edit Properties" @click="${(e: Event) => { e.stopPropagation(); this._handleEditDisplayType(dt); }}">
                       <span class="material-icons" style="font-size: 16px;">edit</span>
                     </button>
-                    <button class="danger" title="Delete Display Type" @click="${(e) => { e.stopPropagation(); this._handleDeleteDisplayType(dt); }}">
+                    <button class="danger" title="Delete Display Type" @click="${(e: Event) => { e.stopPropagation(); this._handleDeleteDisplayType(dt); }}">
                       <span class="material-icons" style="font-size: 16px;">delete_outline</span>
                     </button>
                   </div>
@@ -550,13 +558,13 @@ export class AppRoot extends LitElement {
                       <div style="font-size: 11px; color: #666;">Pos: ${item.x_mm}, ${item.y_mm} | Rot: ${item.orientation}°</div>
                     </div>
                     <div style="display: flex; gap: 4px;">
-                      <button class="secondary" title="Rotate" @click="${(e) => { e.stopPropagation(); this._handleRotate(item.id); }}">
+                      <button class="secondary" title="Rotate" @click="${(e: Event) => { e.stopPropagation(); this._handleRotate(item.id); }}">
                         <span class="material-icons" style="font-size: 16px;">rotate_right</span>
                       </button>
-                      <button class="secondary" title="Settings" @click="${(e) => { e.stopPropagation(); this._handleEditItem(item.id); }}">
+                      <button class="secondary" title="Settings" @click="${(e: Event) => { e.stopPropagation(); this._handleEditItem(item.id); }}">
                         <span class="material-icons" style="font-size: 16px;">settings</span>
                       </button>
-                      <button class="secondary" title="Delete" style="color: #f44336;" @click="${(e) => { e.stopPropagation(); this._handleDeleteItem(item.id); }}">
+                      <button class="secondary" title="Delete" style="color: #f44336;" @click="${(e: Event) => { e.stopPropagation(); this._handleDeleteItem(item.id); }}">
                         <span class="material-icons" style="font-size: 16px;">delete_outline</span>
                       </button>
                     </div>
@@ -601,18 +609,18 @@ export class AppRoot extends LitElement {
           </div>
           <layout-editor
             ?hidden="${!this._activeLayout}"
-            .width_mm="${this._activeLayout?.canvas_width_mm}"
-            .height_mm="${this._activeLayout?.canvas_height_mm}"
+            .width_mm="${this._activeLayout?.canvas_width_mm || 0}"
+            .height_mm="${this._activeLayout?.canvas_height_mm || 0}"
             .gridSnap="${this._activeLayout?.grid_snap_mm || 5}"
             .items="${this._activeLayout?.items || []}"
             .displayTypes="${this._displayTypes}"
             .selectedId="${this._selectedItemId}"
-            @item-moved="${(e) => this._updateItem(e.detail.id, { x_mm: e.detail.x, y_mm: e.detail.y })}"
-            @select-item="${(e) => this._selectedItemId = e.detail.id}"
-            @edit-item="${(e) => this._handleEditItem(e.detail.id)}"
-            @mouse-move="${(e) => this._mousePos = e.detail}"
-            @rotate-item="${(e) => this._handleRotate(e.detail.id)}"
-            @item-delete="${(e) => this._handleDeleteItem(e.detail.id)}"
+            @item-moved="${(e: CustomEvent) => this._updateItem(e.detail.id, { x_mm: e.detail.x, y_mm: e.detail.y })}"
+            @select-item="${(e: CustomEvent) => this._selectedItemId = e.detail.id}"
+            @edit-item="${(e: CustomEvent) => this._handleEditItem(e.detail.id)}"
+            @mouse-move="${(e: CustomEvent) => this._mousePos = e.detail}"
+            @rotate-item="${(e: CustomEvent) => this._handleRotate(e.detail.id)}"
+            @item-delete="${(e: CustomEvent) => this._handleDeleteItem(e.detail.id)}"
             @layout-resized="${this._handleLayoutResized}"
           ></layout-editor>
         </div>
@@ -626,4 +634,8 @@ export class AppRoot extends LitElement {
   }
 }
 
-customElements.define('app-root', AppRoot);
+declare global {
+  interface HTMLElementTagNameMap {
+    'app-root': AppRoot;
+  }
+}

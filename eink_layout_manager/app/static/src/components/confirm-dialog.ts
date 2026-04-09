@@ -1,8 +1,10 @@
 import { LitElement, html, css } from 'lit';
+import { customElement, property, state } from 'lit/decorators.js';
 
 /**
  * A premium reusable confirmation dialog component.
  */
+@customElement('confirm-dialog')
 export class ConfirmDialog extends LitElement {
   static styles = css`
     dialog {
@@ -130,28 +132,24 @@ export class ConfirmDialog extends LitElement {
     }
   `;
 
-  static properties = {
-    title: { type: String },
-    message: { type: String },
-    confirmText: { type: String },
-    cancelText: { type: String },
-    type: { type: String }, // 'danger' or 'info'
-  };
+  @property({ type: String }) title = 'Are you sure?';
+  @property({ type: String }) message = 'This action cannot be undone.';
+  @property({ type: String }) confirmText = 'Confirm';
+  @property({ type: String }) cancelText = 'Cancel';
+  @property({ type: String }) type: 'danger' | 'info' = 'info';
 
-  constructor() {
-    super();
-    this.title = 'Are you sure?';
-    this.message = 'This action cannot be undone.';
-    this.confirmText = 'Confirm';
-    this.cancelText = 'Cancel';
-    this.type = 'info';
-    this._onConfirm = null;
-  }
+  @state() private _onConfirm: ((result: boolean) => void) | null = null;
 
   /**
    * Shows the dialog and returns a promise that resolves to true on confirm, false on cancel.
    */
-  async show(options = {}) {
+  async show(options: {
+    title?: string;
+    message?: string;
+    confirmText?: string;
+    cancelText?: string;
+    type?: 'danger' | 'info';
+  } = {}): Promise<boolean> {
     this.title = options.title || this.title;
     this.message = options.message || this.message;
     this.confirmText = options.confirmText || this.confirmText;
@@ -159,20 +157,20 @@ export class ConfirmDialog extends LitElement {
     this.type = options.type || this.type;
 
     return new Promise((resolve) => {
-      this._onConfirm = (result) => {
-        this.renderRoot.querySelector('dialog').close();
+      this._onConfirm = (result: boolean) => {
+        this.renderRoot.querySelector('dialog')?.close();
         resolve(result);
       };
-      this.renderRoot.querySelector('dialog').showModal();
+      this.renderRoot.querySelector('dialog')?.showModal();
     });
   }
 
-  _handleCancel() {
-    this._onConfirm(false);
+  private _handleCancel() {
+    this._onConfirm?.(false);
   }
 
-  _handleConfirm() {
-    this._onConfirm(true);
+  private _handleConfirm() {
+    this._onConfirm?.(true);
   }
 
   render() {
@@ -200,4 +198,8 @@ export class ConfirmDialog extends LitElement {
   }
 }
 
-customElements.define('confirm-dialog', ConfirmDialog);
+declare global {
+  interface HTMLElementTagNameMap {
+    'confirm-dialog': ConfirmDialog;
+  }
+}

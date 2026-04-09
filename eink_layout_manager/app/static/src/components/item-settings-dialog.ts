@@ -1,8 +1,11 @@
 import { LitElement, html, css } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
+import { LayoutItem, DisplayType } from '../services/HaApiClient';
 
 /**
  * A dialog component for editing the settings of a display item in the layout.
  */
+@customElement('item-settings-dialog')
 export class ItemSettingsDialog extends LitElement {
   static styles = css`
     dialog {
@@ -94,37 +97,31 @@ export class ItemSettingsDialog extends LitElement {
     }
   `;
 
-  static properties = {
-    item: { type: Object },
-    displayTypes: { type: Array },
-  };
+  @property({ type: Object }) item: LayoutItem | null = null;
+  @property({ type: Array }) displayTypes: DisplayType[] = [];
 
-  constructor() {
-    super();
-    this.item = null;
-    this.displayTypes = [];
-  }
-
-  show(item, displayTypes) {
+  show(item: LayoutItem, displayTypes: DisplayType[]) {
     this.item = JSON.parse(JSON.stringify(item));
     this.displayTypes = displayTypes;
-    this.renderRoot.querySelector('dialog').showModal();
+    this.shadowRoot?.querySelector('dialog')?.showModal();
   }
 
   close() {
-    this.renderRoot.querySelector('dialog').close();
+    this.shadowRoot?.querySelector('dialog')?.close();
   }
 
-  _handleSubmit(e) {
+  private _handleSubmit(e: Event) {
     e.preventDefault();
+    if (!this.item) return;
+
     this.dispatchEvent(new CustomEvent('save', { 
         detail: { 
             id: this.item.id,
             updates: {
-                x_mm: parseInt(this.item.x_mm),
-                y_mm: parseInt(this.item.y_mm),
+                x_mm: parseInt(this.item.x_mm as any),
+                y_mm: parseInt(this.item.y_mm as any),
                 display_type_id: this.item.display_type_id,
-                orientation: parseInt(this.item.orientation)
+                orientation: parseInt(this.item.orientation as any)
             }
         } 
     }));
@@ -132,7 +129,9 @@ export class ItemSettingsDialog extends LitElement {
   }
 
   render() {
-    if (!this.item) return html`<dialog></dialog>`;
+    if (!this.item) return html`
+      <dialog></dialog>
+    `;
 
     return html`
       <dialog>
@@ -145,7 +144,7 @@ export class ItemSettingsDialog extends LitElement {
               <label>Display Type</label>
               <select 
                 .value="${this.item.display_type_id}" 
-                @change="${e => this.item.display_type_id = e.target.value}"
+                @change="${(e: any) => this.item ? this.item.display_type_id = e.target.value : null}"
               >
                 ${this.displayTypes.map(dt => html`
                   <option value="${dt.id}">${dt.name} (${dt.width_mm}x${dt.height_mm}mm)</option>
@@ -159,8 +158,8 @@ export class ItemSettingsDialog extends LitElement {
                 <input 
                   type="number" 
                   required 
-                  .value="${this.item.x_mm}" 
-                  @input="${e => this.item.x_mm = e.target.value}"
+                  .value="${this.item.x_mm.toString()}" 
+                  @input="${(e: any) => this.item ? this.item.x_mm = e.target.value : null}"
                 >
               </div>
               <div class="form-group">
@@ -168,8 +167,8 @@ export class ItemSettingsDialog extends LitElement {
                 <input 
                   type="number" 
                   required 
-                  .value="${this.item.y_mm}" 
-                  @input="${e => this.item.y_mm = e.target.value}"
+                  .value="${this.item.y_mm.toString()}" 
+                  @input="${(e: any) => this.item ? this.item.y_mm = e.target.value : null}"
                 >
               </div>
             </div>
@@ -177,8 +176,8 @@ export class ItemSettingsDialog extends LitElement {
             <div class="form-group">
               <label>Orientation</label>
               <select 
-                .value="${this.item.orientation}" 
-                @change="${e => this.item.orientation = e.target.value}"
+                .value="${this.item.orientation.toString()}" 
+                @change="${(e: any) => this.item ? this.item.orientation = e.target.value : null}"
               >
                 <option value="0">Horizontal (0°)</option>
                 <option value="90">Vertical (90°)</option>
@@ -196,4 +195,8 @@ export class ItemSettingsDialog extends LitElement {
   }
 }
 
-customElements.define('item-settings-dialog', ItemSettingsDialog);
+declare global {
+  interface HTMLElementTagNameMap {
+    'item-settings-dialog': ItemSettingsDialog;
+  }
+}

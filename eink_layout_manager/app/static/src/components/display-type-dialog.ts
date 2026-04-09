@@ -1,8 +1,11 @@
 import { LitElement, html, css } from 'lit';
+import { customElement, property, state } from 'lit/decorators.js';
+import { DisplayType } from '../services/HaApiClient';
 
 /**
  * A dialog component for creating and editing eInk Display Types.
  */
+@customElement('display-type-dialog')
 export class DisplayTypeDialog extends LitElement {
   static styles = css`
     dialog {
@@ -273,21 +276,17 @@ export class DisplayTypeDialog extends LitElement {
     }
   `;
 
-  static properties = {
-    displayType: { type: Object },
-    isNew: { type: Boolean },
-    _frameType: { state: true },
-    _matType: { state: true }
-  };
+  @property({ type: Object }) displayType!: DisplayType;
+  @property({ type: Boolean }) isNew = true;
 
-  _PRESETS = [
+  private _PRESETS = [
     { name: 'White', colour: '#ffffff' },
     { name: 'Black', colour: '#000000' },
     { name: 'Brown', colour: '#5d4037' },
     { name: 'Silver', colour: '#c0c0c0' }
   ];
 
-  _getDefaultDisplayType() {
+  private _getDefaultDisplayType(): DisplayType {
     return {
       id: '',
       name: 'New Display',
@@ -303,7 +302,7 @@ export class DisplayTypeDialog extends LitElement {
     };
   }
 
-  show(displayType = null) {
+  show(displayType: DisplayType | null = null) {
     if (displayType) {
       this.displayType = JSON.parse(JSON.stringify(displayType));
       this.isNew = false;
@@ -311,14 +310,16 @@ export class DisplayTypeDialog extends LitElement {
       this.displayType = this._getDefaultDisplayType();
       this.isNew = true;
     }
-    dialog.showModal();
+    const dialog = this.shadowRoot?.querySelector('dialog');
+    dialog?.showModal();
   }
 
   close() {
-    this.renderRoot.querySelector('dialog').close();
+    const dialog = this.shadowRoot?.querySelector('dialog');
+    dialog?.close();
   }
 
-  _handleSubmit(e) {
+  private _handleSubmit(e: Event) {
     e.preventDefault();
     
     // Auto-generate ID if missing
@@ -330,7 +331,7 @@ export class DisplayTypeDialog extends LitElement {
     this.close();
   }
 
-  _renderPreview() {
+  private _renderPreview() {
     const frameW = this.displayType.width_mm || 0;
     const frameH = this.displayType.height_mm || 0;
     const border = this.displayType.frame?.border_width_mm || 0;
@@ -373,7 +374,7 @@ export class DisplayTypeDialog extends LitElement {
     `;
   }
 
-  _renderColourPicker(label, value, onUpdate) {
+  private _renderColourPicker(label: string, value: string, onUpdate: (colour: string) => void) {
     return html`
       <div class="form-group">
         <label>${label}</label>
@@ -391,7 +392,7 @@ export class DisplayTypeDialog extends LitElement {
           <input 
             type="color" 
             .value="${value}" 
-            @input="${e => onUpdate(e.target.value)}"
+            @input="${(e: any) => onUpdate(e.target.value)}"
           >
           <div class="hex-value">${value}</div>
         </div>
@@ -400,6 +401,8 @@ export class DisplayTypeDialog extends LitElement {
   }
 
   render() {
+    if (!this.displayType) return html``;
+
     const frameW = this.displayType.width_mm || 0;
     const frameH = this.displayType.height_mm || 0;
     const border = this.displayType.frame?.border_width_mm || 0;
@@ -426,7 +429,7 @@ export class DisplayTypeDialog extends LitElement {
                   type="text" 
                   required 
                   .value="${this.displayType.name}"
-                  @input="${e => this.displayType.name = e.target.value}"
+                  @input="${(e: any) => this.displayType.name = e.target.value}"
                 >
               </div>
 
@@ -435,44 +438,44 @@ export class DisplayTypeDialog extends LitElement {
               <div class="row">
                 <div class="form-group">
                   <label>Frame Outer Width (mm)</label>
-                  <input type="number" required .value="${this.displayType.width_mm}" @input="${e => this.displayType.width_mm = parseInt(e.target.value)}">
+                  <input type="number" required .value="${this.displayType.width_mm}" @input="${(e: any) => this.displayType.width_mm = parseInt(e.target.value)}">
                 </div>
                 <div class="form-group">
                   <label>Frame Outer Height (mm)</label>
-                  <input type="number" required .value="${this.displayType.height_mm}" @input="${e => this.displayType.height_mm = parseInt(e.target.value)}">
+                  <input type="number" required .value="${this.displayType.height_mm}" @input="${(e: any) => this.displayType.height_mm = parseInt(e.target.value)}">
                 </div>
               </div>
 
               <div class="row">
                 <div class="form-group">
                   <label>Display Panel Width (mm)</label>
-                  <input type="number" required .value="${this.displayType.panel_width_mm}" @input="${e => this.displayType.panel_width_mm = parseInt(e.target.value)}">
+                  <input type="number" required .value="${this.displayType.panel_width_mm}" @input="${(e: any) => this.displayType.panel_width_mm = parseInt(e.target.value)}">
                 </div>
                 <div class="form-group">
                   <label>Display Panel Height (mm)</label>
-                  <input type="number" required .value="${this.displayType.panel_height_mm}" @input="${e => this.displayType.panel_height_mm = parseInt(e.target.value)}">
+                  <input type="number" required .value="${this.displayType.panel_height_mm}" @input="${(e: any) => this.displayType.panel_height_mm = parseInt(e.target.value)}">
                 </div>
               </div>
 
               <div class="form-group">
                 <label>Frame Border Width (mm)</label>
-                <input type="number" required .value="${this.displayType.frame.border_width_mm}" @input="${e => this.displayType.frame.border_width_mm = parseInt(e.target.value)}">
+                <input type="number" required .value="${this.displayType.frame.border_width_mm}" @input="${(e: any) => this.displayType.frame.border_width_mm = parseInt(e.target.value)}">
               </div>
 
               <div class="row">
                 <div class="form-group">
                   <label>Resolution Width (px)</label>
-                  <input type="number" required .value="${this.displayType.width_px}" @input="${e => this.displayType.width_px = parseInt(e.target.value)}">
+                  <input type="number" required .value="${this.displayType.width_px}" @input="${(e: any) => this.displayType.width_px = parseInt(e.target.value)}">
                 </div>
                 <div class="form-group">
                   <label>Resolution Height (px)</label>
-                  <input type="number" required .value="${this.displayType.height_px}" @input="${e => this.displayType.height_px = parseInt(e.target.value)}">
+                  <input type="number" required .value="${this.displayType.height_px}" @input="${(e: any) => this.displayType.height_px = parseInt(e.target.value)}">
                 </div>
               </div>
 
               <div class="form-group">
                 <label>Colour Type</label>
-                <select .value="${this.displayType.colour_type}" @change="${e => { this.displayType.colour_type = e.target.value; this.requestUpdate(); }}">
+                <select .value="${this.displayType.colour_type}" @change="${(e: any) => { this.displayType.colour_type = e.target.value; this.requestUpdate(); }}">
                   <option value="MONO">MONO (B/W)</option>
                   <option value="BWR">BWR (Red)</option>
                   <option value="BWY">BWY (Yellow)</option>
@@ -511,7 +514,7 @@ export class DisplayTypeDialog extends LitElement {
 
           <footer>
             <button type="button" class="secondary" @click="${this.close}">Cancel</button>
-            <button type="button" class="primary" @click="${() => this.shadowRoot.getElementById('real-submit').click()}">Save Display Type</button>
+            <button type="button" class="primary" @click="${() => (this.shadowRoot?.getElementById('real-submit') as HTMLButtonElement).click()}">Save Display Type</button>
           </footer>
         </div>
       </dialog>
@@ -519,4 +522,8 @@ export class DisplayTypeDialog extends LitElement {
   }
 }
 
-customElements.define('display-type-dialog', DisplayTypeDialog);
+declare global {
+  interface HTMLElementTagNameMap {
+    'display-type-dialog': DisplayTypeDialog;
+  }
+}

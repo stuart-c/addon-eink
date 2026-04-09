@@ -1,8 +1,11 @@
 import { LitElement, html, css } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
+import { Layout } from '../services/HaApiClient';
 
 /**
  * A dialog component for configuring layout settings like canvas size and grid snapping.
  */
+@customElement('layout-settings-dialog')
 export class LayoutSettingsDialog extends LitElement {
   static styles = css`
     dialog {
@@ -105,30 +108,23 @@ export class LayoutSettingsDialog extends LitElement {
     .secondary:hover { background: #e4e6e9; }
   `;
 
-  static properties = {
-    layout: { type: Object },
+  @property({ type: Object }) layout: Partial<Layout> = {
+    name: '',
+    canvas_width_mm: 500,
+    canvas_height_mm: 500,
+    grid_snap_mm: 5
   };
 
-  constructor() {
-    super();
-    this.layout = {
-      name: '',
-      canvas_width_mm: 500,
-      canvas_height_mm: 500,
-      grid_snap_mm: 5
-    };
-  }
-
-  show(layout) {
+  show(layout: Layout) {
     this.layout = JSON.parse(JSON.stringify(layout));
-    this.renderRoot.querySelector('dialog').showModal();
+    this.shadowRoot?.querySelector('dialog')?.showModal();
   }
 
   close() {
-    this.renderRoot.querySelector('dialog').close();
+    this.shadowRoot?.querySelector('dialog')?.close();
   }
 
-  _handleSubmit(e) {
+  private _handleSubmit(e: Event) {
     e.preventDefault();
     this.dispatchEvent(new CustomEvent('save', { detail: { settings: this.layout } }));
     this.close();
@@ -147,19 +143,19 @@ export class LayoutSettingsDialog extends LitElement {
               <input 
                 type="text" 
                 required 
-                .value="${this.layout.name}"
-                @input="${e => this.layout.name = e.target.value}"
+                .value="${this.layout.name || ''}"
+                @input="${(e: any) => this.layout.name = e.target.value}"
               >
             </div>
             
             <div class="row">
               <div class="form-group">
                 <label>Canvas Width (mm)</label>
-                <input type="number" required .value="${this.layout.canvas_width_mm}" @input="${e => this.layout.canvas_width_mm = parseInt(e.target.value)}">
+                <input type="number" required .value="${this.layout.canvas_width_mm?.toString() || ''}" @input="${(e: any) => this.layout.canvas_width_mm = parseInt(e.target.value)}">
               </div>
               <div class="form-group">
                 <label>Canvas Height (mm)</label>
-                <input type="number" required .value="${this.layout.canvas_height_mm}" @input="${e => this.layout.canvas_height_mm = parseInt(e.target.value)}">
+                <input type="number" required .value="${this.layout.canvas_height_mm?.toString() || ''}" @input="${(e: any) => this.layout.canvas_height_mm = parseInt(e.target.value)}">
               </div>
             </div>
 
@@ -188,4 +184,8 @@ export class LayoutSettingsDialog extends LitElement {
   }
 }
 
-customElements.define('layout-settings-dialog', LayoutSettingsDialog);
+declare global {
+  interface HTMLElementTagNameMap {
+    'layout-settings-dialog': LayoutSettingsDialog;
+  }
+}
