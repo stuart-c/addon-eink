@@ -20,6 +20,9 @@ export class LayoutEditor extends LitElement {
       box-sizing: border-box;
       padding: 40px;
     }
+    :host([hidden]) {
+      display: none !important;
+    }
     .viewport {
       display: flex;
       justify-content: center;
