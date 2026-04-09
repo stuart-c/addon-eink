@@ -15,8 +15,6 @@ def app(tmp_path):
 
 
 # --- Helper Tests ---
-
-
 def test_get_storage_path(tmp_path):
     """Test get_storage_path correctly creates and returns the directory."""
     os.environ["DATA_DIR"] = str(tmp_path)
@@ -36,8 +34,6 @@ def test_load_schema():
 
 
 # --- Handler Tests ---
-
-
 @pytest.mark.asyncio
 async def test_ping(aiohttp_client, app):
     """Test the /ping health check."""

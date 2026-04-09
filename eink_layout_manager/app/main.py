@@ -8,7 +8,6 @@ from jsonschema import validate, ValidationError
 
 
 # Base directory for data persistence
-# Base directory for data persistence
 SCHEMAS_DIR = os.path.realpath(
     os.path.join(os.path.dirname(__file__), "schemas")
 )
@@ -69,8 +68,6 @@ def load_schema(name):
 
 
 # --- Middlewares ---
-
-
 @web.middleware
 async def request_logger_middleware(request, handler):
     """Log every incoming request for debugging."""
@@ -84,8 +81,6 @@ async def request_logger_middleware(request, handler):
 
 
 # --- Handlers ---
-
-
 async def ping(request):
     """Health check endpoint. Returns 'pong'."""
     return web.Response(text="pong")
@@ -309,8 +304,6 @@ async def delete_item(request):
 
 
 # --- App Init ---
-
-
 def init_app():
     """Initialise the aiohttp application with routes and storage setup."""
     app = web.Application(middlewares=[request_logger_middleware])
