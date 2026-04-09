@@ -15,7 +15,8 @@ def get_storage_path(resource_type):
     Get the filesystem path for a specific resource type.
     Creates the directory if it does not exist.
     """
-    # Security: Whitelist allowed resource types to prevent arbitrary directory creation
+    # Security: Whitelist allowed resource types to prevent
+    # arbitrary directory creation
     allowed_types = {"display_type", "layout"}
     if resource_type not in allowed_types:
         raise ValueError(f"Invalid resource type: {resource_type}")
@@ -39,7 +40,8 @@ def validate_id(item_id):
     if not re.match(r"^[a-zA-Z0-9\-_]+$", item_id):
         raise ValueError(f"Invalid ID format: {item_id}")
 
-    # Extra safety: use os.path.basename to ensure no directory components remain
+    # Extra safety: use os.path.basename to ensure no
+    # directory components remain
     sanitised_id = os.path.basename(item_id)
     if not sanitised_id or sanitised_id != item_id:
         raise ValueError(f"Invalid ID (potential traversal): {item_id}")
