@@ -9,6 +9,7 @@ export interface ConfirmConfig {
   message?: string;
   confirmText?: string;
   type?: 'primary' | 'danger';
+  buttons?: Array<{ text: string, value: any, type?: 'primary' | 'danger' | 'secondary' }>;
 }
 
 /**
@@ -27,12 +28,13 @@ export class ConfirmDialog extends LitElement {
     title: 'Confirm',
     message: 'Are you sure?',
     confirmText: 'Confirm',
-    type: 'primary'
+    type: 'primary',
+    buttons: []
   };
 
   private _resolve: ((result: boolean) => void) | null = null;
 
-  show(config: ConfirmConfig): Promise<boolean> {
+  show(config: ConfirmConfig): Promise<any> {
     this._config = { ...this._config, ...config };
     (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).show();
     return new Promise(resolve => {
@@ -40,13 +42,8 @@ export class ConfirmDialog extends LitElement {
     });
   }
 
-  private _handleConfirm() {
-    this._resolve?.(true);
-    (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).close();
-  }
-
-  private _handleCancel() {
-    this._resolve?.(false);
+  private _handleChoice(value: any) {
+    this._resolve?.(value);
     (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).close();
   }
 
@@ -55,10 +52,19 @@ export class ConfirmDialog extends LitElement {
       <base-dialog .title="${this._config.title}">
         <p>${this._config.message}</p>
         <div slot="footer">
-          <button class="secondary" @click="${this._handleCancel}">Cancel</button>
-          <button class="${this._config.type === 'danger' ? 'danger' : 'primary'}" @click="${this._handleConfirm}">
-            ${this._config.confirmText}
-          </button>
+          ${this._config.buttons && this._config.buttons.length > 0 
+            ? this._config.buttons.map(btn => html`
+                <button class="${btn.type || 'primary'}" @click="${() => this._handleChoice(btn.value)}">
+                  ${btn.text}
+                </button>
+              `)
+            : html`
+                <button class="secondary" @click="${() => this._handleChoice(false)}">Cancel</button>
+                <button class="${this._config.type === 'danger' ? 'danger' : 'primary'}" @click="${() => this._handleChoice(true)}">
+                  ${this._config.confirmText}
+                </button>
+              `
+          }
         </div>
       </base-dialog>
     `;

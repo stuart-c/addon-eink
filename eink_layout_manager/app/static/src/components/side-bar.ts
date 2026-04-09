@@ -77,8 +77,8 @@ export class SideBar extends LitElement {
       <div class="sidebar-section">
         <div class="sidebar-header">
           <h3>Display Types</h3>
-          <button class="secondary" @click="${() => this._dispatch('add-display-type')}" title="Add New Display Type">
-            <span class="material-icons" style="font-size: 18px;">add</span>
+          <button class="secondary" @click="${() => this._dispatch('add-display-type')}" title="Manage Display Types">
+            <span class="material-icons" style="font-size: 18px;">settings</span>
           </button>
         </div>
         ${this.displayTypes.map(dt => html`
@@ -91,12 +91,6 @@ export class SideBar extends LitElement {
               <div class="item-actions">
                 <button class="secondary" title="Add to Layout" @click="${(e: Event) => { e.stopPropagation(); this._dispatch('add-item-to-layout', dt); }}">
                   <span class="material-icons" style="font-size: 16px;">add_box</span>
-                </button>
-                <button class="secondary" title="Edit Properties" @click="${(e: Event) => { e.stopPropagation(); this._dispatch('edit-display-type', dt); }}">
-                  <span class="material-icons" style="font-size: 16px;">edit</span>
-                </button>
-                <button class="danger" title="Delete" @click="${(e: Event) => { e.stopPropagation(); this._dispatch('delete-display-type', dt); }}">
-                  <span class="material-icons" style="font-size: 16px;">delete_outline</span>
                 </button>
               </div>
             </div>

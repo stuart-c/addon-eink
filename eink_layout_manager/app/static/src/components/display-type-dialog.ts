@@ -14,9 +14,9 @@ export class DisplayTypeDialog extends LitElement {
       border: none;
       border-radius: 12px;
       padding: 0;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.3);
-      width: 800px;
-      max-width: 95vw;
+      width: 1000px;
+      max-width: 98vw;
+      height: 80vh;
       background: #fff;
     }
     dialog::backdrop {
@@ -37,9 +37,67 @@ export class DisplayTypeDialog extends LitElement {
     
     .main-layout {
       display: grid;
-      grid-template-columns: 1fr 340px;
-      overflow: hidden;
+      grid-template-columns: 220px 1fr 340px;
+      flex: 1;
+      min-height: 0;
     }
+
+    .list-sidebar {
+      background: #f8f9fa;
+      border-right: 1px solid #eee;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .sidebar-item {
+      padding: 12px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      background: #fff;
+    }
+
+    .sidebar-item:hover { background: #f0faff; }
+    .sidebar-item.selected { 
+      background: #e1f5fe; 
+      border-left: 4px solid var(--primary-colour);
+      padding-left: 8px;
+    }
+
+    .sidebar-thumbnail {
+      width: 80px;
+      height: 60px;
+      background: #eee;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      box-shadow: var(--shadow-small);
+    }
+
+    .sidebar-name {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-colour);
+      text-align: center;
+      word-break: break-all;
+    }
+
+    .add-new-item {
+      padding: 1rem;
+      text-align: center;
+      border-top: 1px solid #eee;
+      margin-top: auto;
+      background: #fff;
+    }
+
+    .add-new-item button { width: 100%; }
 
     form {
       padding: 1.5rem;
@@ -230,7 +288,9 @@ export class DisplayTypeDialog extends LitElement {
   `;
 
   @property({ type: Object }) displayType!: DisplayType;
+  @property({ type: Array }) displayTypes: DisplayType[] = [];
   @property({ type: Boolean }) isNew = true;
+  @property({ type: Object }) confirmDialog!: any; // Reference to app-root's confirm-dialog if needed, or we use events
 
   private _PRESETS = [
     { name: 'White', colour: '#ffffff' },
@@ -259,6 +319,9 @@ export class DisplayTypeDialog extends LitElement {
     if (displayType) {
       this.displayType = JSON.parse(JSON.stringify(displayType));
       this.isNew = false;
+    } else if (this.displayTypes.length > 0) {
+      this.displayType = JSON.parse(JSON.stringify(this.displayTypes[0]));
+      this.isNew = false;
     } else {
       this.displayType = this._getDefaultDisplayType();
       this.isNew = true;
@@ -271,6 +334,81 @@ export class DisplayTypeDialog extends LitElement {
   close() {
     const dialog = this.shadowRoot?.querySelector('dialog');
     dialog?.close();
+  }
+
+  private _isDirty(): boolean {
+    if (this.isNew) {
+      const defaultValue = this._getDefaultDisplayType();
+      return JSON.stringify(this.displayType) !== JSON.stringify(defaultValue);
+    }
+    const original = this.displayTypes.find(dt => dt.id === this.displayType.id);
+    if (!original) return true;
+    return JSON.stringify(this.displayType) !== JSON.stringify(original);
+  }
+
+  private async _handleSelect(id: string | null) {
+    if (this.displayType.id === id && !this.isNew) return;
+    if (id === null && this.isNew) return;
+
+    if (this._isDirty()) {
+      const event = new CustomEvent('request-confirmation', {
+        detail: {
+          config: {
+            title: 'Unsaved Changes',
+            message: `You have unsaved changes to "${this.displayType.name}". What would you like to do?`,
+            buttons: [
+              { text: 'Save', value: 'save', type: 'primary' },
+              { text: 'Discard', value: 'discard', type: 'danger' },
+              { text: 'Cancel', value: 'cancel', type: 'secondary' }
+            ]
+          },
+          callback: async (choice: string) => {
+            if (choice === 'save') {
+              const form = this.shadowRoot?.querySelector('form');
+              if (form?.checkValidity()) {
+                this._handleSubmit(new Event('submit'));
+                this._switchTo(id);
+              } else {
+                form?.reportValidity();
+              }
+            } else if (choice === 'discard') {
+              this._switchTo(id);
+            }
+          }
+        },
+        bubbles: true,
+        composed: true
+      });
+      this.dispatchEvent(event);
+    } else {
+      this._switchTo(id);
+    }
+  }
+
+  private _switchTo(id: string | null) {
+    if (id === null) {
+      this.displayType = this._getDefaultDisplayType();
+      this.isNew = true;
+    } else {
+      const found = this.displayTypes.find(dt => dt.id === id);
+      if (found) {
+        this.displayType = JSON.parse(JSON.stringify(found));
+        this.isNew = false;
+      }
+    }
+    this.requestUpdate();
+  }
+
+  private _handleDelete() {
+    if (!this.displayType || this.isNew) return;
+    this.dispatchEvent(new CustomEvent('delete-display-type', { detail: this.displayType }));
+    // After delete, the displayTypes array will update via app-root, but we should probably switch to first item or new
+    if (this.displayTypes.length > 1) {
+      const next = this.displayTypes.find(dt => dt.id !== this.displayType.id);
+      if (next) this._switchTo(next.id);
+    } else {
+      this._switchTo(null);
+    }
   }
 
   private _handleSubmit(e: Event) {
@@ -334,11 +472,43 @@ export class DisplayTypeDialog extends LitElement {
       <dialog>
         <div class="container">
           <header>
-            <h2>${this.isNew ? 'Add Display Type' : 'Edit Display Type'}</h2>
+            <h2>Manage Display Types</h2>
           </header>
           
           <div class="main-layout">
-            <form @submit="${this._handleSubmit}" @input="${() => this.requestUpdate()}">
+            <div class="list-sidebar">
+              ${this.displayTypes.map(dt => {
+                const dtScale = 60 / Math.max(dt.width_mm, dt.height_mm);
+                return html`
+                  <div 
+                    class="sidebar-item ${this.displayType.id === dt.id && !this.isNew ? 'selected' : ''}" 
+                    @click="${() => this._handleSelect(dt.id)}"
+                  >
+                    <div class="sidebar-thumbnail">
+                      <hardware-preview
+                        .width_mm="${dt.width_mm}"
+                        .height_mm="${dt.height_mm}"
+                        .border_width_mm="${dt.frame.border_width_mm}"
+                        .panel_width_mm="${dt.panel_width_mm}"
+                        .panel_height_mm="${dt.panel_height_mm}"
+                        .frame_colour="${dt.frame.colour}"
+                        .mat_colour="${dt.mat.colour}"
+                        .scale="${dtScale}"
+                      ></hardware-preview>
+                    </div>
+                    <span class="sidebar-name">${dt.name}</span>
+                  </div>
+                `;
+              })}
+              <div class="add-new-item">
+                <button class="secondary ${this.isNew ? 'selected' : ''}" @click="${() => this._handleSelect(null)}">
+                  <span class="material-icons" style="font-size: 18px; vertical-align: middle;">add</span>
+                  Add New
+                </button>
+              </div>
+            </div>
+
+            <form id="display-type-form" @submit="${this._handleSubmit}" @input="${() => this.requestUpdate()}">
               <div class="form-group">
                 <label>Identifier/Name</label>
                 <input 
@@ -438,7 +608,14 @@ export class DisplayTypeDialog extends LitElement {
           </div>
 
           <footer>
-            <button type="button" class="secondary" @click="${this.close}">Cancel</button>
+            <button 
+              type="button" 
+              class="danger" 
+              style="margin-right: auto;" 
+              ?hidden="${this.isNew}" 
+              @click="${this._handleDelete}"
+            >Delete</button>
+            <button type="button" class="secondary" @click="${this.close}">Close</button>
             <button type="button" class="primary" @click="${() => (this.shadowRoot?.getElementById('real-submit') as HTMLButtonElement).click()}">Save Display Type</button>
           </footer>
         </div>
