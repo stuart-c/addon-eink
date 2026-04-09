@@ -36,7 +36,7 @@ describe('ConfirmDialog', () => {
     expect(p?.textContent).toBe('Custom Message');
     
     // Cleanup the promise/dialog
-    element.shadowRoot?.querySelector('button.secondary')?.dispatchEvent(new ImageEvent('click'));
+    element.shadowRoot?.querySelector('button.secondary')?.click();
   });
 
   it('should resolve with true when confirm is clicked', async () => {
