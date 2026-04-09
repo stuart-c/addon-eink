@@ -189,7 +189,7 @@ async def test_delete_item(aiohttp_client, app):
 async def test_not_found(aiohttp_client, app):
     """Test 404 for non-existent resources."""
     client = await aiohttp_client(app)
-    resp = await client.get("/api/display_type/ non_existent")
+    resp = await client.get("/api/display_type/non_existent")
     assert resp.status == 404
 
     # Valid schema but non-existent ID
