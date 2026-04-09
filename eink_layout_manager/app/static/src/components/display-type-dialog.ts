@@ -18,6 +18,7 @@ export class DisplayTypeDialog extends LitElement {
       max-width: 98vw;
       height: 80vh;
       background: #fff;
+      overflow: hidden;
     }
     dialog::backdrop {
       background: rgba(0, 0, 0, 0.6);
@@ -28,6 +29,7 @@ export class DisplayTypeDialog extends LitElement {
       display: flex;
       flex-direction: column;
       height: 100%;
+      overflow: hidden;
     }
     header {
       padding: 1.25rem 1.5rem;
@@ -35,11 +37,11 @@ export class DisplayTypeDialog extends LitElement {
     }
     h2 { margin: 0; font-size: 1.1rem; color: #333; text-transform: uppercase; letter-spacing: 0.5px; }
     
-    .main-layout {
-      display: grid;
       grid-template-columns: 220px 1fr 340px;
+      grid-template-rows: 1fr;
       flex: 1;
       min-height: 0;
+      overflow: hidden;
     }
 
     .list-sidebar {
@@ -93,11 +95,11 @@ export class DisplayTypeDialog extends LitElement {
       padding: 1.5rem 1rem;
       border-top: 1px solid #eee;
       background: #fafafa;
-      margin-top: auto;
       flex-direction: row;
       justify-content: center;
       color: var(--primary-colour);
       font-weight: 600;
+      flex-shrink: 0;
     }
     .sidebar-item.add-new:hover { background: #f0faff; }
     .sidebar-item.add-new.selected { background: #e1f5fe; }
@@ -115,6 +117,7 @@ export class DisplayTypeDialog extends LitElement {
       align-items: center;
       padding: 2rem 1.5rem;
       gap: 1.5rem;
+      overflow-y: auto;
     }
 
     .preview-canvas {
