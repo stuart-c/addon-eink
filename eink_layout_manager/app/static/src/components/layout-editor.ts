@@ -333,12 +333,13 @@ export class LayoutEditor extends LitElement {
               @mouseleave="${this._handleMouseLeave}"
             >
               <div class="grid-overlay"></div>
-              ${this.items.map(item => {
+              ${this.items.map((item, index) => {
                 const dt = this.displayTypes.find(t => t.id === item.display_type_id);
                 if (!dt) return '';
                 return html`
                   <layout-box
                     data-id="${item.id}"
+                    .itemIndex="${index + 1}"
                     .x="${item.x_mm}"
                     .y="${item.y_mm}"
                     .width="${dt.width_mm}"

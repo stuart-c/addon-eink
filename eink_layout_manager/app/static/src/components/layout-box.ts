@@ -61,6 +61,19 @@ export class LayoutBox extends LitElement {
       }
       .action-icon:hover { color: var(--primary-colour); transform: scale(1.2); }
       .action-icon.delete:hover { color: var(--danger-colour); }
+      
+      .item-number {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 60px;
+        font-weight: 900;
+        color: rgba(0, 0, 0, 0.15);
+        pointer-events: none;
+        z-index: 35;
+        font-family: 'Outfit', sans-serif;
+      }
     `
   ];
 
@@ -69,6 +82,7 @@ export class LayoutBox extends LitElement {
   @property({ type: Number }) width = 0;
   @property({ type: Number }) height = 0;
   @property({ type: Number }) orientation = 0; // 0 or 90
+  @property({ type: Number }) itemIndex = 0;
   @property({ type: String }) name = '';
   @property({ type: Boolean, reflect: true }) selected = false;
   @property({ type: Boolean, reflect: true }) invalid = false;
@@ -109,6 +123,10 @@ export class LayoutBox extends LitElement {
           .scale="${1}"
           .orientation="${this.orientation}"
         ></hardware-preview>
+
+        <div class="item-number">
+          ${this.itemIndex}
+        </div>
 
         <div class="label">
           ${this.name} ${this.invalid ? '(Overlap!)' : ''}

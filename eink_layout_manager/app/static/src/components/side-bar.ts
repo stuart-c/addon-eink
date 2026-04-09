@@ -100,7 +100,7 @@ export class SideBar extends LitElement {
 
       <div class="sidebar-section" style="flex: 2;">
         <h3>Layout Items</h3>
-        ${this.activeLayout?.items.map(item => {
+        ${this.activeLayout?.items.map((item, index) => {
           const dt = this.displayTypes.find(t => t.id === item.display_type_id);
           return html`
             <div 
@@ -110,7 +110,7 @@ export class SideBar extends LitElement {
             >
               <div class="item-details">
                 <div class="item-info">
-                  <span class="item-name">${dt?.name || 'Unknown'}</span>
+                  <span class="item-name">#${index + 1}: ${dt?.name || 'Unknown'}</span>
                   <span class="item-meta">Pos: ${item.x_mm}, ${item.y_mm} | Rot: ${item.orientation}°</span>
                 </div>
                 <div class="item-actions">
