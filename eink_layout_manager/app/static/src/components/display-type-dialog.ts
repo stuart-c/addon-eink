@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+import { live } from 'lit/directives/live.js';
 import { DisplayType } from '../services/HaApiClient';
 import './shared/hardware-preview';
 
@@ -254,7 +255,7 @@ export class DisplayTypeDialog extends LitElement {
     };
   }
 
-  show(displayType: DisplayType | null = null) {
+  async show(displayType: DisplayType | null = null) {
     if (displayType) {
       this.displayType = JSON.parse(JSON.stringify(displayType));
       this.isNew = false;
@@ -262,6 +263,7 @@ export class DisplayTypeDialog extends LitElement {
       this.displayType = this._getDefaultDisplayType();
       this.isNew = true;
     }
+    await this.updateComplete;
     const dialog = this.shadowRoot?.querySelector('dialog');
     dialog?.showModal();
   }
@@ -300,7 +302,7 @@ export class DisplayTypeDialog extends LitElement {
         <div class="colour-input-container">
           <input 
             type="color" 
-            .value="${value}" 
+            .value="${live(value)}" 
             @input="${(e: any) => onUpdate(e.target.value)}"
           >
           <div class="hex-value">${value}</div>
@@ -342,7 +344,7 @@ export class DisplayTypeDialog extends LitElement {
                 <input 
                   type="text" 
                   required 
-                  .value="${this.displayType.name}"
+                  .value="${live(this.displayType?.name || '')}"
                   @input="${(e: any) => this.displayType.name = e.target.value}"
                 >
               </div>
@@ -352,44 +354,44 @@ export class DisplayTypeDialog extends LitElement {
               <div class="row">
                 <div class="form-group">
                   <label>Frame Outer Width (mm)</label>
-                  <input type="number" required .value="${this.displayType.width_mm}" @input="${(e: any) => this.displayType.width_mm = parseInt(e.target.value)}">
+                  <input type="number" required .value="${live(this.displayType?.width_mm || 0)}" @input="${(e: any) => this.displayType.width_mm = parseInt(e.target.value)}">
                 </div>
                 <div class="form-group">
                   <label>Frame Outer Height (mm)</label>
-                  <input type="number" required .value="${this.displayType.height_mm}" @input="${(e: any) => this.displayType.height_mm = parseInt(e.target.value)}">
+                  <input type="number" required .value="${live(this.displayType?.height_mm || 0)}" @input="${(e: any) => this.displayType.height_mm = parseInt(e.target.value)}">
                 </div>
               </div>
 
               <div class="row">
                 <div class="form-group">
                   <label>Display Panel Width (mm)</label>
-                  <input type="number" required .value="${this.displayType.panel_width_mm}" @input="${(e: any) => this.displayType.panel_width_mm = parseInt(e.target.value)}">
+                  <input type="number" required .value="${live(this.displayType?.panel_width_mm || 0)}" @input="${(e: any) => this.displayType.panel_width_mm = parseInt(e.target.value)}">
                 </div>
                 <div class="form-group">
                   <label>Display Panel Height (mm)</label>
-                  <input type="number" required .value="${this.displayType.panel_height_mm}" @input="${(e: any) => this.displayType.panel_height_mm = parseInt(e.target.value)}">
+                  <input type="number" required .value="${live(this.displayType?.panel_height_mm || 0)}" @input="${(e: any) => this.displayType.panel_height_mm = parseInt(e.target.value)}">
                 </div>
               </div>
 
               <div class="form-group">
                 <label>Frame Border Width (mm)</label>
-                <input type="number" required .value="${this.displayType.frame.border_width_mm}" @input="${(e: any) => this.displayType.frame.border_width_mm = parseInt(e.target.value)}">
+                <input type="number" required .value="${live(this.displayType?.frame?.border_width_mm || 0)}" @input="${(e: any) => this.displayType.frame.border_width_mm = parseInt(e.target.value)}">
               </div>
 
               <div class="row">
                 <div class="form-group">
                   <label>Resolution Width (px)</label>
-                  <input type="number" required .value="${this.displayType.width_px}" @input="${(e: any) => this.displayType.width_px = parseInt(e.target.value)}">
+                  <input type="number" required .value="${live(this.displayType?.width_px || 0)}" @input="${(e: any) => this.displayType.width_px = parseInt(e.target.value)}">
                 </div>
                 <div class="form-group">
                   <label>Resolution Height (px)</label>
-                  <input type="number" required .value="${this.displayType.height_px}" @input="${(e: any) => this.displayType.height_px = parseInt(e.target.value)}">
+                  <input type="number" required .value="${live(this.displayType?.height_px || 0)}" @input="${(e: any) => this.displayType.height_px = parseInt(e.target.value)}">
                 </div>
               </div>
 
               <div class="form-group">
                 <label>Colour Type</label>
-                <select .value="${this.displayType.colour_type}" @change="${(e: any) => { this.displayType.colour_type = e.target.value; this.requestUpdate(); }}">
+                <select .value="${live(this.displayType?.colour_type || 'MONO')}" @change="${(e: any) => { this.displayType.colour_type = e.target.value; this.requestUpdate(); }}">
                   <option value="MONO">MONO (B/W)</option>
                   <option value="BWR">BWR (Red)</option>
                   <option value="BWY">BWY (Yellow)</option>
