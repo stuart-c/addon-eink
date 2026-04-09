@@ -1,10 +1,10 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
+    "target": "ES2025",
     "useDefineForClassFields": false,
     "module": "ESNext",
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler",
     "strict": true,
     "sourceMap": true,
     "resolveJsonModule": true,
@@ -18,7 +18,7 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "allowJs": true,
-    "baseUrl": ".",
+    "types": ["node"],
     "paths": {
       "*": ["node_modules/*", "src/*"]
     }
