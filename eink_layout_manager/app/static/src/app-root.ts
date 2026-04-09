@@ -207,7 +207,10 @@ export class AppRoot extends LitElement {
       </main>
 
       <display-type-dialog @save="${this._onSaveDisplayType}"></display-type-dialog>
-      <item-settings-dialog @save="${(e: CustomEvent) => this.state.updateItem(e.detail.id, e.detail.updates)}"></item-settings-dialog>
+      <item-settings-dialog 
+        @save="${(e: CustomEvent) => this.state.updateItem(e.detail.id, e.detail.updates)}"
+        @delete="${(e: CustomEvent) => this._onDeleteItem(e)}"
+      ></item-settings-dialog>
       <layout-settings-dialog @save="${this._onSaveLayoutSettings}"></layout-settings-dialog>
       <confirm-dialog></confirm-dialog>
     `;
