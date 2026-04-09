@@ -21,4 +21,6 @@ The recommended way to develop for this repository is using **VS Code Dev Contai
 1. Open the repository in VS Code.
 2. Click **"Reopen in Container"** when prompted.
 
-For detailed development processes and architectural overview, see the [Agent Documentation](agent_docs/00_INDEX.md).
+For detailed development processes, architectural overview, and mandatory agent workflows, see:
+- [Agent Workflow Guide](agents.md)
+- [Agent Documentation Index](agent_docs/00_INDEX.md)
