@@ -126,8 +126,7 @@ export class AppRoot extends LitElement {
   }
 
   private async _onSaveDisplayType(e: CustomEvent) {
-    // Handled in HaStateController via API would be cleaner but following original pattern
-    this.state.refresh(); 
+    await this.state.saveDisplayType(e.detail.displayType);
   }
 
   private async _onEditItem(e: CustomEvent<{ id: string }>) {
