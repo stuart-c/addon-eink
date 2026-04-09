@@ -20,8 +20,8 @@ def app(tmp_path):
 def test_get_storage_path(tmp_path):
     """Test get_storage_path correctly creates and returns the directory."""
     os.environ["DATA_DIR"] = str(tmp_path)
-    path = get_storage_path("test_resource")
-    assert path == os.path.join(str(tmp_path), "test_resource")
+    path = get_storage_path("display_type")
+    assert path == os.path.join(str(tmp_path), "display_type")
     assert os.path.exists(path)
 
 
