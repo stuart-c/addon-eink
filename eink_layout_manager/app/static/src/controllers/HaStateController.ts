@@ -82,6 +82,26 @@ export class HaStateController implements ReactiveController {
     }
   }
 
+  async saveDisplayType(dt: DisplayType) {
+    this.isSaving = true;
+    this.host.requestUpdate();
+    try {
+      const exists = this.displayTypes.some(existing => existing.id === dt.id);
+      if (exists) {
+        await api.updateItem('display_type', dt.id, dt);
+      } else {
+        await api.createItem('display_type', dt);
+      }
+      this.showMessage(`Display type "${dt.name}" saved!`, 'success');
+      await this.refresh();
+    } catch (e: any) {
+      this.showMessage(`Failed to save display type: ${e.message}`, 'error');
+    } finally {
+      this.isSaving = false;
+      this.host.requestUpdate();
+    }
+  }
+
   async deleteDisplayType(dt: DisplayType): Promise<boolean> {
     const isInUse = this.layouts.some(l => l.items.some(i => i.display_type_id === dt.id));
     if (isInUse) {
