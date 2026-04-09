@@ -1,5 +1,5 @@
 name: "eInk Layout Manager"
-version: "0.2.15"
+version: "0.2.16"
 slug: "eink_layout_manager"
 image: "ghcr.io/stuart-c/eink-layout-manager"
 description: "Manage multiple eInk displays with advanced layouts via OpenDisplay"
