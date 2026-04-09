@@ -1,5 +1,5 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 import { live } from 'lit/directives/live.js';
 import { DisplayType } from '../services/HaApiClient';
 import { commonStyles } from '../styles/common-styles';
@@ -121,7 +121,8 @@ export class DisplayTypeDialog extends LitElement {
       align-items: center;
       padding: 2rem 1.5rem;
       gap: 1.5rem;
-      overflow-y: auto;
+      overflow: hidden;
+      position: relative;
     }
 
     .preview-canvas {
@@ -143,6 +144,43 @@ export class DisplayTypeDialog extends LitElement {
       color: #888;
       text-transform: uppercase;
       letter-spacing: 1px;
+    }
+
+    .summary-panel {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      border-top: 1px solid #eee;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+      z-index: 100;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      max-height: 80%;
+    }
+    .summary-panel.collapsed {
+      transform: translateY(calc(100% - 44px));
+    }
+    .summary-toggle {
+      padding: 12px 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      background: #fff;
+      user-select: none;
+    }
+    .summary-toggle:hover {
+      background: #f0faff;
+    }
+    .summary-toggle .preview-label {
+      margin: 0;
+    }
+    .summary-content {
+      padding: 0 1.5rem 1.5rem 1.5rem;
+      overflow-y: auto;
     }
 
     .form-group {
@@ -303,6 +341,8 @@ export class DisplayTypeDialog extends LitElement {
   @property({ type: Boolean }) isNew = true;
   @property({ type: Object }) confirmDialog!: any; // Reference to app-root's confirm-dialog if needed, or we use events
 
+  @state() private _showSummary = false;
+
   private _PRESETS = [
     { name: 'White', colour: '#ffffff' },
     { name: 'Black', colour: '#000000' },
@@ -460,6 +500,10 @@ export class DisplayTypeDialog extends LitElement {
     `;
   }
 
+  private _formatDim(val: number): string {
+    return parseFloat(val.toFixed(1)).toString();
+  }
+
   render() {
     if (!this.displayType) return html``;
 
@@ -609,14 +653,21 @@ export class DisplayTypeDialog extends LitElement {
                   .scale="${scale}"
                 ></hardware-preview>
               </div>
-              
-              <div class="preview-label" style="margin-top: 1rem;">Dimension Summary</div>
-              <table class="summary-table">
-                <tr><th>Overall Frame</th><td><span class="val">${frameW} x ${frameH}</span><span class="unit">mm</span></td></tr>
-                <tr><th>Mat (Aperture)</th><td><span class="val">${matW.toFixed(1)} x ${matH.toFixed(1)}</span><span class="unit">mm</span></td></tr>
-                <tr><th>Display Panel</th><td><span class="val">${panelW} x ${panelH}</span><span class="unit">mm</span></td></tr>
-                <tr><th>Cutout Position</th><td><span class="val">${cutoutX.toFixed(1)} x ${cutoutY.toFixed(1)}</span><span class="unit">mm</span></td></tr>
-              </table>
+
+              <div class="summary-panel ${this._showSummary ? '' : 'collapsed'}">
+                <div class="summary-toggle" @click="${() => this._showSummary = !this._showSummary}">
+                  <span class="preview-label">Dimension Summary</span>
+                  <span class="material-icons">${this._showSummary ? 'expand_more' : 'expand_less'}</span>
+                </div>
+                <div class="summary-content">
+                  <table class="summary-table">
+                    <tr><th>Overall Frame</th><td><span class="val">${this._formatDim(frameW)} x ${this._formatDim(frameH)}</span><span class="unit">mm</span></td></tr>
+                    <tr><th>Mat (Aperture)</th><td><span class="val">${this._formatDim(matW)} x ${this._formatDim(matH)}</span><span class="unit">mm</span></td></tr>
+                    <tr><th>Display Panel</th><td><span class="val">${this._formatDim(panelW)} x ${this._formatDim(panelH)}</span><span class="unit">mm</span></td></tr>
+                    <tr><th>Cutout Position</th><td><span class="val">${this._formatDim(cutoutX)} x ${this._formatDim(cutoutY)}</span><span class="unit">mm</span></td></tr>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
 
