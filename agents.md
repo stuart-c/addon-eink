@@ -48,6 +48,10 @@ Tests and lints **MUST** be run locally before being pushed to GitHub.
   git rebase origin/main
   ```
 - **Builds:** Ensure all GitHub Action builds for the PR are passing before requesting review.
+- **Auto-Merge:** Always enable auto-merge when creating a pull request to ensure it is merged automatically once checks pass and approvals are met:
+  ```bash
+  gh pr create --fill --auto
+  ```
 
 ## 6. Post-Merge Cleanup
 When a PR is merged, the local environment must be tidied:
