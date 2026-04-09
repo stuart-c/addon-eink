@@ -38,31 +38,34 @@ template: |
 autolabeler:
   - label: 'feature'
     title:
-      - '/^feat:/i'
-      - '/feature/i'
-      - '/enhancement/i'
+      - '^feat:'
+      - 'feature'
+      - 'enhancement'
     branch:
-      - '/^feature\//i'
-      - '/^feat\//i'
-      - '/^enhancement\//i'
+      - '^feature/'
+      - '^feat/'
+      - '^enhancement/'
+
   - label: 'fix'
     title:
-      - '/^fix:/i'
-      - '/bugfix/i'
-      - '/\bfix\b/i'
+      - '^fix:'
+      - 'bugfix'
+      - '\bfix\b'
     branch:
-      - '/^fix\//i'
-      - '/^bugfix\//i'
+      - '^fix/'
+      - '^bugfix/'
+
   - label: 'chore'
     title:
-      - '/^chore:/i'
-      - '/^ci:/i'
-      - '/^test:/i'
-      - '/^refactor:/i'
-      - '/^docs:/i'
+      - '^chore:'
+      - '^ci:'
+      - '^test:'
+      - '^refactor:'
+      - '^docs:'
     branch:
-      - '/^chore\//i'
-      - '/^ci\//i'
-      - '/^test\//i'
-      - '/^refactor\//i'
-      - '/^docs\//i'
+      - '^chore/'
+      - '^ci/'
+      - '^test/'
+      - '^refactor/'
+      - '^docs/'
+
