@@ -1,0 +1,84 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { HaStateController } from './HaStateController';
+import { api } from '../services/HaApiClient';
+
+// Mock the API singleton
+vi.mock('../services/HaApiClient', () => {
+  return {
+    api: {
+      ping: vi.fn(),
+      getCollection: vi.fn(),
+      createItem: vi.fn(),
+      updateItem: vi.fn(),
+      deleteItem: vi.fn(),
+    },
+  };
+});
+
+// A dummy host for the controller
+const mockHost = {
+  addController: vi.fn(),
+  requestUpdate: vi.fn(),
+  updateComplete: Promise.resolve(true),
+};
+
+describe('HaStateController', () => {
+  let controller: HaStateController;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    controller = new HaStateController(mockHost as any);
+  });
+
+  it('should initialize with default values', () => {
+    expect(controller.connected).toBe(false);
+    expect(controller.displayTypes).toEqual([]);
+    expect(controller.layouts).toEqual([]);
+    expect(controller.activeLayout).toBe(null);
+  });
+
+  it('should refresh and set connected state', async () => {
+    vi.mocked(api.ping).mockResolvedValue(true);
+    vi.mocked(api.getCollection).mockResolvedValue([]);
+    
+    // Mock the createItem call during createDefaultLayout
+    vi.mocked(api.createItem).mockResolvedValue({ id: 'default' } as any);
+
+    await controller.refresh();
+
+    expect(api.ping).toHaveBeenCalled();
+    expect(controller.connected).toBe(true);
+    expect(controller.activeLayout).not.toBeNull();
+    expect(controller.activeLayout?.id).toBe('default');
+  });
+
+  it('should handle failed ping', async () => {
+    vi.mocked(api.ping).mockResolvedValue(false);
+
+    await controller.refresh();
+
+    expect(controller.connected).toBe(false);
+    expect(api.getCollection).not.toHaveBeenCalled();
+  });
+
+  it('should switch layouts', () => {
+    const layout1 = { id: 'l1', name: 'L1', items: [] } as any;
+    const layout2 = { id: 'l2', name: 'L2', items: [] } as any;
+    
+    controller.layouts = [layout1, layout2];
+    controller.switchLayout(layout2);
+
+    expect(controller.activeLayout).toBe(layout2);
+    expect(controller.selectedItemId).toBe(null);
+    expect(mockHost.requestUpdate).toHaveBeenCalled();
+  });
+
+  it('should update active layout fields', () => {
+    controller.activeLayout = { id: 'l1', name: 'Original', items: [] } as any;
+    
+    controller.updateActiveLayout({ name: 'Updated' });
+
+    expect(controller.activeLayout.name).toBe('Updated');
+    expect(mockHost.requestUpdate).toHaveBeenCalled();
+  });
+});
