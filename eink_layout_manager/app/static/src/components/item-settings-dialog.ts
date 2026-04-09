@@ -45,6 +45,12 @@ export class ItemSettingsDialog extends LitElement {
     }));
     (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).close();
   }
+  
+  private _handleDelete() {
+    if (!this.item) return;
+    this.dispatchEvent(new CustomEvent('delete', { detail: { id: this.item.id } }));
+    (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).close();
+  }
 
   render() {
     return html`
@@ -93,6 +99,7 @@ export class ItemSettingsDialog extends LitElement {
         </form>
 
         <div slot="footer">
+          <button class="danger" style="margin-right: auto;" @click="${this._handleDelete}">Delete</button>
           <button class="secondary" @click="${() => (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).close()}">Cancel</button>
           <button class="primary" @click="${() => (this.shadowRoot?.getElementById('item-form') as HTMLFormElement).requestSubmit()}">Apply</button>
         </div>

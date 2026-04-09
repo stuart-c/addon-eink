@@ -120,14 +120,8 @@ export class SideBar extends LitElement {
                   <span class="item-meta">Pos: ${item.x_mm}, ${item.y_mm} | Rot: ${item.orientation}°</span>
                 </div>
                 <div class="item-actions">
-                  <button class="secondary" title="Rotate" @click="${(e: Event) => { e.stopPropagation(); this._dispatch('rotate-item', { id: item.id }); }}">
-                    <span class="material-icons" style="font-size: 16px;">rotate_right</span>
-                  </button>
                   <button class="secondary" title="Settings" @click="${(e: Event) => { e.stopPropagation(); this._dispatch('edit-item', { id: item.id }); }}">
                     <span class="material-icons" style="font-size: 16px;">settings</span>
-                  </button>
-                  <button class="secondary" title="Delete" style="color: var(--danger-colour);" @click="${(e: Event) => { e.stopPropagation(); this._dispatch('delete-item', { id: item.id }); }}">
-                    <span class="material-icons" style="font-size: 16px;">delete_outline</span>
                   </button>
                 </div>
               </div>
