@@ -6,7 +6,6 @@ import traceback
 from aiohttp import web
 from jsonschema import validate, ValidationError
 
-
 # Base directory for data persistence
 SCHEMAS_DIR = os.path.realpath(
     os.path.join(os.path.dirname(__file__), "schemas")
