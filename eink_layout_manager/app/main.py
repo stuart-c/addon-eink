@@ -8,7 +8,9 @@ from jsonschema import validate, ValidationError
 
 # Base directory for data persistence
 # Base directory for data persistence
-SCHEMAS_DIR = os.path.realpath(os.path.join(os.path.dirname(__file__), "schemas"))
+SCHEMAS_DIR = os.path.realpath(
+    os.path.join(os.path.dirname(__file__), "schemas")
+)
 
 
 def get_storage_path(resource_type):
