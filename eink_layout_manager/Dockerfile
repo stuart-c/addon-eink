@@ -4,7 +4,7 @@ ARG BUILD_FROM="ghcr.io/home-assistant/amd64-base-python:3.12-alpine3.19"
 FROM node:20-alpine AS node-builder
 WORKDIR /app/static
 COPY app/static .
-RUN npm install && npm test && npm run build
+RUN npm install && npm test -- --run && npm run build
 
 # Stage 1: Build stage
 FROM $BUILD_FROM AS builder
