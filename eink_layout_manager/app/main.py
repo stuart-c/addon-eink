@@ -12,7 +12,6 @@ SCHEMAS_DIR = os.path.realpath(
     os.path.join(os.path.dirname(__file__), "schemas")
 )
 
-
 def get_storage_path(resource_type):
     """
     Get the filesystem path for a specific resource type.
@@ -37,7 +36,6 @@ def get_storage_path(resource_type):
     os.makedirs(real_path, exist_ok=True)
     return real_path
 
-
 def validate_id(item_id):
     """
     Validate and sanitise a resource ID to prevent path traversal.
@@ -59,16 +57,13 @@ def validate_id(item_id):
 
     return sanitised_id
 
-
 def load_schema(name):
     """Load a JSON schema from the schemas directory."""
     schema_path = os.path.join(SCHEMAS_DIR, f"{name}.json")
     with open(schema_path, "r") as f:
         return json.load(f)
 
-
 # --- Middlewares ---
-
 
 @web.middleware
 async def request_logger_middleware(request, handler):
@@ -81,14 +76,11 @@ async def request_logger_middleware(request, handler):
         traceback.print_exc()
         raise
 
-
 # --- Handlers ---
-
 
 async def ping(request):
     """Health check endpoint. Returns 'pong'."""
     return web.Response(text="pong")
-
 
 async def get_collection(request):
     """Fetch all resources for a specific collection type."""
@@ -116,7 +108,6 @@ async def get_collection(request):
                         continue
     return web.json_response(items)
 
-
 async def get_item(request):
     """Fetch a single resource by ID."""
     resource_type = request.match_info["resource_type"]
@@ -139,7 +130,6 @@ async def get_item(request):
 
     with open(file_real, "r") as f:
         return web.json_response(json.load(f))
-
 
 async def create_item(request):
     """Create a new resource. Returns 409 if ID already exists."""
@@ -190,7 +180,6 @@ async def create_item(request):
         json.dump(data, f, indent=2)
 
     return web.json_response(data, status=201)
-
 
 async def update_item(request):
     """Update an existing resource by ID."""
@@ -246,7 +235,6 @@ async def update_item(request):
         json.dump(data, f, indent=2)
 
     return web.json_response(data, status=200)
-
 
 async def delete_item(request):
     """Permanently delete a resource by ID."""
@@ -306,9 +294,7 @@ async def delete_item(request):
     os.remove(file_real)
     return web.json_response({"status": "deleted"})
 
-
 # --- App Init ---
-
 
 def init_app():
     """Initialise the aiohttp application with routes and storage setup."""
@@ -346,7 +332,6 @@ def init_app():
         app.router.add_static("/", static_dist)
 
     return app
-
 
 if __name__ == "__main__":
     port_env = os.environ.get("INGRESS_PORT")

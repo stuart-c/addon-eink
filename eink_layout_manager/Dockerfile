@@ -21,7 +21,6 @@ COPY app/requirements.txt /tmp/
 RUN \
     pip3 wheel --no-cache-dir --wheel-dir /tmp/wheels -r /tmp/requirements.txt
 
-
 # Stage 2: Test & Lint stage
 FROM builder AS tester
 
@@ -37,7 +36,6 @@ RUN \
     black --check --line-length 79 /app && \
     flake8 /app && \
     PYTHONPATH=/ pytest /app/tests/
-
 
 # Stage 3: Runner stage (Final)
 FROM $BUILD_FROM AS runner
