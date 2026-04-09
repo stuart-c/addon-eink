@@ -420,40 +420,77 @@ export class DisplayTypeDialog extends LitElement {
     return JSON.stringify(this.displayType) !== JSON.stringify(original);
   }
 
+  private _requestConfirmation(
+    config: { title: string, message: string, buttons: any[] },
+    callback: (choice: string) => void
+  ) {
+    this.dispatchEvent(new CustomEvent('request-confirmation', {
+      detail: { config, callback },
+      bubbles: true,
+      composed: true
+    }));
+  }
+
+  private _handleHeaderClose() {
+    if (this._isDirty()) {
+      this._requestConfirmation(
+        {
+          title: 'Unsaved Changes',
+          message: `You have unsaved changes to "${this.displayType.name}". What would you like to do?`,
+          buttons: [
+            { text: 'Save', value: 'save', type: 'primary' },
+            { text: 'Discard', value: 'discard', type: 'danger' },
+            { text: 'Cancel', value: 'cancel', type: 'secondary' }
+          ]
+        },
+        async (choice: string) => {
+          if (choice === 'save') {
+            const form = this.shadowRoot?.querySelector('form');
+            if (form?.checkValidity()) {
+              this._handleSubmit(new Event('submit'));
+              this.close();
+            } else {
+              form?.reportValidity();
+            }
+          } else if (choice === 'discard') {
+            this.close();
+          }
+        }
+      );
+    } else {
+      this.close();
+    }
+  }
+
   private async _handleSelect(id: string | null) {
     if (this.displayType.id === id && !this.isNew) return;
     if (id === null && this.isNew) return;
 
     if (this._isDirty()) {
-      const event = new CustomEvent('request-confirmation', {
-        detail: {
-          config: {
-            title: 'Unsaved Changes',
-            message: `You have unsaved changes to "${this.displayType.name}". What would you like to do?`,
-            buttons: [
-              { text: 'Save', value: 'save', type: 'primary' },
-              { text: 'Discard', value: 'discard', type: 'danger' },
-              { text: 'Cancel', value: 'cancel', type: 'secondary' }
-            ]
-          },
-          callback: async (choice: string) => {
-            if (choice === 'save') {
-              const form = this.shadowRoot?.querySelector('form');
-              if (form?.checkValidity()) {
-                this._handleSubmit(new Event('submit'));
-                this._switchTo(id);
-              } else {
-                form?.reportValidity();
-              }
-            } else if (choice === 'discard') {
-              this._switchTo(id);
-            }
-          }
+      this._requestConfirmation(
+        {
+          title: 'Unsaved Changes',
+          message: `You have unsaved changes to "${this.displayType.name}". What would you like to do?`,
+          buttons: [
+            { text: 'Save', value: 'save', type: 'primary' },
+            { text: 'Discard', value: 'discard', type: 'danger' },
+            { text: 'Cancel', value: 'cancel', type: 'secondary' }
+          ]
         },
-        bubbles: true,
-        composed: true
-      });
-      this.dispatchEvent(event);
+        async (choice: string) => {
+          if (choice === 'save') {
+            const form = this.shadowRoot?.querySelector('form');
+            if (form?.checkValidity()) {
+              this._handleSubmit(new Event('submit'));
+              this._switchTo(id);
+            } else {
+              form?.reportValidity();
+            }
+          } else if (choice === 'discard') {
+            this._switchTo(id);
+          }
+        }
+      );
     } else {
       this._switchTo(id);
     }
@@ -551,7 +588,7 @@ export class DisplayTypeDialog extends LitElement {
         <div class="container">
           <header>
             <h2>Manage Display Types</h2>
-            <button type="button" class="close-button" @click="${this.close}" title="Close">
+            <button type="button" class="close-button" @click="${this._handleHeaderClose}" title="Close">
               <span class="material-icons">close</span>
             </button>
           </header>
@@ -709,7 +746,7 @@ export class DisplayTypeDialog extends LitElement {
               type="button" 
               class="secondary" 
               ?disabled="${!this._isDirty()}"
-              @click="${this.close}"
+              @click="${() => this._switchTo(this.isNew ? null : this.displayType.id)}"
             >Cancel</button>
             <button 
               type="button" 
