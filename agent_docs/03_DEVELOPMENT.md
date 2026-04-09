@@ -16,39 +16,12 @@ We utilize **VS Code Dev Containers** to provide a consistent, reproducible deve
 
 ## Workflow Patterns
 
-### 1. Branch Isolation with Git Worktrees
-To avoid environment pollution and facilitate parallel work across different tracks, always use **git worktrees** when working on multiple branches.
+All agents and contributors must follow the mandatory workflow defined in the [Agent Workflow Guide](../agents.md).
 
-```bash
-git worktree add .worktrees/feature-name -b feature/name
-```
-
-### 2. Pre-PR Verification
-Before pushing changes or creating a Pull Request, you **MUST** run the following quality checks locally within the dev container:
-
-- **Linting:** `flake8 .`
-- **Formatting:** `black .`
-- **Testing:** `pytest`
-
-### 3. Automated Testing Requirements
+### Automated Testing Requirements
 **All new code must be covered by unit tests.** 
 - Ensure that any new logic, API endpoints, or schema changes have corresponding test cases in the `tests/` directory.
-- Verify that your tests pass locally before submitting a PR.
-
-### 4. PR Management and Monitoring
-When a PR is created:
-1. **GitHub Tooling:** Always use the `gh` tool to monitor and manage PRs. 
-   - **Authentication:** Check for GitHub authentication using `gh auth status`. If you are not logged in, search `~/.config/gh` for auth details or ask the USER for access to a GitHub token.
-2. **Keep PRs Up-to-Date:** Regularly check if the PR is outdated with respect to the base branch. If it is, perform a rebase to ensure a clean merge:
-   ```bash
-   git fetch origin
-   git rebase origin/main
-   git push --force-with-lease
-   ```
-3. **Monitor CI Checks:** Use `gh pr checks <pr-number> --watch` to monitor the GitHub Actions status.
-4. **Mandatory Passing Builds:** Never merge or request a final review until all CI builds (including linting and build tests) are passing.
-5. **Post-Approval Action:** Once a PR is approved, merge it and verify that the final build completes successfully.
-6. **Task Completion:** Always provide the URL for the generated Pull Request to the user once the task is finished.
+- Verify that your tests pass locally before submitting a PR as per the workflow guide.
 
 ## Recent Design Decisions
 

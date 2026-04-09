@@ -8,7 +8,6 @@ This directory contains resources for AI agents to continue the development of t
 
 ## Agent Workflow Guidelines
 
-1. **Review Constraints:** Always rely on this documentation when taking on new tasks.
-2. **Git Branches and Worktrees:** Ensure all development happens in branches utilizing `git worktree` and that Pull Requests are fully tested before merge.
-3. **CI/CD:** Always run GitHub Actions formatters and linters (`black`, `flake8`) locally before committing if possible, but trust the PR status checks.
-4. **Task Completion:** Always provide the Pull Request link upon completion of a task to the user.
+1. **Mandatory Workflow:** All agents **MUST** follow the [Agent Workflow Guide](../agents.md) for branch naming, git worktree usage, and PR management.
+2. **Review Constraints:** Always rely on this documentation and the workflow guide when taking on new tasks.
+3. **Task Completion:** Always provide the Pull Request link upon completion of a task to the user.
