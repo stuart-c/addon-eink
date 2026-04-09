@@ -19,6 +19,12 @@ categories:
   - title: '🎨 Frontend Changes'
     labels:
       - 'frontend'
+  - title: '🐳 Docker Changes'
+    labels:
+      - 'docker'
+  - title: '🤖 GitHub Actions Changes'
+    labels:
+      - 'github_actions'
   - title: '🧰 Maintenance'
     labels:
       - 'chore'
@@ -82,7 +88,14 @@ autolabeler:
   - label: 'python'
     files:
       - 'eink_layout_manager/app/**/*.py'
-      - 'eink_layout_manager/Dockerfile'
   - label: 'frontend'
     files:
       - 'eink_layout_manager/app/static/**/*'
+  - label: 'github_actions'
+    files:
+      - '.github/workflows/**/*'
+  - label: 'docker'
+    files:
+      - '**/Dockerfile'
+      - '**/docker-compose.yml'
+      - '**/.dockerignore'
