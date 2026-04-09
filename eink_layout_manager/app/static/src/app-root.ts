@@ -206,7 +206,15 @@ export class AppRoot extends LitElement {
         </div>
       </main>
 
-      <display-type-dialog @save="${this._onSaveDisplayType}"></display-type-dialog>
+      <display-type-dialog 
+        .displayTypes="${this.state.displayTypes}" 
+        @save="${this._onSaveDisplayType}"
+        @delete-display-type="${this._onDeleteDisplayType}"
+        @request-confirmation="${async (e: CustomEvent) => {
+          const result = await this._confirmDialog.show(e.detail.config);
+          e.detail.callback(result);
+        }}"
+      ></display-type-dialog>
       <item-settings-dialog 
         @save="${(e: CustomEvent) => this.state.updateItem(e.detail.id, e.detail.updates)}"
         @delete="${(e: CustomEvent) => this._onDeleteItem(e)}"
