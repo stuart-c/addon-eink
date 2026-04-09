@@ -10,6 +10,8 @@ import './components/display-type-dialog';
 import './components/item-settings-dialog';
 import './components/layout-settings-dialog';
 import './components/confirm-dialog';
+import './components/yaml-editor';
+
 
 import { DisplayTypeDialog } from './components/display-type-dialog';
 import { ItemSettingsDialog } from './components/item-settings-dialog';
@@ -36,16 +38,24 @@ export class AppRoot extends LitElement {
       background-color: #f0f2f5;
       overflow: hidden;
     }
+    }
     .editor-container {
       flex: 1;
       min-width: 0;
       position: relative;
       display: flex;
       flex-direction: column;
+      background: white;
+    }
+    yaml-editor {
+      flex: 1;
     }
   `;
 
+
   @state() private _mousePos: { x: number | null, y: number | null } = { x: null, y: null };
+  @state() private _viewMode: 'graphical' | 'yaml' = 'graphical';
+
 
   @query('display-type-dialog') private _displayTypeDialog!: DisplayTypeDialog;
   @query('item-settings-dialog') private _itemDialog!: ItemSettingsDialog;
@@ -159,9 +169,12 @@ export class AppRoot extends LitElement {
         .connected="${this.state.connected}"
         .message="${this.state.message}"
         .isSaving="${this.state.isSaving}"
+        .viewMode="${this._viewMode}"
         @edit-layout="${this._handleEditLayout}"
         @save-layout="${() => this.state.saveActiveLayout()}"
+        @toggle-view-mode="${() => this._viewMode = (this._viewMode === 'graphical' ? 'yaml' : 'graphical')}"
       ></app-header>
+
 
       <main>
         <side-bar
@@ -188,7 +201,7 @@ export class AppRoot extends LitElement {
           ></app-toolbar>
 
           <layout-editor
-            ?hidden="${!this.state.activeLayout}"
+            ?hidden="${this._viewMode !== 'graphical' || !this.state.activeLayout}"
             .width_mm="${this.state.activeLayout?.canvas_width_mm || 0}"
             .height_mm="${this.state.activeLayout?.canvas_height_mm || 0}"
             .gridSnap="${this.state.activeLayout?.grid_snap_mm || 5}"
@@ -203,6 +216,13 @@ export class AppRoot extends LitElement {
             @item-delete="${(e: CustomEvent) => this._onDeleteItem(e)}"
             @layout-resized="${(e: CustomEvent) => this.state.updateActiveLayout({ canvas_width_mm: e.detail.width, canvas_height_mm: e.detail.height })}"
           ></layout-editor>
+
+          <yaml-editor
+            ?hidden="${this._viewMode !== 'yaml' || !this.state.activeLayout}"
+            .layout="${this.state.activeLayout}"
+            @layout-update="${(e: CustomEvent) => this.state.updateActiveLayout(e.detail)}"
+          ></yaml-editor>
+
         </div>
       </main>
 
