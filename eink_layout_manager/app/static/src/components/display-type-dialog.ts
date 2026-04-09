@@ -699,11 +699,21 @@ export class DisplayTypeDialog extends LitElement {
               type="button" 
               class="danger" 
               style="margin-right: auto;" 
-              ?hidden="${this.isNew}" 
+              ?disabled="${this.isNew}" 
               @click="${this._handleDelete}"
             >Delete</button>
-            <button type="button" class="secondary" @click="${this.close}">Close</button>
-            <button type="button" class="primary" @click="${() => (this.shadowRoot?.getElementById('real-submit') as HTMLButtonElement).click()}">Save Display Type</button>
+            <button 
+              type="button" 
+              class="secondary" 
+              ?disabled="${!this._isDirty()}"
+              @click="${this.close}"
+            >Cancel</button>
+            <button 
+              type="button" 
+              class="primary" 
+              ?disabled="${!this._isDirty()}"
+              @click="${() => (this.shadowRoot?.getElementById('real-submit') as HTMLButtonElement).click()}"
+            >Save Display Type</button>
           </footer>
         </div>
       </dialog>
