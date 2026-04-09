@@ -19,7 +19,10 @@ We utilize **VS Code Dev Containers** to provide a consistent, reproducible deve
 
 ## Workflow Patterns
 
-All agents and contributors must follow the mandatory workflow defined in the [Agent Workflow Guide](../agents.md). This includes using the `.worktrees/` directory for all parallel feature development.
+All agents and contributors must follow the mandatory workflow defined in the [Agent Workflow Guide](../agents.md). This includes using the `.worktrees/` directory for all parallel feature development and enabling **GitHub auto-merge** for all pull requests.
+
+> [!TIP]
+> Enabling auto-merge ensures that your contributions are integrated as soon as they satisfy the repository's status checks and approval requirements, maintaining a high-velocity development cycle.
 
 ### Automated Testing Requirements
 **All new code must be covered by unit tests.** 
