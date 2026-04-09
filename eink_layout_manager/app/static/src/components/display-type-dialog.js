@@ -52,7 +52,7 @@ export class DisplayTypeDialog extends LitElement {
         width: 28px; height: 28px; border-radius: 6px; cursor: pointer;
         border: 1px solid #ddd; transition: all 0.2s;
       }
-      .swatch.selected { border: 2px solid var(--primary-color); box-shadow: 0 0 0 2px rgba(3, 169, 244, 0.2); }
+      .swatch.selected { border: 2px solid var(--primary-colour); box-shadow: 0 0 0 2px rgba(3, 169, 244, 0.2); }
       
       .summary-table {
         width: 100%; border-collapse: collapse; font-size: 12px;
@@ -70,10 +70,10 @@ export class DisplayTypeDialog extends LitElement {
   };
 
   _PRESETS = [
-    { name: 'White', color: '#ffffff' },
-    { name: 'Black', color: '#000000' },
-    { name: 'Brown', color: '#5d4037' },
-    { name: 'Silver', color: '#c0c0c0' }
+    { name: 'White', colour: '#ffffff' },
+    { name: 'Black', colour: '#000000' },
+    { name: 'Brown', colour: '#5d4037' },
+    { name: 'Silver', colour: '#c0c0c0' }
   ];
 
   show(displayType = null) {
@@ -117,7 +117,7 @@ export class DisplayTypeDialog extends LitElement {
         <div class="main-layout">
           <form id="dt-form" class="form-scroll" @submit="${this._handleSubmit}" @input="${() => this.requestUpdate()}">
             <div class="form-group">
-              <label>Name</label>
+              <label>Identifier/Name</label>
               <input type="text" required .value="${this.displayType.name}" @input="${e => this.displayType.name = e.target.value}">
             </div>
 
@@ -137,20 +137,32 @@ export class DisplayTypeDialog extends LitElement {
               <div class="form-group"><label>Resolution X (px)</label><input type="number" required .value="${this.displayType.width_px}" @input="${e => this.displayType.width_px = parseInt(e.target.value)}"></div>
               <div class="form-group"><label>Resolution Y (px)</label><input type="number" required .value="${this.displayType.height_px}" @input="${e => this.displayType.height_px = parseInt(e.target.value)}"></div>
             </div>
+
+            <div class="form-group">
+              <label>Colour Type</label>
+              <select .value="${this.displayType.colour_type}" @change="${e => { this.displayType.colour_type = e.target.value; this.requestUpdate(); }}">
+                <option value="MONO">MONO (B/W)</option>
+                <option value="BWR">BWR (Red)</option>
+                <option value="BWY">BWY (Yellow)</option>
+                <option value="BWRY">BWRY (Red/Yellow)</option>
+                <option value="BWGBRY">BWGBRY (Spectra 6)</option>
+                <option value="GRAYSCALE_4">Greyscale (4-bit)</option>
+              </select>
+            </div>
             
             <div class="section-header">Aesthetics</div>
             <div class="row">
               <div class="form-group">
-                <label>Frame Color</label>
+                <label>Frame Colour</label>
                 <div class="swatch-group">
-                  ${this._PRESETS.map(p => html`<div class="swatch ${this.displayType.frame.colour === p.color ? 'selected' : ''}" style="background: ${p.color}" @click="${() => { this.displayType.frame.colour = p.color; this.requestUpdate(); }}"></div>`)}
+                  ${this._PRESETS.map(p => html`<div class="swatch ${this.displayType.frame.colour === p.colour ? 'selected' : ''}" style="background: ${p.colour}" @click="${() => { this.displayType.frame.colour = p.colour; this.requestUpdate(); }}"></div>`)}
                   <input type="color" .value="${this.displayType.frame.colour}" @input="${e => { this.displayType.frame.colour = e.target.value; this.requestUpdate(); }}">
                 </div>
               </div>
               <div class="form-group">
-                <label>Mat Color</label>
+                <label>Mat Colour</label>
                 <div class="swatch-group">
-                  ${this._PRESETS.map(p => html`<div class="swatch ${this.displayType.mat.colour === p.color ? 'selected' : ''}" style="background: ${p.color}" @click="${() => { this.displayType.mat.colour = p.color; this.requestUpdate(); }}"></div>`)}
+                  ${this._PRESETS.map(p => html`<div class="swatch ${this.displayType.mat.colour === p.colour ? 'selected' : ''}" style="background: ${p.colour}" @click="${() => { this.displayType.mat.colour = p.colour; this.requestUpdate(); }}"></div>`)}
                   <input type="color" .value="${this.displayType.mat.colour}" @input="${e => { this.displayType.mat.colour = e.target.value; this.requestUpdate(); }}">
                 </div>
               </div>
@@ -171,7 +183,7 @@ export class DisplayTypeDialog extends LitElement {
             ></hardware-preview>
             
             <table class="summary-table">
-              <tr><th>Overall</th><td><span class="val">${frameW}x${frameH}</span> mm</td></tr>
+              <tr><th>Overall Size</th><td><span class="val">${frameW}x${frameH}</span> mm</td></tr>
               <tr><th>Aperture</th><td><span class="val">${(frameW - 2*border).toFixed(1)}x${(frameH - 2*border).toFixed(1)}</span> mm</td></tr>
               <tr><th>Panel</th><td><span class="val">${panelW}x${panelH}</span> mm</td></tr>
             </table>

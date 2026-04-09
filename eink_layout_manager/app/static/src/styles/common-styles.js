@@ -2,13 +2,13 @@ import { css } from 'lit';
 
 export const commonStyles = css`
   :host {
-    --primary-color: #03a9f4;
+    --primary-colour: #03a9f4;
     --primary-hover: #0288d1;
-    --danger-color: #f44336;
+    --danger-colour: #f44336;
     --danger-hover: #d32f2f;
-    --text-color: #333;
+    --text-colour: #333;
     --text-muted: #666;
-    --border-color: #ddd;
+    --border-colour: #ddd;
     --bg-light: #f8f9fa;
     --shadow-small: 0 2px 4px rgba(0,0,0,0.1);
     --shadow-medium: 0 4px 15px rgba(0,0,0,0.15);
@@ -33,7 +33,7 @@ export const commonStyles = css`
   }
 
   button {
-    background: var(--primary-color);
+    background: var(--primary-colour);
     color: white;
     border: none;
     padding: 0.5rem 1rem;
@@ -58,8 +58,8 @@ export const commonStyles = css`
 
   button.secondary {
     background: white;
-    color: var(--primary-color);
-    border: 1px solid var(--primary-color);
+    color: var(--primary-colour);
+    border: 1px solid var(--primary-colour);
   }
 
   button.secondary:hover {
@@ -68,8 +68,8 @@ export const commonStyles = css`
 
   button.danger {
     background: white;
-    color: var(--danger-color);
-    border: 1px solid var(--danger-color);
+    color: var(--danger-colour);
+    border: 1px solid var(--danger-colour);
   }
 
   button.danger:hover {
@@ -95,15 +95,15 @@ export const commonStyles = css`
   input, select {
     width: 100%;
     padding: 10px;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border-colour);
     border-radius: var(--border-radius);
     box-sizing: border-box;
     font-size: 14px;
-    transition: border-color 0.2s;
+    transition: border-colour 0.2s;
   }
 
   input:focus, select:focus {
     outline: none;
-    border-color: var(--primary-color);
+    border-colour: var(--primary-colour);
   }
 `;

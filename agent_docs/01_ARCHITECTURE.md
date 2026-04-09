@@ -1,6 +1,6 @@
 # Main Architecture
 
-The `addon-eink` repository is designed to be deployed as a Home Assistant Addon. It provides a control system for managing a selection of eInk displays via the `OpenDisplay` (OpenEPaperLink) integration in Home Assistant, while offering a UI to handle multi-display complex layouts (like slicing, tiling, or synchronizing content across several disjoint screens).
+The `addon-eink` repository is designed to be deployed as a Home Assistant Addon. It provides a control system for managing a selection of eInk displays via the `OpenDisplay` (OpenEPaperLink) integration in Home Assistant, while offering a UI to handle multi-display complex layouts (like slicing, tiling, or synchronising content across several disjoint screens).
 
 ## Technology Stack
 

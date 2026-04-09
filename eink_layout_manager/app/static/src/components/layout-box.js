@@ -23,8 +23,8 @@ export class LayoutBox extends LitElement {
         border: 2px solid #333;
         box-shadow: var(--shadow-small);
       }
-      :host([selected]) .container { border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(3,169,244,0.3); z-index: 10; }
-      :host([invalid]) .container { border-color: var(--danger-color); background-color: rgba(244, 67, 54, 0.1); }
+      :host([selected]) .container { border-colour: var(--primary-colour); box-shadow: 0 0 0 2px rgba(3,169,244,0.3); z-index: 10; }
+      :host([invalid]) .container { border-colour: var(--danger-colour); background-colour: rgba(244, 67, 54, 0.1); }
       
       .label {
         position: absolute;
@@ -54,8 +54,8 @@ export class LayoutBox extends LitElement {
         display: flex; align-items: center; justify-content: center;
         transition: color 0.2s, transform 0.1s;
       }
-      .action-icon:hover { color: var(--primary-color); transform: scale(1.2); }
-      .action-icon.delete:hover { color: var(--danger-color); }
+      .action-icon:hover { color: var(--primary-colour); transform: scale(1.2); }
+      .action-icon.delete:hover { color: var(--danger-colour); }
     `
   ];
 

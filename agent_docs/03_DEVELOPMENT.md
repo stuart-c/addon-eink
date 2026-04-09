@@ -1,6 +1,9 @@
 # Development Guidelines
 
-This document outlines the standard development process and recent design decisions for the `addon-eink` repository. Following these guidelines ensures consistency across multiple agents and contributors.
+This document outlines the standard development process and recent design decisions for the `addon-eink` repository. Following these guidelines ensures consistency across multiple agents and contributors. 
+
+> [!IMPORTANT]
+> This repository strictly uses **British English** for all documentation, UI labels, and internal code (where it does not conflict with external standards). Agents must use `colour`, `initialise`, `centre`, and `greyscale`.
 
 ## Local Development Environment
 

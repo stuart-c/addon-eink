@@ -6,7 +6,7 @@ export class AppHeader extends LitElement {
     commonStyles,
     css`
       header {
-        background-color: var(--primary-color);
+        background-color: var(--primary-colour);
         color: white;
         padding: 1rem 2rem;
         display: flex;

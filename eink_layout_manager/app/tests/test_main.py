@@ -6,7 +6,7 @@ from app.main import init_app, get_storage_path, load_schema
 @pytest.fixture
 def app(tmp_path):
     """
-    Fixture to initialize the application for testing
+    Fixture to initialise the application for testing
     using a temporary data directory.
     """
     # Override DATA_DIR for tests

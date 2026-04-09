@@ -8,7 +8,7 @@ export class AppToolbar extends LitElement {
       :host {
         padding: 0.75rem 1.5rem;
         background: white;
-        border-bottom: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-colour);
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -54,13 +54,13 @@ export class AppToolbar extends LitElement {
         align-items: center;
         transition: background 0.2s;
       }
-      .dropdown-item:hover { background: #f0faff; color: var(--primary-color); }
-      .dropdown-item.selected { background: #e1f5fe; color: var(--primary-color); font-weight: 600; }
+      .dropdown-item:hover { background: #f0faff; color: var(--primary-colour); }
+      .dropdown-item.selected { background: #e1f5fe; color: var(--primary-colour); font-weight: 600; }
       .dropdown-divider { height: 1px; background: #eee; margin: 4px 0; }
-      .dropdown-item.action { color: var(--primary-color); font-weight: 600; }
+      .dropdown-item.action { color: var(--primary-colour); font-weight: 600; }
 
       .stats { font-size: 12px; color: #666; display: flex; align-items: center; gap: 1rem; }
-      .pos-highlight { color: var(--primary-color); font-weight: 600; }
+      .pos-highlight { color: var(--primary-colour); font-weight: 600; }
       .divider { padding-left: 1rem; border-left: 1px solid #ddd; }
 
       @keyframes slideIn {

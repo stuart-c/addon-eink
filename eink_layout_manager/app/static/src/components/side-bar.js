@@ -9,7 +9,7 @@ export class SideBar extends LitElement {
         width: 320px;
         flex-shrink: 0;
         background-color: white;
-        border-right: 1px solid var(--border-color);
+        border-right: 1px solid var(--border-colour);
         display: flex;
         flex-direction: column;
         height: 100%;
@@ -38,9 +38,9 @@ export class SideBar extends LitElement {
         transition: all 0.2s ease;
         user-select: none;
       }
-      .list-item:hover { border-color: var(--primary-color); background: #f0faff; }
+      .list-item:hover { border-colour: var(--primary-colour); background: #f0faff; }
       .list-item.selected { 
-        border-color: var(--primary-color); 
+        border-colour: var(--primary-colour); 
         background: #e1f5fe; 
         box-shadow: 0 2px 8px rgba(3,169,244,0.1); 
       }
@@ -125,7 +125,7 @@ export class SideBar extends LitElement {
                   <button class="secondary" title="Settings" @click="${(e) => { e.stopPropagation(); this._dispatch('edit-item', { id: item.id }); }}">
                     <span class="material-icons" style="font-size: 16px;">settings</span>
                   </button>
-                  <button class="secondary" title="Delete" style="color: var(--danger-color);" @click="${(e) => { e.stopPropagation(); this._dispatch('delete-item', { id: item.id }); }}">
+                  <button class="secondary" title="Delete" style="color: var(--danger-colour);" @click="${(e) => { e.stopPropagation(); this._dispatch('delete-item', { id: item.id }); }}">
                     <span class="material-icons" style="font-size: 16px;">delete_outline</span>
                   </button>
                 </div>

@@ -14,7 +14,7 @@ export class HardwarePreview extends LitElement {
     }
     .preview-layer {
       position: absolute;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      box-shadow: 4px 4px 10px rgba(0,0,0,0.15);
       transition: all 0.2s ease-out;
     }
     .preview-frame { z-index: 10; border-radius: 2px; }

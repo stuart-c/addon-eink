@@ -9,7 +9,7 @@ This file serves as a ledger of unknown design components. Agents should resolve
 ## Image Processing
 
 - **Image Engine Constraints:** For slicing/tiling large images across eInk screens, do we rely strictly on Pillow (`PIL`), or are there external tools we need (like ImageMagick)?
-- **Color Depth and Dithering:** Do we implement our own multi-color dither logic, or rely on OpenDisplay doing that conversion natively?
+- **Colour Depth and Dithering:** Do we implement our own multi-colour dither logic, or rely on OpenDisplay doing that conversion natively?
 
 ## General Scope
 
