@@ -4,22 +4,20 @@ ARG BUILD_FROM="ghcr.io/home-assistant/amd64-base-python:3.12-alpine3.19"
 FROM node:22-bookworm AS node-builder
 WORKDIR /app/static
 COPY app/static .
-RUN npm install && npm test -- --run && npm run build
+RUN npm install
+RUN npm test -- --run
+RUN npm run build
 
 # Stage 1: Build stage
 FROM $BUILD_FROM AS builder
 
 # Install build dependencies
-RUN \
-    apk add --no-cache \
-        build-base \
-        libjpeg-turbo-dev \
-        zlib-dev
+RUN apk add --no-cache build-base
+RUN apk add --no-cache libjpeg-turbo-dev zlib-dev
 
 # Build wheels for app dependencies to isolate build artifacts
 COPY app/requirements.txt /tmp/
-RUN \
-    pip3 wheel --no-cache-dir --wheel-dir /tmp/wheels -r /tmp/requirements.txt
+RUN pip3 wheel --no-cache-dir --wheel-dir /tmp/wheels -r /tmp/requirements.txt
 
 
 # Stage 2: Test & Lint stage
@@ -27,8 +25,7 @@ FROM builder AS tester
 
 # Install test and linting dependencies
 COPY app/requirements_test.txt /tmp/
-RUN \
-    pip3 install --no-cache-dir -r /tmp/requirements_test.txt
+RUN pip3 install --no-cache-dir -r /tmp/requirements_test.txt
 
 COPY app /app
 
