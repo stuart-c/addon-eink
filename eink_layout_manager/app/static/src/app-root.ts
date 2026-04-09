@@ -12,7 +12,6 @@ import './components/layout-settings-dialog';
 import './components/confirm-dialog';
 import './components/yaml-editor';
 
-
 import { DisplayTypeDialog } from './components/display-type-dialog';
 import { ItemSettingsDialog } from './components/item-settings-dialog';
 import { LayoutSettingsDialog } from './components/layout-settings-dialog';
@@ -51,10 +50,8 @@ export class AppRoot extends LitElement {
     }
   `;
 
-
   @state() private _mousePos: { x: number | null, y: number | null } = { x: null, y: null };
   @state() private _viewMode: 'graphical' | 'yaml' = 'graphical';
-
 
   @query('display-type-dialog') private _displayTypeDialog!: DisplayTypeDialog;
   @query('item-settings-dialog') private _itemDialog!: ItemSettingsDialog;
@@ -173,7 +170,6 @@ export class AppRoot extends LitElement {
         @save-layout="${() => this.state.saveActiveLayout()}"
         @toggle-view-mode="${() => this._viewMode = (this._viewMode === 'graphical' ? 'yaml' : 'graphical')}"
       ></app-header>
-
 
       <main>
         <side-bar

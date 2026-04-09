@@ -15,7 +15,6 @@
 - Fix: Security - Path Injection Remediations @stuart-c-ai (#101)
 - Fix: Release Drafter Auto-Labeling @stuart-c-ai (#100)
 
-
 # Changelog
 
 All notable changes to this project will be documented in this file.

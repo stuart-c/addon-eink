@@ -47,7 +47,6 @@ export class AppHeader extends LitElement {
   @property({ type: Boolean }) isSaving = false;
   @property({ type: String }) viewMode: 'graphical' | 'yaml' = 'graphical';
 
-
   private _dispatch(name: string) {
     this.dispatchEvent(new CustomEvent(name, { bubbles: true, composed: true }));
   }
