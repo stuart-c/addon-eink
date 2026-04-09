@@ -37,8 +37,31 @@ export class DisplayTypeDialog extends LitElement {
     header {
       padding: 1.25rem 1.5rem;
       border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
     h2 { margin: 0; font-size: 1.1rem; color: #333; text-transform: uppercase; letter-spacing: 0.5px; }
+    
+    .close-button {
+      background: none;
+      border: none;
+      padding: 8px;
+      color: #666;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.2s;
+    }
+    .close-button:hover {
+      background-color: #f0f0f0;
+      color: #333;
+    }
+    .close-button .material-icons {
+      font-size: 24px;
+    }
     .main-layout {
       display: grid;
       grid-template-columns: 220px 1fr 340px;
@@ -468,7 +491,7 @@ export class DisplayTypeDialog extends LitElement {
     }
 
     this.dispatchEvent(new CustomEvent('save', { detail: { displayType: this.displayType } }));
-    this.close();
+    this.isNew = false;
   }
 
   private _renderColourPicker(label: string, value: string, onUpdate: (colour: string) => void) {
@@ -525,6 +548,9 @@ export class DisplayTypeDialog extends LitElement {
         <div class="container">
           <header>
             <h2>Manage Display Types</h2>
+            <button type="button" class="close-button" @click="${this.close}" title="Close">
+              <span class="material-icons">close</span>
+            </button>
           </header>
           
           <div class="main-layout">
