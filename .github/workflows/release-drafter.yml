@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: release-drafter/release-drafter@v7
         with:
-          commitish: main
+
 
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
