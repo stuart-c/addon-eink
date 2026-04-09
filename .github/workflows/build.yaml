@@ -123,14 +123,37 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
           ref: main
 
-      - name: Bump Version in config.yaml
+      - name: Update Addon Version and Changelog
+        env:
+          RELEASE_BODY: ${{ github.event.release.body }}
         run: |
           VERSION="${{ needs.prepare.outputs.version }}"
+          CHANGELOG="eink_layout_manager/CHANGELOG.md"
+          DATE=$(date +'%Y-%m-%d')
+          
+          # Update version in config.yaml
           sed -i "s/^version:.*/version: \"$VERSION\"/" eink_layout_manager/config.yaml
+          
+          # Update CHANGELOG.md
+          # If the file doesn't exist, we'll create it with a header
+          if [ ! -f "$CHANGELOG" ]; then
+            echo -e "# Changelog\n\nAll notable changes to this project will be documented in this file.\n" > "$CHANGELOG"
+          fi
+          
+          # Find the line after the header (usually line 3 or 5 depending on initial content)
+          # We'll just prepend after the first few lines if they match a pattern, or just prepend to the top if we can't find it.
+          # Actually, the user asked for "top of the file". 
+          # "Keep a Changelog" usually has a header. Prepending to the absolute top is simpler.
+          
+          printf "## [%s] - %s\n\n%s\n\n" "$VERSION" "$DATE" "$RELEASE_BODY" > "$CHANGELOG.tmp"
+          cat "$CHANGELOG" >> "$CHANGELOG.tmp"
+          mv "$CHANGELOG.tmp" "$CHANGELOG"
+          
+          # Commit changes
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add eink_layout_manager/config.yaml
-          git commit -m "chore: bump addon version to $VERSION"
+          git add eink_layout_manager/config.yaml "$CHANGELOG"
+          git commit -m "chore: bump addon version to $VERSION and update changelog"
           # Pull latest changes before pushing (safety rebase)
           git pull --rebase origin main
           git push origin HEAD:refs/heads/main
