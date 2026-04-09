@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+import { live } from 'lit/directives/live.js';
 import { LayoutItem, DisplayType } from '../services/HaApiClient';
 import './shared/base-dialog';
 import { commonStyles } from '../styles/common-styles';
@@ -20,9 +21,10 @@ export class ItemSettingsDialog extends LitElement {
   @property({ type: Object }) item: LayoutItem | null = null;
   @property({ type: Array }) displayTypes: DisplayType[] = [];
 
-  show(item: LayoutItem, displayTypes: DisplayType[]) {
+  async show(item: LayoutItem, displayTypes: DisplayType[]) {
     this.item = JSON.parse(JSON.stringify(item));
     this.displayTypes = displayTypes;
+    await this.updateComplete;
     (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).show();
   }
 
@@ -45,14 +47,12 @@ export class ItemSettingsDialog extends LitElement {
   }
 
   render() {
-    if (!this.item) return html``;
-
     return html`
       <base-dialog title="Display Settings">
         <form id="item-form" @submit="${this._handleSubmit}">
           <div class="form-group">
             <label>Display Type</label>
-            <select .value="${this.item.display_type_id}" @change="${(e: any) => this.item ? this.item.display_type_id = e.target.value : null}">
+            <select .value="${live(this.item?.display_type_id || '')}" @change="${(e: any) => this.item ? this.item.display_type_id = e.target.value : null}">
               ${this.displayTypes.map(dt => html`
                 <option value="${dt.id}">${dt.name} (${dt.width_mm}x${dt.height_mm}mm)</option>
               `)}
@@ -65,7 +65,7 @@ export class ItemSettingsDialog extends LitElement {
               <input 
                 type="number" 
                 required 
-                .value="${this.item.x_mm.toString()}" 
+                .value="${live(this.item?.x_mm.toString() || '0')}" 
                 @input="${(e: any) => this.item ? this.item.x_mm = e.target.value : null}"
               >
             </div>
@@ -74,7 +74,7 @@ export class ItemSettingsDialog extends LitElement {
               <input 
                 type="number" 
                 required 
-                .value="${this.item.y_mm.toString()}" 
+                .value="${live(this.item?.y_mm.toString() || '0')}" 
                 @input="${(e: any) => this.item ? this.item.y_mm = e.target.value : null}"
               >
             </div>
@@ -83,7 +83,7 @@ export class ItemSettingsDialog extends LitElement {
           <div class="form-group">
             <label>Orientation</label>
             <select 
-              .value="${this.item.orientation.toString()}" 
+              .value="${live(this.item?.orientation.toString() || '0')}" 
               @change="${(e: any) => this.item ? this.item.orientation = e.target.value : null}"
             >
               <option value="0">Horizontal (0°)</option>

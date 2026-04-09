@@ -53,14 +53,14 @@ export class AppRoot extends LitElement {
   @query('confirm-dialog') private _confirmDialog!: ConfirmDialog;
 
   // Header Actions
-  private _handleEditLayout() {
+  private async _handleEditLayout() {
     if (this.state.activeLayout) {
-      this._layoutSettingsDialog.show(this.state.activeLayout);
+      await this._layoutSettingsDialog.show(this.state.activeLayout);
     }
   }
 
   // Toolbar Actions
-  private _handleCreateLayout() {
+  private async _handleCreateLayout() {
     const newLayout: Partial<Layout> = {
       name: 'New Layout',
       canvas_width_mm: 500,
@@ -68,16 +68,16 @@ export class AppRoot extends LitElement {
       grid_snap_mm: 5,
       items: []
     };
-    this._layoutSettingsDialog.show(newLayout as Layout);
+    await this._layoutSettingsDialog.show(newLayout as Layout);
   }
 
   // Sidebar Actions
-  private _onAddDisplayType() {
-    this._displayTypeDialog.show();
+  private async _onAddDisplayType() {
+    await this._displayTypeDialog.show();
   }
 
-  private _onEditDisplayType(e: CustomEvent<DisplayType>) {
-    this._displayTypeDialog.show(e.detail);
+  private async _onEditDisplayType(e: CustomEvent<DisplayType>) {
+    await this._displayTypeDialog.show(e.detail);
   }
 
   private async _onDeleteDisplayType(e: CustomEvent<DisplayType>) {
@@ -124,10 +124,10 @@ export class AppRoot extends LitElement {
     this.state.refresh(); 
   }
 
-  private _onEditItem(e: CustomEvent<{ id: string }>) {
+  private async _onEditItem(e: CustomEvent<{ id: string }>) {
     const item = this.state.activeLayout?.items.find(i => i.id === e.detail.id);
     if (item) {
-      this._itemDialog.show(item, this.state.displayTypes);
+      await this._itemDialog.show(item, this.state.displayTypes);
     }
   }
 
