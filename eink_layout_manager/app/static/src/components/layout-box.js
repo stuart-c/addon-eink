@@ -167,7 +167,7 @@ export class LayoutBox extends LitElement {
     const panelW = this.panel_width_mm || 0;
     const panelH = this.panel_height_mm || 0;
     
-    // Centering within the mat
+    // Centring within the mat
     const cutoutX = (matW - panelW) / 2;
     const cutoutY = (matH - panelH) / 2;
 

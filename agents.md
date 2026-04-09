@@ -2,6 +2,13 @@
 
 This document defines the mandatory workflow for all AI agents working on the `addon-eink` repository. Following these rules ensures consistency, prevents conflicts, and maintains high code quality.
 
+## 0. Language Standard
+All documentation, UI labels, and internal code (where standards allow) **MUST** use **British English**.
+- Use `colour` instead of `color`.
+- Use `-ise` suffixes instead of `-ize` (e.g., `initialise`, `standardise`, `optimise`).
+- Use `greyscale` instead of `grayscale`.
+- Use `centre` instead of `center` (except in CSS properties).
+
 ## 1. Documentation First
 Before making any changes, agents **MUST** read all documentation in the root and the `agent_docs/` directory. This includes:
 - `README.md`

@@ -210,7 +210,7 @@ export class DisplayTypeDialog extends LitElement {
       border: 2px solid #03a9f4;
       box-shadow: 0 0 0 2px rgba(3, 169, 244, 0.2);
     }
-    .color-input-container {
+    .colour-input-container {
       display: flex;
       align-items: center;
       gap: 12px;
@@ -281,10 +281,10 @@ export class DisplayTypeDialog extends LitElement {
   };
 
   _PRESETS = [
-    { name: 'White', color: '#ffffff' },
-    { name: 'Black', color: '#000000' },
-    { name: 'Brown', color: '#5d4037' },
-    { name: 'Silver', color: '#c0c0c0' }
+    { name: 'White', colour: '#ffffff' },
+    { name: 'Black', colour: '#000000' },
+    { name: 'Brown', colour: '#5d4037' },
+    { name: 'Silver', colour: '#c0c0c0' }
   ];
 
   _getDefaultDisplayType() {
@@ -311,7 +311,7 @@ export class DisplayTypeDialog extends LitElement {
       this.displayType = this._getDefaultDisplayType();
       this.isNew = true;
     }
-    this.renderRoot.querySelector('dialog').showModal();
+    dialog.showModal();
   }
 
   close() {
@@ -373,21 +373,21 @@ export class DisplayTypeDialog extends LitElement {
     `;
   }
 
-  _renderColorPicker(label, value, onUpdate) {
+  _renderColourPicker(label, value, onUpdate) {
     return html`
       <div class="form-group">
         <label>${label}</label>
         <div class="swatch-group">
           ${this._PRESETS.map(p => html`
             <div 
-              class="swatch ${value.toLowerCase() === p.color.toLowerCase() ? 'selected' : ''}" 
-              style="background: ${p.color}"
+              class="swatch ${value.toLowerCase() === p.colour.toLowerCase() ? 'selected' : ''}" 
+              style="background: ${p.colour}"
               title="${p.name}"
-              @click="${() => onUpdate(p.color)}"
+              @click="${() => onUpdate(p.colour)}"
             ></div>
           `)}
         </div>
-        <div class="color-input-container">
+        <div class="colour-input-container">
           <input 
             type="color" 
             .value="${value}" 
@@ -478,14 +478,14 @@ export class DisplayTypeDialog extends LitElement {
                   <option value="BWY">BWY (Yellow)</option>
                   <option value="BWRY">BWRY (Red/Yellow)</option>
                   <option value="BWGBRY">BWGBRY (Spectra 6)</option>
-                  <option value="GRAYSCALE_4">Grayscale (4-bit)</option>
+                  <option value="GRAYSCALE_4">Greyscale (4-bit)</option>
                 </select>
               </div>
 
               <div class="section-header">Aesthetics</div>
               <div class="row">
-                ${this._renderColorPicker('Frame Color', this.displayType.frame.colour, (c) => { this.displayType.frame.colour = c; this.requestUpdate(); })}
-                ${this._renderColorPicker('Mat Color', this.displayType.mat.colour, (c) => { this.displayType.mat.colour = c; this.requestUpdate(); })}
+                ${this._renderColourPicker('Frame Colour', this.displayType.frame.colour, (c) => { this.displayType.frame.colour = c; this.requestUpdate(); })}
+                ${this._renderColourPicker('Mat Colour', this.displayType.mat.colour, (c) => { this.displayType.mat.colour = c; this.requestUpdate(); })}
               </div>
 
               <div style="display: none;">
