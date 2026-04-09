@@ -103,7 +103,10 @@ async def get_collection(request):
                 file_path = os.path.join(storage_real, filename)
                 file_real = os.path.realpath(file_path)
                 # Ensure we only open files within the intended directory
-                if os.path.commonpath([storage_real, file_real]) != storage_real:
+                if (
+                    os.path.commonpath([storage_real, file_real])
+                    != storage_real
+                ):
                     continue
                 with open(file_real, "r") as f:
                     try:
