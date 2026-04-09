@@ -393,6 +393,9 @@ export class DisplayTypeDialog extends LitElement {
     if (displayType) {
       this.displayType = JSON.parse(JSON.stringify(displayType));
       this.isNew = false;
+    } else if (this.displayTypes.length > 0) {
+      this.displayType = JSON.parse(JSON.stringify(this.displayTypes[0]));
+      this.isNew = false;
     } else {
       this.displayType = this._getDefaultDisplayType();
       this.isNew = true;
