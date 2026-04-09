@@ -1,9 +1,11 @@
 import { LitElement, html, css } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
 
 /**
  * A shared component for rendering the physical display assembly:
  * Frame -> Mat -> Display Panel
  */
+@customElement('hardware-preview')
 export class HardwarePreview extends LitElement {
   static styles = css`
     :host {
@@ -26,23 +28,14 @@ export class HardwarePreview extends LitElement {
     }
   `;
 
-  static properties = {
-    width_mm: { type: Number },
-    height_mm: { type: Number },
-    border_width_mm: { type: Number },
-    panel_width_mm: { type: Number },
-    panel_height_mm: { type: Number },
-    frame_colour: { type: String },
-    mat_colour: { type: String },
-    scale: { type: Number }, // Pixels per mm
-  };
-
-  constructor() {
-    super();
-    this.scale = 1;
-    this.frame_colour = '#000';
-    this.mat_colour = '#fff';
-  }
+  @property({ type: Number }) width_mm = 0;
+  @property({ type: Number }) height_mm = 0;
+  @property({ type: Number }) border_width_mm = 0;
+  @property({ type: Number }) panel_width_mm = 0;
+  @property({ type: Number }) panel_height_mm = 0;
+  @property({ type: String }) frame_colour = '#000';
+  @property({ type: String }) mat_colour = '#fff';
+  @property({ type: Number }) scale = 1; // Pixels per mm
 
   render() {
     const frameW = this.width_mm || 0;
@@ -83,4 +76,8 @@ export class HardwarePreview extends LitElement {
   }
 }
 
-customElements.define('hardware-preview', HardwarePreview);
+declare global {
+  interface HTMLElementTagNameMap {
+    'hardware-preview': HardwarePreview;
+  }
+}
