@@ -99,11 +99,11 @@ export const commonStyles = css`
     border-radius: var(--border-radius);
     box-sizing: border-box;
     font-size: 14px;
-    transition: border-colour 0.2s;
+    transition: border-color 0.2s;
   }
 
   input:focus, select:focus {
     outline: none;
-    border-colour: var(--primary-colour);
+    border-color: var(--primary-colour);
   }
 `;

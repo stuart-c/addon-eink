@@ -41,9 +41,9 @@ export class SideBar extends LitElement {
         transition: all 0.2s ease;
         user-select: none;
       }
-      .list-item:hover { border-colour: var(--primary-colour); background: #f0faff; }
+      .list-item:hover { border-color: var(--primary-colour); background: #f0faff; }
       .list-item.selected { 
-        border-colour: var(--primary-colour); 
+        border-color: var(--primary-colour); 
         background: #e1f5fe; 
         box-shadow: 0 2px 8px rgba(3,169,244,0.1); 
       }

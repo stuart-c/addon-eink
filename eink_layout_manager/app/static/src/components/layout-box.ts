@@ -28,8 +28,8 @@ export class LayoutBox extends LitElement {
         border: 2px solid #333;
         box-shadow: var(--shadow-small);
       }
-      :host([selected]) .container { border-colour: var(--primary-colour); box-shadow: 0 0 0 2px rgba(3,169,244,0.3); z-index: 10; }
-      :host([invalid]) .container { border-colour: var(--danger-colour); background-colour: rgba(244, 67, 54, 0.1); }
+      :host([selected]) .container { border-color: var(--primary-colour); box-shadow: 0 0 0 2px rgba(3,169,244,0.3); z-index: 10; }
+      :host([invalid]) .container { border-color: var(--danger-colour); background-color: rgba(244, 67, 54, 0.1); }
       
       .label {
         position: absolute;
@@ -107,6 +107,7 @@ export class LayoutBox extends LitElement {
           .frame_colour="${this.frame_colour}"
           .mat_colour="${this.mat_colour}"
           .scale="${1}"
+          .orientation="${this.orientation}"
         ></hardware-preview>
 
         <div class="label">
