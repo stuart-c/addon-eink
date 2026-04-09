@@ -71,8 +71,13 @@ RUN rm -rf /app/tests /app/requirements_test.txt
 
 WORKDIR /app
 
-# Give execution permissions to s6 run scripts
-RUN chmod a+x /etc/services.d/app/run
+# Create non-root user
+RUN addgroup -g 1000 addon && \
+    adduser -u 1000 -G addon -S -D addon
+
+# Give execution permissions to s6 run scripts and set ownership for /app
+RUN chmod a+x /etc/services.d/app/run && \
+    chown -R addon:addon /app
 
 # Labels
 LABEL \
