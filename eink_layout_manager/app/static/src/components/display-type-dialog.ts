@@ -89,19 +89,21 @@ export class DisplayTypeDialog extends LitElement {
       word-break: break-all;
     }
 
-    .add-new-item {
-      padding: 1rem;
-      text-align: center;
+    .sidebar-item.add-new {
+      padding: 1.5rem 1rem;
       border-top: 1px solid #eee;
+      background: #fafafa;
       margin-top: auto;
-      background: #fff;
+      flex-direction: row;
+      justify-content: center;
+      color: var(--primary-colour);
+      font-weight: 600;
     }
-
-    .add-new-item button { width: 100%; }
+    .sidebar-item.add-new:hover { background: #f0faff; }
+    .sidebar-item.add-new.selected { background: #e1f5fe; }
 
     form {
       padding: 1.5rem;
-      max-height: 70vh;
       overflow-y: auto;
       border-right: 1px solid #eee;
     }
@@ -188,6 +190,7 @@ export class DisplayTypeDialog extends LitElement {
     button:hover { filter: brightness(0.95); }
     .primary { background: #03a9f4; color: white; }
     .secondary { background: #eee; color: #555; }
+    .danger { background: #d32f2f; color: white; }
     
     .section-header {
       margin-top: 1.5rem;
@@ -500,11 +503,13 @@ export class DisplayTypeDialog extends LitElement {
                   </div>
                 `;
               })}
-              <div class="add-new-item">
-                <button class="secondary ${this.isNew ? 'selected' : ''}" @click="${() => this._handleSelect(null)}">
-                  <span class="material-icons" style="font-size: 18px; vertical-align: middle;">add</span>
-                  Add New
-                </button>
+              
+              <div 
+                class="sidebar-item add-new ${this.isNew ? 'selected' : ''}" 
+                @click="${() => this._handleSelect(null)}"
+              >
+                <span class="material-icons" style="margin-right: 8px;">add_circle_outline</span>
+                Add New Display
               </div>
             </div>
 
