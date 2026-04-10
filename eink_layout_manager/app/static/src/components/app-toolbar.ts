@@ -112,6 +112,7 @@ export class AppToolbar extends LitElement {
     return html`
       <div class="dropdown">
         <div class="dropdown-trigger ${this._showMenu ? 'active' : ''}" @click="${() => this._showMenu = !this._showMenu}">
+          <span class="material-icons">dashboard</span>
           <span>${this.activeLayout?.name || 'Loading...'}</span>
           <div class="chevron">▼</div>
         </div>

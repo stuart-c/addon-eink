@@ -7,9 +7,6 @@ export class AppHeader extends LitElement {
   static styles = [
     commonStyles,
     css`
-  static styles = [
-    commonStyles,
-    css`
       header {
         background: var(--bg-white);
         color: var(--text-colour);
