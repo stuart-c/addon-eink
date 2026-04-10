@@ -9,57 +9,77 @@ export class SideBar extends LitElement {
     commonStyles,
     css`
       :host {
-        width: 320px;
-        flex-shrink: 0;
-        background-color: white;
-        border-right: 1px solid var(--border-colour);
         display: flex;
         flex-direction: column;
         height: 100%;
         overflow: hidden;
+        background: var(--bg-white);
       }
       .sidebar-section {
-        padding: 1rem;
-        border-bottom: 1px solid #eee;
-        flex: 1;
+        padding: 1.5rem 1rem;
+        border-bottom: 1px solid var(--border-colour);
         overflow-y: auto;
+      }
+      .sidebar-section.scrollable {
+        flex: 1;
       }
       .sidebar-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 1rem;
+        margin-bottom: 1.25rem;
+        padding: 0 0.5rem;
       }
-      h3 { margin: 0; font-size: 0.9rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+      h3 { 
+        margin: 0; 
+        font-size: 11px; 
+        font-weight: 700; 
+        color: var(--text-muted); 
+        text-transform: uppercase; 
+        letter-spacing: 1px; 
+      }
       
       .list-item {
-        padding: 0.75rem;
-        border: 1px solid #eee;
+        padding: 1rem;
+        border: 1px solid var(--border-colour);
         border-radius: var(--border-radius);
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.75rem;
         cursor: pointer;
-        transition: all 0.2s ease;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         user-select: none;
+        background: var(--bg-white);
       }
-      .list-item:hover { border-color: var(--primary-colour); background: #f0faff; }
+      .list-item:hover { 
+        border-color: var(--primary-colour); 
+        background: #f8fbff;
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-small);
+      }
       .list-item.selected { 
         border-color: var(--primary-colour); 
-        background: #e1f5fe; 
-        box-shadow: 0 2px 8px rgba(3,169,244,0.1); 
+        background: #f0f7ff; 
+        box-shadow: 0 4px 12px rgba(33, 150, 243, 0.1); 
       }
       
       .item-details { display: flex; justify-content: space-between; align-items: center; }
       .item-info { flex: 1; }
-      .item-name { font-weight: 600; display: block; }
-      .item-meta { font-size: 11px; color: #888; }
-      .item-actions { display: flex; gap: 4px; }
+      .item-name { font-weight: 700; display: block; color: var(--text-colour); font-size: 14px; margin-bottom: 4px; }
+      .item-meta { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+      .item-actions { display: flex; gap: 6px; }
       
-      .sidebar button.secondary,
-      .sidebar button.danger {
-        padding: 4px;
-        border-radius: 4px;
-        min-width: 24px;
-        height: 24px;
+      .sidebar button.secondary {
+        padding: 6px;
+        border-radius: 6px;
+        min-width: 32px;
+        height: 32px;
+        background: var(--bg-light);
+        border: 1px solid var(--border-colour);
+        color: var(--text-muted);
+      }
+      .sidebar button.secondary:hover {
+        background: var(--bg-white);
+        border-color: var(--primary-colour);
+        color: var(--primary-colour);
       }
     `
   ];
@@ -98,7 +118,7 @@ export class SideBar extends LitElement {
         `)}
       </div>
 
-      <div class="sidebar-section" style="flex: 2;">
+      <div class="sidebar-section scrollable">
         <h3>Layout Items</h3>
         ${this.activeLayout?.items.map((item, index) => {
           const dt = this.displayTypes.find(t => t.id === item.display_type_id);

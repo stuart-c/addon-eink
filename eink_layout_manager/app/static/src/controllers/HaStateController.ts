@@ -14,6 +14,7 @@ export class HaStateController implements ReactiveController {
   public layouts: Layout[] = [];
   public activeLayout: Layout | null = null;
   public selectedItemId: string | null = null;
+  public activeSection: 'display-types' | 'layouts' | 'images' | 'scenes' = 'layouts';
   public message = '';
   public isSaving = false;
 
@@ -132,6 +133,11 @@ export class HaStateController implements ReactiveController {
   switchLayout(layout: Layout) {
     this.activeLayout = layout;
     this.selectedItemId = null;
+    this.host.requestUpdate();
+  }
+  
+  setSection(section: 'display-types' | 'layouts' | 'images' | 'scenes') {
+    this.activeSection = section;
     this.host.requestUpdate();
   }
 
