@@ -88,22 +88,34 @@ export class AppHeader extends LitElement {
     this.dispatchEvent(new CustomEvent(name, { bubbles: true, composed: true }));
   }
 
+  private _dispatchSection(section: string) {
+    this.dispatchEvent(new CustomEvent('set-section', {
+      detail: section,
+      bubbles: true,
+      composed: true
+    }));
+  }
+
   render() {
     return html`
       <header>
         <div class="header-title">
           <div><strong>eInk Layout Manager</strong></div>
           <div class="nav-group">
-            <button class="nav-item ${this.activeSection === 'display-types' ? 'active' : ''}" title="Display Types">
+            <button class="nav-item ${this.activeSection === 'display-types' ? 'active' : ''}" 
+              @click="${() => this._dispatchSection('display-types')}" title="Display Types">
               <span class="material-icons">settings_input_component</span>
             </button>
-            <button class="nav-item ${this.activeSection === 'layouts' ? 'active' : ''}" title="Layouts">
+            <button class="nav-item ${this.activeSection === 'layouts' ? 'active' : ''}" 
+              @click="${() => this._dispatchSection('layouts')}" title="Layouts">
               <span class="material-icons">dashboard</span>
             </button>
-            <button class="nav-item ${this.activeSection === 'images' ? 'active' : ''}" title="Images">
+            <button class="nav-item ${this.activeSection === 'images' ? 'active' : ''}" 
+              @click="${() => this._dispatchSection('images')}" title="Images">
               <span class="material-icons">image</span>
             </button>
-            <button class="nav-item ${this.activeSection === 'scenes' ? 'active' : ''}" title="Scenes">
+            <button class="nav-item ${this.activeSection === 'scenes' ? 'active' : ''}" 
+              @click="${() => this._dispatchSection('scenes')}" title="Scenes">
               <span class="material-icons">landscape</span>
             </button>
           </div>
