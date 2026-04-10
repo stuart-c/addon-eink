@@ -13,8 +13,9 @@ export class AppToolbar extends LitElement {
         background: white;
         border-bottom: 1px solid var(--border-colour);
         display: flex;
-        justify-content: space-between;
+        justify-content: flex-start;
         align-items: center;
+        gap: 1rem;
       }
       .dropdown {
         position: relative;
@@ -75,6 +76,44 @@ export class AppToolbar extends LitElement {
         from { transform: translateY(-10px); opacity: 0; }
         to { transform: translateY(0); opacity: 1; }
       }
+      
+      .toolbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      
+      .settings-button {
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f0f2f5;
+        border: 1px solid #ddd;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: #555;
+      }
+      .settings-button:hover {
+        background: #e4e6e9;
+        border-color: #ccc;
+        color: #333;
+      }
+      .settings-button .material-icons {
+        font-size: 20px;
+      }
+      
+      .mouse-info { 
+        font-size: 12px; 
+        color: #666; 
+        display: flex; 
+        align-items: center; 
+        gap: 1rem;
+        margin-left: auto;
+      }
     `
   ];
 
@@ -110,11 +149,16 @@ export class AppToolbar extends LitElement {
 
   render() {
     return html`
-      <div class="dropdown">
-        <div class="dropdown-trigger ${this._showMenu ? 'active' : ''}" @click="${() => this._showMenu = !this._showMenu}">
-          <span>${this.activeLayout?.name || 'Loading...'}</span>
-          <div class="chevron">▼</div>
-        </div>
+      <div class="toolbar-actions">
+        <button class="settings-button" @click="${() => this._dispatch('edit-layout')}" title="Layout Settings">
+          <span class="material-icons">settings</span>
+        </button>
+
+        <div class="dropdown">
+          <div class="dropdown-trigger ${this._showMenu ? 'active' : ''}" @click="${() => this._showMenu = !this._showMenu}">
+            <span>${this.activeLayout?.name || 'Loading...'}</span>
+            <div class="chevron">▼</div>
+          </div>
         <div class="dropdown-menu ${this._showMenu ? 'show' : ''}">
           ${this.layouts.map(l => html`
             <div class="dropdown-item ${this.activeLayout?.id === l.id ? 'selected' : ''}" @click="${() => this._dispatch('switch-layout', l)}">
@@ -126,6 +170,7 @@ export class AppToolbar extends LitElement {
           <div class="dropdown-item action" @click="${() => this._dispatch('create-layout')}">
             <span class="material-icons" style="font-size: 16px; margin-right: 8px;">add</span>
             Create new layout...
+          </div>
           </div>
         </div>
       </div>

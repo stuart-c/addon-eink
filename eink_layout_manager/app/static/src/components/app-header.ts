@@ -58,9 +58,6 @@ export class AppHeader extends LitElement {
         <div class="header-actions">
           ${this.message ? html`<span class="message-badge">${this.message}</span>` : ''}
           
-          <button class="secondary" @click="${() => this._dispatch('edit-layout')}" title="Layout Settings">
-            <span class="material-icons">settings</span>
-          </button>
           
           <button class="secondary" @click="${() => this._dispatch('toggle-view-mode')}" title="Switch to ${this.viewMode === 'graphical' ? 'YAML' : 'Graphical'} Mode">
             <span class="material-icons">${this.viewMode === 'graphical' ? 'code' : 'dashboard'}</span>
