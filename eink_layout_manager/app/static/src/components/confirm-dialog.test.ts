@@ -35,8 +35,10 @@ describe('ConfirmDialog', () => {
     const p = element.shadowRoot?.querySelector('p');
     expect(p?.textContent).toBe('Custom Message');
     
-    // Cleanup the promise/dialog
-    element.shadowRoot?.querySelector('button.secondary')?.click();
+    // Cleanup/Close dialog
+    const cancelBtn = element.shadowRoot?.querySelector('button.secondary') as HTMLButtonElement;
+    cancelBtn.click();
+    await promise;
   });
 
   it('should resolve with true when confirm is clicked', async () => {
