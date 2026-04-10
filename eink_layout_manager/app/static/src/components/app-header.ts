@@ -68,7 +68,7 @@ export class AppHeader extends LitElement {
             <span class="material-icons">history</span>
           </button>
           
-          <button @click="${() => this._dispatch('save-layout')}" ?disabled="${this.isSaving}" title="${this.isSaving ? 'Saving...' : 'Save Layout'}">
+          <button class="secondary" @click="${() => this._dispatch('save-layout')}" ?disabled="${this.isSaving}" title="${this.isSaving ? 'Saving...' : 'Save Layout'}">
             <span class="material-icons">${this.isSaving ? 'sync' : 'save'}</span>
           </button>
 
