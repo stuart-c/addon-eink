@@ -4,6 +4,7 @@ import asyncio
 from app import database
 from sqlalchemy import text
 
+
 @pytest.fixture
 async def db_setup(tmp_path):
     """Fixture to set up and tear down a temporary test database."""
@@ -13,19 +14,21 @@ async def db_setup(tmp_path):
     yield
     await database.close_db()
 
+
 @pytest.mark.asyncio
 async def test_init_db_creates_file(tmp_path):
     """Test that init_db creates the database file."""
     os.environ["DATA_DIR"] = str(tmp_path)
     db_file = os.path.join(str(tmp_path), "eink_layout_manager.db")
-    
+
     # Ensure it doesn't exist yet
     if os.path.exists(db_file):
         os.remove(db_file)
-        
+
     await database.init_db()
     assert os.path.exists(db_file)
     await database.close_db()
+
 
 @pytest.mark.asyncio
 async def test_get_session_connectivity(db_setup):
@@ -34,13 +37,14 @@ async def test_get_session_connectivity(db_setup):
         result = await session.execute(text("SELECT 1"))
         assert result.scalar() == 1
 
+
 @pytest.mark.asyncio
 async def test_get_session_without_init():
     """Test that get_session raises error if not initialised."""
-    await database.close_db() # Ensure closed
+    await database.close_db()  # Ensure closed
     # Reset internal factory for test
     database._session_factory = None
-    
+
     with pytest.raises(RuntimeError) as excinfo:
         database.get_session()
     assert "Database not initialised" in str(excinfo.value)
