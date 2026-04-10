@@ -19,7 +19,7 @@ def get_storage_path(resource_type):
     """
     # Security: Whitelist allowed resource types to prevent
     # arbitrary directory creation
-    allowed_types = {"display_type", "layout"}
+    allowed_types = {"display_type", "layout", "image"}
     if resource_type not in allowed_types:
         raise ValueError(f"Invalid resource type: {resource_type}")
 
@@ -146,8 +146,7 @@ async def create_item(request):
 
     # Validation
     try:
-        is_display = resource_type == "display_type"
-        schema_name = "display_type" if is_display else "layout"
+        schema_name = resource_type
         schema = load_schema(schema_name)
         validate(instance=data, schema=schema)
     except FileNotFoundError:
@@ -208,8 +207,7 @@ async def update_item(request):
 
     # Validation
     try:
-        is_display = resource_type == "display_type"
-        schema_name = "display_type" if is_display else "layout"
+        schema_name = resource_type
         schema = load_schema(schema_name)
         validate(instance=data, schema=schema)
     except FileNotFoundError:
@@ -311,12 +309,13 @@ def init_app():
     try:
         os.makedirs(get_storage_path("display_type"), exist_ok=True)
         os.makedirs(get_storage_path("layout"), exist_ok=True)
+        os.makedirs(get_storage_path("image"), exist_ok=True)
     except ValueError as e:
         print(f"Error initialising storage: {str(e)}")
 
     # RESTful API
-    # Valid resource types: display_type, layout
-    api_prefix = "/api/{resource_type:(?:display_type|layout)}"
+    # Valid resource types: display_type, layout, image
+    api_prefix = "/api/{resource_type:(?:display_type|layout|image)}"
 
     app.router.add_get(f"{api_prefix}", get_collection)
     app.router.add_get(f"{api_prefix}/{{id}}", get_item)
