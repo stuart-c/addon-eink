@@ -106,4 +106,12 @@ describe('HaStateController', () => {
     expect(controller.activeLayout?.name).toBe('Original');
     expect(controller.isDirty).toBe(false);
   });
+
+  it('should switch sections', () => {
+    expect(controller.activeSection).toBe('layouts');
+    
+    controller.setSection('images');
+    expect(controller.activeSection).toBe('images');
+    expect(mockHost.requestUpdate).toHaveBeenCalled();
+  });
 });

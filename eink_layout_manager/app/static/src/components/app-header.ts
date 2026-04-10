@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { commonStyles } from '../styles/common-styles';
+import { type AppSection } from '../controllers/HaStateController';
 
 @customElement('app-header')
 export class AppHeader extends LitElement {
@@ -77,7 +78,7 @@ export class AppHeader extends LitElement {
     `
   ];
 
-  @property({ type: String }) activeSection = 'layouts';
+  @property({ type: String }) activeSection: AppSection = 'layouts';
   @property({ type: Boolean }) connected = false;
   @property({ type: String }) message = '';
   @property({ type: Boolean }) isSaving = false;
@@ -88,7 +89,7 @@ export class AppHeader extends LitElement {
     this.dispatchEvent(new CustomEvent(name, { bubbles: true, composed: true }));
   }
 
-  private _dispatchSection(section: string) {
+  private _dispatchSection(section: AppSection) {
     this.dispatchEvent(new CustomEvent('set-section', {
       detail: section,
       bubbles: true,

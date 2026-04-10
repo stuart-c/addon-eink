@@ -1,6 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, state, query } from 'lit/decorators.js';
-import { HaStateController } from './controllers/HaStateController';
+import { HaStateController, type AppSection } from './controllers/HaStateController';
 
 import './components/app-header';
 import './components/app-toolbar';
@@ -271,7 +271,7 @@ export class AppRoot extends LitElement {
       'images': { title: 'Image Library', icon: 'image', message: 'Upload and process images for your displays.' },
       'scenes': { title: 'Smart Scenes', icon: 'landscape', message: 'Compose complex scenes by combining layouts, images and live data.' }
     };
-    const active = sections[this.state.activeSection as keyof typeof sections];
+    const active = sections[this.state.activeSection as Exclude<AppSection, 'layouts'>];
     
     return html`
       <section-layout>
