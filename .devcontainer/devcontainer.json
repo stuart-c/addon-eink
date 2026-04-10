@@ -4,11 +4,6 @@
 		"dockerfile": "Dockerfile",
 		"context": ".."
 	},
-	"features": {
-		"ghcr.io/devcontainers/features/node:1": {
-			"version": "22"
-		}
-	},
 	"customizations": {
 		"vscode": {
 			"extensions": [
@@ -30,5 +25,6 @@
 		}
 	},
 	"remoteUser": "vscode",
-	"postCreateCommand": "cd eink_layout_manager/app/static && npm install"
+	"postCreateCommand": "cd eink_layout_manager/app/static && npm install",
+	"postStartCommand": "sudo service ssh start"
 }
