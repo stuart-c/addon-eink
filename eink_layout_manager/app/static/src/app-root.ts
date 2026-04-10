@@ -31,12 +31,11 @@ export class AppRoot extends LitElement {
       height: 100vh;
       width: 100vw;
       overflow: hidden;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
     main {
       flex: 1;
       display: flex;
-      background-color: #f0f2f5;
+      background-color: #eee;
       overflow: hidden;
     }
     .editor-container {

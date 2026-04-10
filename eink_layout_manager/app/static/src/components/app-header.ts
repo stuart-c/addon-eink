@@ -8,34 +8,33 @@ export class AppHeader extends LitElement {
     commonStyles,
     css`
       header {
-        background: var(--bg-white);
-        color: var(--text-colour);
-        padding: 0 1.5rem;
-        height: 64px;
+        background-color: var(--primary-colour);
+        color: white;
+        padding: 0.5rem 1.5rem;
+        height: 60px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-bottom: 1px solid var(--border-colour);
+        box-shadow: var(--shadow-small);
         z-index: 100;
         position: relative;
       }
       .nav-group {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        background: var(--bg-light);
+        gap: 0.25rem;
+        background: rgba(255,255,255,0.15);
         padding: 4px;
-        border-radius: 10px;
-        border: 1px solid var(--border-colour);
+        border-radius: 8px;
       }
       .nav-item {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 40px;
-        height: 40px;
-        border-radius: 8px;
-        color: var(--text-muted);
+        width: 36px;
+        height: 36px;
+        border-radius: 6px;
+        color: rgba(255,255,255,0.7);
         cursor: pointer;
         transition: all 0.2s;
         border: none;
@@ -43,11 +42,11 @@ export class AppHeader extends LitElement {
         padding: 0;
       }
       .nav-item:hover {
-        background: rgba(0,0,0,0.05);
-        color: var(--text-colour);
+        background: rgba(255,255,255,0.1);
+        color: white;
       }
       .nav-item.active {
-        background: var(--bg-white);
+        background: white;
         color: var(--primary-colour);
         box-shadow: var(--shadow-small);
       }
@@ -62,11 +61,10 @@ export class AppHeader extends LitElement {
         gap: 0.5rem;
         font-size: 12px;
         font-weight: 600;
-        color: var(--text-muted);
-        background: var(--bg-light);
+        color: rgba(255,255,255,0.9);
+        background: rgba(0,0,0,0.1);
         padding: 4px 12px;
         border-radius: 20px;
-        border: 1px solid var(--border-colour);
       }
       .status-dot {
         width: 8px;
@@ -79,31 +77,30 @@ export class AppHeader extends LitElement {
       .message-badge {
         font-size: 12px;
         font-weight: 600;
-        background: var(--primary-colour);
-        color: white;
+        background: white;
+        color: var(--primary-colour);
         padding: 4px 12px;
         border-radius: 20px;
-        box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       }
       
       header button.action-icon {
         width: 36px;
         height: 36px;
         padding: 0;
-        border-radius: 8px;
+        border-radius: 6px;
         background: transparent;
-        color: var(--text-muted);
+        color: white;
         box-shadow: none;
         border: 1px solid transparent;
       }
       header button.action-icon:hover {
-        background: var(--bg-light);
-        color: var(--text-colour);
-        border-color: var(--border-colour);
+        background: rgba(255,255,255,0.1);
+        border-color: rgba(255,255,255,0.3);
       }
       header button.action-icon.primary {
-        background: var(--primary-colour);
-        color: white;
+        background: white;
+        color: var(--primary-colour);
       }
     `
   ];
@@ -120,7 +117,7 @@ export class AppHeader extends LitElement {
 
   render() {
     return html`
-      <header class="glass">
+      <header>
         <div class="nav-group">
           <button class="nav-item ${this.activeSection === 'display-types' ? 'active' : ''}" 
             @click="${() => this._dispatch('set-section', 'display-types')}" title="Display Types">

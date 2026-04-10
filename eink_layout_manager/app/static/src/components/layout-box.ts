@@ -44,22 +44,19 @@ export class LayoutBox extends LitElement {
       
       .actions {
         position: absolute;
-        top: -15px; right: -15px;
-        display: flex; gap: 12px;
+        top: -10px; right: -10px;
+        display: flex; gap: 4px;
         opacity: 0; visibility: hidden;
-        background: white; padding: 6px 10px; border-radius: 20px;
-        box-shadow: var(--shadow-medium); z-index: 50;
-        transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        transform: scale(calc(0.8 / var(--editor-scale, 1)));
+        background: white; padding: 4px; border-radius: 4px;
+        box-shadow: var(--shadow-small); z-index: 50;
       }
-      :host(:hover) .actions { opacity: 1; visibility: visible; transform: scale(calc(1 / var(--editor-scale, 1))); }
+      :host(:hover) .actions { opacity: 1; visibility: visible; }
       
       .action-icon {
-        cursor: pointer; color: #555; width: 24px; height: 24px;
+        cursor: pointer; color: #555; width: 20px; height: 20px;
         display: flex; align-items: center; justify-content: center;
-        transition: color 0.2s, transform 0.1s;
       }
-      .action-icon:hover { color: var(--primary-colour); transform: scale(1.2); }
+      .action-icon:hover { color: var(--primary-colour); }
       .action-icon.delete:hover { color: var(--danger-colour); }
       
       .item-number {

@@ -19,30 +19,18 @@ export class EmptyView extends LitElement {
       }
       .icon {
         font-size: 64px;
-        margin-bottom: 1.5rem;
-        opacity: 0.2;
+        margin-bottom: 1rem;
+        color: #ddd;
       }
       h2 {
-        margin: 0 0 0.5rem 0;
-        color: var(--text-colour);
+        margin: 0 0 1rem 0;
+        color: var(--text-muted);
         font-weight: 700;
-        letter-spacing: -0.02em;
       }
       p {
         max-width: 400px;
-        line-height: 1.6;
+        line-height: 1.4;
         margin: 0;
-      }
-      .badge {
-        margin-top: 2rem;
-        padding: 0.5rem 1rem;
-        background: rgba(33, 150, 243, 0.1);
-        color: var(--primary-colour);
-        border-radius: 20px;
-        font-size: 13px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 1px;
       }
     `
   ];
@@ -56,7 +44,6 @@ export class EmptyView extends LitElement {
       <span class="material-icons icon">${this.icon}</span>
       <h2>${this.title}</h2>
       <p>${this.message}</p>
-      <div class="badge">Development in Progress</div>
     `;
   }
 }

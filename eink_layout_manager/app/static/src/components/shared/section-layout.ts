@@ -29,18 +29,19 @@ export class SectionLayout extends LitElement {
         background: var(--bg-light);
       }
       .right-top-bar {
-        height: 64px;
+        height: 56px;
         background: var(--bg-white);
         border-bottom: 1px solid var(--border-colour);
         display: flex;
         align-items: center;
-        padding: 0 1.5rem;
+        padding: 0 1rem;
         flex-shrink: 0;
       }
       .right-main {
         flex: 1;
         position: relative;
         overflow: auto;
+        background: #eee;
       }
     `
   ];

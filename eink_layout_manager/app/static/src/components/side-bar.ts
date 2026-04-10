@@ -14,9 +14,10 @@ export class SideBar extends LitElement {
         height: 100%;
         overflow: hidden;
         background: var(--bg-white);
+        border-right: 1px solid var(--border-colour);
       }
       .sidebar-section {
-        padding: 1.5rem 1rem;
+        padding: 1rem;
         border-bottom: 1px solid var(--border-colour);
         overflow-y: auto;
       }
@@ -27,8 +28,7 @@ export class SideBar extends LitElement {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 1.25rem;
-        padding: 0 0.5rem;
+        margin-bottom: 0.75rem;
       }
       h3 { 
         margin: 0; 
@@ -36,48 +36,41 @@ export class SideBar extends LitElement {
         font-weight: 700; 
         color: var(--text-muted); 
         text-transform: uppercase; 
-        letter-spacing: 1px; 
+        letter-spacing: 0.5px; 
       }
       
       .list-item {
-        padding: 1rem;
-        border: 1px solid var(--border-colour);
-        border-radius: var(--border-radius);
-        margin-bottom: 0.75rem;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--border-colour);
         cursor: pointer;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        user-select: none;
+        transition: background-color 0.2s;
         background: var(--bg-white);
+        user-select: none;
       }
       .list-item:hover { 
-        border-color: var(--primary-colour); 
-        background: #f8fbff;
-        transform: translateY(-1px);
-        box-shadow: var(--shadow-small);
+        background-color: #f9f9f9;
       }
       .list-item.selected { 
-        border-color: var(--primary-colour); 
-        background: #f0f7ff; 
-        box-shadow: 0 4px 12px rgba(33, 150, 243, 0.1); 
+        background-color: #e3f2fd; 
+        border-left: 4px solid var(--primary-colour);
       }
       
       .item-details { display: flex; justify-content: space-between; align-items: center; }
       .item-info { flex: 1; }
-      .item-name { font-weight: 700; display: block; color: var(--text-colour); font-size: 14px; margin-bottom: 4px; }
-      .item-meta { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+      .item-name { font-weight: 700; display: block; color: var(--text-colour); font-size: 14px; margin-bottom: 2px; }
+      .item-meta { font-size: 12px; color: var(--text-muted); }
       .item-actions { display: flex; gap: 6px; }
       
       .sidebar button.secondary {
-        padding: 6px;
-        border-radius: 6px;
-        min-width: 32px;
-        height: 32px;
-        background: var(--bg-light);
+        padding: 4px;
+        border-radius: 4px;
+        min-width: 28px;
+        height: 28px;
+        background: white;
         border: 1px solid var(--border-colour);
         color: var(--text-muted);
       }
       .sidebar button.secondary:hover {
-        background: var(--bg-white);
         border-color: var(--primary-colour);
         color: var(--primary-colour);
       }
