@@ -10,6 +10,7 @@ import './components/display-types-view';
 import { DisplayTypesView } from './components/display-types-view';
 import './components/item-settings-dialog';
 import './components/layout-settings-dialog';
+import './components/image-dialog';
 import './components/confirm-dialog';
 import './components/yaml-editor';
 import './components/shared/section-layout';
@@ -17,6 +18,7 @@ import './components/shared/empty-view';
 
 import { ItemSettingsDialog } from './components/item-settings-dialog';
 import { LayoutSettingsDialog } from './components/layout-settings-dialog';
+import { ImageDialog } from './components/image-dialog';
 import { ConfirmDialog } from './components/confirm-dialog';
 import { DisplayType, Layout } from './services/HaApiClient';
 
@@ -57,6 +59,7 @@ export class AppRoot extends LitElement {
 
   @query('item-settings-dialog') private _itemDialog!: ItemSettingsDialog;
   @query('layout-settings-dialog') private _layoutSettingsDialog!: LayoutSettingsDialog;
+  @query('image-dialog') private _imageDialog!: ImageDialog;
   @query('confirm-dialog') private _confirmDialog!: ConfirmDialog;
 
   private async _handleEditLayout() {
@@ -182,6 +185,8 @@ export class AppRoot extends LitElement {
       this._displayTypesView?.addNew();
     } else if (this.state.activeSection === 'layouts') {
       this._handleCreateLayout();
+    } else if (this.state.activeSection === 'images') {
+      this._imageDialog.show();
     }
   }
 
@@ -241,6 +246,7 @@ export class AppRoot extends LitElement {
         @delete="${(e: CustomEvent) => this._onDeleteItem(e)}"
       ></item-settings-dialog>
       <layout-settings-dialog @save="${this._onSaveLayoutSettings}"></layout-settings-dialog>
+      <image-dialog></image-dialog>
       <confirm-dialog></confirm-dialog>
     `;
   }
