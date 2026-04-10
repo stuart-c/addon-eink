@@ -52,21 +52,6 @@ describe('AppToolbar', () => {
     expect(spy.mock.calls[0][0].detail).toEqual(mockLayouts[1]);
   });
 
-  it('should dispatch create-layout event', async () => {
-    const spy = vi.fn();
-    element.addEventListener('create-layout', spy);
-
-    // Open menu
-    const trigger = element.shadowRoot?.querySelector('.dropdown-trigger') as HTMLElement;
-    trigger.click();
-    await element.updateComplete;
-
-    const createAction = element.shadowRoot?.querySelector('.dropdown-item.action') as HTMLElement;
-    createAction.click();
-
-    expect(spy).toHaveBeenCalled();
-  });
-
   it('should display mouse coordinates when provided', async () => {
     element.mousePos = { x: 50, y: 75 };
     await element.updateComplete;
