@@ -15,9 +15,10 @@ describe('AppHeader', () => {
     element.remove();
   });
 
-  it('should render the title', () => {
-    const title = element.shadowRoot?.querySelector('div > strong');
-    expect(title?.textContent).toBe('eInk Layout Manager');
+  it('should render navigation icons', () => {
+    const nav = element.shadowRoot?.querySelector('.header-nav');
+    const icons = nav?.querySelectorAll('.nav-icon');
+    expect(icons?.length).toBe(4);
   });
 
   it('should display the message when provided', async () => {
@@ -28,16 +29,16 @@ describe('AppHeader', () => {
     expect(badge?.textContent).toBe('Test Message');
   });
 
-  it('should reflect connected status', async () => {
+  it('should reflect connected status via class', async () => {
     element.connected = true;
     await element.updateComplete;
     let dot = element.shadowRoot?.querySelector('.status-dot');
-    expect(dot?.textContent).toBe('Online');
+    expect(dot?.classList.contains('connected')).toBe(true);
 
     element.connected = false;
     await element.updateComplete;
     dot = element.shadowRoot?.querySelector('.status-dot');
-    expect(dot?.textContent).toBe('Offline');
+    expect(dot?.classList.contains('disconnected')).toBe(true);
   });
 
   it('should dispatch edit-layout event', async () => {

@@ -58,7 +58,7 @@ describe('LayoutBox', () => {
     const spy = vi.fn();
     element.addEventListener('item-edit', spy);
     
-    const btn = element.shadowRoot?.querySelector('.action-icon[title="Settings"]') as HTMLElement;
+    const btn = element.shadowRoot?.querySelector('.action-btn[title="Settings"]') as HTMLElement;
     btn.click();
     
     expect(spy).toHaveBeenCalled();
@@ -68,7 +68,7 @@ describe('LayoutBox', () => {
     const spy = vi.fn();
     element.addEventListener('item-rotate', spy);
     
-    const btn = element.shadowRoot?.querySelector('.action-icon[title="Rotate"]') as HTMLElement;
+    const btn = element.shadowRoot?.querySelector('.action-btn[title="Rotate"]') as HTMLElement;
     btn.click();
     
     expect(spy).toHaveBeenCalled();
@@ -78,7 +78,7 @@ describe('LayoutBox', () => {
     const spy = vi.fn();
     element.addEventListener('item-delete', spy);
     
-    const btn = element.shadowRoot?.querySelector('.action-icon.delete') as HTMLElement;
+    const btn = element.shadowRoot?.querySelector('.action-btn.delete') as HTMLElement;
     btn.click();
     
     expect(spy).toHaveBeenCalled();

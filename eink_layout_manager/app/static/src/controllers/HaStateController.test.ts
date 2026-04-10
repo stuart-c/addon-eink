@@ -81,4 +81,12 @@ describe('HaStateController', () => {
     expect(controller.activeLayout.name).toBe('Updated');
     expect(mockHost.requestUpdate).toHaveBeenCalled();
   });
+
+  it('should manage active sections', () => {
+    expect(controller.activeSection).toBe('layouts');
+    
+    controller.setSection('images');
+    expect(controller.activeSection).toBe('images');
+    expect(mockHost.requestUpdate).toHaveBeenCalled();
+  });
 });

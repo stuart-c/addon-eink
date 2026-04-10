@@ -22,8 +22,9 @@ describe('AppToolbar', () => {
   });
 
   it('should display the active layout name', () => {
-    const trigger = element.shadowRoot?.querySelector('.dropdown-trigger span');
-    expect(trigger?.textContent).toBe('Layout 1');
+    const spans = element.shadowRoot?.querySelectorAll('.dropdown-trigger span');
+    // The name is the second span (the first is the dashboard icon)
+    expect(spans?.[1]?.textContent).toBe('Layout 1');
   });
 
   it('should show the dropdown menu when clicked', async () => {
