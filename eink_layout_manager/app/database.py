@@ -12,6 +12,7 @@ class Base(DeclarativeBase):
 
     pass
 
+
 # Import models here so they are registered with Base.metadata
 from . import models  # noqa: F401
 

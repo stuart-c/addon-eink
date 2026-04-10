@@ -2,6 +2,7 @@ from sqlalchemy import Column, String, Integer, JSON, ForeignKey
 from sqlalchemy.orm import relationship
 from .database import Base
 
+
 class DisplayType(Base):
     __tablename__ = "display_types"
 
@@ -17,6 +18,7 @@ class DisplayType(Base):
     frame = Column(JSON, nullable=False)
     mat = Column(JSON, nullable=False)
 
+
 class Layout(Base):
     __tablename__ = "layouts"
 
@@ -25,6 +27,7 @@ class Layout(Base):
     canvas_width_mm = Column(Integer, nullable=False)
     canvas_height_mm = Column(Integer, nullable=False)
     items = Column(JSON, nullable=False)
+
 
 class Image(Base):
     __tablename__ = "images"
