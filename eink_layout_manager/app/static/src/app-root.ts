@@ -11,6 +11,8 @@ import './components/item-settings-dialog';
 import './components/layout-settings-dialog';
 import './components/confirm-dialog';
 import './components/yaml-editor';
+import './components/shared/section-layout';
+import './components/shared/empty-view';
 
 import { DisplayTypeDialog } from './components/display-type-dialog';
 import { ItemSettingsDialog } from './components/item-settings-dialog';
@@ -180,13 +182,38 @@ export class AppRoot extends LitElement {
         .isSaving="${this.state.isSaving}"
         .isDirty="${this.state.isDirty}"
         .viewMode="${this._viewMode}"
+        .activeSection="${this.state.activeSection}"
         @save-layout="${() => this.state.saveActiveLayout()}"
         @discard-layout="${this._handleDiscardLayout}"
         @toggle-view-mode="${() => this._viewMode = (this._viewMode === 'graphical' ? 'yaml' : 'graphical')}"
+        @set-section="${(e: CustomEvent) => this.state.setSection(e.detail)}"
       ></app-header>
 
-      <main>
+      ${this.state.activeSection === 'layouts' ? this._renderLayoutsSection() : this._renderEmptySection()}
+
+      <display-type-dialog 
+        .displayTypes="${this.state.displayTypes}" 
+        @save="${this._onSaveDisplayType}"
+        @delete-display-type="${this._onDeleteDisplayType}"
+        @request-confirmation="${async (e: CustomEvent) => {
+          const result = await this._confirmDialog.show(e.detail.config);
+          e.detail.callback(result);
+        }}"
+      ></display-type-dialog>
+      <item-settings-dialog 
+        @save="${(e: CustomEvent) => this.state.updateItem(e.detail.id, e.detail.updates)}"
+        @delete="${(e: CustomEvent) => this._onDeleteItem(e)}"
+      ></item-settings-dialog>
+      <layout-settings-dialog @save="${this._onSaveLayoutSettings}"></layout-settings-dialog>
+      <confirm-dialog></confirm-dialog>
+    `;
+  }
+
+  private _renderLayoutsSection() {
+    return html`
+      <section-layout>
         <side-bar
+          slot="left-bar"
           .displayTypes="${this.state.displayTypes}"
           .activeLayout="${this.state.activeLayout}"
           .selectedItemId="${this.state.selectedItemId}"
@@ -200,16 +227,17 @@ export class AppRoot extends LitElement {
           @delete-item="${this._onDeleteItem}"
         ></side-bar>
 
-        <div class="editor-container">
-          <app-toolbar
-            .layouts="${this.state.layouts}"
-            .activeLayout="${this.state.activeLayout}"
-            .mousePos="${this._mousePos}"
-            @switch-layout="${(e: CustomEvent) => this.state.switchLayout(e.detail)}"
-            @create-layout="${this._handleCreateLayout}"
-            @edit-layout="${this._handleEditLayout}"
-          ></app-toolbar>
+        <app-toolbar
+          slot="right-top-bar"
+          .layouts="${this.state.layouts}"
+          .activeLayout="${this.state.activeLayout}"
+          .mousePos="${this._mousePos}"
+          @switch-layout="${(e: CustomEvent) => this.state.switchLayout(e.detail)}"
+          @create-layout="${this._handleCreateLayout}"
+          @edit-layout="${this._handleEditLayout}"
+        ></app-toolbar>
 
+        <div slot="right-main" style="height: 100%; display: flex; flex-direction: column;">
           <layout-editor
             ?hidden="${this._viewMode !== 'graphical' || !this.state.activeLayout}"
             .width_mm="${this.state.activeLayout?.canvas_width_mm || 0}"
@@ -232,25 +260,34 @@ export class AppRoot extends LitElement {
             .layout="${this.state.activeLayout}"
             @layout-update="${(e: CustomEvent) => this.state.updateActiveLayout(e.detail)}"
           ></yaml-editor>
-
         </div>
-      </main>
+      </section-layout>
+    `;
+  }
 
-      <display-type-dialog 
-        .displayTypes="${this.state.displayTypes}" 
-        @save="${this._onSaveDisplayType}"
-        @delete-display-type="${this._onDeleteDisplayType}"
-        @request-confirmation="${async (e: CustomEvent) => {
-          const result = await this._confirmDialog.show(e.detail.config);
-          e.detail.callback(result);
-        }}"
-      ></display-type-dialog>
-      <item-settings-dialog 
-        @save="${(e: CustomEvent) => this.state.updateItem(e.detail.id, e.detail.updates)}"
-        @delete="${(e: CustomEvent) => this._onDeleteItem(e)}"
-      ></item-settings-dialog>
-      <layout-settings-dialog @save="${this._onSaveLayoutSettings}"></layout-settings-dialog>
-      <confirm-dialog></confirm-dialog>
+  private _renderEmptySection() {
+    const sections = {
+      'display-types': { title: 'Display Types', icon: 'settings_input_component', message: 'Manage your eInk display inventory and hardware profiles.' },
+      'images': { title: 'Image Library', icon: 'image', message: 'Upload and process images for your displays.' },
+      'scenes': { title: 'Smart Scenes', icon: 'landscape', message: 'Compose complex scenes by combining layouts, images and live data.' }
+    };
+    const active = sections[this.state.activeSection as keyof typeof sections];
+    
+    return html`
+      <section-layout>
+        <div slot="left-bar" style="padding: 1rem; color: #666; font-size: 14px;">
+          Sidebar for ${active.title} section coming soon.
+        </div>
+        <div slot="right-top-bar" style="font-weight: 600; color: #333;">
+          ${active.title} Toolbar
+        </div>
+        <empty-view 
+          slot="right-main"
+          .title="${active.title}"
+          .icon="${active.icon}"
+          .message="${active.message}"
+        ></empty-view>
+      </section-layout>
     `;
   }
 }
