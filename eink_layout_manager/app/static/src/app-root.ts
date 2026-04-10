@@ -67,6 +67,7 @@ export class AppRoot extends LitElement {
   @query('display-types-view') private _displayTypesView?: DisplayTypesView;
 
   @state() private _displayTypesDirty = false;
+  @state() private _canDelete = false;
 
   private async _handleSave() {
     if (this.state.activeSection === 'layouts') {
@@ -159,6 +160,12 @@ export class AppRoot extends LitElement {
     await this.state.saveDisplayType(e.detail.displayType);
   }
 
+  private _onHeaderDeleteItem() {
+    if (this.state.activeSection === 'display-types') {
+      this._displayTypesView?.requestDelete();
+    }
+  }
+
   private async _onEditItem(e: CustomEvent<{ id: string }>) {
     const item = this.state.activeLayout?.items.find(i => i.id === e.detail.id);
     if (item) {
@@ -197,8 +204,10 @@ export class AppRoot extends LitElement {
         .isDirty="${this.state.isDirty || this._displayTypesDirty}"
         .viewMode="${this._viewMode}"
         .activeSection="${this.state.activeSection}"
+        .canDelete="${this._canDelete}"
         @save-changes="${this._handleSave}"
         @discard-changes="${this._handleDiscard}"
+        @delete-item="${this._onHeaderDeleteItem}"
         @toggle-view-mode="${() => this._viewMode = (this._viewMode === 'graphical' ? 'yaml' : 'graphical')}"
         @set-section="${(e: CustomEvent) => this.state.setSection(e.detail)}"
       ></app-header>
@@ -277,10 +286,10 @@ export class AppRoot extends LitElement {
     return html`
       <display-types-view
         .displayTypes="${this.state.displayTypes}"
-        .viewMode="${this._viewMode}"
         @save="${this._onSaveDisplayType}"
         @delete-display-type="${this._onDeleteDisplayType}"
         @dirty-state-change="${(e: CustomEvent) => this._displayTypesDirty = e.detail.isDirty}"
+        @can-delete-change="${(e: CustomEvent) => this._canDelete = e.detail.canDelete}"
         @request-confirmation="${async (e: CustomEvent) => {
           const result = await this._confirmDialog.show(e.detail.config);
           e.detail.callback(result);

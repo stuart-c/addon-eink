@@ -55,6 +55,10 @@ export class DisplayTypesView extends LitElement {
       display: flex;
       flex-direction: column;
       height: 100%;
+    }
+
+    .sidebar-items {
+      flex: 1;
       overflow-y: auto;
     }
 
@@ -106,7 +110,6 @@ export class DisplayTypesView extends LitElement {
       color: var(--primary-colour);
       font-weight: 600;
       flex-shrink: 0;
-      margin-top: auto;
     }
     .sidebar-item.add-new:hover { background: #f0faff; }
     .sidebar-item.add-new.selected { background: #e1f5fe; }
@@ -388,7 +391,16 @@ export class DisplayTypesView extends LitElement {
     super.updated(changedProperties);
     if (changedProperties.has('displayType') || changedProperties.has('displayTypes')) {
       this._updateDirtyState();
+      this._updateDeleteState();
     }
+  }
+
+  private _updateDeleteState() {
+    this.dispatchEvent(new CustomEvent('can-delete-change', {
+      detail: { canDelete: !this.isNew && !!this.displayType },
+      bubbles: true,
+      composed: true
+    }));
   }
 
   private _isDirty(): boolean {
@@ -487,6 +499,10 @@ export class DisplayTypesView extends LitElement {
     }
   }
 
+  public requestDelete() {
+    this._handleDelete();
+  }
+
   private _handleDelete() {
     if (!this.displayType || this.isNew) return;
     this.dispatchEvent(new CustomEvent('delete-display-type', { detail: this.displayType }));
@@ -572,29 +588,31 @@ export class DisplayTypesView extends LitElement {
       <section-layout>
         <!-- Sidebar: Display Types List -->
         <div slot="left-bar" class="list-sidebar">
-          ${this.displayTypes.map(dt => {
-            const dtScale = 60 / Math.max(dt.width_mm, dt.height_mm);
-            return html`
-              <div 
-                class="sidebar-item ${this.displayType?.id === dt.id && !this.isNew ? 'selected' : ''}" 
-                @click="${() => this._handleSelect(dt.id)}"
-              >
-                <div class="sidebar-thumbnail">
-                  <hardware-preview
-                    .width_mm="${dt.width_mm}"
-                    .height_mm="${dt.height_mm}"
-                    .border_width_mm="${dt.frame.border_width_mm}"
-                    .panel_width_mm="${dt.panel_width_mm}"
-                    .panel_height_mm="${dt.panel_height_mm}"
-                    .frame_colour="${dt.frame.colour}"
-                    .mat_colour="${dt.mat.colour}"
-                    .scale="${dtScale}"
-                  ></hardware-preview>
+          <div class="sidebar-items">
+            ${this.displayTypes.map(dt => {
+              const dtScale = 60 / Math.max(dt.width_mm, dt.height_mm);
+              return html`
+                <div 
+                  class="sidebar-item ${this.displayType?.id === dt.id && !this.isNew ? 'selected' : ''}" 
+                  @click="${() => this._handleSelect(dt.id)}"
+                >
+                  <div class="sidebar-thumbnail">
+                    <hardware-preview
+                      .width_mm="${dt.width_mm}"
+                      .height_mm="${dt.height_mm}"
+                      .border_width_mm="${dt.frame.border_width_mm}"
+                      .panel_width_mm="${dt.panel_width_mm}"
+                      .panel_height_mm="${dt.panel_height_mm}"
+                      .frame_colour="${dt.frame.colour}"
+                      .mat_colour="${dt.mat.colour}"
+                      .scale="${dtScale}"
+                    ></hardware-preview>
+                  </div>
+                  <span class="sidebar-name">${dt.name}</span>
                 </div>
-                <span class="sidebar-name">${dt.name}</span>
-              </div>
-            `;
-          })}
+              `;
+            })}
+          </div>
           
           <div 
             class="sidebar-item add-new ${this.isNew ? 'selected' : ''}" 
@@ -611,17 +629,6 @@ export class DisplayTypesView extends LitElement {
             ${this.isNew ? 'Create New Display Type' : `Editing: ${this.displayType.name}`}
           </div>
           <div class="toolbar-actions">
-            ${this.viewMode === 'graphical' ? html`
-              <button 
-                type="button" 
-                class="danger" 
-                ?disabled="${this.isNew}" 
-                @click="${this._handleDelete}"
-              >
-                <span class="material-icons" style="font-size: 18px;">delete</span>
-                Delete
-              </button>
-            ` : ''}
           </div>
         </div>
 

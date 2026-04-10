@@ -83,6 +83,7 @@ export class AppHeader extends LitElement {
   @property({ type: String }) message = '';
   @property({ type: Boolean }) isSaving = false;
   @property({ type: Boolean }) isDirty = false;
+  @property({ type: Boolean }) canDelete = false;
   @property({ type: String }) viewMode: 'graphical' | 'yaml' = 'graphical';
 
   private _dispatch(name: string) {
@@ -141,6 +142,10 @@ export class AppHeader extends LitElement {
 
           <button class="secondary" @click="${() => this._dispatch('discard-changes')}" ?disabled="${!this.isDirty || this.isSaving}" title="Discard Changes">
             <span class="material-icons">history</span>
+          </button>
+
+          <button class="secondary" @click="${() => this._dispatch('delete-item')}" ?disabled="${!this.canDelete || this.isSaving}" title="Delete Current Item">
+            <span class="material-icons" style="color: var(--danger-colour);">delete</span>
           </button>
           
           <button class="secondary" @click="${() => this._dispatch('save-changes')}" ?disabled="${this.isSaving}" title="${this.isSaving ? 'Saving...' : 'Save Changes'}">
