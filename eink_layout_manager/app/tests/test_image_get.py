@@ -53,7 +53,7 @@ async def test_get_image_success(aiohttp_client, app):
     assert "file_hash" in result
     assert "file_path" in result
     assert result["file_path"].endswith(".png")
-    
+
     # Optional fields should be present (matching None/empty)
     assert "artist" in result
     assert "collection" in result
