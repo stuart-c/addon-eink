@@ -18,7 +18,7 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "allowJs": true,
-    "types": ["node", "js-yaml", "prismjs"],
+    "types": ["node", "vitest"],
     "paths": {
       "*": ["./node_modules/*", "./src/*"]
     }
