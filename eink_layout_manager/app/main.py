@@ -77,6 +77,31 @@ def load_schema(name):
         return json.load(f)
 
 
+# --- Helpers ---
+def image_model_to_dict(image):
+    """Convert an Image model instance to a dictionary according to schema."""
+    return {
+        "id": image.id,
+        "name": image.name,
+        "artist": image.artist,
+        "collection": image.collection,
+        "file_type": image.file_type,
+        "dimensions": {
+            "width": image.width,
+            "height": image.height,
+        },
+        "colour_depth": image.colour_depth,
+        "keywords": image.keywords if image.keywords is not None else [],
+        "description": image.description,
+        "file_path": image.file_path,
+        "original_archive_file": image.original_archive_file,
+        "license": image.license,
+        "source": image.source,
+        "status": image.status,
+        "file_hash": image.file_hash,
+    }
+
+
 # --- Middlewares ---
 @web.middleware
 async def request_logger_middleware(request, handler):
@@ -408,6 +433,30 @@ async def handle_image_create(request):
         )
 
 
+async def handle_image_get(request):
+    """Retrieve image metadata from the SQL database."""
+    image_id = request.match_info["id"]
+    try:
+        image_id = validate_id(image_id)
+    except ValueError as e:
+        return web.json_response({"error": str(e)}, status=400)
+
+    try:
+        async with database.get_session() as session:
+            stmt = select(models.Image).where(models.Image.id == image_id)
+            result = await session.execute(stmt)
+            image = result.scalar_one_or_none()
+
+            if not image:
+                return web.json_response({"error": "Not Found"}, status=404)
+
+            return web.json_response(image_model_to_dict(image))
+    except Exception as e:
+        return web.json_response(
+            {"error": "Database error", "details": str(e)}, status=500
+        )
+
+
 # --- App Init ---
 def init_app():
     """Initialise the aiohttp application with routes and storage setup."""
@@ -438,6 +487,7 @@ def init_app():
     api_prefix = "/api/{resource_type:(?:display_type|layout|image)}"
 
     app.router.add_get(f"{api_prefix}", get_collection)
+    app.router.add_get("/api/image/{id}", handle_image_get)
     app.router.add_get(f"{api_prefix}/{{id}}", get_item)
     app.router.add_post("/api/image", handle_image_create)
     app.router.add_post(f"{api_prefix}", create_item)
