@@ -584,7 +584,7 @@ export class DisplayTypeDialog extends LitElement {
       : 1;
 
     return html`
-      <dialog>
+      <dialog @cancel="${(e: Event) => { e.preventDefault(); this._handleHeaderClose(); }}">
         <div class="container">
           <header>
             <h2>Manage Display Types</h2>
