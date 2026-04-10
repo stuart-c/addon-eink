@@ -104,7 +104,8 @@ export class YamlEditor extends LitElement {
     `
   ];
 
-  @property({ type: Object }) layout: Layout | null = null;
+  @property({ type: Object }) data: any = null;
+  @property({ type: String }) schemaName = 'Object';
   @state() private _yamlText = '';
   @state() private _errorMessage = '';
   
@@ -112,10 +113,10 @@ export class YamlEditor extends LitElement {
   @query('pre') private _highlightLayer!: HTMLPreElement;
 
   protected updated(changedProperties: PropertyValues) {
-    if (changedProperties.has('layout') && this.layout) {
+    if (changedProperties.has('data') && this.data) {
       // Strip internal properties like 'invalid' before showing in YAML
-      const cleanLayout = this._getCleanLayout(this.layout);
-      const currentYaml = this._dumpYaml(cleanLayout);
+      const cleanData = this._getCleanData(this.data);
+      const currentYaml = this._dumpYaml(cleanData);
       
       // Only update if the logical content is actually different to avoid cursor jumping
       if (this._yamlText === '' || !this._isYamlEqual(this._yamlText, currentYaml)) {
@@ -124,11 +125,23 @@ export class YamlEditor extends LitElement {
     }
   }
 
-  private _getCleanLayout(layout: Layout): any {
-    const clean = JSON.parse(JSON.stringify(layout));
-    if (clean.items) {
-      clean.items.forEach((i: any) => delete i.invalid);
-    }
+  private _getCleanData(data: any): any {
+    const clean = JSON.parse(JSON.stringify(data));
+    const stripRecursive = (obj: any) => {
+      if (!obj || typeof obj !== 'object') return;
+      if (Array.isArray(obj)) {
+        obj.forEach(stripRecursive);
+        return;
+      }
+      Object.keys(obj).forEach(key => {
+        if (key.startsWith('_') || key === 'invalid') {
+          delete obj[key];
+        } else {
+          stripRecursive(obj[key]);
+        }
+      });
+    };
+    stripRecursive(clean);
     return clean;
   }
 
@@ -159,16 +172,16 @@ export class YamlEditor extends LitElement {
 
   private _validateAndSync(val: string) {
     try {
-      const parsed = yaml.load(val) as Layout;
-      if (parsed && typeof parsed === 'object' && parsed.id) {
+      const parsed = yaml.load(val);
+      if (parsed && typeof parsed === 'object') {
         this._errorMessage = '';
-        this.dispatchEvent(new CustomEvent('layout-update', {
+        this.dispatchEvent(new CustomEvent('data-update', {
           detail: parsed,
           bubbles: true,
           composed: true
         }));
       } else {
-        this._errorMessage = 'Invalid layout structure';
+        this._errorMessage = 'Invalid YAML structure';
       }
     } catch (e: any) {
       this._errorMessage = e.reason || e.message;
@@ -205,7 +218,7 @@ export class YamlEditor extends LitElement {
           ${this._errorMessage || 'Valid YAML'}
         </div>
         <div class="status-item">
-          <span>Schema: Layout (v${this.layout?.id || '?'})</span>
+          <span>Schema: ${this.schemaName}</span>
         </div>
       </div>
     `;
