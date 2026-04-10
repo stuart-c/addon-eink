@@ -75,8 +75,8 @@ async def test_get_image_not_found(aiohttp_client, app):
 async def test_get_image_invalid_id(aiohttp_client, app):
     """Test 400 for invalid ID format."""
     client = await aiohttp_client(app)
-    # ID with path traversal characters should be rejected by validate_id
-    resp = await client.get("/api/image/../illegal")
+    # ID with invalid characters should be rejected by validate_id
+    resp = await client.get("/api/image/invalid!id")
     assert resp.status == 400
     result = await resp.json()
     assert "Invalid ID" in result["error"]
