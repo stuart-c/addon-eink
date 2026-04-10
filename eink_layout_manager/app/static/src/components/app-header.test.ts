@@ -104,4 +104,14 @@ describe('AppHeader', () => {
     const button = element.shadowRoot?.querySelector('button[title="Discard Changes"]') as HTMLButtonElement;
     expect(button.disabled).toBe(true);
   });
+
+  it('should dispatch add-item event when add button is clicked', async () => {
+    const spy = vi.fn();
+    element.addEventListener('add-item', spy);
+    
+    const button = element.shadowRoot?.querySelector('button[title="Add New Item"]') as HTMLButtonElement;
+    button.click();
+    
+    expect(spy).toHaveBeenCalled();
+  });
 });
