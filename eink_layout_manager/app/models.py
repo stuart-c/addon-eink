@@ -1,5 +1,9 @@
 from sqlalchemy import Column, String, Integer, JSON
-from .database import Base
+
+try:
+    from .database import Base
+except ImportError:
+    from database import Base
 
 
 class DisplayType(Base):

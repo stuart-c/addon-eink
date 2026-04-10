@@ -14,7 +14,10 @@ class Base(DeclarativeBase):
 
 
 # Import models here so they are registered with Base.metadata
-from . import models  # noqa: F401, E402
+try:
+    from . import models  # noqa: F401, E402
+except ImportError:
+    import models  # noqa: F401, E402
 
 
 def get_db_url():
