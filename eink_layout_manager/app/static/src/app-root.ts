@@ -113,7 +113,7 @@ export class AppRoot extends LitElement {
     this.state.setSection('display-types');
   }
 
-  private async _onEditDisplayType(e: CustomEvent<DisplayType>) {
+  private async _onEditDisplayType(_e: CustomEvent<DisplayType>) {
     this.state.setSection('display-types');
   }
 
