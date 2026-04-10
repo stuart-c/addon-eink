@@ -7,7 +7,9 @@ from aiohttp import web
 from jsonschema import validate, ValidationError
 
 # Base directory for data persistence
-SCHEMAS_DIR = os.path.realpath(os.path.join(os.path.dirname(__file__), "schemas"))
+SCHEMAS_DIR = os.path.realpath(
+    os.path.join(os.path.dirname(__file__), "schemas")
+)
 
 
 def get_storage_path(resource_type):
@@ -175,7 +177,9 @@ async def create_item(request):
         return web.json_response({"error": "Access Denied"}, status=403)
 
     if os.path.exists(file_real):
-        return web.json_response({"error": "Resource already exists"}, status=409)
+        return web.json_response(
+            {"error": "Resource already exists"}, status=409
+        )
 
     with open(file_real, "w") as f:
         json.dump(data, f, indent=2)
