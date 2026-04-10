@@ -9,10 +9,9 @@ export class AppToolbar extends LitElement {
     commonStyles,
     css`
       :host {
-        padding: 0.75rem 1.5rem;
         background: white;
-        border-bottom: 1px solid var(--border-colour);
         display: flex;
+        flex: 1;
         justify-content: flex-start;
         align-items: center;
         gap: 1rem;
@@ -68,7 +67,6 @@ export class AppToolbar extends LitElement {
       .dropdown-divider { height: 1px; background: #eee; margin: 4px 0; }
       .dropdown-item.action { color: var(--primary-colour); font-weight: 600; }
 
-      .mouse-info { font-size: 12px; color: #666; display: flex; align-items: center; gap: 1rem; }
       .pos-value { color: var(--primary-colour); font-weight: 600; }
       .canvas-dim { padding-left: 1rem; border-left: 1px solid #ddd; }
 
