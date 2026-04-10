@@ -41,7 +41,28 @@ export interface Layout {
   items: LayoutItem[];
 }
 
-export type ResourceType = 'display_type' | 'layout';
+export interface Image {
+  id: string;
+  name: string;
+  artist?: string;
+  collection?: string;
+  file_type: 'JPG' | 'PNG' | 'GIF' | 'WEBP' | 'BMP' | 'TIFF';
+  dimensions: {
+    width: number;
+    height: number;
+  };
+  colour_depth?: number;
+  keywords?: string[];
+  description?: string;
+  file_path: string;
+  original_archive_file?: string;
+  license?: string;
+  source?: string;
+  status: 'UPLOADED' | 'PROCESSING' | 'READY' | 'ERROR';
+  file_hash: string;
+}
+
+export type ResourceType = 'display_type' | 'layout' | 'image';
 
 export class HaApiClient {
   private baseUrl: string;
@@ -107,6 +128,8 @@ export class HaApiClient {
   async getLayouts(): Promise<Layout[]> { return this.getCollection<Layout>('layout'); }
   async updateLayout(id: string, layout: Layout): Promise<Layout> { return this.updateItem<Layout>('layout', id, layout); }
   async getDisplayTypes(): Promise<DisplayType[]> { return this.getCollection<DisplayType>('display_type'); }
+  async getImages(): Promise<Image[]> { return this.getCollection<Image>('image'); }
+  async updateImage(id: string, image: Image): Promise<Image> { return this.updateItem<Image>('image', id, image); }
 
   // --- Health ---
 

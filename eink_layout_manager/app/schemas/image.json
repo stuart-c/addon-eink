@@ -70,6 +70,15 @@
     "source": {
       "type": "string",
       "description": "Original source URL or repository"
+    },
+    "status": {
+      "type": "string",
+      "description": "Current processing state of the image",
+      "enum": ["UPLOADED", "PROCESSING", "READY", "ERROR"]
+    },
+    "file_hash": {
+      "type": "string",
+      "description": "SHA-256 hash of the image file"
     }
   },
   "required": [
@@ -77,6 +86,8 @@
     "name",
     "file_type",
     "dimensions",
-    "file_path"
+    "file_path",
+    "status",
+    "file_hash"
   ]
 }
