@@ -651,6 +651,10 @@ export class DisplayTypesView extends LitElement {
                   <label>Frame Outer Height (mm)</label>
                   <input type="number" required .value="${live(this.displayType?.height_mm || 0)}" @input="${(e: any) => this.displayType!.height_mm = parseInt(e.target.value)}">
                 </div>
+                <div class="form-group">
+                  <label>Frame Border Width (mm)</label>
+                  <input type="number" required .value="${live(this.displayType?.frame?.border_width_mm || 0)}" @input="${(e: any) => this.displayType!.frame.border_width_mm = parseInt(e.target.value)}">
+                </div>
               </div>
 
               <div class="row">
@@ -662,11 +666,17 @@ export class DisplayTypesView extends LitElement {
                   <label>Display Panel Height (mm)</label>
                   <input type="number" required .value="${live(this.displayType?.panel_height_mm || 0)}" @input="${(e: any) => this.displayType!.panel_height_mm = parseInt(e.target.value)}">
                 </div>
-              </div>
-
-              <div class="form-group">
-                <label>Frame Border Width (mm)</label>
-                <input type="number" required .value="${live(this.displayType?.frame?.border_width_mm || 0)}" @input="${(e: any) => this.displayType!.frame.border_width_mm = parseInt(e.target.value)}">
+                <div class="form-group">
+                  <label>Colour Type</label>
+                  <select .value="${live(this.displayType?.colour_type || 'MONO')}" @change="${(e: any) => { this.displayType!.colour_type = e.target.value; this.requestUpdate(); this._updateDirtyState(); }}">
+                    <option value="MONO">MONO (B/W)</option>
+                    <option value="BWR">BWR (Red)</option>
+                    <option value="BWY">BWY (Yellow)</option>
+                    <option value="BWRY">BWRY (Red/Yellow)</option>
+                    <option value="BWGBRY">BWGBRY (Spectra 6)</option>
+                    <option value="GRAYSCALE_4">Greyscale (4-bit)</option>
+                  </select>
+                </div>
               </div>
 
               <div class="row">
@@ -678,18 +688,7 @@ export class DisplayTypesView extends LitElement {
                   <label>Resolution Height (px)</label>
                   <input type="number" required .value="${live(this.displayType?.height_px || 0)}" @input="${(e: any) => this.displayType!.height_px = parseInt(e.target.value)}">
                 </div>
-              </div>
-
-              <div class="form-group">
-                <label>Colour Type</label>
-                <select .value="${live(this.displayType?.colour_type || 'MONO')}" @change="${(e: any) => { this.displayType!.colour_type = e.target.value; this.requestUpdate(); this._updateDirtyState(); }}">
-                  <option value="MONO">MONO (B/W)</option>
-                  <option value="BWR">BWR (Red)</option>
-                  <option value="BWY">BWY (Yellow)</option>
-                  <option value="BWRY">BWRY (Red/Yellow)</option>
-                  <option value="BWGBRY">BWGBRY (Spectra 6)</option>
-                  <option value="GRAYSCALE_4">Greyscale (4-bit)</option>
-                </select>
+                <div class="form-group"></div> <!-- Placeholder for 3rd column alignment -->
               </div>
 
               <div class="section-header">Aesthetics</div>
