@@ -54,13 +54,13 @@ export class LayoutBox extends LitElement {
       }
       :host(:hover) .actions { opacity: 1; visibility: visible; transform: scale(calc(1 / var(--editor-scale, 1))); }
       
-      .action-btn {
+      .action-icon {
         cursor: pointer; color: #555; width: 24px; height: 24px;
         display: flex; align-items: center; justify-content: center;
         transition: color 0.2s, transform 0.1s;
       }
-      .action-btn:hover { color: var(--primary-colour); transform: scale(1.2); }
-      .action-btn.delete:hover { color: var(--danger-colour); }
+      .action-icon:hover { color: var(--primary-colour); transform: scale(1.2); }
+      .action-icon.delete:hover { color: var(--danger-colour); }
       
       .item-number {
         position: absolute;
@@ -133,13 +133,13 @@ export class LayoutBox extends LitElement {
         </div>
 
         <div class="actions">
-          <div class="action-btn" title="Edit" @click="${() => this._dispatch('item-edit')}">
+          <div class="action-icon" title="Settings" @click="${() => this._dispatch('item-edit')}">
             <span class="material-icons" style="font-size: 16px;">settings</span>
           </div>
-          <div class="action-btn" title="Rotate" @click="${(e: Event) => { e.stopPropagation(); this._dispatch('item-rotate'); }}">
+          <div class="action-icon" title="Rotate" @click="${(e: Event) => { e.stopPropagation(); this._dispatch('item-rotate'); }}">
             <span class="material-icons" style="font-size: 16px;">rotate_right</span>
           </div>
-          <div class="action-btn delete" title="Delete" @click="${(e: Event) => { e.stopPropagation(); this._dispatch('item-delete'); }}">
+          <div class="action-icon delete" title="Delete" @click="${(e: Event) => { e.stopPropagation(); this._dispatch('item-delete'); }}">
             <span class="material-icons" style="font-size: 16px;">delete_outline</span>
           </div>
         </div>

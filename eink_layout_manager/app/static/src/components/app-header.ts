@@ -86,7 +86,7 @@ export class AppHeader extends LitElement {
         box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
       }
       
-      header button.action-btn {
+      header button.action-icon {
         width: 36px;
         height: 36px;
         padding: 0;
@@ -96,12 +96,12 @@ export class AppHeader extends LitElement {
         box-shadow: none;
         border: 1px solid transparent;
       }
-      header button.action-btn:hover {
+      header button.action-icon:hover {
         background: var(--bg-light);
         color: var(--text-colour);
         border-color: var(--border-colour);
       }
-      header button.action-btn.primary {
+      header button.action-icon.primary {
         background: var(--primary-colour);
         color: white;
       }
@@ -148,15 +148,15 @@ export class AppHeader extends LitElement {
             <span>${this.connected ? 'Online' : 'Offline'}</span>
           </div>
 
-          <button class="action-btn" @click="${() => this._dispatch('edit-layout')}" title="Layout Settings">
+          <button class="action-icon" @click="${() => this._dispatch('edit-layout')}" title="Layout Settings">
             <span class="material-icons">settings</span>
           </button>
           
-          <button class="action-btn" @click="${() => this._dispatch('toggle-view-mode')}" title="Switch to ${this.viewMode === 'graphical' ? 'YAML' : 'Graphical'} Mode">
+          <button class="action-icon" @click="${() => this._dispatch('toggle-view-mode')}" title="Switch to ${this.viewMode === 'graphical' ? 'YAML' : 'Graphical'} Mode">
             <span class="material-icons">${this.viewMode === 'graphical' ? 'code' : 'apps'}</span>
           </button>
           
-          <button class="action-btn primary" @click="${() => this._dispatch('save-layout')}" ?disabled="${this.isSaving}" title="${this.isSaving ? 'Saving...' : 'Save Layout'}">
+          <button class="action-icon primary" @click="${() => this._dispatch('save-layout')}" ?disabled="${this.isSaving}" title="${this.isSaving ? 'Saving...' : 'Save Layout'}">
             <span class="material-icons">${this.isSaving ? 'sync' : 'save'}</span>
           </button>
         </div>
