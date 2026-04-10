@@ -8,13 +8,15 @@ import { api, DisplayType, Layout, LayoutItem } from '../services/HaApiClient';
  * - Active Layout selection
  * - Backend connectivity
  */
+export type AppSection = 'display-types' | 'layouts' | 'images' | 'scenes';
+
 export class HaStateController implements ReactiveController {
   public connected = false;
   public displayTypes: DisplayType[] = [];
   public layouts: Layout[] = [];
   public activeLayout: Layout | null = null;
   public selectedItemId: string | null = null;
-  public activeSection = 'layouts';
+  public activeSection: AppSection = 'layouts';
   private _originalLayout: string | null = null;
   public isSaving = false;
 
@@ -168,7 +170,7 @@ export class HaStateController implements ReactiveController {
     }
   }
 
-  setSection(section: string) {
+  setSection(section: AppSection) {
     this.activeSection = section;
     this.host.requestUpdate();
   }
