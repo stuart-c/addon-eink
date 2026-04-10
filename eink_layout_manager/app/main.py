@@ -7,6 +7,7 @@ import uuid
 import io
 from PIL import Image as PILImage
 
+from sqlalchemy import select
 from aiohttp import web
 from jsonschema import validate, ValidationError
 
@@ -328,10 +329,30 @@ async def handle_image_create(request):
     image_id = uuid.uuid4().hex
     try:
         file_hash = hashlib.sha256(content).hexdigest()
+
+        # Check for duplicate image by hash
+        async with database.get_session() as session:
+            stmt = select(models.Image).where(
+                models.Image.file_hash == file_hash
+            )
+            result = await session.execute(stmt)
+            existing_image = result.scalar_one_or_none()
+            if existing_image:
+                return web.json_response(
+                    {
+                        "error": "Duplicate image",
+                        "message": "This image has already been uploaded.",
+                        "id": existing_image.id,
+                    },
+                    status=409,
+                )
+
         with PILImage.open(io.BytesIO(content)) as img:
             width, height = img.size
             file_type = img.format
-    except Exception:
+    except Exception as e:
+        if isinstance(e, web.HTTPException):
+            raise
         return web.json_response({"error": "Invalid image"}, status=400)
 
     try:
