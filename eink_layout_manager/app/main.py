@@ -6,6 +6,8 @@ import traceback
 from aiohttp import web
 from jsonschema import validate, ValidationError
 
+from . import database
+
 # Base directory for data persistence
 SCHEMAS_DIR = os.path.realpath(
     os.path.join(os.path.dirname(__file__), "schemas")
@@ -304,6 +306,17 @@ async def delete_item(request):
 def init_app():
     """Initialise the aiohttp application with routes and storage setup."""
     app = web.Application(middlewares=[request_logger_middleware])
+
+    async def on_startup(app):
+        """Database and storage initialisation on start."""
+        await database.init_db()
+
+    async def on_cleanup(app):
+        """Cleanup on app shutdown."""
+        await database.close_db()
+
+    app.on_startup.append(on_startup)
+    app.on_cleanup.append(on_cleanup)
 
     # Data directory setup
     try:
