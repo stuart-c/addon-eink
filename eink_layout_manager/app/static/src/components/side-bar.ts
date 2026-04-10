@@ -77,12 +77,9 @@ export class SideBar extends LitElement {
       <div class="sidebar-section">
         <div class="sidebar-header">
           <h3>Display Types</h3>
-          <button class="secondary" @click="${() => this._dispatch('add-display-type')}" title="Manage Display Types">
-            <span class="material-icons" style="font-size: 18px;">settings</span>
-          </button>
         </div>
         ${this.displayTypes.map(dt => html`
-          <div class="list-item" @dblclick="${() => this._dispatch('edit-display-type', dt)}">
+          <div class="list-item">
             <div class="item-details">
               <div class="item-info">
                 <span class="item-name">${dt.name}</span>
