@@ -143,6 +143,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+# Standalone SSH environment keys
+.ssh_internal/
 
 # Spyder project settings
 .spyderproject
