@@ -1,6 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, state, query } from 'lit/decorators.js';
-import { HaStateController, AppSection } from './controllers/HaStateController';
+import { HaStateController, type AppSection } from './controllers/HaStateController';
 
 import './components/app-header';
 import './components/app-toolbar';

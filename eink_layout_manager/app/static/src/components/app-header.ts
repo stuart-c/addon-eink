@@ -1,7 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { commonStyles } from '../styles/common-styles';
-import { AppSection } from '../controllers/HaStateController';
+import { type AppSection } from '../controllers/HaStateController';
 
 @customElement('app-header')
 export class AppHeader extends LitElement {
