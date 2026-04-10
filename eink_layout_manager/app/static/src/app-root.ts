@@ -65,6 +65,20 @@ export class AppRoot extends LitElement {
     }
   }
 
+  private async _handleDiscardLayout() {
+    const confirmed = await this._confirmDialog.show({
+      title: 'Discard Changes?',
+      message: 'Are you sure you want to discard all unsaved changes to this layout?',
+      confirmText: 'Discard',
+      type: 'danger'
+    });
+
+    if (confirmed) {
+      this.state.discardChanges();
+      this.state.showMessage('Changes discarded', 'info');
+    }
+  }
+
   // Toolbar Actions
   private async _handleCreateLayout() {
     const newLayout: Partial<Layout> = {
@@ -164,8 +178,10 @@ export class AppRoot extends LitElement {
         .connected="${this.state.connected}"
         .message="${this.state.message}"
         .isSaving="${this.state.isSaving}"
+        .isDirty="${this.state.isDirty}"
         .viewMode="${this._viewMode}"
         @save-layout="${() => this.state.saveActiveLayout()}"
+        @discard-layout="${this._handleDiscardLayout}"
         @toggle-view-mode="${() => this._viewMode = (this._viewMode === 'graphical' ? 'yaml' : 'graphical')}"
       ></app-header>
 

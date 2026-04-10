@@ -14,11 +14,16 @@ export class HaStateController implements ReactiveController {
   public layouts: Layout[] = [];
   public activeLayout: Layout | null = null;
   public selectedItemId: string | null = null;
-  public message = '';
+  private _originalLayout: string | null = null;
   public isSaving = false;
 
   constructor(private host: ReactiveControllerHost) {
     this.host.addController(this);
+  }
+
+  get isDirty() {
+    if (!this.activeLayout) return false;
+    return JSON.stringify(this.activeLayout) !== this._originalLayout;
   }
 
   async hostConnected() {
@@ -40,6 +45,7 @@ export class HaStateController implements ReactiveController {
           const fresh = this.layouts.find(l => l.id === this.activeLayout?.id);
           if (fresh) this.activeLayout = fresh;
         }
+        this._originalLayout = JSON.stringify(this.activeLayout);
       } else {
         await this.createDefaultLayout();
       }
@@ -61,6 +67,7 @@ export class HaStateController implements ReactiveController {
     };
     this.activeLayout = defaultLayout;
     this.layouts = [defaultLayout];
+    this._originalLayout = JSON.stringify(defaultLayout);
     await api.createItem('layout', defaultLayout);
   }
 
@@ -72,6 +79,7 @@ export class HaStateController implements ReactiveController {
     
     try {
       await api.updateItem('layout', this.activeLayout.id, this.activeLayout);
+      this._originalLayout = JSON.stringify(this.activeLayout);
       this.showMessage('Layout saved!', 'success');
       await this.refresh();
     } catch (e: any) {
@@ -131,6 +139,14 @@ export class HaStateController implements ReactiveController {
 
   switchLayout(layout: Layout) {
     this.activeLayout = layout;
+    this._originalLayout = JSON.stringify(layout);
+    this.selectedItemId = null;
+    this.host.requestUpdate();
+  }
+
+  discardChanges() {
+    if (!this.activeLayout || !this._originalLayout) return;
+    this.activeLayout = JSON.parse(this._originalLayout);
     this.selectedItemId = null;
     this.host.requestUpdate();
   }
