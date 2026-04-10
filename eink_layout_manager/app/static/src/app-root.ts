@@ -177,6 +177,14 @@ export class AppRoot extends LitElement {
     }
   }
 
+  private _onHeaderAddItem() {
+    if (this.state.activeSection === 'display-types') {
+      this._displayTypesView?.addNew();
+    } else if (this.state.activeSection === 'layouts') {
+      this._handleCreateLayout();
+    }
+  }
+
   private async _onEditItem(e: CustomEvent<{ id: string }>) {
     const item = this.state.activeLayout?.items.find(i => i.id === e.detail.id);
     if (item) {
@@ -219,6 +227,7 @@ export class AppRoot extends LitElement {
         @save-changes="${this._handleSave}"
         @discard-changes="${this._handleDiscard}"
         @delete-item="${this._onHeaderDeleteItem}"
+        @add-item="${this._onHeaderAddItem}"
         @toggle-view-mode="${() => this._viewMode = (this._viewMode === 'graphical' ? 'yaml' : 'graphical')}"
         @set-section="${(e: CustomEvent) => this.state.setSection(e.detail)}"
       ></app-header>

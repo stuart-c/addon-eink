@@ -101,16 +101,6 @@ export class DisplayTypesView extends LitElement {
       word-break: break-all;
     }
 
-    .sidebar-item.add-new {
-      padding: 1.5rem 1rem;
-      border-top: 1px solid #eee;
-      background: #fafafa;
-      flex-direction: row;
-      justify-content: center;
-      color: var(--primary-colour);
-      font-weight: 600;
-      flex-shrink: 0;
-    }
     .sidebar-item.add-new:hover { background: #f0faff; }
     .sidebar-item.add-new.selected { background: #e1f5fe; }
 
@@ -499,6 +489,10 @@ export class DisplayTypesView extends LitElement {
     }
   }
 
+  public addNew() {
+    this._handleSelect(null);
+  }
+
   public requestDelete() {
     this._handleDelete();
   }
@@ -612,14 +606,6 @@ export class DisplayTypesView extends LitElement {
                 </div>
               `;
             })}
-          </div>
-          
-          <div 
-            class="sidebar-item add-new ${this.isNew ? 'selected' : ''}" 
-            @click="${() => this._handleSelect(null)}"
-          >
-            <span class="material-icons" style="margin-right: 8px;">add_circle_outline</span>
-            Add New Display
           </div>
         </div>
 
