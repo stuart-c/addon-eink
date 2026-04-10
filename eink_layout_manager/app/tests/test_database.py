@@ -1,6 +1,5 @@
 import os
 import pytest
-import asyncio
 from app import database
 from sqlalchemy import text
 
