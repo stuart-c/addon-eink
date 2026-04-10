@@ -139,11 +139,11 @@ export class AppHeader extends LitElement {
             <span class="material-icons">${this.viewMode === 'graphical' ? 'code' : 'dashboard'}</span>
           </button>
 
-          <button class="secondary" @click="${() => this._dispatch('discard-layout')}" ?disabled="${!this.isDirty || this.isSaving}" title="Discard Changes">
+          <button class="secondary" @click="${() => this._dispatch('discard-changes')}" ?disabled="${!this.isDirty || this.isSaving}" title="Discard Changes">
             <span class="material-icons">history</span>
           </button>
           
-          <button class="secondary" @click="${() => this._dispatch('save-layout')}" ?disabled="${this.isSaving}" title="${this.isSaving ? 'Saving...' : 'Save Layout'}">
+          <button class="secondary" @click="${() => this._dispatch('save-changes')}" ?disabled="${this.isSaving}" title="${this.isSaving ? 'Saving...' : 'Save Changes'}">
             <span class="material-icons">${this.isSaving ? 'sync' : 'save'}</span>
           </button>
 
