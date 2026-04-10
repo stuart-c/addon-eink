@@ -55,24 +55,11 @@ export class AppHeader extends LitElement {
         gap: 0.75rem;
         align-items: center;
       }
-      .status-group {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 12px;
-        font-weight: 600;
-        color: rgba(255,255,255,0.9);
-        background: rgba(0,0,0,0.1);
-        padding: 4px 12px;
-        border-radius: 20px;
-      }
       .status-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: #ccc;
+        font-size: 11px;
+        opacity: 0.8;
+        margin-left: 0.5rem;
       }
-      .status-dot.online { background: #4caf50; box-shadow: 0 0 8px rgba(76, 175, 80, 0.4); }
       
       .message-badge {
         font-size: 12px;
@@ -140,11 +127,6 @@ export class AppHeader extends LitElement {
         <div class="header-actions">
           ${this.message ? html`<span class="message-badge">${this.message}</span>` : ''}
           
-          <div class="status-group">
-            <span class="status-dot ${this.connected ? 'online' : ''}"></span>
-            <span>${this.connected ? 'Online' : 'Offline'}</span>
-          </div>
-
           <button class="action-icon" @click="${() => this._dispatch('edit-layout')}" title="Layout Settings">
             <span class="material-icons">settings</span>
           </button>
@@ -156,6 +138,8 @@ export class AppHeader extends LitElement {
           <button class="action-icon primary" @click="${() => this._dispatch('save-layout')}" ?disabled="${this.isSaving}" title="${this.isSaving ? 'Saving...' : 'Save Layout'}">
             <span class="material-icons">${this.isSaving ? 'sync' : 'save'}</span>
           </button>
+
+          <span class="status-dot">${this.connected ? 'Online' : 'Offline'}</span>
         </div>
       </header>
     `;
