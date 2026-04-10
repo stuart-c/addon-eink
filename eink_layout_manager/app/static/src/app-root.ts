@@ -258,8 +258,9 @@ export class AppRoot extends LitElement {
 
           <yaml-editor
             ?hidden="${this._viewMode !== 'yaml' || !this.state.activeLayout}"
-            .layout="${this.state.activeLayout}"
-            @layout-update="${(e: CustomEvent) => this.state.updateActiveLayout(e.detail)}"
+            .data="${this.state.activeLayout}"
+            .schemaName="Layout"
+            @data-update="${(e: CustomEvent) => this.state.updateActiveLayout(e.detail)}"
           ></yaml-editor>
         </div>
       </section-layout>
@@ -270,6 +271,7 @@ export class AppRoot extends LitElement {
     return html`
       <display-types-view
         .displayTypes="${this.state.displayTypes}"
+        .viewMode="${this._viewMode}"
         @save="${this._onSaveDisplayType}"
         @delete-display-type="${this._onDeleteDisplayType}"
         @dirty-state-change="${(e: CustomEvent) => this._displayTypesDirty = e.detail.isDirty}"
