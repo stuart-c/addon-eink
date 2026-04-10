@@ -103,6 +103,9 @@ describe('DisplayTypeDialog', () => {
     const cancelEvent = new Event('cancel', { bubbles: true, cancelable: true });
     dialog?.dispatchEvent(cancelEvent);
     
+    // Allow microtasks to settle
+    await new Promise(resolve => setTimeout(resolve, 0));
+    
     // Note: If this fails, it means we haven't implemented the listener yet!
     expect(spy).toHaveBeenCalled();
   });

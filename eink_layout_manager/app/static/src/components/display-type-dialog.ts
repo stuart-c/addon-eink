@@ -462,6 +462,11 @@ export class DisplayTypeDialog extends LitElement {
     }
   }
 
+  private _handleCancel = (e: Event) => {
+    e.preventDefault();
+    this._handleHeaderClose();
+  };
+
   private async _handleSelect(id: string | null) {
     if (this.displayType.id === id && !this.isNew) return;
     if (id === null && this.isNew) return;
@@ -584,7 +589,7 @@ export class DisplayTypeDialog extends LitElement {
       : 1;
 
     return html`
-      <dialog @cancel="${(e: Event) => { e.preventDefault(); this._handleHeaderClose(); }}">
+      <dialog @cancel="${this._handleCancel}">
         <div class="container">
           <header>
             <h2>Manage Display Types</h2>
