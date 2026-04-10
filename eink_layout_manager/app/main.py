@@ -6,7 +6,10 @@ import traceback
 from aiohttp import web
 from jsonschema import validate, ValidationError
 
-from . import database
+try:
+    from . import database
+except ImportError:
+    import database
 
 # Base directory for data persistence
 SCHEMAS_DIR = os.path.realpath(
