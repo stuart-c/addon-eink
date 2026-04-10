@@ -60,7 +60,11 @@ describe('AppHeader', () => {
     
     expect(spy).toHaveBeenCalled();
   });
-
+  it('should show loading state when saving', async () => {
+    element.isSaving = true;
+    await element.updateComplete;
+    
+    const button = element.shadowRoot?.querySelector('button[title^="Save Layout"]') as HTMLButtonElement;
     expect(button.disabled).toBe(true);
     expect(button.querySelector('.material-icons')?.textContent).toBe('sync');
   });
