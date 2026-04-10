@@ -81,4 +81,29 @@ describe('HaStateController', () => {
     expect(controller.activeLayout.name).toBe('Updated');
     expect(mockHost.requestUpdate).toHaveBeenCalled();
   });
+
+  it('should track dirty state correctly', () => {
+    const layout = { id: 'l1', name: 'Original', items: [] } as any;
+    controller.switchLayout(layout);
+    
+    expect(controller.isDirty).toBe(false);
+    
+    controller.updateActiveLayout({ name: 'Changed' });
+    expect(controller.isDirty).toBe(true);
+    
+    controller.updateActiveLayout({ name: 'Original' });
+    expect(controller.isDirty).toBe(false);
+  });
+
+  it('should discard changes correctly', () => {
+    const layout = { id: 'l1', name: 'Original', items: [] } as any;
+    controller.switchLayout(layout);
+    
+    controller.updateActiveLayout({ name: 'Changed' });
+    expect(controller.activeLayout?.name).toBe('Changed');
+    
+    controller.discardChanges();
+    expect(controller.activeLayout?.name).toBe('Original');
+    expect(controller.isDirty).toBe(false);
+  });
 });

@@ -45,6 +45,7 @@ export class AppHeader extends LitElement {
   @property({ type: Boolean }) connected = false;
   @property({ type: String }) message = '';
   @property({ type: Boolean }) isSaving = false;
+  @property({ type: Boolean }) isDirty = false;
   @property({ type: String }) viewMode: 'graphical' | 'yaml' = 'graphical';
 
   private _dispatch(name: string) {
@@ -61,6 +62,10 @@ export class AppHeader extends LitElement {
           
           <button class="secondary" @click="${() => this._dispatch('toggle-view-mode')}" title="Switch to ${this.viewMode === 'graphical' ? 'YAML' : 'Graphical'} Mode">
             <span class="material-icons">${this.viewMode === 'graphical' ? 'code' : 'dashboard'}</span>
+          </button>
+
+          <button class="secondary" @click="${() => this._dispatch('discard-layout')}" ?disabled="${!this.isDirty || this.isSaving}" title="Discard Changes">
+            <span class="material-icons">history</span>
           </button>
           
           <button @click="${() => this._dispatch('save-layout')}" ?disabled="${this.isSaving}" title="${this.isSaving ? 'Saving...' : 'Save Layout'}">

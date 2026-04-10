@@ -61,12 +61,29 @@ describe('AppHeader', () => {
     expect(spy).toHaveBeenCalled();
   });
 
-  it('should disable save button when isSaving is true', async () => {
-    element.isSaving = true;
-    await element.updateComplete;
-    
-    const button = element.shadowRoot?.querySelector('button[title^="Saving..."]') as HTMLButtonElement;
     expect(button.disabled).toBe(true);
     expect(button.querySelector('.material-icons')?.textContent).toBe('sync');
+  });
+
+  it('should dispatch discard-layout event', async () => {
+    element.isDirty = true;
+    await element.updateComplete;
+    
+    const spy = vi.fn();
+    element.addEventListener('discard-layout', spy);
+    
+    const button = element.shadowRoot?.querySelector('button[title="Discard Changes"]') as HTMLButtonElement;
+    expect(button.disabled).toBe(false);
+    button.click();
+    
+    expect(spy).toHaveBeenCalled();
+  });
+
+  it('should disable discard button when not dirty', async () => {
+    element.isDirty = false;
+    await element.updateComplete;
+    
+    const button = element.shadowRoot?.querySelector('button[title="Discard Changes"]') as HTMLButtonElement;
+    expect(button.disabled).toBe(true);
   });
 });
