@@ -83,7 +83,7 @@ async def request_logger_middleware(request, handler):
     print(f"REQUEST: {request.method} {request.path}")
     try:
         return await handler(request)
-    except Exception:
+    except Exception as e:
         print(f"EXCEPTION in {request.path}: {str(e)}")
         traceback.print_exc()
         raise
@@ -320,7 +320,7 @@ async def handle_image_create(request):
             )
         filename = field.filename
         content = await field.read()
-    except Exception:
+    except Exception as e:
         return web.json_response(
             {"error": f"Failed to read: {str(e)}"}, status=400
         )
@@ -370,7 +370,7 @@ async def handle_image_create(request):
                 },
                 status=201,
             )
-    except Exception:
+    except Exception as e:
         if os.path.exists(file_path):
             os.remove(file_path)
         return web.json_response(
