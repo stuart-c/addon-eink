@@ -132,6 +132,22 @@ export class HaStateController implements ReactiveController {
     }
   }
 
+  async deleteLayout(layout: Layout): Promise<boolean> {
+    try {
+      await api.deleteItem('layout', layout.id);
+      if (this.activeLayout?.id === layout.id) {
+        this.activeLayout = null;
+        this._originalLayout = null;
+      }
+      await this.refresh();
+      this.showMessage(`Layout "${layout.name}" deleted.`, 'success');
+      return true;
+    } catch (e: any) {
+      this.showMessage(`Failed to delete: ${e.message}`, 'error');
+      return false;
+    }
+  }
+
   showMessage(text: string, _type: 'info' | 'success' | 'error' = 'info') {
     this.message = text;
     this.host.requestUpdate();
