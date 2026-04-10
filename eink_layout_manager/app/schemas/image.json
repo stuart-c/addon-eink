@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Image",
+  "description": "Metadata for an image file used in layouts",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for this image"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human readable name for the image"
+    },
+    "artist": {
+      "type": "string",
+      "description": "The creator of the image"
+    },
+    "collection": {
+      "type": "string",
+      "description": "The collection this image belongs to"
+    },
+    "file_type": {
+      "type": "string",
+      "description": "Image file format",
+      "enum": ["JPG", "PNG", "GIF", "WEBP", "BMP", "TIFF"]
+    },
+    "dimensions": {
+      "type": "object",
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": ["width", "height"]
+    },
+    "colour_depth": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Bits per pixel"
+    },
+    "keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of tags associated with the image"
+    },
+    "description": {
+      "type": "string",
+      "description": "Long-form description of the image content"
+    },
+    "file_path": {
+      "type": "string",
+      "description": "Relative path to the image file in storage"
+    },
+    "original_archive_file": {
+      "type": "string",
+      "description": "Name of the original archive if imported"
+    },
+    "license": {
+      "type": "string",
+      "description": "Usage license (e.g., CC BY-SA 4.0)"
+    },
+    "source": {
+      "type": "string",
+      "description": "Original source URL or repository"
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "file_type",
+    "dimensions",
+    "file_path"
+  ]
+}
