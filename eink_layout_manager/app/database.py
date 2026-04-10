@@ -12,6 +12,9 @@ class Base(DeclarativeBase):
 
     pass
 
+# Import models here so they are registered with Base.metadata
+from . import models  # noqa: F401
+
 
 def get_db_url():
     """Construct the database URL from environment or defaults."""
