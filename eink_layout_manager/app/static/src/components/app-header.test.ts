@@ -64,7 +64,7 @@ describe('AppHeader', () => {
     element.isSaving = true;
     await element.updateComplete;
     
-    const button = element.shadowRoot?.querySelector('button[title^="Save Layout"]') as HTMLButtonElement;
+    const button = element.shadowRoot?.querySelector('button[title="Saving..."]') as HTMLButtonElement;
     expect(button.disabled).toBe(true);
     expect(button.querySelector('.material-icons')?.textContent).toBe('sync');
   });
