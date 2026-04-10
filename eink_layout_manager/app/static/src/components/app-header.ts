@@ -140,6 +140,10 @@ export class AppHeader extends LitElement {
             <span class="material-icons">${this.viewMode === 'graphical' ? 'code' : 'dashboard'}</span>
           </button>
 
+          <button class="secondary" @click="${() => this._dispatch('add-item')}" title="Add New Item">
+            <span class="material-icons">add</span>
+          </button>
+
           <button class="secondary" @click="${() => this._dispatch('discard-changes')}" ?disabled="${!this.isDirty || this.isSaving}" title="Discard Changes">
             <span class="material-icons">history</span>
           </button>
