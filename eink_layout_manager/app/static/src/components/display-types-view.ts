@@ -118,7 +118,7 @@ export class DisplayTypesView extends LitElement {
       align-items: center;
       padding: 2rem 1.5rem;
       gap: 1.5rem;
-      overflow: hidden;
+      overflow-y: auto;
       position: relative;
     }
 
@@ -144,40 +144,16 @@ export class DisplayTypesView extends LitElement {
     }
 
     .summary-panel {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
       background: white;
-      border-top: 1px solid #eee;
-      box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
-      z-index: 100;
-      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid #eee;
+      border-radius: 12px;
+      box-shadow: var(--shadow-small);
       display: flex;
       flex-direction: column;
-      max-height: 80%;
-    }
-    .summary-panel.collapsed {
-      transform: translateY(calc(100% - 44px));
-    }
-    .summary-toggle {
-      padding: 12px 1.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      cursor: pointer;
-      background: #fff;
-      user-select: none;
-    }
-    .summary-toggle:hover {
-      background: #f0faff;
-    }
-    .summary-toggle .preview-label {
-      margin: 0;
+      width: 100%;
     }
     .summary-content {
-      padding: 0 1.5rem 1.5rem 1.5rem;
-      overflow-y: auto;
+      padding: 1.5rem;
     }
 
     .form-group {
@@ -339,7 +315,6 @@ export class DisplayTypesView extends LitElement {
   @property({ type: Boolean }) isNew = true;
   @property({ type: String }) viewMode: 'graphical' | 'yaml' = 'graphical';
 
-  @state() private _showSummary = false;
   @state() private _isDirtyState = false;
 
   private _PRESETS = [
@@ -721,12 +696,9 @@ export class DisplayTypesView extends LitElement {
               ></hardware-preview>
             </div>
 
-            <div class="summary-panel ${this._showSummary ? '' : 'collapsed'}">
-              <div class="summary-toggle" @click="${() => this._showSummary = !this._showSummary}">
-                <span class="preview-label">Dimension Summary</span>
-                <span class="material-icons">${this._showSummary ? 'expand_more' : 'expand_less'}</span>
-              </div>
+            <div class="summary-panel">
               <div class="summary-content">
+                <div class="preview-label" style="margin-bottom: 12px;">Dimension Summary</div>
                 <table class="summary-table">
                   <tr><th>Overall Frame</th><td><span class="val">${this._formatDim(frameW)} x ${this._formatDim(frameH)}</span><span class="unit">mm</span></td></tr>
                   <tr><th>Mat (Aperture)</th><td><span class="val">${this._formatDim(matW)} x ${this._formatDim(matH)}</span><span class="unit">mm</span></td></tr>
