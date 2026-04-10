@@ -2,14 +2,19 @@ import json
 import os
 import re
 import traceback
+import hashlib
+import uuid
+import io
+from PIL import Image as PILImage
 
 from aiohttp import web
 from jsonschema import validate, ValidationError
 
 try:
-    from . import database
+    from . import database, models
 except ImportError:
     import database
+    import models
 
 # Base directory for data persistence
 SCHEMAS_DIR = os.path.realpath(
@@ -305,6 +310,74 @@ async def delete_item(request):
     return web.json_response({"status": "deleted"})
 
 
+async def handle_image_create(request):
+    try:
+        reader = await request.multipart()
+        field = await reader.next()
+        if not field or field.name != "file":
+            return web.json_response(
+                {"error": 'Missing "file" field'}, status=400
+            )
+        filename = field.filename
+        content = await field.read()
+    except Exception as e:
+        return web.json_response(
+            {"error": f"Failed to read: {str(e)}"}, status=400
+        )
+
+    image_id = uuid.uuid4().hex
+    try:
+        file_hash = hashlib.sha256(content).hexdigest()
+        with PILImage.open(io.BytesIO(content)) as img:
+            width, height = img.size
+            file_type = img.format
+    except Exception:
+        return web.json_response({"error": "Invalid image"}, status=400)
+
+    try:
+        ext = file_type.lower() if file_type else "bin"
+        storage_path = get_storage_path("image")
+        filename_on_disk = f"{image_id}.{ext}"
+        file_path = os.path.join(storage_path, filename_on_disk)
+        with open(file_path, "wb") as f:
+            f.write(content)
+    except Exception:
+        return web.json_response({"error": "Failed to save"}, status=500)
+
+    try:
+        async with database.get_session() as session:
+            new_image = models.Image(
+                id=image_id,
+                name=filename or "unnamed",
+                file_type=file_type,
+                width=width,
+                height=height,
+                file_path=filename_on_disk,
+                status="UPLOADED",
+                file_hash=file_hash,
+            )
+            session.add(new_image)
+            await session.commit()
+            return web.json_response(
+                {
+                    "id": image_id,
+                    "name": new_image.name,
+                    "file_type": file_type,
+                    "dimensions": {"width": width, "height": height},
+                    "file_path": filename_on_disk,
+                    "status": "UPLOADED",
+                    "file_hash": file_hash,
+                },
+                status=201,
+            )
+    except Exception as e:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        return web.json_response(
+            {"error": "DB fail", "details": str(e)}, status=500
+        )
+
+
 # --- App Init ---
 def init_app():
     """Initialise the aiohttp application with routes and storage setup."""
@@ -335,6 +408,7 @@ def init_app():
 
     app.router.add_get(f"{api_prefix}", get_collection)
     app.router.add_get(f"{api_prefix}/{{id}}", get_item)
+    app.router.add_post("/api/image", handle_image_create)
     app.router.add_post(f"{api_prefix}", create_item)
     app.router.add_put(f"{api_prefix}/{{id}}", update_item)
     app.router.add_delete(f"{api_prefix}/{{id}}", delete_item)
