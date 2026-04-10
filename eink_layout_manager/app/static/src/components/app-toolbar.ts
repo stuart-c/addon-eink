@@ -163,12 +163,6 @@ export class AppToolbar extends LitElement {
               ${l.name}
               ${this.activeLayout?.id === l.id ? html`✓` : ''}
             </div>
-          `)}
-          <div class="dropdown-divider"></div>
-          <div class="dropdown-item action" @click="${() => this._dispatch('create-layout')}">
-            <span class="material-icons" style="font-size: 16px; margin-right: 8px;">add</span>
-            Create new layout...
-          </div>
           </div>
         </div>
       </div>
