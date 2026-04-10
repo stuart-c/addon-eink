@@ -160,9 +160,20 @@ export class AppRoot extends LitElement {
     await this.state.saveDisplayType(e.detail.displayType);
   }
 
-  private _onHeaderDeleteItem() {
+  private async _onHeaderDeleteItem() {
     if (this.state.activeSection === 'display-types') {
       this._displayTypesView?.requestDelete();
+    } else if (this.state.activeSection === 'layouts' && this.state.activeLayout) {
+      const confirmed = await this._confirmDialog.show({
+        title: 'Delete Layout?',
+        message: `Are you sure you want to permanently remove "${this.state.activeLayout.name}"? This action cannot be undone.`,
+        confirmText: 'Delete',
+        type: 'danger'
+      });
+
+      if (confirmed) {
+        await this.state.deleteLayout(this.state.activeLayout);
+      }
     }
   }
 
@@ -204,7 +215,7 @@ export class AppRoot extends LitElement {
         .isDirty="${this.state.isDirty || this._displayTypesDirty}"
         .viewMode="${this._viewMode}"
         .activeSection="${this.state.activeSection}"
-        .canDelete="${this._canDelete}"
+        .canDelete="${this.state.activeSection === 'layouts' ? !!this.state.activeLayout : this._canDelete}"
         @save-changes="${this._handleSave}"
         @discard-changes="${this._handleDiscard}"
         @delete-item="${this._onHeaderDeleteItem}"
