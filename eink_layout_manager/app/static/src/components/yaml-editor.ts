@@ -5,7 +5,7 @@ import yaml from 'js-yaml';
 import Prism from 'prismjs';
 import 'prismjs/components/prism-yaml';
 import { commonStyles } from '../styles/common-styles';
-import { Layout } from '../services/HaApiClient';
+
 
 /**
  * A sleek YAML editor for layouts with real-time syntax highlighting

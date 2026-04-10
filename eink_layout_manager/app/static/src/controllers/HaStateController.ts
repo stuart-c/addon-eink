@@ -17,6 +17,7 @@ export class HaStateController implements ReactiveController {
   public activeLayout: Layout | null = null;
   public selectedItemId: string | null = null;
   public activeSection: AppSection = 'layouts';
+  public message: string = '';
   private _originalLayout: string | null = null;
   public isSaving = false;
 
@@ -131,7 +132,7 @@ export class HaStateController implements ReactiveController {
     }
   }
 
-  showMessage(text: string, type: 'info' | 'success' | 'error' = 'info') {
+  showMessage(text: string, _type: 'info' | 'success' | 'error' = 'info') {
     this.message = text;
     this.host.requestUpdate();
     setTimeout(() => {
