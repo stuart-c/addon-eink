@@ -22,9 +22,8 @@ describe('AppToolbar', () => {
   });
 
   it('should display the active layout name', () => {
-    const spans = element.shadowRoot?.querySelectorAll('.dropdown-trigger span');
-    // The name is the second span (the first is the dashboard icon)
-    expect(spans?.[1]?.textContent).toBe('Layout 1');
+    const trigger = element.shadowRoot?.querySelector('.dropdown-trigger span');
+    expect(trigger?.textContent).toBe('Layout 1');
   });
 
   it('should show the dropdown menu when clicked', async () => {
@@ -62,8 +61,9 @@ describe('AppToolbar', () => {
     trigger.click();
     await element.updateComplete;
 
-    const createAction = element.shadowRoot?.querySelector('.dropdown-item.action') as HTMLElement;
-    createAction.click();
+    const items = element.shadowRoot?.querySelectorAll('.dropdown-item');
+    // "Create new layout..." is the last dropdown-item
+    (items?.[2] as HTMLElement).click();
 
     expect(spy).toHaveBeenCalled();
   });
@@ -72,7 +72,7 @@ describe('AppToolbar', () => {
     element.mousePos = { x: 50, y: 75 };
     await element.updateComplete;
 
-    const mouseInfo = element.shadowRoot?.querySelector('.pos-value');
+    const mouseInfo = element.shadowRoot?.querySelector('.mouse-info');
     expect(mouseInfo?.textContent).toContain('X: 50mm, Y: 75mm');
   });
 

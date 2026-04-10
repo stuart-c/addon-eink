@@ -47,34 +47,34 @@ export class AppToolbar extends LitElement {
         z-index: 100;
         overflow: hidden;
         display: none;
+        z-index: 100;
+        padding: 0.5rem 0;
       }
       .dropdown-menu.show {
         display: block;
-        animation: slideIn 0.2s ease;
+        animation: fadeIn 0.15s ease-out;
       }
       .dropdown-item {
-        padding: 0.75rem 1rem;
+        padding: 0.5rem 1rem;
         cursor: pointer;
-        font-size: 0.9rem;
-        color: #444;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        transition: background 0.2s;
+        font-size: 14px;
       }
-      .dropdown-item:hover { background: #f0faff; color: var(--primary-colour); }
-      .dropdown-item.selected { background: #e1f5fe; color: var(--primary-colour); font-weight: 600; }
-      .dropdown-divider { height: 1px; background: #eee; margin: 4px 0; }
-      .dropdown-item.action { color: var(--primary-colour); font-weight: 600; }
-
-      .mouse-info { font-size: 12px; color: #666; display: flex; align-items: center; gap: 1rem; }
-      .pos-value { color: var(--primary-colour); font-weight: 600; }
-      .canvas-dim { padding-left: 1rem; border-left: 1px solid #ddd; }
-
-      @keyframes slideIn {
+      .dropdown-item:hover {
+        background: var(--bg-light);
+        color: var(--primary-colour);
+      }
+      .dropdown-item.selected {
+        background: #f0faff;
+        color: var(--primary-colour);
+        font-weight: 600;
+      }
+      @keyframes fadeIn {
         from { transform: translateY(-10px); opacity: 0; }
         to { transform: translateY(0); opacity: 1; }
       }
+      .mouse-info { font-size: 12px; color: #666; display: flex; align-items: center; gap: 1rem; }
+      .pos-value { color: var(--primary-colour); font-weight: 600; }
+      .canvas-dim { padding-left: 1rem; border-left: 1px solid #ddd; }
     `
   ];
 
@@ -103,41 +103,42 @@ export class AppToolbar extends LitElement {
     }
   }
 
-  private _dispatch(name: string, detail?: any) {
+  private _dispatch(name: string, detail: any) {
     this.dispatchEvent(new CustomEvent(name, { detail, bubbles: true, composed: true }));
     this._showMenu = false;
   }
 
   render() {
     return html`
-      <div class="dropdown">
-        <div class="dropdown-trigger ${this._showMenu ? 'active' : ''}" @click="${() => this._showMenu = !this._showMenu}">
-          <span class="material-icons">dashboard</span>
-          <span>${this.activeLayout?.name || 'Loading...'}</span>
-          <div class="chevron">▼</div>
-        </div>
-        <div class="dropdown-menu ${this._showMenu ? 'show' : ''}">
-          ${this.layouts.map(l => html`
-            <div class="dropdown-item ${this.activeLayout?.id === l.id ? 'selected' : ''}" @click="${() => this._dispatch('switch-layout', l)}">
-              ${l.name}
-              ${this.activeLayout?.id === l.id ? html`✓` : ''}
+      <div class="toolbar">
+        <div class="dropdown">
+          <div class="dropdown-trigger ${this._showMenu ? 'active' : ''}" @click="${() => this._showMenu = !this._showMenu}">
+            <span>${this.activeLayout?.name || 'Loading...'}</span>
+            <div class="chevron">▼</div>
+          </div>
+          <div class="dropdown-menu ${this._showMenu ? 'show' : ''}">
+            ${this.layouts.map(l => html`
+              <div class="dropdown-item ${this.activeLayout?.id === l.id ? 'selected' : ''}" @click="${() => this._dispatch('switch-layout', l)}">
+                ${l.name}
+              </div>
+            `)}
+            <div style="border-top: 1px solid #eee; margin-top: 5px; padding-top: 5px;">
+              <div class="dropdown-item" @click="${() => this._dispatch('create-layout', null)}">
+                <span class="material-icons" style="font-size: 16px; margin-right: 8px;">add</span>
+                Create new layout...
+              </div>
             </div>
-          `)}
-          <div class="dropdown-divider"></div>
-          <div class="dropdown-item action" @click="${() => this._dispatch('create-layout')}">
-            <span class="material-icons" style="font-size: 16px; margin-right: 8px;">add</span>
-            Create new layout...
           </div>
         </div>
-      </div>
 
-      <div class="mouse-info">
-        ${this.mousePos.x !== null ? html`
-          <span class="pos-value">X: ${this.mousePos.x}mm, Y: ${this.mousePos.y}mm</span>
-        ` : ''}
-        <span class="canvas-dim">
-          Canvas: ${this.activeLayout?.canvas_width_mm}x${this.activeLayout?.canvas_height_mm}mm
-        </span>
+        <div class="mouse-info">
+          ${this.mousePos.x !== null ? html`
+            <span class="pos-value">X: ${this.mousePos.x}mm, Y: ${this.mousePos.y}mm</span>
+          ` : ''}
+          <span class="canvas-dim">
+            Canvas: ${this.activeLayout?.canvas_width_mm}x${this.activeLayout?.canvas_height_mm}mm
+          </span>
+        </div>
       </div>
     `;
   }

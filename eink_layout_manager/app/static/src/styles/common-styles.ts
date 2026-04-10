@@ -10,7 +10,6 @@ export const commonStyles = css`
     --text-muted: #666;
     --border-colour: #ddd;
     --bg-light: #f8f9fa;
-    --bg-white: #ffffff;
     --shadow-small: 0 2px 4px rgba(0,0,0,0.1);
     --shadow-medium: 0 4px 15px rgba(0,0,0,0.15);
     --shadow-large: 0 15px 35px rgba(0,0,0,0.25);
@@ -52,10 +51,6 @@ export const commonStyles = css`
     background: var(--primary-hover);
   }
 
-  button:active {
-    transform: translateY(1px);
-  }
-
   button:disabled {
     opacity: 0.6;
     cursor: not-allowed;
@@ -65,7 +60,6 @@ export const commonStyles = css`
     background: white;
     color: var(--primary-colour);
     border: 1px solid var(--primary-colour);
-    box-shadow: none;
   }
 
   button.secondary:hover {
@@ -98,21 +92,18 @@ export const commonStyles = css`
     letter-spacing: 0.5px;
   }
 
-  input, select, textarea {
+  input, select {
     width: 100%;
     padding: 10px;
-    background: var(--bg-white);
     border: 1px solid var(--border-colour);
     border-radius: var(--border-radius);
     box-sizing: border-box;
     font-size: 14px;
-    color: var(--text-colour);
     transition: border-color 0.2s;
   }
 
-  input:focus, select:focus, textarea:focus {
+  input:focus, select:focus {
     outline: none;
     border-color: var(--primary-colour);
   }
-`;
 `;

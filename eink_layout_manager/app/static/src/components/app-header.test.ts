@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { AppHeader } from './app-header';
 import './app-header';
 
@@ -15,9 +15,14 @@ describe('AppHeader', () => {
     element.remove();
   });
 
+  it('should render the title', () => {
+    const title = element.shadowRoot?.querySelector('strong');
+    expect(title?.textContent).toBe('eInk Layout Manager');
+  });
+
   it('should render navigation icons', () => {
-    const nav = element.shadowRoot?.querySelector('.header-nav');
-    const icons = nav?.querySelectorAll('.nav-icon');
+    const nav = element.shadowRoot?.querySelector('.nav-group');
+    const icons = nav?.querySelectorAll('.nav-item');
     expect(icons?.length).toBe(4);
   });
 
@@ -29,16 +34,16 @@ describe('AppHeader', () => {
     expect(badge?.textContent).toBe('Test Message');
   });
 
-  it('should reflect connected status via class', async () => {
+  it('should reflect connected status', async () => {
     element.connected = true;
     await element.updateComplete;
     let dot = element.shadowRoot?.querySelector('.status-dot');
-    expect(dot?.classList.contains('connected')).toBe(true);
+    expect(dot?.textContent).toBe('Online');
 
     element.connected = false;
     await element.updateComplete;
     dot = element.shadowRoot?.querySelector('.status-dot');
-    expect(dot?.classList.contains('disconnected')).toBe(true);
+    expect(dot?.textContent).toBe('Offline');
   });
 
   it('should dispatch edit-layout event', async () => {
@@ -65,18 +70,21 @@ describe('AppHeader', () => {
     const spy = vi.fn();
     element.addEventListener('save-layout', spy);
     
-    const button = element.shadowRoot?.querySelector('button[title^="Save Layout"]') as HTMLButtonElement;
+    const button = element.shadowRoot?.querySelector('button[title="Save Layout"]') as HTMLButtonElement;
     button.click();
     
     expect(spy).toHaveBeenCalled();
   });
 
-  it('should disable save button when isSaving is true', async () => {
-    element.isSaving = true;
-    await element.updateComplete;
+  it('should dispatch set-section event when nav item is clicked', async () => {
+    const spy = vi.fn();
+    element.addEventListener('set-section', spy);
     
-    const button = element.shadowRoot?.querySelector('button[title^="Saving..."]') as HTMLButtonElement;
-    expect(button.disabled).toBe(true);
-    expect(button.querySelector('.material-icons')?.textContent).toBe('sync');
+    const navItem = element.shadowRoot?.querySelector('.nav-item[title="Images"]') as HTMLButtonElement;
+    navItem.click();
+    
+    expect(spy).toHaveBeenCalledWith(expect.objectContaining({
+      detail: 'images'
+    }));
   });
 });

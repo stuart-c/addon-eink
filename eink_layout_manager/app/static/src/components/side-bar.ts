@@ -13,12 +13,10 @@ export class SideBar extends LitElement {
         flex-direction: column;
         height: 100%;
         overflow: hidden;
-        background: var(--bg-white);
-        border-right: 1px solid var(--border-colour);
       }
       .sidebar-section {
         padding: 1rem;
-        border-bottom: 1px solid var(--border-colour);
+        border-bottom: 1px solid #eee;
         overflow-y: auto;
       }
       .sidebar-section.scrollable {
@@ -28,51 +26,39 @@ export class SideBar extends LitElement {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 0.75rem;
+        margin-bottom: 1rem;
       }
-      h3 { 
-        margin: 0; 
-        font-size: 11px; 
-        font-weight: 700; 
-        color: var(--text-muted); 
-        text-transform: uppercase; 
-        letter-spacing: 0.5px; 
-      }
+      h3 { margin: 0; font-size: 0.9rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
       
       .list-item {
-        padding: 0.75rem 1rem;
-        border-bottom: 1px solid var(--border-colour);
+        padding: 0.75rem;
+        border: 1px solid #eee;
+        border-radius: var(--border-radius);
+        margin-bottom: 0.5rem;
         cursor: pointer;
-        transition: background-color 0.2s;
-        background: var(--bg-white);
+        transition: all 0.2s ease;
+        background: white;
         user-select: none;
       }
-      .list-item:hover { 
-        background-color: #f9f9f9;
-      }
+      .list-item:hover { border-color: var(--primary-colour); background: #f0faff; }
       .list-item.selected { 
-        background-color: #e3f2fd; 
-        border-left: 4px solid var(--primary-colour);
+        border-color: var(--primary-colour); 
+        background: #e1f5fe; 
+        box-shadow: 0 2px 8px rgba(3,169,244,0.1); 
       }
       
       .item-details { display: flex; justify-content: space-between; align-items: center; }
       .item-info { flex: 1; }
-      .item-name { font-weight: 700; display: block; color: var(--text-colour); font-size: 14px; margin-bottom: 2px; }
-      .item-meta { font-size: 12px; color: var(--text-muted); }
-      .item-actions { display: flex; gap: 6px; }
+      .item-name { font-weight: 600; display: block; }
+      .item-meta { font-size: 11px; color: #888; }
+      .item-actions { display: flex; gap: 4px; }
       
-      .sidebar button.secondary {
+      .sidebar button.secondary,
+      .sidebar button.danger {
         padding: 4px;
         border-radius: 4px;
-        min-width: 28px;
-        height: 28px;
-        background: white;
-        border: 1px solid var(--border-colour);
-        color: var(--text-muted);
-      }
-      .sidebar button.secondary:hover {
-        border-color: var(--primary-colour);
-        color: var(--primary-colour);
+        min-width: 24px;
+        height: 24px;
       }
     `
   ];
