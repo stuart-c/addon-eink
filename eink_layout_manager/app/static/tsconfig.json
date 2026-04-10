@@ -18,10 +18,7 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "allowJs": true,
-    "types": ["node"],
-    "paths": {
-      "*": ["./node_modules/*", "./src/*"]
-    }
+    "types": ["node", "js-yaml", "prismjs"]
   },
   "include": ["src/**/*.ts", "src/**/*.js"],
   "references": [{ "path": "./tsconfig.node.json" }]

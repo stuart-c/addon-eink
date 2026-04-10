@@ -58,6 +58,12 @@ export class AppRoot extends LitElement {
   @query('item-settings-dialog') private _itemDialog!: ItemSettingsDialog;
   @query('layout-settings-dialog') private _layoutSettingsDialog!: LayoutSettingsDialog;
   @query('confirm-dialog') private _confirmDialog!: ConfirmDialog;
+
+  private async _handleEditLayout() {
+    if (this.state.activeLayout) {
+      await this._layoutSettingsDialog.show(this.state.activeLayout);
+    }
+  }
   @query('display-types-view') private _displayTypesView?: DisplayTypesView;
 
   @state() private _displayTypesDirty = false;
