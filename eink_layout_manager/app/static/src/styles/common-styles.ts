@@ -146,4 +146,3 @@ export const commonStyles = css`
     box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1), inset 0 1px 2px rgba(0,0,0,0.02);
   }
 `;
-`;
