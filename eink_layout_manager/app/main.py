@@ -83,7 +83,7 @@ async def request_logger_middleware(request, handler):
     print(f"REQUEST: {request.method} {request.path}")
     try:
         return await handler(request)
-    except Exception as e:
+    except Exception:
         print(f"EXCEPTION in {request.path}: {str(e)}")
         traceback.print_exc()
         raise
@@ -320,7 +320,7 @@ async def handle_image_create(request):
             )
         filename = field.filename
         content = await field.read()
-    except Exception as e:
+    except Exception:
         return web.json_response(
             {"error": f"Failed to read: {str(e)}"}, status=400
         )
@@ -331,7 +331,7 @@ async def handle_image_create(request):
         with PILImage.open(io.BytesIO(content)) as img:
             width, height = img.size
             file_type = img.format
-    except Exception as e:
+    except Exception:
         return web.json_response({"error": "Invalid image"}, status=400)
 
     try:
@@ -341,7 +341,7 @@ async def handle_image_create(request):
         file_path = os.path.join(storage_path, filename_on_disk)
         with open(file_path, "wb") as f:
             f.write(content)
-    except Exception as e:
+    except Exception:
         return web.json_response({"error": "Failed to save"}, status=500)
 
     try:
@@ -370,7 +370,7 @@ async def handle_image_create(request):
                 },
                 status=201,
             )
-    except Exception as e:
+    except Exception:
         if os.path.exists(file_path):
             os.remove(file_path)
         return web.json_response(
