@@ -83,3 +83,37 @@ async def test_image_upload_missing_field(aiohttp_client, app):
     resp = await client.post("/api/image", data=data)
     assert resp.status == 400
     assert "file" in (await resp.json())["error"].lower()
+
+
+@pytest.mark.asyncio
+async def test_image_upload_duplicate(aiohttp_client, app):
+    """Test uploading the same image twice returns a 409 conflict."""
+    client = await aiohttp_client(app)
+
+    # 1. Create a dummy image
+    img = PILImage.new("RGB", (50, 50), color="red")
+    img_byte_arr = io.BytesIO()
+    img.save(img_byte_arr, format="PNG")
+    img_data = img_byte_arr.getvalue()
+
+    # 2. Upload for the first time
+    data1 = aiohttp.FormData()
+    data1.add_field(
+        "file", img_data, filename="image.png", content_type="image/png"
+    )
+    resp1 = await client.post("/api/image", data=data1)
+    assert resp1.status == 201
+    result1 = await resp1.json()
+
+    # 3. Upload the exact same image again
+    data2 = aiohttp.FormData()
+    data2.add_field(
+        "file", img_data, filename="image_copy.png", content_type="image/png"
+    )
+    resp2 = await client.post("/api/image", data=data2)
+
+    # 4. Verify rejection
+    assert resp2.status == 409
+    result2 = await resp2.json()
+    assert result2["error"] == "Duplicate image"
+    assert result2["id"] == result1["id"]
