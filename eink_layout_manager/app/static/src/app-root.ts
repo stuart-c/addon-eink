@@ -165,7 +165,6 @@ export class AppRoot extends LitElement {
         .message="${this.state.message}"
         .isSaving="${this.state.isSaving}"
         .viewMode="${this._viewMode}"
-        @edit-layout="${this._handleEditLayout}"
         @save-layout="${() => this.state.saveActiveLayout()}"
         @toggle-view-mode="${() => this._viewMode = (this._viewMode === 'graphical' ? 'yaml' : 'graphical')}"
       ></app-header>
@@ -192,6 +191,7 @@ export class AppRoot extends LitElement {
             .mousePos="${this._mousePos}"
             @switch-layout="${(e: CustomEvent) => this.state.switchLayout(e.detail)}"
             @create-layout="${this._handleCreateLayout}"
+            @edit-layout="${this._handleEditLayout}"
           ></app-toolbar>
 
           <layout-editor

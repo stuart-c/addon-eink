@@ -40,15 +40,6 @@ describe('AppHeader', () => {
     expect(dot?.textContent).toBe('Offline');
   });
 
-  it('should dispatch edit-layout event', async () => {
-    const spy = vi.fn();
-    element.addEventListener('edit-layout', spy);
-    
-    const button = element.shadowRoot?.querySelector('button[title="Layout Settings"]') as HTMLButtonElement;
-    button.click();
-    
-    expect(spy).toHaveBeenCalled();
-  });
 
   it('should dispatch toggle-view-mode event', async () => {
     const spy = vi.fn();

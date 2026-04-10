@@ -75,6 +75,16 @@ describe('AppToolbar', () => {
     expect(mouseInfo?.textContent).toContain('X: 50mm, Y: 75mm');
   });
 
+  it('should dispatch edit-layout event when settings button is clicked', async () => {
+    const spy = vi.fn();
+    element.addEventListener('edit-layout', spy);
+
+    const button = element.shadowRoot?.querySelector('.settings-button') as HTMLButtonElement;
+    button.click();
+
+    expect(spy).toHaveBeenCalled();
+  });
+
   it('should display canvas dimensions', () => {
     const canvasDim = element.shadowRoot?.querySelector('.canvas-dim');
     expect(canvasDim?.textContent).toContain('Canvas: 100x100mm');
