@@ -51,3 +51,4 @@ class Image(Base):
     source = Column(String, nullable=True)
     status = Column(String, nullable=False)
     file_hash = Column(String, nullable=False)
+    thumbnail_path = Column(String, nullable=True)

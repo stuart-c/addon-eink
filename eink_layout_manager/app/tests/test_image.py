@@ -86,6 +86,7 @@ async def test_image_upload_missing_field(aiohttp_client, app):
 
 
 @pytest.mark.asyncio
+@pytest.mark.asyncio
 async def test_image_upload_duplicate(aiohttp_client, app):
     """Test uploading the same image twice returns a 409 conflict."""
     client = await aiohttp_client(app)
@@ -117,3 +118,47 @@ async def test_image_upload_duplicate(aiohttp_client, app):
     result2 = await resp2.json()
     assert result2["error"] == "Duplicate image"
     assert result2["id"] == result1["id"]
+
+
+@pytest.mark.asyncio
+async def test_image_upload_with_thumbnail(aiohttp_client, app, tmp_path):
+    """Test successful image upload with thumbnail generation."""
+    client = await aiohttp_client(app)
+
+    # 1. Create a large dummy image (greater than 200x200)
+    width, height = 400, 300
+    img = PILImage.new("RGB", (width, height), color="red")
+    img_byte_arr = io.BytesIO()
+    img.save(img_byte_arr, format="JPEG")
+    img_data = img_byte_arr.getvalue()
+
+    # 2. Prepare multipart upload
+    data = aiohttp.FormData()
+    data.add_field(
+        "file", img_data, filename="test_thumb.jpg", content_type="image/jpeg"
+    )
+
+    # 3. Post to endpoint
+    resp = await client.post("/api/image", data=data)
+    assert resp.status == 201
+    result = await resp.json()
+
+    # 4. Verify thumbnail path in response
+    assert "thumbnail_path" in result
+    assert result["thumbnail_path"] == result["file_path"]
+
+    # 5. Verify thumbnail file exists on disk
+    thumb_storage_path = os.path.join(str(tmp_path), "thumbnail")
+    thumb_file_path = os.path.join(
+        thumb_storage_path, result["thumbnail_path"]
+    )
+    assert os.path.exists(thumb_file_path)
+
+    # 6. Verify thumbnail dimensions
+    with PILImage.open(thumb_file_path) as thumb_img:
+        tw, th = thumb_img.size
+        # For 400x300, thumbnail (200, 200) should be 200x150
+        assert tw <= 200
+        assert th <= 200
+        assert tw == 200
+        assert th == 150
