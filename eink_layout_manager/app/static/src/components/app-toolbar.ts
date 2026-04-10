@@ -163,9 +163,10 @@ export class AppToolbar extends LitElement {
               ${l.name}
               ${this.activeLayout?.id === l.id ? html`✓` : ''}
             </div>
-          </div>
+          `)}
         </div>
       </div>
+    </div>
 
       <div class="mouse-info">
         ${this.mousePos.x !== null ? html`
