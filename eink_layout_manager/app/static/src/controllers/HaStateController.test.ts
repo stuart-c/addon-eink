@@ -49,7 +49,7 @@ describe('HaStateController', () => {
     expect(api.ping).toHaveBeenCalled();
     expect(controller.connected).toBe(true);
     expect(controller.activeLayout).toBeDefined();
-    expect(controller.activeLayout).not.toBeNull();
+    expect(controller.activeLayout === null).toBe(false);
     expect(controller.activeLayout!.id).toBe('default');
   });
 
