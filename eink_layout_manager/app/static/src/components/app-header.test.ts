@@ -65,11 +65,11 @@ describe('AppHeader', () => {
     expect(spy).toHaveBeenCalled();
   });
 
-  it('should dispatch save-layout event', async () => {
+  it('should dispatch save-changes event', async () => {
     const spy = vi.fn();
-    element.addEventListener('save-layout', spy);
+    element.addEventListener('save-changes', spy);
     
-    const button = element.shadowRoot?.querySelector('button[title^="Save Layout"]') as HTMLButtonElement;
+    const button = element.shadowRoot?.querySelector('button[title^="Save Changes"]') as HTMLButtonElement;
     button.click();
     
     expect(spy).toHaveBeenCalled();
@@ -83,12 +83,12 @@ describe('AppHeader', () => {
     expect(button.querySelector('.material-icons')?.textContent).toBe('sync');
   });
 
-  it('should dispatch discard-layout event', async () => {
+  it('should dispatch discard-changes event', async () => {
     element.isDirty = true;
     await element.updateComplete;
     
     const spy = vi.fn();
-    element.addEventListener('discard-layout', spy);
+    element.addEventListener('discard-changes', spy);
     
     const button = element.shadowRoot?.querySelector('button[title="Discard Changes"]') as HTMLButtonElement;
     expect(button.disabled).toBe(false);

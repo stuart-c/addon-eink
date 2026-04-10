@@ -345,6 +345,7 @@ export class DisplayTypesView extends LitElement {
   @property({ type: Boolean }) isNew = true;
 
   @state() private _showSummary = false;
+  @state() private _isDirtyState = false;
 
   private _PRESETS = [
     { name: 'White', colour: '#ffffff' },
@@ -378,6 +379,14 @@ export class DisplayTypesView extends LitElement {
       this.displayType = this._getDefaultDisplayType();
       this.isNew = true;
     }
+    this._updateDirtyState();
+  }
+
+  protected updated(changedProperties: Map<string | number | symbol, unknown>) {
+    super.updated(changedProperties);
+    if (changedProperties.has('displayType') || changedProperties.has('displayTypes')) {
+      this._updateDirtyState();
+    }
   }
 
   private _isDirty(): boolean {
@@ -389,6 +398,31 @@ export class DisplayTypesView extends LitElement {
     const original = this.displayTypes.find(dt => dt.id === this.displayType?.id);
     if (!original) return true;
     return JSON.stringify(this.displayType) !== JSON.stringify(original);
+  }
+
+  private _updateDirtyState() {
+    const dirty = this._isDirty();
+    if (this._isDirtyState !== dirty) {
+      this._isDirtyState = dirty;
+      this.dispatchEvent(new CustomEvent('dirty-state-change', {
+        detail: { isDirty: dirty },
+        bubbles: true,
+        composed: true
+      }));
+    }
+  }
+
+  public save() {
+     const form = this.shadowRoot?.querySelector('form');
+     if (form?.checkValidity()) {
+       this._handleSubmit(new Event('submit'));
+     } else {
+       form?.reportValidity();
+     }
+  }
+
+  public discard() {
+    this._handleSelect(this.isNew ? null : (this.displayType?.id || null));
   }
 
   private _requestConfirmation(
@@ -418,6 +452,7 @@ export class DisplayTypesView extends LitElement {
         }
       }
       this.requestUpdate();
+      this._updateDirtyState();
     };
 
     if (this._isDirty()) {
@@ -464,6 +499,7 @@ export class DisplayTypesView extends LitElement {
       this.isNew = true;
     }
     this.requestUpdate();
+    this._updateDirtyState();
   }
 
   private _handleSubmit(e: Event) {
@@ -478,6 +514,7 @@ export class DisplayTypesView extends LitElement {
     this.dispatchEvent(new CustomEvent('save', { detail: { displayType: this.displayType } }));
     this.isNew = false;
     this.requestUpdate();
+    this._updateDirtyState();
   }
 
   private _renderColourPicker(label: string, value: string, onUpdate: (colour: string) => void) {
@@ -498,7 +535,7 @@ export class DisplayTypesView extends LitElement {
           <input 
             type="color" 
             .value="${live(value)}" 
-            @input="${(e: any) => onUpdate(e.target.value)}"
+            @input="${(e: any) => { onUpdate(e.target.value); this._updateDirtyState(); }}"
           >
           <div class="hex-value">${value}</div>
         </div>
@@ -581,29 +618,12 @@ export class DisplayTypesView extends LitElement {
               <span class="material-icons" style="font-size: 18px;">delete</span>
               Delete
             </button>
-            <button 
-              type="button" 
-              class="secondary" 
-              ?disabled="${!this._isDirty()}"
-              @click="${() => this._handleSelect(this.isNew ? null : (this.displayType?.id || null))}"
-            >
-              Cancel
-            </button>
-            <button 
-              type="button" 
-              class="primary" 
-              ?disabled="${!this._isDirty()}"
-              @click="${() => (this.shadowRoot?.getElementById('real-submit') as HTMLButtonElement).click()}"
-            >
-              <span class="material-icons" style="font-size: 18px;">save</span>
-              Save Changes
-            </button>
           </div>
         </div>
 
         <!-- Main Content -->
         <div slot="right-main" class="editor-layout">
-          <form id="display-type-form" @submit="${this._handleSubmit}" @input="${() => this.requestUpdate()}">
+          <form id="display-type-form" @submit="${this._handleSubmit}" @input="${() => { this.requestUpdate(); this._updateDirtyState(); }}">
             <div class="form-group">
               <label>Identifier/Name</label>
               <input 
@@ -657,7 +677,7 @@ export class DisplayTypesView extends LitElement {
 
             <div class="form-group">
               <label>Colour Type</label>
-              <select .value="${live(this.displayType?.colour_type || 'MONO')}" @change="${(e: any) => { this.displayType!.colour_type = e.target.value; this.requestUpdate(); }}">
+              <select .value="${live(this.displayType?.colour_type || 'MONO')}" @change="${(e: any) => { this.displayType!.colour_type = e.target.value; this.requestUpdate(); this._updateDirtyState(); }}">
                 <option value="MONO">MONO (B/W)</option>
                 <option value="BWR">BWR (Red)</option>
                 <option value="BWY">BWY (Yellow)</option>

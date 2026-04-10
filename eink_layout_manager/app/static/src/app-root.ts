@@ -7,6 +7,7 @@ import './components/app-toolbar';
 import './components/side-bar';
 import './components/layout-editor';
 import './components/display-types-view';
+import { DisplayTypesView } from './components/display-types-view';
 import './components/item-settings-dialog';
 import './components/layout-settings-dialog';
 import './components/confirm-dialog';
@@ -57,25 +58,34 @@ export class AppRoot extends LitElement {
   @query('item-settings-dialog') private _itemDialog!: ItemSettingsDialog;
   @query('layout-settings-dialog') private _layoutSettingsDialog!: LayoutSettingsDialog;
   @query('confirm-dialog') private _confirmDialog!: ConfirmDialog;
+  @query('display-types-view') private _displayTypesView?: DisplayTypesView;
 
-  // Header Actions
-  private async _handleEditLayout() {
-    if (this.state.activeLayout) {
-      await this._layoutSettingsDialog.show(this.state.activeLayout);
+  @state() private _displayTypesDirty = false;
+
+  private async _handleSave() {
+    if (this.state.activeSection === 'layouts') {
+      await this.state.saveActiveLayout();
+    } else if (this.state.activeSection === 'display-types') {
+      this._displayTypesView?.save();
     }
   }
 
-  private async _handleDiscardLayout() {
+  private async _handleDiscard() {
     const confirmed = await this._confirmDialog.show({
       title: 'Discard Changes?',
-      message: 'Are you sure you want to discard all unsaved changes to this layout?',
+      message: `Are you sure you want to discard all unsaved changes to this ${this.state.activeSection === 'layouts' ? 'layout' : 'display type'}?`,
       confirmText: 'Discard',
       type: 'danger'
     });
 
     if (confirmed) {
-      this.state.discardChanges();
-      this.state.showMessage('Changes discarded', 'info');
+      if (this.state.activeSection === 'layouts') {
+        this.state.discardChanges();
+        this.state.showMessage('Changes discarded', 'info');
+      } else if (this.state.activeSection === 'display-types') {
+        this._displayTypesView?.discard();
+        this.state.showMessage('Changes discarded', 'info');
+      }
     }
   }
 
@@ -178,11 +188,11 @@ export class AppRoot extends LitElement {
         .connected="${this.state.connected}"
         .message="${this.state.message}"
         .isSaving="${this.state.isSaving}"
-        .isDirty="${this.state.isDirty}"
+        .isDirty="${this.state.isDirty || this._displayTypesDirty}"
         .viewMode="${this._viewMode}"
         .activeSection="${this.state.activeSection}"
-        @save-layout="${() => this.state.saveActiveLayout()}"
-        @discard-layout="${this._handleDiscardLayout}"
+        @save-changes="${this._handleSave}"
+        @discard-changes="${this._handleDiscard}"
         @toggle-view-mode="${() => this._viewMode = (this._viewMode === 'graphical' ? 'yaml' : 'graphical')}"
         @set-section="${(e: CustomEvent) => this.state.setSection(e.detail)}"
       ></app-header>
@@ -262,6 +272,7 @@ export class AppRoot extends LitElement {
         .displayTypes="${this.state.displayTypes}"
         @save="${this._onSaveDisplayType}"
         @delete-display-type="${this._onDeleteDisplayType}"
+        @dirty-state-change="${(e: CustomEvent) => this._displayTypesDirty = e.detail.isDirty}"
         @request-confirmation="${async (e: CustomEvent) => {
           const result = await this._confirmDialog.show(e.detail.config);
           e.detail.callback(result);
