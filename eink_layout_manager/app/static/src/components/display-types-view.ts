@@ -391,7 +391,16 @@ export class DisplayTypesView extends LitElement {
     super.updated(changedProperties);
     if (changedProperties.has('displayType') || changedProperties.has('displayTypes')) {
       this._updateDirtyState();
+      this._updateDeleteState();
     }
+  }
+
+  private _updateDeleteState() {
+    this.dispatchEvent(new CustomEvent('can-delete-change', {
+      detail: { canDelete: !this.isNew && !!this.displayType },
+      bubbles: true,
+      composed: true
+    }));
   }
 
   private _isDirty(): boolean {
@@ -488,6 +497,10 @@ export class DisplayTypesView extends LitElement {
     } else {
       performSwitch();
     }
+  }
+
+  public requestDelete() {
+    this._handleDelete();
   }
 
   private _handleDelete() {
@@ -616,17 +629,6 @@ export class DisplayTypesView extends LitElement {
             ${this.isNew ? 'Create New Display Type' : `Editing: ${this.displayType.name}`}
           </div>
           <div class="toolbar-actions">
-            ${this.viewMode === 'graphical' ? html`
-              <button 
-                type="button" 
-                class="danger" 
-                ?disabled="${this.isNew}" 
-                @click="${this._handleDelete}"
-              >
-                <span class="material-icons" style="font-size: 18px;">delete</span>
-                Delete
-              </button>
-            ` : ''}
           </div>
         </div>
 
