@@ -48,8 +48,9 @@ describe('HaStateController', () => {
 
     expect(api.ping).toHaveBeenCalled();
     expect(controller.connected).toBe(true);
-    expect(controller.activeLayout).not.toBeNull();
-    expect(controller.activeLayout?.id).toBe('default');
+    expect(controller.activeLayout).toBeDefined();
+    expect(controller.activeLayout !== null).toBe(true);
+    expect(controller.activeLayout!.id).toBe('default');
   });
 
   it('should handle failed ping', async () => {
@@ -58,7 +59,7 @@ describe('HaStateController', () => {
     await controller.refresh();
 
     expect(controller.connected).toBe(false);
-    expect(api.getCollection).not.toHaveBeenCalled();
+    expect(api.getCollection).toHaveBeenCalledTimes(0);
   });
 
   it('should switch layouts', () => {
@@ -78,7 +79,7 @@ describe('HaStateController', () => {
     
     controller.updateActiveLayout({ name: 'Updated' });
 
-    expect(controller.activeLayout.name).toBe('Updated');
+    expect(controller.activeLayout!.name).toBe('Updated');
     expect(mockHost.requestUpdate).toHaveBeenCalled();
   });
 
