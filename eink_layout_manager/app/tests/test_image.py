@@ -78,7 +78,7 @@ async def test_image_upload_missing_field(aiohttp_client, app):
     client = await aiohttp_client(app)
 
     data = aiohttp.FormData()
-    data.add_field("wrong_field", b"data")
+    data.add_field("wrong_field", io.BytesIO(b"data"))
 
     resp = await client.post("/api/image", data=data)
     assert resp.status == 400
