@@ -20,6 +20,12 @@ describe('AppHeader', () => {
     expect(title?.textContent).toBe('eInk Layout Manager');
   });
 
+  it('should render navigation icons', () => {
+    const nav = element.shadowRoot?.querySelector('.nav-group');
+    const icons = nav?.querySelectorAll('.nav-item');
+    expect(icons?.length).toBe(4);
+  });
+
   it('should display the message when provided', async () => {
     element.message = 'Test Message';
     await element.updateComplete;

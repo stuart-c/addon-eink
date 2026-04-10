@@ -17,6 +17,41 @@ export class AppHeader extends LitElement {
         box-shadow: var(--shadow-small);
         z-index: 10;
       }
+      .header-title {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+      }
+      .nav-group {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        background: rgba(255,255,255,0.15);
+        padding: 4px;
+        border-radius: 8px;
+      }
+      .nav-item {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        color: rgba(255,255,255,0.7);
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+        background: transparent;
+        padding: 0;
+      }
+      .nav-item:hover {
+        background: rgba(255,255,255,0.1);
+        color: white;
+      }
+      .nav-item.active {
+        background: white;
+        color: var(--primary-colour);
+      }
       .header-actions {
         display: flex;
         gap: 0.75rem;
@@ -33,7 +68,7 @@ export class AppHeader extends LitElement {
         opacity: 0.8;
         margin-left: 0.5rem;
       }
-      header button {
+      header button:not(.nav-item) {
         width: 40px;
         height: 40px;
         padding: 0;
@@ -42,6 +77,7 @@ export class AppHeader extends LitElement {
     `
   ];
 
+  @property({ type: String }) activeSection = 'layouts';
   @property({ type: Boolean }) connected = false;
   @property({ type: String }) message = '';
   @property({ type: Boolean }) isSaving = false;
@@ -55,10 +91,26 @@ export class AppHeader extends LitElement {
   render() {
     return html`
       <header>
-        <div><strong>eInk Layout Manager</strong></div>
+        <div class="header-title">
+          <div><strong>eInk Layout Manager</strong></div>
+          <div class="nav-group">
+            <button class="nav-item ${this.activeSection === 'display-types' ? 'active' : ''}" title="Display Types">
+              <span class="material-icons">settings_input_component</span>
+            </button>
+            <button class="nav-item ${this.activeSection === 'layouts' ? 'active' : ''}" title="Layouts">
+              <span class="material-icons">dashboard</span>
+            </button>
+            <button class="nav-item ${this.activeSection === 'images' ? 'active' : ''}" title="Images">
+              <span class="material-icons">image</span>
+            </button>
+            <button class="nav-item ${this.activeSection === 'scenes' ? 'active' : ''}" title="Scenes">
+              <span class="material-icons">landscape</span>
+            </button>
+          </div>
+        </div>
+
         <div class="header-actions">
           ${this.message ? html`<span class="message-badge">${this.message}</span>` : ''}
-          
           
           <button class="secondary" @click="${() => this._dispatch('toggle-view-mode')}" title="Switch to ${this.viewMode === 'graphical' ? 'YAML' : 'Graphical'} Mode">
             <span class="material-icons">${this.viewMode === 'graphical' ? 'code' : 'dashboard'}</span>
@@ -72,7 +124,6 @@ export class AppHeader extends LitElement {
             <span class="material-icons">${this.isSaving ? 'sync' : 'save'}</span>
           </button>
 
-          
           <span class="status-dot">${this.connected ? 'Online' : 'Offline'}</span>
         </div>
       </header>
