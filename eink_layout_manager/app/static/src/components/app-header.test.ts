@@ -15,9 +15,17 @@ describe('AppHeader', () => {
     element.remove();
   });
 
-  it('should render the title', () => {
+  it('should render the title with active section', () => {
     const title = element.shadowRoot?.querySelector('div > strong');
-    expect(title?.textContent).toBe('eInk Layout Manager');
+    expect(title?.textContent).toContain('eInk Layout Manager - Layouts');
+  });
+
+  it('should update the title when section changes', async () => {
+    element.activeSection = 'images';
+    await element.updateComplete;
+    
+    const title = element.shadowRoot?.querySelector('div > strong');
+    expect(title?.textContent).toContain('eInk Layout Manager - Images');
   });
 
   it('should render navigation icons', () => {

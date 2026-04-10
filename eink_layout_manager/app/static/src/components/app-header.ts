@@ -95,12 +95,21 @@ export class AppHeader extends LitElement {
       composed: true
     }));
   }
+  
+  get _sectionLabel() {
+    const labels: Record<string, string> = {
+      'display-types': 'Display Types',
+      'layouts': 'Layouts',
+      'images': 'Images',
+      'scenes': 'Scenes'
+    };
+    return labels[this.activeSection] || this.activeSection;
+  }
 
   render() {
     return html`
       <header>
         <div class="header-title">
-          <div><strong>eInk Layout Manager</strong></div>
           <div class="nav-group">
             <button class="nav-item ${this.activeSection === 'display-types' ? 'active' : ''}" 
               @click="${() => this._dispatchSection('display-types')}" title="Display Types">
@@ -119,6 +128,7 @@ export class AppHeader extends LitElement {
               <span class="material-icons">landscape</span>
             </button>
           </div>
+          <div><strong>eInk Layout Manager - ${this._sectionLabel}</strong></div>
         </div>
 
         <div class="header-actions">
