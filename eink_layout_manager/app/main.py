@@ -30,7 +30,7 @@ def get_storage_path(resource_type):
     """
     # Security: Whitelist allowed resource types to prevent
     # arbitrary directory creation
-    allowed_types = {"display_type", "layout", "image"}
+    allowed_types = {"display_type", "layout", "image", "thumbnail"}
     if resource_type not in allowed_types:
         raise ValueError(f"Invalid resource type: {resource_type}")
 
@@ -362,6 +362,13 @@ async def handle_image_create(request):
         file_path = os.path.join(storage_path, filename_on_disk)
         with open(file_path, "wb") as f:
             f.write(content)
+
+        # Generate thumbnail
+        thumb_storage_path = get_storage_path("thumbnail")
+        thumb_path = os.path.join(thumb_storage_path, filename_on_disk)
+        with PILImage.open(io.BytesIO(content)) as img:
+            img.thumbnail((200, 200))
+            img.save(thumb_path)
     except Exception:
         return web.json_response({"error": "Failed to save"}, status=500)
 
@@ -376,6 +383,7 @@ async def handle_image_create(request):
                 file_path=filename_on_disk,
                 status="UPLOADED",
                 file_hash=file_hash,
+                thumbnail_path=filename_on_disk,
             )
             session.add(new_image)
             await session.commit()
@@ -386,6 +394,7 @@ async def handle_image_create(request):
                     "file_type": file_type,
                     "dimensions": {"width": width, "height": height},
                     "file_path": filename_on_disk,
+                    "thumbnail_path": filename_on_disk,
                     "status": "UPLOADED",
                     "file_hash": file_hash,
                 },
@@ -420,6 +429,7 @@ def init_app():
         os.makedirs(get_storage_path("display_type"), exist_ok=True)
         os.makedirs(get_storage_path("layout"), exist_ok=True)
         os.makedirs(get_storage_path("image"), exist_ok=True)
+        os.makedirs(get_storage_path("thumbnail"), exist_ok=True)
     except ValueError as e:
         print(f"Error initialising storage: {str(e)}")
 
