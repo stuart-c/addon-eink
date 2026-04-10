@@ -6,7 +6,7 @@ import './components/app-header';
 import './components/app-toolbar';
 import './components/side-bar';
 import './components/layout-editor';
-import './components/display-type-dialog';
+import './components/display-types-view';
 import './components/item-settings-dialog';
 import './components/layout-settings-dialog';
 import './components/confirm-dialog';
@@ -14,7 +14,6 @@ import './components/yaml-editor';
 import './components/shared/section-layout';
 import './components/shared/empty-view';
 
-import { DisplayTypeDialog } from './components/display-type-dialog';
 import { ItemSettingsDialog } from './components/item-settings-dialog';
 import { LayoutSettingsDialog } from './components/layout-settings-dialog';
 import { ConfirmDialog } from './components/confirm-dialog';
@@ -55,7 +54,6 @@ export class AppRoot extends LitElement {
   @state() private _mousePos: { x: number | null, y: number | null } = { x: null, y: null };
   @state() private _viewMode: 'graphical' | 'yaml' = 'graphical';
 
-  @query('display-type-dialog') private _displayTypeDialog!: DisplayTypeDialog;
   @query('item-settings-dialog') private _itemDialog!: ItemSettingsDialog;
   @query('layout-settings-dialog') private _layoutSettingsDialog!: LayoutSettingsDialog;
   @query('confirm-dialog') private _confirmDialog!: ConfirmDialog;
@@ -95,11 +93,11 @@ export class AppRoot extends LitElement {
 
   // Sidebar Actions
   private async _onAddDisplayType() {
-    await this._displayTypeDialog.show();
+    this.state.setSection('display-types');
   }
 
   private async _onEditDisplayType(e: CustomEvent<DisplayType>) {
-    await this._displayTypeDialog.show(e.detail);
+    this.state.setSection('display-types');
   }
 
   private async _onDeleteDisplayType(e: CustomEvent<DisplayType>) {
@@ -189,17 +187,10 @@ export class AppRoot extends LitElement {
         @set-section="${(e: CustomEvent) => this.state.setSection(e.detail)}"
       ></app-header>
 
-      ${this.state.activeSection === 'layouts' ? this._renderLayoutsSection() : this._renderEmptySection()}
+      ${this.state.activeSection === 'layouts' ? this._renderLayoutsSection() : 
+        this.state.activeSection === 'display-types' ? this._renderDisplayTypesSection() :
+        this._renderEmptySection()}
 
-      <display-type-dialog 
-        .displayTypes="${this.state.displayTypes}" 
-        @save="${this._onSaveDisplayType}"
-        @delete-display-type="${this._onDeleteDisplayType}"
-        @request-confirmation="${async (e: CustomEvent) => {
-          const result = await this._confirmDialog.show(e.detail.config);
-          e.detail.callback(result);
-        }}"
-      ></display-type-dialog>
       <item-settings-dialog 
         @save="${(e: CustomEvent) => this.state.updateItem(e.detail.id, e.detail.updates)}"
         @delete="${(e: CustomEvent) => this._onDeleteItem(e)}"
@@ -265,13 +256,26 @@ export class AppRoot extends LitElement {
     `;
   }
 
+  private _renderDisplayTypesSection() {
+    return html`
+      <display-types-view
+        .displayTypes="${this.state.displayTypes}"
+        @save="${this._onSaveDisplayType}"
+        @delete-display-type="${this._onDeleteDisplayType}"
+        @request-confirmation="${async (e: CustomEvent) => {
+          const result = await this._confirmDialog.show(e.detail.config);
+          e.detail.callback(result);
+        }}"
+      ></display-types-view>
+    `;
+  }
+
   private _renderEmptySection() {
     const sections = {
-      'display-types': { title: 'Display Types', icon: 'settings_input_component', message: 'Manage your eInk display inventory and hardware profiles.' },
       'images': { title: 'Image Library', icon: 'image', message: 'Upload and process images for your displays.' },
       'scenes': { title: 'Smart Scenes', icon: 'landscape', message: 'Compose complex scenes by combining layouts, images and live data.' }
     };
-    const active = sections[this.state.activeSection as Exclude<AppSection, 'layouts'>];
+    const active = sections[this.state.activeSection as Exclude<AppSection, 'layouts' | 'display-types'>];
     
     return html`
       <section-layout>
