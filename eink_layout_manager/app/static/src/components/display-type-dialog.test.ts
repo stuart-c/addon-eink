@@ -39,13 +39,17 @@ describe('DisplayTypeDialog', () => {
     // (Wait, the show() uses JSON stringify to clone it, so it should match)
     expect((element as any)._isDirty()).toBe(false);
 
-    element.displayType.name = 'Modified Name';
+    (element as any).displayType = { ...(element as any).displayType, name: 'Modified Name' };
+    element.requestUpdate();
+    await element.updateComplete;
     expect((element as any)._isDirty()).toBe(true);
   });
 
   it('should dispatch request-confirmation when closing and dirty', async () => {
     await element.show(mockDisplayType as any);
-    element.displayType.name = 'Modified Name';
+    (element as any).displayType = { ...(element as any).displayType, name: 'Modified Name' };
+    element.requestUpdate();
+    await element.updateComplete;
     
     const spy = vi.fn();
     element.addEventListener('request-confirmation', spy);
@@ -58,7 +62,9 @@ describe('DisplayTypeDialog', () => {
 
   it('should dispatch request-confirmation when switching and dirty', async () => {
     await element.show(mockDisplayType as any);
-    element.displayType.name = 'Modified Name';
+    (element as any).displayType = { ...(element as any).displayType, name: 'Modified Name' };
+    element.requestUpdate();
+    await element.updateComplete;
     
     const spy = vi.fn();
     element.addEventListener('request-confirmation', spy);
@@ -85,7 +91,9 @@ describe('DisplayTypeDialog', () => {
 
   it('should handle cancel event from dialog (Escape key)', async () => {
     await element.show(mockDisplayType as any);
-    element.displayType.name = 'Modified Name';
+    (element as any).displayType = { ...(element as any).displayType, name: 'Modified Name' };
+    element.requestUpdate();
+    await element.updateComplete;
     
     const spy = vi.fn();
     element.addEventListener('request-confirmation', spy);

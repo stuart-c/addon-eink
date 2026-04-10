@@ -29,8 +29,8 @@ describe('ConfirmDialog', () => {
     });
     await element.updateComplete;
 
-    const baseDialog = element.shadowRoot?.querySelector('base-dialog');
-    expect(baseDialog?.getAttribute('title')).toBe('Custom Title');
+    const baseDialog = element.shadowRoot?.querySelector('base-dialog') as any;
+    expect(baseDialog?.title).toBe('Custom Title');
     
     const p = element.shadowRoot?.querySelector('p');
     expect(p?.textContent).toBe('Custom Message');
