@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import (
     AsyncSession,
 )
 from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy import text
 
 
 class Base(DeclarativeBase):
@@ -32,6 +33,35 @@ _engine = None
 _session_factory = None
 
 
+async def ensure_schema_up_to_date(conn):
+    """Ensure the database schema matches the models by adding missing
+    columns."""
+    # Check 'images' table for recently added columns
+    result = await conn.execute(text("PRAGMA table_info(images)"))
+    columns = [row[1] for row in result.fetchall()]
+
+    if "thumbnail_path" not in columns:
+        await conn.execute(
+            text("ALTER TABLE images ADD COLUMN thumbnail_path VARCHAR")
+        )
+
+    if "created_at" not in columns:
+        await conn.execute(
+            text(
+                "ALTER TABLE images ADD COLUMN created_at DATETIME "
+                "DEFAULT CURRENT_TIMESTAMP"
+            )
+        )
+
+    if "updated_at" not in columns:
+        await conn.execute(
+            text(
+                "ALTER TABLE images ADD COLUMN updated_at DATETIME "
+                "DEFAULT CURRENT_TIMESTAMP"
+            )
+        )
+
+
 async def init_db():
     """Initialise the database engine and create tables."""
     global _engine, _session_factory
@@ -45,6 +75,7 @@ async def init_db():
     # Create tables if they don't exist
     async with _engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        await ensure_schema_up_to_date(conn)
 
     return _engine
 
