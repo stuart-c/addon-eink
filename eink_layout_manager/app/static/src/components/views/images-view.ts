@@ -92,6 +92,45 @@ export class ImagesView extends LitElement {
         letter-spacing: 0.5px;
         margin-bottom: 1rem;
       }
+
+      .actions {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        display: flex;
+        gap: 8px;
+        opacity: 0;
+        visibility: hidden;
+        background: white;
+        padding: 6px;
+        border-radius: 20px;
+        box-shadow: var(--shadow-medium);
+        z-index: 10;
+        transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        transform: translateY(-5px) scale(0.9);
+      }
+
+      .image-card:hover .actions {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0) scale(1);
+      }
+
+      .action-icon {
+        cursor: pointer;
+        color: #555;
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.2s, transform 0.1s;
+      }
+
+      .action-icon:hover {
+        color: var(--primary-colour);
+        transform: scale(1.1);
+      }
     `
   ];
 
@@ -130,13 +169,26 @@ export class ImagesView extends LitElement {
 
   private _renderImage(image: Image) {
     return html`
-      <div class="image-card" @click="${() => this._handleImageClick(image)}">
+      <div 
+        class="image-card" 
+        @click="${() => this._handleImageClick(image)}"
+        @dblclick="${(e: MouseEvent) => this._handleEditImage(image, e)}"
+      >
         <div class="thumbnail-container">
           <img 
             src="/api/image/${image.id}/thumbnail" 
             alt="${image.name}"
             loading="lazy"
           >
+          <div class="actions">
+            <div 
+              class="action-icon" 
+              title="Edit Metadata" 
+              @click="${(e: MouseEvent) => this._handleEditImage(image, e)}"
+            >
+              <span class="material-icons" style="font-size: 18px;">settings</span>
+            </div>
+          </div>
         </div>
         <div class="image-info">
           <p class="image-name" title="${image.name}">${image.name}</p>
@@ -150,6 +202,15 @@ export class ImagesView extends LitElement {
 
   private _handleImageClick(image: Image) {
     this.dispatchEvent(new CustomEvent('image-click', {
+      detail: { image },
+      bubbles: true,
+      composed: true
+    }));
+  }
+
+  private _handleEditImage(image: Image, e: MouseEvent) {
+    e.stopPropagation();
+    this.dispatchEvent(new CustomEvent('edit-image', {
       detail: { image },
       bubbles: true,
       composed: true

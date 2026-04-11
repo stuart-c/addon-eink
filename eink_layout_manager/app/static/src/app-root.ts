@@ -183,7 +183,7 @@ export class AppRoot extends LitElement {
         @save="${(e: CustomEvent) => this.state.updateItem(e.detail.id, e.detail.updates)}"
         @delete="${(e: CustomEvent) => this._onDeleteItem(e)}"
       ></item-settings-dialog>
-      <image-dialog></image-dialog>
+      <image-dialog @image-saved="${() => this.state.refresh()}"></image-dialog>
       <confirm-dialog></confirm-dialog>
     `;
   }
@@ -240,6 +240,7 @@ export class AppRoot extends LitElement {
     return html`
       <images-view
         .images="${this.state.images}"
+        @edit-image="${(e: CustomEvent) => this._imageDialog.show(e.detail.image)}"
       ></images-view>
     `;
   }
