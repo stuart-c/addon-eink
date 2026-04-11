@@ -1,6 +1,8 @@
 import os
 import pytest
-from app.main import init_app, get_storage_path, load_schema
+from app.main import init_app
+from app.utils.storage import get_storage_path
+from app.utils.validation import load_schema
 
 
 @pytest.fixture
