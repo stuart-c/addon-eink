@@ -28,3 +28,14 @@ if (typeof HTMLDialogElement !== 'undefined') {
   // (though JSDOM should have it, just not implemented)
   console.log('HTMLDialogElement not found, applying polyfill to generic dialog-like elements');
 }
+
+/**
+ * Mock for ResizeObserver which is not supported in JSDOM.
+ */
+class MockResizeObserver {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+
+vi.stubGlobal('ResizeObserver', MockResizeObserver);
