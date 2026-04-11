@@ -62,6 +62,23 @@ export class HaStateController implements ReactiveController {
     }
   }
 
+  /**
+   * Refreshes only the image library collection.
+   */
+  async refreshImages() {
+    if (!this.connected) {
+      this.connected = await api.ping();
+      if (!this.connected) return;
+    }
+
+    try {
+      this.images = await api.getImages();
+      this.host.requestUpdate();
+    } catch (e: any) {
+      console.error('Image fetch failed', e);
+    }
+  }
+
   private async createDefaultLayout() {
     const defaultLayout: Layout = {
       id: 'default',

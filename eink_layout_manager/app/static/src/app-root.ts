@@ -183,7 +183,7 @@ export class AppRoot extends LitElement {
         @save="${(e: CustomEvent) => this.state.updateItem(e.detail.id, e.detail.updates)}"
         @delete="${(e: CustomEvent) => this._onDeleteItem(e)}"
       ></item-settings-dialog>
-      <image-dialog @image-saved="${() => this.state.refresh()}"></image-dialog>
+      <image-dialog @image-saved="${() => this.state.refreshImages()}"></image-dialog>
       <confirm-dialog></confirm-dialog>
     `;
   }
