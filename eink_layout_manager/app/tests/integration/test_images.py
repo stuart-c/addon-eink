@@ -475,3 +475,43 @@ async def test_image_list_pagination(aiohttp_client, app):
     # 6. Test invalid parameters
     resp = await client.get("/api/image?page=invalid")
     assert resp.status == 400
+
+
+@pytest.mark.asyncio
+async def test_image_timestamps_stored_but_not_exposed(aiohttp_client, app):
+    """Test that timestamps are saved to DB but NOT returned by API."""
+    client = await aiohttp_client(app)
+
+    # 1. Upload an image
+    img = PILImage.new("RGB", (10, 10), color="green")
+    img_byte_arr = io.BytesIO()
+    img.save(img_byte_arr, format="PNG")
+    data = aiohttp.FormData()
+    data.add_field(
+        "file",
+        img_byte_arr.getvalue(),
+        filename="timestamp_test.png",
+        content_type="image/png",
+    )
+
+    resp = await client.post("/api/image", data=data)
+    assert resp.status == 201
+    result = await resp.json()
+    image_id = result["id"]
+
+    # 2. Verify API response DOES NOT have timestamps
+    assert "created_at" not in result
+    assert "updated_at" not in result
+
+    # 3. Verify database DOES have timestamps
+    from app import database, models
+    from sqlalchemy import select
+    from datetime import datetime
+
+    async with database.get_session() as session:
+        stmt = select(models.Image).where(models.Image.id == image_id)
+        db_result = await session.execute(stmt)
+        image = db_result.scalar_one()
+
+        assert isinstance(image.created_at, datetime)
+        assert isinstance(image.updated_at, datetime)
