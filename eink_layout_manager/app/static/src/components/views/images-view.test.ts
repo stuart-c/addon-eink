@@ -1,7 +1,17 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ImagesView } from './images-view';
 import './images-view';
-import { Image } from '../../services/HaApiClient';
+import { Image, api } from '../../services/HaApiClient';
+import '../shared/keyword-input';
+
+// Mock the API
+vi.mock('../../services/HaApiClient', () => {
+  return {
+    api: {
+      getKeywords: vi.fn().mockResolvedValue([]),
+    },
+  };
+});
 
 describe('ImagesView', () => {
   let element: ImagesView;
