@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import './app-root';
 import { AppRoot } from './app-root';
-import { api } from './services/HaApiClient';
 
 // Mock the API
 vi.mock('./services/HaApiClient', () => {
