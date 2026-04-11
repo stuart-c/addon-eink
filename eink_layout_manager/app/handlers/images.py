@@ -415,8 +415,6 @@ async def handle_image_update(request):
             {"error": "ID in body does not match ID in URL"}, status=400
         )
 
-
-
     try:
         async with database.get_session() as session:
             stmt = select(models.Image).where(models.Image.id == image_id)
@@ -427,7 +425,8 @@ async def handle_image_update(request):
                 return web.json_response({"error": "Not Found"}, status=404)
 
             # Pre-populate required fields for validation if missing
-            # This allows partial updates from the frontend while satisfying the full schema
+            # This allows partial updates from the frontend while
+            # satisfying the full schema
             if "id" not in data:
                 data["id"] = image.id
             if "name" not in data:
@@ -454,7 +453,8 @@ async def handle_image_update(request):
                 )
             except ValidationError as e:
                 return web.json_response(
-                    {"error": "Validation failed", "message": e.message}, status=400
+                    {"error": "Validation failed", "message": e.message},
+                    status=400,
                 )
 
             # Update fields from sanitized data
