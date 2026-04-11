@@ -55,10 +55,6 @@
       "type": "string",
       "description": "Long-form description of the image content"
     },
-    "file_path": {
-      "type": "string",
-      "description": "Relative path to the image file in storage"
-    },
     "original_archive_file": {
       "type": "string",
       "description": "Name of the original archive if imported"
@@ -76,18 +72,12 @@
       "description": "Current processing state of the image",
       "enum": ["UPLOADED", "PROCESSING", "READY", "ERROR"]
     },
-    "file_hash": {
-      "type": "string",
-      "description": "SHA-256 hash of the image file"
-    }
   },
   "required": [
     "id",
     "name",
     "file_type",
     "dimensions",
-    "file_path",
-    "status",
-    "file_hash"
+    "status"
   ]
 }
