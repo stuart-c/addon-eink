@@ -73,12 +73,14 @@ export class HaApiClient {
 
   private async _fetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
+    const headers: Record<string, string> = { ...(options.headers as any) };
+    if (!(options.body instanceof FormData)) {
+      headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+    }
+
     const response = await fetch(url, {
       ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
+      headers
     });
 
     if (!response.ok) {
@@ -130,6 +132,16 @@ export class HaApiClient {
   async getDisplayTypes(): Promise<DisplayType[]> { return this.getCollection<DisplayType>('display_type'); }
   async getImages(): Promise<Image[]> { return this.getCollection<Image>('image'); }
   async updateImage(id: string, image: Image): Promise<Image> { return this.updateItem<Image>('image', id, image); }
+  
+  async uploadImage(file: File): Promise<Image> {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    return this._fetch<Image>('api/image', {
+      method: 'POST',
+      body: formData,
+    });
+  }
 
   // --- Health ---
 

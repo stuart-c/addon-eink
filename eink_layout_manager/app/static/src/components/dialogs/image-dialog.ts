@@ -1,8 +1,9 @@
 import { LitElement, html, css } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { customElement, state } from 'lit/decorators.js';
 import '../shared/base-dialog';
 import { BaseDialog } from '../shared/base-dialog';
 import { commonStyles } from '../../styles/common-styles';
+import { api, Image } from '../../services/HaApiClient';
 
 /**
  * A dialog component for adding and processing new images.
@@ -121,12 +122,84 @@ export class ImageDialog extends LitElement {
         justify-content: flex-end;
         gap: 0.75rem;
       }
+
+      .preview-image {
+        width: 100%;
+        height: 100%;
+        max-height: 300px;
+        object-fit: contain;
+        border-radius: var(--border-radius);
+      }
+
+      .error-message {
+        background: #fff1f0;
+        border: 1px solid #ffa39e;
+        color: #f5222d;
+        padding: 0.75rem;
+        border-radius: var(--border-radius);
+        margin-bottom: 1.5rem;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
     `
   ];
 
+  @state() private _uploadedImage: Image | null = null;
+  @state() private _isUploading = false;
+  @state() private _error: string | null = null;
+
   async show() {
+    this._uploadedImage = null;
+    this._isUploading = false;
+    this._error = null;
     await this.updateComplete;
     (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).show();
+  }
+
+  private _handleUploadClick() {
+    this.shadowRoot?.querySelector<HTMLInputElement>('input[type="file"]')?.click();
+  }
+
+  private async _onFileChange(e: Event) {
+    const input = e.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      await this._processFile(input.files[0]);
+    }
+  }
+
+  private _onDragOver(e: DragEvent) {
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+    this.shadowRoot?.querySelector('.upload-section')?.classList.add('drag-over');
+  }
+
+  private _onDragLeave() {
+    this.shadowRoot?.querySelector('.upload-section')?.classList.remove('drag-over');
+  }
+
+  private async _onDrop(e: DragEvent) {
+    e.preventDefault();
+    this._onDragLeave();
+    const file = e.dataTransfer?.files[0];
+    if (file && file.type.startsWith('image/')) {
+      await this._processFile(file);
+    }
+  }
+
+  private async _processFile(file: File) {
+    this._isUploading = true;
+    this._error = null;
+    try {
+      const result = await api.uploadImage(file);
+      this._uploadedImage = result;
+    } catch (err: any) {
+      this._error = err.message || 'Failed to upload image';
+      console.error('Upload error:', err);
+    } finally {
+      this._isUploading = false;
+    }
   }
 
   render() {
@@ -135,9 +208,20 @@ export class ImageDialog extends LitElement {
         <div class="dialog-content">
           <!-- Metadata Fields (Left) -->
           <div class="metadata-fields">
+            ${this._error ? html`
+              <div class="error-message">
+                <span class="material-icons" style="font-size: 18px;">error_outline</span>
+                ${this._error}
+              </div>
+            ` : ''}
+
             <div class="form-group">
               <label>Name</label>
-              <input type="text" placeholder="Optional - defaults to filename">
+              <input 
+                type="text" 
+                placeholder="Optional - defaults to filename"
+                .value="${this._uploadedImage?.name || ''}"
+              >
             </div>
             
             <div class="form-group">
@@ -163,32 +247,73 @@ export class ImageDialog extends LitElement {
             <div class="grid" style="margin-top: 1.25rem;">
               <div class="form-group" style="margin-bottom: 0;">
                 <label>Width (px)</label>
-                <input type="number" readonly placeholder="Auto-detected">
+                <input 
+                  type="number" 
+                  readonly 
+                  placeholder="Auto-detected"
+                  .value="${this._uploadedImage?.dimensions.width || ''}"
+                >
               </div>
               <div class="form-group" style="margin-bottom: 0;">
                 <label>Height (px)</label>
-                <input type="number" readonly placeholder="Auto-detected">
+                <input 
+                  type="number" 
+                  readonly 
+                  placeholder="Auto-detected"
+                  .value="${this._uploadedImage?.dimensions.height || ''}"
+                >
               </div>
             </div>
 
             <div class="grid" style="margin-top: 1.25rem;">
               <div class="form-group" style="margin-bottom: 0;">
                 <label>Format</label>
-                <input type="text" readonly placeholder="Auto-detected">
+                <input 
+                  type="text" 
+                  readonly 
+                  placeholder="Auto-detected"
+                  .value="${this._uploadedImage?.file_type || ''}"
+                >
               </div>
               <div class="form-group" style="margin-bottom: 0;">
                 <label>Colour Depth</label>
-                <input type="text" readonly placeholder="Auto-detected">
+                <input 
+                  type="text" 
+                  readonly 
+                  placeholder="Auto-detected"
+                  .value="${this._uploadedImage?.colour_depth || ''}"
+                >
               </div>
             </div>
           </div>
 
           <!-- Upload Drop Zone (Right) -->
-          <div class="upload-section">
-            <span class="material-icons">cloud_upload</span>
-            <p>Drag & Drop Image</p>
-            <p class="hint">or click to browse your files</p>
-            <input type="file" style="display: none;" accept="image/*">
+          <div 
+            class="upload-section"
+            @click="${this._handleUploadClick}"
+            @dragover="${this._onDragOver}"
+            @dragleave="${this._onDragLeave}"
+            @drop="${this._onDrop}"
+          >
+            ${this._uploadedImage ? html`
+              <img 
+                src="api/image/${this._uploadedImage.id}/thumbnail" 
+                class="preview-image"
+                alt="Thumbnail preview"
+              >
+            ` : html`
+              <span class="material-icons">
+                ${this._isUploading ? 'sync' : 'cloud_upload'}
+              </span>
+              <p>${this._isUploading ? 'Uploading...' : 'Drag & Drop Image'}</p>
+              <p class="hint">${this._isUploading ? 'This may take a moment' : 'or click to browse your files'}</p>
+            `}
+            <input 
+              type="file" 
+              style="display: none;" 
+              accept="image/*"
+              @change="${this._onFileChange}"
+            >
           </div>
         </div>
 
@@ -199,7 +324,10 @@ export class ImageDialog extends LitElement {
           >
             Cancel
           </button>
-          <button @click="${() => {}}">
+          <button 
+            ?disabled="${this._isUploading || !this._uploadedImage}"
+            @click="${() => {}}"
+          >
             <span class="material-icons">publish</span>
             Upload Image
           </button>
