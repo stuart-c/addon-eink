@@ -41,13 +41,16 @@ Tests and lints **MUST** be run locally using the root `venv` before being pushe
 - **Linting:** `./venv/bin/flake8 --exclude=venv eink_layout_manager/app`.
 - **Tests:** `PYTHONPATH=eink_layout_manager ./venv/bin/pytest eink_layout_manager/app/tests`.
 
+> [!NOTE]
+> If the local Node.js version is incompatible with the frontend requirements (>=22.13.0), you are exempt from running `npm test` locally. In this case, you must only run the checks that work and rely on the PR build status for frontend verification.
+
 ## 5. Pull Request Management
 - **Mergeability:** PRs **MUST** be rebased from the latest `main` branch before any review is requested.
   ```bash
   git fetch origin
   git rebase origin/main
   ```
-- **Local Verification:** You **MUST** ensure all tests and lints pass locally (as per Section 4) before requesting a review.
+- **Local Verification:** You **MUST** ensure all tests and lints pass locally (as per Section 4) before requesting a review. For frontend changes where local Node.js is incompatible, the GitHub Action build status is the primary source of truth.
 - **PR Quality:** Before requesting a review, you **MUST** update the PR title and description to provide a clear explanation of:
     - **Purpose:** Why are these changes being made?
     - **Implementation:** How were the changes implemented? Highlight any significant architectural decisions, complex logic, or new patterns.

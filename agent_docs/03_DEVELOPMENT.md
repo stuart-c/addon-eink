@@ -17,6 +17,14 @@ We utilise **VS Code Dev Containers** to provide a consistent, reproducible deve
 > [!TIP]
 > Using the dev container ensures you are running tests and linters in the exact same environment as the CI pipeline.
 
+## Frontend Development
+
+The frontend UI is located in `eink_layout_manager/app/static`.
+
+- **Node.js Requirement:** The frontend requires **Node.js >=22.13.0**.
+- **Local Environment Note:** The local development environment may have an older version of Node.js (e.g., v18.x). In such cases, full test suites (`npm test`) may fail locally.
+- **Testing Strategy:** When local Node.js is incompatible, agents should only run checks that are known to work (e.g., basic linting or type checking if possible) and **MUST** rely on the GitHub Actions PR build status to verify frontend correctness.
+
 ## Workflow Patterns
 
 All agents and contributors must follow the mandatory workflow defined in the [Agent Workflow Guide](../agents.md). This includes using the `.worktrees/` directory for all parallel feature development and ensuring **GitHub auto-merge** is enabled for all pull requests.
