@@ -11,6 +11,7 @@ def setup_routes(app):
     api_prefix = "/api/{resource_type:(?:display_type|layout|image)}"
 
     # Image specific routes (more specific routes first)
+    app.router.add_get("/api/image/keywords", images.handle_image_keywords_get)
     app.router.add_get("/api/image", images.handle_image_list)
     app.router.add_get("/api/image/{id}", images.handle_image_get)
     app.router.add_get(

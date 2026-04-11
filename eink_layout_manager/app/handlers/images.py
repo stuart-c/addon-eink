@@ -2,6 +2,7 @@ import hashlib
 import io
 import os
 import uuid
+from collections import Counter
 from PIL import Image as PILImage
 from sqlalchemy import select
 from aiohttp import web
@@ -217,3 +218,35 @@ async def handle_image_delete(request):
             print(f"Error deleting image files for {image_id}: {str(e)}")
 
     return web.json_response({"status": "deleted"})
+
+
+async def handle_image_keywords_get(request):
+    """Retrieve an ordered list of keywords and their usage counts."""
+    try:
+        async with database.get_session() as session:
+            stmt = select(models.Image.keywords).where(
+                models.Image.keywords.is_not(None)
+            )
+            result = await session.execute(stmt)
+            all_keywords_lists = result.scalars().all()
+
+            counts = Counter()
+            for kw_list in all_keywords_lists:
+                if kw_list:
+                    counts.update(kw_list)
+
+            # Convert to list of objects, ordered by count descending.
+            # We also sort alphabetically for stable results on equal counts.
+            sorted_kws = sorted(
+                counts.items(), key=lambda x: (-x[1], x[0].lower())
+            )
+
+            ordered_keywords = [
+                {"keyword": kw, "count": count} for kw, count in sorted_kws
+            ]
+
+            return web.json_response(ordered_keywords)
+    except Exception as e:
+        return web.json_response(
+            {"error": "Database error", "details": str(e)}, status=500
+        )
