@@ -92,7 +92,7 @@ describe('ImagesView', () => {
 
   it('should render detailed search inputs', () => {
     const inputs = element.shadowRoot?.querySelectorAll('input[type="text"]');
-    const placeholders = Array.from(inputs || []).map(i => i.placeholder);
+    const placeholders = Array.from(inputs || []).map(i => (i as HTMLInputElement).placeholder);
     
     expect(placeholders).toContain('Search by title...');
     expect(placeholders).toContain('Search description...');
