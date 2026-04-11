@@ -1,8 +1,8 @@
 import { LitElement, html, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import './shared/base-dialog';
-import { BaseDialog } from './shared/base-dialog';
-import { commonStyles } from '../styles/common-styles';
+import '../shared/base-dialog';
+import { BaseDialog } from '../shared/base-dialog';
+import { commonStyles } from '../../styles/common-styles';
 
 /**
  * A dialog component for adding and processing new images.

@@ -1,11 +1,11 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { live } from 'lit/directives/live.js';
-import type { DisplayType } from '../services/HaApiClient';
-import { commonStyles } from '../styles/common-styles';
-import './shared/hardware-preview';
-import './shared/section-layout';
-import './yaml-editor';
+import type { DisplayType } from '../../services/HaApiClient';
+import { commonStyles } from '../../styles/common-styles';
+import '../shared/hardware-preview';
+import '../shared/section-layout';
+import '../layout/yaml-editor';
 
 /**
  * A view component for managing eInk Display Types.

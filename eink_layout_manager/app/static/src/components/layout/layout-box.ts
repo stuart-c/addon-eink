@@ -1,7 +1,7 @@
 import { LitElement, html, css, PropertyValues } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import './shared/hardware-preview';
-import { commonStyles } from '../styles/common-styles';
+import '../shared/hardware-preview';
+import { commonStyles } from '../../styles/common-styles';
 
 /**
  * Represents a single fixed-size display instance on the layout.

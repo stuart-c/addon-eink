@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { LayoutsView } from './layouts-view';
 import './layouts-view';
-import { Layout, DisplayType } from '../services/HaApiClient';
+import { Layout, DisplayType } from '../../services/HaApiClient';
 
 describe('LayoutsView', () => {
   let element: LayoutsView;

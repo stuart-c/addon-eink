@@ -4,7 +4,7 @@ import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import yaml from 'js-yaml';
 import Prism from 'prismjs';
 import 'prismjs/components/prism-yaml';
-import { commonStyles } from '../styles/common-styles';
+import { commonStyles } from '../../styles/common-styles';
 
 
 /**

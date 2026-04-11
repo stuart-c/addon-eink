@@ -1,12 +1,12 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state, query } from 'lit/decorators.js';
-import { DisplayType, Layout } from '../services/HaApiClient';
-import { commonStyles } from '../styles/common-styles';
-import './app-toolbar';
-import './layout-editor';
-import './yaml-editor';
-import './shared/section-layout';
-import { LayoutSettingsDialog } from './layout-settings-dialog';
+import { DisplayType, Layout } from '../../services/HaApiClient';
+import { commonStyles } from '../../styles/common-styles';
+import '../layout/app-toolbar';
+import '../layout/layout-editor';
+import '../layout/yaml-editor';
+import '../shared/section-layout';
+import { LayoutSettingsDialog } from '../dialogs/layout-settings-dialog';
 
 /**
  * A view component for managing eInk Layouts.

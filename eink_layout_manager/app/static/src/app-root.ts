@@ -2,21 +2,21 @@ import { LitElement, html, css } from 'lit';
 import { customElement, state, query } from 'lit/decorators.js';
 import { HaStateController, type AppSection } from './controllers/HaStateController';
 
-import './components/app-header';
-import './components/side-bar';
-import './components/layouts-view';
-import './components/display-types-view';
-import { DisplayTypesView } from './components/display-types-view';
-import { LayoutsView } from './components/layouts-view';
-import './components/item-settings-dialog';
-import './components/image-dialog';
-import './components/confirm-dialog';
+import './components/shell/app-header';
+import './components/layout/side-bar';
+import './components/views/layouts-view';
+import './components/views/display-types-view';
+import { DisplayTypesView } from './components/views/display-types-view';
+import { LayoutsView } from './components/views/layouts-view';
+import './components/dialogs/item-settings-dialog';
+import './components/dialogs/image-dialog';
+import './components/dialogs/confirm-dialog';
 import './components/shared/empty-view';
 import './components/shared/section-layout';
 
-import { ItemSettingsDialog } from './components/item-settings-dialog';
-import { ImageDialog } from './components/image-dialog';
-import { ConfirmDialog } from './components/confirm-dialog';
+import { ItemSettingsDialog } from './components/dialogs/item-settings-dialog';
+import { ImageDialog } from './components/dialogs/image-dialog';
+import { ConfirmDialog } from './components/dialogs/confirm-dialog';
 import { DisplayType, Layout } from './services/HaApiClient';
 
 @customElement('app-root')
