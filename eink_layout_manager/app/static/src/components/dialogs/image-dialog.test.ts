@@ -23,7 +23,7 @@ describe('ImageDialog', () => {
     keywords: ['test', 'unit'],
     file_type: 'PNG',
     dimensions: { width: 800, height: 600 },
-    colour_depth: 'Greyscale',
+    colour_depth: 8,
     file_path: '/path/to/img1.png',
     file_hash: 'hash1'
   };

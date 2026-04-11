@@ -18,7 +18,7 @@ import './components/shared/section-layout';
 import { ItemSettingsDialog } from './components/dialogs/item-settings-dialog';
 import { ImageDialog } from './components/dialogs/image-dialog';
 import { ConfirmDialog } from './components/dialogs/confirm-dialog';
-import { DisplayType, Layout } from './services/HaApiClient';
+import { DisplayType, Layout, Image } from './services/HaApiClient';
 
 @customElement('app-root')
 export class AppRoot extends LitElement {
