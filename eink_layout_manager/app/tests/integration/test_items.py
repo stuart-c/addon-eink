@@ -1,48 +1,4 @@
-import os
 import pytest
-from app.main import init_app
-from app.utils.storage import get_storage_path
-from app.utils.validation import load_schema
-
-
-@pytest.fixture
-def app(tmp_path):
-    """
-    Fixture to initialise the application for testing
-    using a temporary data directory.
-    """
-    # Override DATA_DIR for tests
-    os.environ["DATA_DIR"] = str(tmp_path)
-    return init_app()
-
-
-# --- Helper Tests ---
-def test_get_storage_path(tmp_path):
-    """Test get_storage_path correctly creates and returns the directory."""
-    os.environ["DATA_DIR"] = str(tmp_path)
-    path = get_storage_path("display_type")
-    assert path == os.path.join(str(tmp_path), "display_type")
-    assert os.path.exists(path)
-
-
-def test_load_schema():
-    """Test load_schema returns a valid schema dict."""
-    schema = load_schema("display_type")
-    assert isinstance(schema, dict)
-    assert schema["title"] == "DisplayType"
-
-    with pytest.raises(FileNotFoundError):
-        load_schema("non_existent_schema")
-
-
-# --- Handler Tests ---
-@pytest.mark.asyncio
-async def test_ping(aiohttp_client, app):
-    """Test the /ping health check."""
-    client = await aiohttp_client(app)
-    resp = await client.get("/api/ping")
-    assert resp.status == 200
-    assert await resp.text() == "pong"
 
 
 @pytest.mark.asyncio
