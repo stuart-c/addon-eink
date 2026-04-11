@@ -13,11 +13,8 @@ def image_model_to_dict(image):
         "colour_depth": image.colour_depth,
         "keywords": image.keywords if image.keywords is not None else [],
         "description": image.description,
-        "file_path": image.file_path,
         "original_archive_file": image.original_archive_file,
         "license": image.license,
         "source": image.source,
         "status": image.status,
-        "file_hash": image.file_hash,
-        "thumbnail_path": image.thumbnail_path,
     }

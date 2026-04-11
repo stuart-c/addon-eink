@@ -124,6 +124,21 @@ async def handle_image_get(request):
         )
 
 
+async def handle_image_list(request):
+    """Retrieve all image metadata from the SQL database."""
+    try:
+        async with database.get_session() as session:
+            stmt = select(models.Image).order_by(models.Image.name)
+            result = await session.execute(stmt)
+            images = result.scalars().all()
+
+            return web.json_response([image_model_to_dict(i) for i in images])
+    except Exception as e:
+        return web.json_response(
+            {"error": "Database error", "details": str(e)}, status=500
+        )
+
+
 async def handle_image_thumbnail_get(request):
     """Serve the thumbnail image file from disk."""
     image_id = request.match_info["id"]

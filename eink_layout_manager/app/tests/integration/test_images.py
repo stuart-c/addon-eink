@@ -34,8 +34,9 @@ async def test_image_upload_success(aiohttp_client, app, tmp_path):
     assert result["dimensions"] == {"width": width, "height": height}
     assert result["status"] == "UPLOADED"
     assert "id" in result
-    assert "file_hash" in result
-    assert result["file_path"].endswith(".png")
+    assert "id" in result
+    assert "file_hash" not in result
+    assert "file_path" not in result
 
     # Check for presence of all schema fields
     for field in [
@@ -47,9 +48,13 @@ async def test_image_upload_success(aiohttp_client, app, tmp_path):
         "original_archive_file",
         "license",
         "source",
-        "thumbnail_path",
     ]:
         assert field in result
+    
+    # Verify internal fields are ABSENT
+    assert "thumbnail_path" not in result
+    assert "file_path" not in result
+    assert "file_hash" not in result
 
     # 5. Verify file exists on disk
     storage_path = os.path.join(str(tmp_path), "image")
@@ -144,9 +149,10 @@ async def test_image_upload_with_thumbnail(aiohttp_client, app, tmp_path):
     assert resp.status == 201
     result = await resp.json()
 
-    # 4. Verify thumbnail path in response
-    assert "thumbnail_path" in result
-    assert result["thumbnail_path"] == result["file_path"]
+    # 4. Verify internal fields are NOT in response
+    assert "thumbnail_path" not in result
+    assert "file_path" not in result
+    assert "file_hash" not in result
 
     # Check for presence of all schema fields (ensuring consistency)
     for field in [
@@ -164,10 +170,12 @@ async def test_image_upload_with_thumbnail(aiohttp_client, app, tmp_path):
         "license",
         "source",
         "status",
-        "file_hash",
-        "thumbnail_path",
     ]:
         assert field in result
+    
+    # Internal fields should be ABSENT
+    for field in ["file_path", "file_hash", "thumbnail_path"]:
+        assert field not in result
 
     # 5. Verify thumbnail file exists on disk
     thumb_storage_path = os.path.join(str(tmp_path), "thumbnail")
@@ -206,7 +214,15 @@ async def test_image_delete_success(aiohttp_client, app, tmp_path):
     assert resp.status == 201
     result = await resp.json()
     image_id = result["id"]
-    filename = result["file_path"]
+
+    # Retrieve full record from DB to get internal path for file verification
+    from app import database, models
+    from sqlalchemy import select
+    async with database.get_session() as session:
+        stmt = select(models.Image).where(models.Image.id == image_id)
+        db_result = await session.execute(stmt)
+        image = db_result.scalar_one()
+        filename = image.file_path
 
     # 2. Verify files exist
     storage_path = os.path.join(str(tmp_path), "image")
