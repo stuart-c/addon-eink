@@ -19,15 +19,15 @@ We utilise **VS Code Dev Containers** to provide a consistent, reproducible deve
 
 ## Workflow Patterns
 
-All agents and contributors must follow the mandatory workflow defined in the [Agent Workflow Guide](../agents.md). This includes using the `.worktrees/` directory for all parallel feature development and enabling **GitHub auto-merge** for all pull requests.
+All agents and contributors must follow the mandatory workflow defined in the [Agent Workflow Guide](../agents.md). This includes using the `.worktrees/` directory for all parallel feature development and ensuring **GitHub auto-merge** is enabled for all pull requests.
 
-> [!TIP]
-> Enabling auto-merge ensures that your contributions are integrated as soon as they satisfy the repository's status checks and approval requirements, maintaining a high-velocity development cycle.
+> [!IMPORTANT]
+> **Enabling auto-merge is mandatory.** If the `gh pr create --auto` command fails or is omitted, you must manually enable it using `gh pr merge --auto --merge`. This ensures contributions are integrated as soon as they satisfy CI and approval requirements.
 
 ### Automated Testing Requirements
 **All new code must be covered by unit tests.** 
 - Ensure that any new logic, API endpoints, or schema changes have corresponding test cases in the `tests/` directory.
-- Verify that your tests pass locally before submitting a PR as per the workflow guide.
+- **Mandatory Verification**: You **MUST** verify that your tests and lints pass locally using the root `venv` before submitting a PR or requesting a review, as per the parameters in the [Workflow Guide](../agents.md).
 
 ### API Consistency Rule
 To simplify frontend state management, **POST (creation) responses MUST exactly match GET (retrieval) responses** for the same resource. This ensures the frontend receives the complete metadata object immediately upon resource creation.
