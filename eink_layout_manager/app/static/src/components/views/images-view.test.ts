@@ -161,10 +161,55 @@ describe('ImagesView', () => {
     expect(placeholders).toContain('Collection');
   });
 
-  it('should render sort dropdown with options', () => {
-    const select = element.shadowRoot?.querySelector('select');
-    expect(select).toBeTruthy();
-    expect(select?.querySelectorAll('option').length).toBeGreaterThan(4);
+  it('should render sort priority section', () => {
+    const title = Array.from(element.shadowRoot?.querySelectorAll('.sidebar-title') || [])
+      .find(el => el.textContent?.includes('Sort Priority'));
+    expect(title).toBeTruthy();
+    
+    const sortItems = element.shadowRoot?.querySelectorAll('.sort-item');
+    expect(sortItems?.length).toBe(1);
+    expect(sortItems?.[0].textContent).toContain('Name');
+  });
+
+  it('should add a sort field from the menu', async () => {
+    // Open menu
+    const addButton = element.shadowRoot?.querySelector('.add-sort-button') as HTMLElement;
+    addButton.click();
+    await element.updateComplete;
+
+    const menuItems = element.shadowRoot?.querySelectorAll('.add-sort-item');
+    expect(menuItems?.length).toBe(4); // 5 total - 1 active (Name)
+
+    // Click Artist
+    const artistItem = Array.from(menuItems || []).find(i => i.textContent?.trim() === 'Artist') as HTMLElement;
+    artistItem.click();
+    await element.updateComplete;
+
+    const sortItems = element.shadowRoot?.querySelectorAll('.sort-item');
+    expect(sortItems?.length).toBe(2);
+    expect(sortItems?.[1].textContent).toContain('Artist');
+  });
+
+  it('should remove a sort field', async () => {
+    // Initial: Name
+    const removeButton = element.shadowRoot?.querySelector('.sort-action.remove') as HTMLElement;
+    removeButton.click();
+    await element.updateComplete;
+
+    const sortItems = element.shadowRoot?.querySelectorAll('.sort-item');
+    expect(sortItems?.length).toBe(0);
+  });
+
+  it('should toggle sort direction', async () => {
+    const toggleButton = element.shadowRoot?.querySelector('.sort-action') as HTMLElement;
+    const icon = toggleButton.querySelector('.material-icons');
+    
+    expect(icon?.textContent?.trim()).toBe('north'); // asc
+
+    toggleButton.click();
+    await element.updateComplete;
+    
+    expect(icon?.textContent?.trim()).toBe('south'); // desc
   });
 
   it('should reset filters when reset button is clicked', async () => {
