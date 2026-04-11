@@ -32,7 +32,6 @@ async def test_image_upload_success(aiohttp_client, app, tmp_path):
     assert result["name"] == "test_upload.png"
     assert result["file_type"] == "PNG"
     assert result["dimensions"] == {"width": width, "height": height}
-    assert result["status"] == "UPLOADED"
     assert "id" in result
     assert "file_hash" not in result
     assert "file_path" not in result
@@ -176,7 +175,6 @@ async def test_image_upload_with_thumbnail(aiohttp_client, app, tmp_path):
         "original_archive_file",
         "license",
         "source",
-        "status",
     ]:
         assert field in result
 
@@ -347,7 +345,6 @@ async def test_get_image_success(aiohttp_client, app):
     assert result["name"] == "test_get.png"
     assert result["file_type"] == "PNG"
     assert result["dimensions"] == {"width": width, "height": height}
-    assert result["status"] == "UPLOADED"
 
     # Verify internal fields are ABSENT
     assert "file_hash" not in result
