@@ -8,6 +8,7 @@ vi.mock('../services/HaApiClient', () => {
     api: {
       ping: vi.fn(),
       getCollection: vi.fn(),
+      getImages: vi.fn(),
       createItem: vi.fn(),
       updateItem: vi.fn(),
       deleteItem: vi.fn(),
@@ -40,6 +41,7 @@ describe('HaStateController', () => {
   it('should refresh and set connected state', async () => {
     vi.mocked(api.ping).mockResolvedValue(true);
     vi.mocked(api.getCollection).mockResolvedValue([]);
+    vi.mocked(api.getImages).mockResolvedValue([]);
     
     // Mock the createItem call during createDefaultLayout
     vi.mocked(api.createItem).mockResolvedValue({ id: 'default' } as any);
