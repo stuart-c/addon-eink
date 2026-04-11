@@ -18,3 +18,14 @@ def image_model_to_dict(image):
         "source": image.source,
         "status": image.status,
     }
+
+
+def image_model_to_summary_dict(image):
+    """Convert an Image model instance to a summary dictionary."""
+    return {
+        "id": image.id,
+        "name": image.name,
+        "artist": image.artist,
+        "collection": image.collection,
+        "description": image.description,
+    }
