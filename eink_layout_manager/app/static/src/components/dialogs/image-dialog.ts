@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '../shared/base-dialog';
+import '../shared/keyword-input';
 import { BaseDialog } from '../shared/base-dialog';
 import { commonStyles } from '../../styles/common-styles';
 import { api, Image } from '../../services/HaApiClient';
@@ -149,11 +150,13 @@ export class ImageDialog extends LitElement {
   @state() private _uploadedImage: Image | null = null;
   @state() private _isUploading = false;
   @state() private _error: string | null = null;
+  @state() private _keywords: string[] = [];
 
   async show() {
     this._uploadedImage = null;
     this._isUploading = false;
     this._error = null;
+    this._keywords = [];
     await this.updateComplete;
     (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).show();
   }
@@ -214,6 +217,10 @@ export class ImageDialog extends LitElement {
     }
   }
 
+  private _handleKeywordsChanged(e: CustomEvent<{ keywords: string[] }>) {
+    this._keywords = e.detail.keywords;
+  }
+
   render() {
     return html`
       <base-dialog title="Add New Image">
@@ -253,7 +260,10 @@ export class ImageDialog extends LitElement {
 
             <div class="form-group" style="margin-bottom: 0;">
               <label>Keywords</label>
-              <input type="text" placeholder="summer, beach, sunset (comma separated)">
+              <keyword-input 
+                .keywords="${this._keywords}"
+                @keywords-changed="${this._handleKeywordsChanged}"
+              ></keyword-input>
             </div>
 
             <div class="grid" style="margin-top: 1.25rem;">

@@ -62,6 +62,11 @@ export interface Image {
   file_hash: string;
 }
 
+export interface KeywordInfo {
+  keyword: string;
+  count: number;
+}
+
 export type ResourceType = 'display_type' | 'layout' | 'image';
 
 export class HaApiClient {
@@ -132,15 +137,18 @@ export class HaApiClient {
   async getDisplayTypes(): Promise<DisplayType[]> { return this.getCollection<DisplayType>('display_type'); }
   async getImages(): Promise<Image[]> { return this.getCollection<Image>('image'); }
   async updateImage(id: string, image: Image): Promise<Image> { return this.updateItem<Image>('image', id, image); }
-  
   async uploadImage(file: File): Promise<Image> {
     const formData = new FormData();
     formData.append('file', file);
-    
+
     return this._fetch<Image>('api/image', {
       method: 'POST',
       body: formData,
     });
+  }
+
+  async getKeywords(): Promise<KeywordInfo[]> {
+    return this._fetch<KeywordInfo[]>('api/image/keywords');
   }
 
   // --- Health ---
