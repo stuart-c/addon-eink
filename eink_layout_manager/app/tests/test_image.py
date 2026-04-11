@@ -49,6 +49,20 @@ async def test_image_upload_success(aiohttp_client, app, tmp_path):
     assert "file_hash" in result
     assert result["file_path"].endswith(".png")
 
+    # Check for presence of all schema fields
+    for field in [
+        "artist",
+        "collection",
+        "colour_depth",
+        "keywords",
+        "description",
+        "original_archive_file",
+        "license",
+        "source",
+        "thumbnail_path",
+    ]:
+        assert field in result
+
     # 5. Verify file exists on disk
     storage_path = os.path.join(str(tmp_path), "image")
     file_path = os.path.join(storage_path, result["file_path"])
@@ -146,6 +160,27 @@ async def test_image_upload_with_thumbnail(aiohttp_client, app, tmp_path):
     # 4. Verify thumbnail path in response
     assert "thumbnail_path" in result
     assert result["thumbnail_path"] == result["file_path"]
+
+    # Check for presence of all schema fields (ensuring consistency)
+    for field in [
+        "id",
+        "name",
+        "artist",
+        "collection",
+        "file_type",
+        "dimensions",
+        "colour_depth",
+        "keywords",
+        "description",
+        "file_path",
+        "original_archive_file",
+        "license",
+        "source",
+        "status",
+        "file_hash",
+        "thumbnail_path",
+    ]:
+        assert field in result
 
     # 5. Verify thumbnail file exists on disk
     thumb_storage_path = os.path.join(str(tmp_path), "thumbnail")
