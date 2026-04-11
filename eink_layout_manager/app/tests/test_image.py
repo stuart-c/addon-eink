@@ -215,3 +215,48 @@ async def test_image_delete_not_found(aiohttp_client, app):
     client = await aiohttp_client(app)
     resp = await client.delete("/api/image/nonexistent_id")
     assert resp.status == 404
+
+
+@pytest.mark.asyncio
+async def test_image_get_thumbnail_success(aiohttp_client, app):
+    """Test successful thumbnail retrieval."""
+    client = await aiohttp_client(app)
+
+    # 1. Upload an image (large enough to definitely have a thumbnail)
+    width, height = 400, 300
+    img = PILImage.new("RGB", (width, height), color="blue")
+    img_byte_arr = io.BytesIO()
+    img.save(img_byte_arr, format="JPEG")
+    img_data = img_byte_arr.getvalue()
+
+    data = aiohttp.FormData()
+    data.add_field(
+        "file", img_data, filename="thumb_test.jpg", content_type="image/jpeg"
+    )
+    resp = await client.post("/api/image", data=data)
+    assert resp.status == 201
+    result = await resp.json()
+    image_id = result["id"]
+
+    # 2. Get the thumbnail
+    thumb_resp = await client.get(f"/api/image/{image_id}/thumbnail")
+    assert thumb_resp.status == 200
+    assert thumb_resp.content_type in [
+        "image/jpeg",
+        "application/octet-stream",
+    ]
+
+    # 3. Verify it's actually an image and has correct dimensions
+    thumb_data = await thumb_resp.read()
+    with PILImage.open(io.BytesIO(thumb_data)) as thumb_img:
+        tw, th = thumb_img.size
+        assert tw <= 200
+        assert th <= 200
+
+
+@pytest.mark.asyncio
+async def test_image_get_thumbnail_not_found(aiohttp_client, app):
+    """Test thumbnail retrieval for non-existent image returns 404."""
+    client = await aiohttp_client(app)
+    resp = await client.get("/api/image/nonexistent_id/thumbnail")
+    assert resp.status == 404
