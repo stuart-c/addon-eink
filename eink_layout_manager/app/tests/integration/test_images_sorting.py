@@ -5,7 +5,7 @@ import uuid
 
 @pytest.fixture
 async def sample_images(app):
-    """Fixture to populate the database with sample images for sorting tests."""
+    """Fixture to populate the database with sample images for tests."""
     images = [
         models.Image(
             id=uuid.uuid4().hex,
@@ -59,10 +59,11 @@ async def test_image_list_sort_default(aiohttp_client, app, sample_images):
     resp = await client.get("/api/image")
     assert resp.status == 200
     result = await resp.json()
+    items = result["items"]
     # Expected order: Alpha, beta, Gamma
-    assert result[0]["name"] == "Alpha"
-    assert result[1]["name"] == "beta"
-    assert result[2]["name"] == "Gamma"
+    assert items[0]["name"] == "Alpha"
+    assert items[1]["name"] == "beta"
+    assert items[2]["name"] == "Gamma"
 
 
 @pytest.mark.asyncio
@@ -72,10 +73,11 @@ async def test_image_list_sort_name_desc(aiohttp_client, app, sample_images):
     resp = await client.get("/api/image?sort=name:desc")
     assert resp.status == 200
     result = await resp.json()
+    items = result["items"]
     # Expected order: Gamma, beta, Alpha
-    assert result[0]["name"] == "Gamma"
-    assert result[1]["name"] == "beta"
-    assert result[2]["name"] == "Alpha"
+    assert items[0]["name"] == "Gamma"
+    assert items[1]["name"] == "beta"
+    assert items[2]["name"] == "Alpha"
 
 
 @pytest.mark.asyncio
@@ -85,12 +87,13 @@ async def test_image_list_sort_multi_field(aiohttp_client, app, sample_images):
     resp = await client.get("/api/image?sort=artist:asc,name:desc")
     assert resp.status == 200
     result = await resp.json()
+    items = result["items"]
 
     # artist: apple/Apple -> name:desc -> Gamma (G), beta (b)
     # then Zebra -> Alpha
-    assert result[0]["name"] == "Gamma"
-    assert result[1]["name"] == "beta"
-    assert result[2]["name"] == "Alpha"
+    assert items[0]["name"] == "Gamma"
+    assert items[1]["name"] == "beta"
+    assert items[2]["name"] == "Alpha"
 
 
 @pytest.mark.asyncio
@@ -100,10 +103,11 @@ async def test_image_list_sort_numeric(aiohttp_client, app, sample_images):
     resp = await client.get("/api/image?sort=width:asc")
     assert resp.status == 200
     result = await resp.json()
+    items = result["items"]
     # widths: 100 (Alpha), 200 (Gamma), 300 (beta)
-    assert result[0]["name"] == "Alpha"
-    assert result[1]["name"] == "Gamma"
-    assert result[2]["name"] == "beta"
+    assert items[0]["name"] == "Alpha"
+    assert items[1]["name"] == "Gamma"
+    assert items[2]["name"] == "beta"
 
 
 @pytest.mark.asyncio
@@ -115,5 +119,6 @@ async def test_image_list_sort_invalid_field(
     resp = await client.get("/api/image?sort=invalid:asc")
     assert resp.status == 200
     result = await resp.json()
+    items = result["items"]
     # Should fallback to name:asc
-    assert result[0]["name"] == "Alpha"
+    assert items[0]["name"] == "Alpha"

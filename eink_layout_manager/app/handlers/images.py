@@ -129,7 +129,7 @@ async def handle_image_get(request):
 
 
 async def handle_image_list(request):
-    """Retrieve image metadata from the SQL database with sorting and pagination."""
+    """Retrieve image metadata with sorting and pagination."""
     # 1. Parse sorting parameters
     sort_query = request.query.get("sort", "name:asc")
 
