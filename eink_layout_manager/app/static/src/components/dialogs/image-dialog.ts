@@ -26,6 +26,12 @@ export class ImageDialog extends LitElement {
         box-sizing: border-box;
       }
 
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+      }
+
       .metadata-fields {
         display: flex;
         flex-direction: column;
@@ -152,6 +158,28 @@ export class ImageDialog extends LitElement {
             <div class="form-group" style="margin-bottom: 0;">
               <label>Keywords</label>
               <input type="text" placeholder="summer, beach, sunset (comma separated)">
+            </div>
+
+            <div class="grid" style="margin-top: 1.25rem;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label>Width (px)</label>
+                <input type="number" readonly placeholder="Auto-detected">
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label>Height (px)</label>
+                <input type="number" readonly placeholder="Auto-detected">
+              </div>
+            </div>
+
+            <div class="grid" style="margin-top: 1.25rem;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label>Format</label>
+                <input type="text" readonly placeholder="Auto-detected">
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label>Colour Depth</label>
+                <input type="text" readonly placeholder="Auto-detected">
+              </div>
             </div>
           </div>
 
