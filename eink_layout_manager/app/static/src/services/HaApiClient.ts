@@ -58,7 +58,6 @@ export interface Image {
   original_archive_file?: string;
   license?: string;
   source?: string;
-  status: 'UPLOADED' | 'PROCESSING' | 'READY' | 'ERROR';
   file_hash: string;
 }
 

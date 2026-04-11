@@ -67,17 +67,12 @@
       "type": "string",
       "description": "Original source URL or repository"
     },
-    "status": {
-      "type": "string",
-      "description": "Current processing state of the image",
-      "enum": ["UPLOADED", "PROCESSING", "READY", "ERROR"]
-    },
+
   },
   "required": [
     "id",
     "name",
     "file_type",
-    "dimensions",
-    "status"
+    "dimensions"
   ]
 }
