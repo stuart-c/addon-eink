@@ -180,6 +180,7 @@ async def handle_image_list(request):
         order_by_clauses = [func.lower(models.Image.name).asc()]
 
     # 2. Parse pagination parameters
+    # 2. Parse pagination parameters
     try:
         page = int(request.query.get("page", 1))
         limit = int(request.query.get("limit", 20))
@@ -197,17 +198,84 @@ async def handle_image_list(request):
 
     offset = (page - 1) * limit
 
+    # 3. Parse filtering parameters
+    filters = []
+
+    # Mandatory status filter
+    filters.append(models.Image.status == "READY")
+
+    # Numeric filters
+    try:
+        min_width = request.query.get("min_width")
+        if min_width:
+            filters.append(models.Image.width >= int(min_width))
+
+        max_width = request.query.get("max_width")
+        if max_width:
+            filters.append(models.Image.width <= int(max_width))
+
+        min_height = request.query.get("min_height")
+        if min_height:
+            filters.append(models.Image.height >= int(min_height))
+
+        max_height = request.query.get("max_height")
+        if max_height:
+            filters.append(models.Image.height <= int(max_height))
+    except ValueError:
+        return web.json_response(
+            {"error": "Invalid numeric filter parameter"}, status=400
+        )
+
+    # Text filters (Case-insensitive partial match)
+    # title maps to name
+    title = request.query.get("title")
+    if title:
+        filters.append(models.Image.name.ilike(f"%{title}%"))
+
+    description = request.query.get("description")
+    if description:
+        filters.append(models.Image.description.ilike(f"%{description}%"))
+
+    artist = request.query.get("artist")
+    if artist:
+        filters.append(models.Image.artist.ilike(f"%{artist}%"))
+
+    collection = request.query.get("collection")
+    if collection:
+        filters.append(models.Image.collection.ilike(f"%{collection}%"))
+
+    # Keyword filter (comma-separated, AND logic/intersection)
+    keyword_query = request.query.get("keyword")
+    if keyword_query:
+        kws = [k.strip() for k in keyword_query.split(",") if k.strip()]
+        for kw in kws:
+            # Subquery to check for keyword in JSON array
+            kw_je = func.json_each(
+                models.Image.keywords
+            ).table_valued("value")
+            kw_subquery = (
+                select(1)
+                .select_from(kw_je)
+                .where(kw_je.c.value == kw)
+                .exists()
+            )
+            filters.append(kw_subquery)
+
     try:
         async with database.get_session() as session:
-            # Get total count
-            count_stmt = select(func.count()).select_from(models.Image)
+            # Build base statement with filters
+            base_stmt = select(models.Image).where(*filters)
+
+            # Get total count (from filtered set)
+            count_stmt = select(func.count()).select_from(
+                base_stmt.alias("filtered_images")
+            )
             count_result = await session.execute(count_stmt)
             total_count = count_result.scalar() or 0
 
             # Get sorted and paginated results
             stmt = (
-                select(models.Image)
-                .order_by(*order_by_clauses)
+                base_stmt.order_by(*order_by_clauses)
                 .limit(limit)
                 .offset(offset)
             )

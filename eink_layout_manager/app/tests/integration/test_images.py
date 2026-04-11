@@ -404,7 +404,20 @@ async def test_image_list_success(aiohttp_client, app):
         filename="list_test.png",
         content_type="image/png",
     )
-    await client.post("/api/image", data=data)
+    upload_resp = await client.post("/api/image", data=data)
+    assert upload_resp.status == 201
+    image_id = (await upload_resp.json())["id"]
+
+    # 2.5 Manually set status to READY so it appears in filtered list
+    from app import database, models
+    from sqlalchemy import update
+    async with database.get_session() as session:
+        await session.execute(
+            update(models.Image)
+            .where(models.Image.id == image_id)
+            .values(status="READY")
+        )
+        await session.commit()
 
     # 3. Retrieve list with content
     resp = await client.get("/api/image")
@@ -430,6 +443,7 @@ async def test_image_list_pagination(aiohttp_client, app):
     client = await aiohttp_client(app)
 
     # 1. Create multiple images
+    image_ids = []
     for i in range(15):
         # Create unique content for each image to avoid duplicate rejection
         img = PILImage.new("RGB", (10, 10), color=(0, 0, i))
@@ -442,7 +456,20 @@ async def test_image_list_pagination(aiohttp_client, app):
             filename=f"image_{i:02d}.png",
             content_type="image/png",
         )
-        await client.post("/api/image", data=data)
+        resp = await client.post("/api/image", data=data)
+        assert resp.status == 201
+        image_ids.append((await resp.json())["id"])
+
+    # 1.5 Manually set ALL images to READY
+    from app import database, models
+    from sqlalchemy import update
+    async with database.get_session() as session:
+        await session.execute(
+            update(models.Image)
+            .where(models.Image.id.in_(image_ids))
+            .values(status="READY")
+        )
+        await session.commit()
 
     # 2. Test default pagination (limit 20)
     resp = await client.get("/api/image")
