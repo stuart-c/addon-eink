@@ -117,4 +117,27 @@ describe('HaStateController', () => {
     expect(controller.activeSection).toBe('images');
     expect(mockHost.requestUpdate).toHaveBeenCalled();
   });
+
+  it('should track selectedImageId', () => {
+    expect(controller.selectedImageId).toBe(null);
+    controller.selectedImageId = 'img1';
+    expect(controller.selectedImageId).toBe('img1');
+  });
+
+  it('should delete image, refresh, and clear selection', async () => {
+    const mockImage = { id: 'img1', name: 'Delete Me' } as any;
+    controller.selectedImageId = 'img1';
+    
+    vi.mocked(api.deleteItem).mockResolvedValue({} as any);
+    vi.mocked(api.ping).mockResolvedValue(true);
+    vi.mocked(api.getCollection).mockResolvedValue([]);
+    vi.mocked(api.getImages).mockResolvedValue([]);
+    
+    const result = await controller.deleteImage(mockImage);
+    
+    expect(result).toBe(true);
+    expect(api.deleteItem).toHaveBeenCalledWith('image', 'img1');
+    expect(controller.selectedImageId).toBe(null);
+    expect(api.getImages).toHaveBeenCalled();
+  });
 });
