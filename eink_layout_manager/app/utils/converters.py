@@ -16,7 +16,6 @@ def image_model_to_dict(image):
         "original_archive_file": image.original_archive_file,
         "license": image.license,
         "source": image.source,
-        "status": image.status,
     }
 
 
