@@ -22,16 +22,16 @@ describe('AppToolbar', () => {
   });
 
   it('should display the active layout name', () => {
-    const trigger = element.shadowRoot?.querySelector('.dropdown-trigger span');
+    const trigger = element.shadowRoot?.querySelector('#trigger-layouts span');
     expect(trigger?.textContent).toBe('Layout 1');
   });
 
   it('should show the dropdown menu when clicked', async () => {
-    const trigger = element.shadowRoot?.querySelector('.dropdown-trigger') as HTMLElement;
+    const trigger = element.shadowRoot?.querySelector('#trigger-layouts') as HTMLElement;
     trigger.click();
     await element.updateComplete;
 
-    const menu = element.shadowRoot?.querySelector('.dropdown-menu');
+    const menu = element.shadowRoot?.querySelector('#menu-layouts');
     expect(menu?.classList.contains('show')).toBe(true);
   });
 
@@ -40,7 +40,7 @@ describe('AppToolbar', () => {
     element.addEventListener('switch-layout', spy);
 
     // Open menu
-    const trigger = element.shadowRoot?.querySelector('.dropdown-trigger') as HTMLElement;
+    const trigger = element.shadowRoot?.querySelector('#trigger-layouts') as HTMLElement;
     trigger.click();
     await element.updateComplete;
 
@@ -64,7 +64,7 @@ describe('AppToolbar', () => {
     const spy = vi.fn();
     element.addEventListener('edit-layout', spy);
 
-    const button = element.shadowRoot?.querySelector('.settings-button') as HTMLButtonElement;
+    const button = element.shadowRoot?.querySelector('#btn-layout-settings') as HTMLButtonElement;
     button.click();
 
     expect(spy).toHaveBeenCalled();

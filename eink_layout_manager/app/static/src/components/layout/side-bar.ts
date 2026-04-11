@@ -74,27 +74,6 @@ export class SideBar extends LitElement {
 
   render() {
     return html`
-      <div class="sidebar-section">
-        <div class="sidebar-header">
-          <h3>Display Types</h3>
-        </div>
-        ${this.displayTypes.map(dt => html`
-          <div class="list-item">
-            <div class="item-details">
-              <div class="item-info">
-                <span class="item-name">${dt.name}</span>
-                <span class="item-meta">${dt.width_mm}x${dt.height_mm}mm</span>
-              </div>
-              <div class="item-actions">
-                <button class="secondary" title="Add to Layout" @click="${(e: Event) => { e.stopPropagation(); this._dispatch('add-item-to-layout', dt); }}">
-                  <span class="material-icons" style="font-size: 16px;">add_box</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        `)}
-      </div>
-
       <div class="sidebar-section" style="flex: 2;">
         <h3>Layout Items</h3>
         ${this.activeLayout?.items.map((item, index) => {
