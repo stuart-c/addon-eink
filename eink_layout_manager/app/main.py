@@ -99,6 +99,7 @@ def image_model_to_dict(image):
         "source": image.source,
         "status": image.status,
         "file_hash": image.file_hash,
+        "thumbnail_path": image.thumbnail_path,
     }
 
 
@@ -412,18 +413,9 @@ async def handle_image_create(request):
             )
             session.add(new_image)
             await session.commit()
+            await session.refresh(new_image)
             return web.json_response(
-                {
-                    "id": image_id,
-                    "name": new_image.name,
-                    "file_type": file_type,
-                    "dimensions": {"width": width, "height": height},
-                    "file_path": filename_on_disk,
-                    "thumbnail_path": filename_on_disk,
-                    "status": "UPLOADED",
-                    "file_hash": file_hash,
-                },
-                status=201,
+                image_model_to_dict(new_image), status=201
             )
     except Exception as e:
         if os.path.exists(file_path):
