@@ -5,6 +5,10 @@ from app import database
 from app.middlewares import request_logger_middleware
 from app.routes import setup_routes
 from app.utils.storage import get_storage_path
+from app.background.cleanup import (
+    schedule_image_cleanup,
+    stop_image_cleanup,
+)
 
 
 def init_app():
@@ -20,6 +24,8 @@ def init_app():
         await database.close_db()
 
     app.on_startup.append(on_startup)
+    app.on_startup.append(schedule_image_cleanup)
+    app.on_cleanup.append(stop_image_cleanup)
     app.on_cleanup.append(on_cleanup)
 
     # Data directory setup
