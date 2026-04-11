@@ -17,6 +17,7 @@ export class HaStateController implements ReactiveController {
   public images: Image[] = [];
   public activeLayout: Layout | null = null;
   public selectedItemId: string | null = null;
+  public selectedImageId: string | null = null;
   public activeSection: AppSection = 'layouts';
   public message: string = '';
   private _originalLayout: string | null = null;
@@ -146,6 +147,21 @@ export class HaStateController implements ReactiveController {
       return true;
     } catch (e: any) {
       this.showMessage(`Failed to delete: ${e.message}`, 'error');
+      return false;
+    }
+  }
+
+  async deleteImage(image: Image): Promise<boolean> {
+    try {
+      await api.deleteItem('image', image.id);
+      if (this.selectedImageId === image.id) {
+        this.selectedImageId = null;
+      }
+      await this.refresh();
+      this.showMessage(`Image "${image.name}" deleted.`, 'success');
+      return true;
+    } catch (e: any) {
+      this.showMessage(`Failed to delete image: ${e.message}`, 'error');
       return false;
     }
   }

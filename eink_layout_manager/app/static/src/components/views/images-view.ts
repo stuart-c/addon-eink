@@ -42,6 +42,12 @@ export class ImagesView extends LitElement {
         box-shadow: var(--shadow-medium);
       }
 
+      .image-card.selected {
+        outline: 2px solid var(--primary-colour);
+        background: #f0faff;
+        box-shadow: var(--shadow-medium);
+      }
+
       .thumbnail-container {
         aspect-ratio: 1 / 1;
         background-color: #f0f2f5;
@@ -135,6 +141,22 @@ export class ImagesView extends LitElement {
   ];
 
   @property({ type: Array }) images: Image[] = [];
+  @property({ type: String }) selectedImageId: string | null = null;
+
+  get canDelete() {
+    return !!this.selectedImageId;
+  }
+
+  public requestDelete() {
+    const image = this.images.find(img => img.id === this.selectedImageId);
+    if (image) {
+      this.dispatchEvent(new CustomEvent('delete-image', {
+        detail: { image },
+        bubbles: true,
+        composed: true
+      }));
+    }
+  }
 
   render() {
     return html`
@@ -168,9 +190,10 @@ export class ImagesView extends LitElement {
   }
 
   private _renderImage(image: Image) {
+    const isSelected = image.id === this.selectedImageId;
     return html`
       <div 
-        class="image-card" 
+        class="image-card ${isSelected ? 'selected' : ''}" 
         @click="${() => this._handleImageClick(image)}"
         @dblclick="${(e: MouseEvent) => this._handleEditImage(image, e)}"
       >
