@@ -66,6 +66,16 @@ export interface KeywordInfo {
   count: number;
 }
 
+export interface PaginatedResponse<T> {
+  items: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total_items: number;
+    total_pages: number;
+  };
+}
+
 export type ResourceType = 'display_type' | 'layout' | 'image';
 
 export class HaApiClient {
@@ -134,7 +144,10 @@ export class HaApiClient {
   async getLayouts(): Promise<Layout[]> { return this.getCollection<Layout>('layout'); }
   async updateLayout(id: string, layout: Layout): Promise<Layout> { return this.updateItem<Layout>('layout', id, layout); }
   async getDisplayTypes(): Promise<DisplayType[]> { return this.getCollection<DisplayType>('display_type'); }
-  async getImages(): Promise<Image[]> { return this.getCollection<Image>('image'); }
+  async getImages(): Promise<Image[]> {
+    const resp = await this._fetch<PaginatedResponse<Image>>('api/image');
+    return resp.items;
+  }
   async updateImage(id: string, image: Image): Promise<Image> { return this.updateItem<Image>('image', id, image); }
   async uploadImage(file: File): Promise<Image> {
     const formData = new FormData();
