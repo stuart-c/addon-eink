@@ -14,6 +14,7 @@ from ..utils.converters import (
     image_model_to_dict,
     image_model_to_summary_dict,
 )
+from ..utils.images import delete_image_files_and_record
 
 
 async def handle_image_create(request):
@@ -285,30 +286,13 @@ async def handle_image_delete(request):
         if not image:
             return web.json_response({"error": "Not Found"}, status=404)
 
-        filename = image.file_path
-        thumbnail = image.thumbnail_path
-
-        # Delete from DB
-        await session.delete(image)
-        await session.commit()
-
-        # Delete files from disk
+        # Delete from DB and disk using shared utility
         try:
-            # Delete main image
-            storage_path = get_storage_path("image")
-            file_path = os.path.join(storage_path, filename)
-            if os.path.exists(file_path):
-                os.remove(file_path)
-
-            # Delete thumbnail if it exists
-            if thumbnail:
-                thumb_storage_path = get_storage_path("thumbnail")
-                thumb_file_path = os.path.join(thumb_storage_path, thumbnail)
-                if os.path.exists(thumb_file_path):
-                    os.remove(thumb_file_path)
+            await delete_image_files_and_record(image, session)
         except Exception as e:
-            # Log but don't fail, as DB record is already gone
-            print(f"Error deleting image files for {image_id}: {str(e)}")
+            return web.json_response(
+                {"error": "Deletion failed", "details": str(e)}, status=500
+            )
 
     return web.json_response({"status": "deleted"})
 
