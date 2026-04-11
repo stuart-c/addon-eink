@@ -138,17 +138,25 @@ export class ImageDialog extends LitElement {
   ];
 
   @state() private _uploadedImage: Image | null = null;
+  @state() private _editingImage: Image | null = null;
   @state() private _isUploading = false;
   @state() private _error: string | null = null;
   @state() private _keywords: string[] = [];
   @state() private _imageName: string = '';
+  @state() private _artist: string = '';
+  @state() private _collection: string = '';
+  @state() private _description: string = '';
 
-  async show() {
-    this._uploadedImage = null;
+  async show(image?: Image) {
+    this._editingImage = image || null;
+    this._uploadedImage = image || null;
     this._isUploading = false;
     this._error = null;
-    this._keywords = [];
-    this._imageName = '';
+    this._keywords = image?.keywords || [];
+    this._imageName = image?.name || '';
+    this._artist = image?.artist || '';
+    this._collection = image?.collection || '';
+    this._description = image?.description || '';
     await this.updateComplete;
     (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).show();
   }
@@ -214,9 +222,45 @@ export class ImageDialog extends LitElement {
     this._keywords = e.detail.keywords;
   }
 
+  private async _handleSave() {
+    if (!this._uploadedImage || !this._imageName.trim()) return;
+
+    this._isUploading = true;
+    this._error = null;
+    try {
+      const metadata = {
+        name: this._imageName,
+        artist: this._artist,
+        collection: this._collection,
+        description: this._description,
+        keywords: this._keywords
+      };
+
+      if (this._editingImage) {
+        await api.updateImage(this._editingImage.id, { ...this._editingImage, ...metadata });
+      } else {
+        await api.updateImage(this._uploadedImage.id, { ...this._uploadedImage, ...metadata });
+      }
+
+      this.dispatchEvent(new CustomEvent('image-saved', {
+        bubbles: true,
+        composed: true
+      }));
+      
+      this._uploadedImage = null;
+      this._editingImage = null;
+      (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).close();
+    } catch (err: any) {
+      this._error = err.message || 'Failed to save image metadata';
+      console.error('Save error:', err);
+    } finally {
+      this._isUploading = false;
+    }
+  }
+
   render() {
     return html`
-      <base-dialog title="Add New Image">
+      <base-dialog title="${this._editingImage ? 'Edit Image' : 'Add New Image'}">
         <div class="dialog-content">
           <!-- Metadata Fields (Left) -->
           <div class="metadata-fields">
@@ -240,11 +284,21 @@ export class ImageDialog extends LitElement {
             <div class="grid">
               <div class="form-group">
                 <label>Artist</label>
-                <input type="text" placeholder="Who created this?">
+                <input 
+                  type="text" 
+                  placeholder="Who created this?"
+                  .value="${this._artist}"
+                  @input="${(e: InputEvent) => this._artist = (e.target as HTMLInputElement).value}"
+                >
               </div>
               <div class="form-group">
                 <label>Collection</label>
-                <input type="text" placeholder="e.g. Landscapes, Personal">
+                <input 
+                  type="text" 
+                  placeholder="e.g. Landscapes, Personal"
+                  .value="${this._collection}"
+                  @input="${(e: InputEvent) => this._collection = (e.target as HTMLInputElement).value}"
+                >
               </div>
             </div>
 
@@ -258,7 +312,11 @@ export class ImageDialog extends LitElement {
 
             <div class="form-group" style="margin-bottom: 0;">
               <label>Description</label>
-              <textarea placeholder="Describe the image..."></textarea>
+              <textarea 
+                placeholder="Describe the image..."
+                .value="${this._description}"
+                @input="${(e: InputEvent) => this._description = (e.target as HTMLTextAreaElement).value}"
+              ></textarea>
             </div>
           </div>
 
@@ -266,10 +324,11 @@ export class ImageDialog extends LitElement {
           <div class="media-section">
             <div 
               class="upload-section"
-              @click="${this._handleUploadClick}"
-              @dragover="${this._onDragOver}"
-              @dragleave="${this._onDragLeave}"
-              @drop="${this._onDrop}"
+              style="${this._editingImage ? 'cursor: default; border-style: solid; opacity: 0.9;' : ''}"
+              @click="${this._editingImage ? null : this._handleUploadClick}"
+              @dragover="${this._editingImage ? (e: Event) => e.preventDefault() : this._onDragOver}"
+              @dragleave="${this._editingImage ? null : this._onDragLeave}"
+              @drop="${this._editingImage ? (e: Event) => e.preventDefault() : this._onDrop}"
             >
               ${this._uploadedImage ? html`
                 <img 
@@ -284,12 +343,14 @@ export class ImageDialog extends LitElement {
                 <p>${this._isUploading ? 'Uploading...' : 'Drag & Drop Image'}</p>
                 <p class="hint">${this._isUploading ? 'This may take a moment' : 'or click to browse your files'}</p>
               `}
-              <input 
-                type="file" 
-                style="display: none;" 
-                accept="image/*"
-                @change="${this._onFileChange}"
-              >
+              ${this._editingImage ? '' : html`
+                <input 
+                  type="file" 
+                  style="display: none;" 
+                  accept="image/*"
+                  @change="${this._onFileChange}"
+                >
+              `}
             </div>
 
             <div class="grid" style="margin-top: 1.5rem;">
@@ -334,10 +395,10 @@ export class ImageDialog extends LitElement {
           </button>
           <button 
             ?disabled="${this._isUploading || !this._uploadedImage || !this._imageName.trim()}"
-            @click="${() => {}}"
+            @click="${this._handleSave}"
           >
             <span class="material-icons">save</span>
-            Save Image
+            ${this._editingImage ? 'Update Image' : 'Save Image'}
           </button>
         </div>
       </base-dialog>
