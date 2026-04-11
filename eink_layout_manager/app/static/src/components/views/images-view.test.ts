@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ImagesView } from './images-view';
 import './images-view';
-import { Image, api } from '../../services/HaApiClient';
+import { Image } from '../../services/HaApiClient';
 import '../shared/keyword-input';
 
 // Mock the API
