@@ -8,7 +8,7 @@ This document outlines the standard development process and recent design decisi
 ## Local Development Environment
 
 ### VS Code Dev Containers
-We utilize **VS Code Dev Containers** to provide a consistent, reproducible development environment.
+We utilise **VS Code Dev Containers** to provide a consistent, reproducible development environment.
 
 - **Base Image:** `Python 3.12-bookworm` (Debian-based).
 - **Tooling:** The container is pre-configured with `black`, `flake8`, and `pytest`.
@@ -29,7 +29,15 @@ All agents and contributors must follow the mandatory workflow defined in the [A
 - Ensure that any new logic, API endpoints, or schema changes have corresponding test cases in the `tests/` directory.
 - Verify that your tests pass locally before submitting a PR as per the workflow guide.
 
+### API Consistency Rule
+To simplify frontend state management, **POST (creation) responses MUST exactly match GET (retrieval) responses** for the same resource. This ensures the frontend receives the complete metadata object immediately upon resource creation.
+
 ## Recent Design Decisions
+
+### Image Processing Pipeline
+- **Duplicate Prevention:** We use SHA-256 file hashing to uniquely identify image assets. Attempting to upload a duplicate image results in a `409 Conflict` response containing the existing image's metadata.
+- **Thumbnail Generation:** Thumbnails are automatically generated on upload (max 200x200px) and stored in a dedicated `/data/thumbnail` directory.
+- **Thumbnail Retrieval:** A dedicated endpoint `GET /api/image/{id}/thumbnail` is used to serve the binary thumbnail data.
 
 ### Hardware Support
 - **Spectra 6 (BWGBRY) support:** The `colour_type` schema has been updated to include `BWGBRY` to support OpenDisplay's Spectra 6 hardware.
