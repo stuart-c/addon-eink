@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, JSON
+from sqlalchemy import Column, String, Integer, JSON, DateTime, func
 
 try:
     from .database import Base
@@ -52,3 +52,7 @@ class Image(Base):
     status = Column(String, nullable=False)
     file_hash = Column(String, nullable=False)
     thumbnail_path = Column(String, nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(
+        DateTime, server_default=func.now(), onupdate=func.now()
+    )
