@@ -8,6 +8,7 @@ vi.mock('../../services/HaApiClient', () => ({
     uploadImage: vi.fn(),
     updateImage: vi.fn(),
     deleteItem: vi.fn(),
+    getKeywords: vi.fn().mockResolvedValue([]),
   },
 }));
 

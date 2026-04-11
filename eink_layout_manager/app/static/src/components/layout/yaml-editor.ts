@@ -155,13 +155,33 @@ export class YamlEditor extends LitElement {
   }
 
   private _isYamlEqual(y1: string, y2: string): boolean {
+    if (y1 === y2) return true;
     try {
       const o1 = yaml.load(y1);
       const o2 = yaml.load(y2);
-      return JSON.stringify(o1) === JSON.stringify(o2);
+      return this._isDeepEqual(o1, o2);
     } catch {
       return false;
     }
+  }
+
+  private _isDeepEqual(obj1: any, obj2: any): boolean {
+    if (obj1 === obj2) return true;
+    if (typeof obj1 !== 'object' || obj1 === null || typeof obj2 !== 'object' || obj2 === null) {
+      return false;
+    }
+
+    const keys1 = Object.keys(obj1);
+    const keys2 = Object.keys(obj2);
+
+    if (keys1.length !== keys2.length) return false;
+
+    for (const key of keys1) {
+      if (!Object.prototype.hasOwnProperty.call(obj2, key)) return false;
+      if (!this._isDeepEqual(obj1[key], obj2[key])) return false;
+    }
+
+    return true;
   }
 
   private _handleInput(e: Event) {
