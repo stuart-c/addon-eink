@@ -16,7 +16,7 @@ export class ImageDialog extends LitElement {
     commonStyles,
     css`
       :host {
-        --dialog-width: 720px;
+        --dialog-width: 960px;
       }
 
       .dialog-content {
@@ -38,21 +38,6 @@ export class ImageDialog extends LitElement {
         display: flex;
         flex-direction: column;
         gap: 1.25rem;
-        max-height: 400px;
-        overflow-y: auto;
-        padding-right: 0.75rem;
-      }
-
-      /* Custom scrollbar for metadata fields */
-      .metadata-fields::-webkit-scrollbar {
-        width: 4px;
-      }
-      .metadata-fields::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      .metadata-fields::-webkit-scrollbar-thumb {
-        background: #ddd;
-        border-radius: 4px;
       }
 
       .upload-section {
@@ -130,6 +115,11 @@ export class ImageDialog extends LitElement {
         max-height: 300px;
         object-fit: contain;
         border-radius: var(--border-radius);
+      }
+
+      .media-section {
+        display: flex;
+        flex-direction: column;
       }
 
       .error-message {
@@ -247,22 +237,18 @@ export class ImageDialog extends LitElement {
               >
             </div>
             
-            <div class="form-group">
-              <label>Artist</label>
-              <input type="text" placeholder="Who created this?">
+            <div class="grid">
+              <div class="form-group">
+                <label>Artist</label>
+                <input type="text" placeholder="Who created this?">
+              </div>
+              <div class="form-group">
+                <label>Collection</label>
+                <input type="text" placeholder="e.g. Landscapes, Personal">
+              </div>
             </div>
 
             <div class="form-group">
-              <label>Collection</label>
-              <input type="text" placeholder="e.g. Landscapes, Personal">
-            </div>
-
-            <div class="form-group">
-              <label>Description</label>
-              <textarea placeholder="Describe the image..."></textarea>
-            </div>
-
-            <div class="form-group" style="margin-bottom: 0;">
               <label>Keywords</label>
               <keyword-input 
                 .keywords="${this._keywords}"
@@ -270,28 +256,52 @@ export class ImageDialog extends LitElement {
               ></keyword-input>
             </div>
 
-            <div class="grid" style="margin-top: 1.25rem;">
-              <div class="form-group" style="margin-bottom: 0;">
-                <label>Width (px)</label>
-                <input 
-                  type="number" 
-                  readonly 
-                  placeholder="Auto-detected"
-                  .value="${this._uploadedImage?.dimensions.width || ''}"
+            <div class="form-group" style="margin-bottom: 0;">
+              <label>Description</label>
+              <textarea placeholder="Describe the image..."></textarea>
+            </div>
+          </div>
+
+          <!-- Media & Technical Info (Right) -->
+          <div class="media-section">
+            <div 
+              class="upload-section"
+              @click="${this._handleUploadClick}"
+              @dragover="${this._onDragOver}"
+              @dragleave="${this._onDragLeave}"
+              @drop="${this._onDrop}"
+            >
+              ${this._uploadedImage ? html`
+                <img 
+                  src="api/image/${this._uploadedImage.id}/thumbnail" 
+                  class="preview-image"
+                  alt="Thumbnail preview"
                 >
-              </div>
-              <div class="form-group" style="margin-bottom: 0;">
-                <label>Height (px)</label>
-                <input 
-                  type="number" 
-                  readonly 
-                  placeholder="Auto-detected"
-                  .value="${this._uploadedImage?.dimensions.height || ''}"
-                >
-              </div>
+              ` : html`
+                <span class="material-icons">
+                  ${this._isUploading ? 'sync' : 'cloud_upload'}
+                </span>
+                <p>${this._isUploading ? 'Uploading...' : 'Drag & Drop Image'}</p>
+                <p class="hint">${this._isUploading ? 'This may take a moment' : 'or click to browse your files'}</p>
+              `}
+              <input 
+                type="file" 
+                style="display: none;" 
+                accept="image/*"
+                @change="${this._onFileChange}"
+              >
             </div>
 
-            <div class="grid" style="margin-top: 1.25rem;">
+            <div class="grid" style="margin-top: 1.5rem;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label>Dimensions</label>
+                <input 
+                  type="text" 
+                  readonly 
+                  placeholder="Auto-detected"
+                  .value="${this._uploadedImage ? `${this._uploadedImage.dimensions.width} × ${this._uploadedImage.dimensions.height} px` : ''}"
+                >
+              </div>
               <div class="form-group" style="margin-bottom: 0;">
                 <label>Format</label>
                 <input 
@@ -301,45 +311,17 @@ export class ImageDialog extends LitElement {
                   .value="${this._uploadedImage?.file_type || ''}"
                 >
               </div>
-              <div class="form-group" style="margin-bottom: 0;">
-                <label>Colour Depth</label>
-                <input 
-                  type="text" 
-                  readonly 
-                  placeholder="Auto-detected"
-                  .value="${this._uploadedImage?.colour_depth || ''}"
-                >
-              </div>
             </div>
-          </div>
 
-          <!-- Upload Drop Zone (Right) -->
-          <div 
-            class="upload-section"
-            @click="${this._handleUploadClick}"
-            @dragover="${this._onDragOver}"
-            @dragleave="${this._onDragLeave}"
-            @drop="${this._onDrop}"
-          >
-            ${this._uploadedImage ? html`
-              <img 
-                src="api/image/${this._uploadedImage.id}/thumbnail" 
-                class="preview-image"
-                alt="Thumbnail preview"
+            <div class="form-group" style="margin-top: 1rem; margin-bottom: 0;">
+              <label>Colour Depth</label>
+              <input 
+                type="text" 
+                readonly 
+                placeholder="Auto-detected"
+                .value="${this._uploadedImage?.colour_depth || ''}"
               >
-            ` : html`
-              <span class="material-icons">
-                ${this._isUploading ? 'sync' : 'cloud_upload'}
-              </span>
-              <p>${this._isUploading ? 'Uploading...' : 'Drag & Drop Image'}</p>
-              <p class="hint">${this._isUploading ? 'This may take a moment' : 'or click to browse your files'}</p>
-            `}
-            <input 
-              type="file" 
-              style="display: none;" 
-              accept="image/*"
-              @change="${this._onFileChange}"
-            >
+            </div>
           </div>
         </div>
 
