@@ -9,7 +9,10 @@ from aiohttp import web
 from .. import database, models
 from ..utils.storage import get_storage_path
 from ..utils.validation import validate_id
-from ..utils.converters import image_model_to_dict
+from ..utils.converters import (
+    image_model_to_dict,
+    image_model_to_summary_dict,
+)
 
 
 async def handle_image_create(request):
@@ -132,7 +135,8 @@ async def handle_image_list(request):
             result = await session.execute(stmt)
             images = result.scalars().all()
 
-            return web.json_response([image_model_to_dict(i) for i in images])
+            summary_list = [image_model_to_summary_dict(i) for i in images]
+            return web.json_response(summary_list)
     except Exception as e:
         return web.json_response(
             {"error": "Database error", "details": str(e)}, status=500

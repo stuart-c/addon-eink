@@ -380,3 +380,45 @@ async def test_get_image_invalid_id(aiohttp_client, app):
     assert resp.status == 400
     result = await resp.json()
     assert "Invalid ID" in result["error"]
+
+
+@pytest.mark.asyncio
+async def test_image_list_success(aiohttp_client, app):
+    """Test retrieving the list of images (summary objects)."""
+    client = await aiohttp_client(app)
+
+    # 1. Retrieve list when empty
+    resp_empty = await client.get("/api/image")
+    assert resp_empty.status == 200
+    assert await resp_empty.json() == []
+
+    # 2. Upload an image to populate
+    width, height = 50, 50
+    img = PILImage.new("RGB", (width, height), color="red")
+    img_byte_arr = io.BytesIO()
+    img.save(img_byte_arr, format="PNG")
+
+    data = aiohttp.FormData()
+    data.add_field(
+        "file",
+        img_byte_arr.getvalue(),
+        filename="list_test.png",
+        content_type="image/png",
+    )
+    await client.post("/api/image", data=data)
+
+    # 3. Retrieve list with content
+    resp = await client.get("/api/image")
+    assert resp.status == 200
+    result = await resp.json()
+    assert len(result) == 1
+
+    # 4. Verify summary fields
+    img_summary = result[0]
+    expected_fields = {"id", "name", "artist", "collection", "description"}
+    assert set(img_summary.keys()) == expected_fields
+    assert img_summary["name"] == "list_test.png"
+
+    # Verify internal fields are EXCLUDED
+    for field in ["thumbnail_path", "file_path", "file_hash"]:
+        assert field not in img_summary
