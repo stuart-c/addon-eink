@@ -47,6 +47,9 @@ Tests and lints **MUST** be run locally before being pushed to GitHub.
   git fetch origin
   git rebase origin/main
   ```
+- **PR Quality:** Before requesting a review, you **MUST** update the PR title and description to provide a clear explanation of:
+    - **Purpose:** Why are these changes being made?
+    - **Implementation:** How were the changes implemented? Highlight any significant architectural decisions, complex logic, or new patterns.
 - **Builds:** Ensure all GitHub Action builds for the PR are passing before requesting review.
 - **Auto-Merge:** Always enable auto-merge when creating a pull request to ensure it is merged automatically once checks pass and approvals are met:
   ```bash

@@ -4,15 +4,18 @@ The `addon-eink` repository is designed to be deployed as a Home Assistant Addon
 
 ## Technology Stack
 
-- **Container Environment:** Standard Home Assistant `alpine` Addon Base utilizing the S6-overlay supervisor.
-- **Backend Service:** Python 3 application utilizing `aiohttp` or `FastAPI` (to match standard Home Assistant async paradigms).
-- **Frontend UI:** Lit Web Components (to match Home Assistant Frontend styling and ecosystem).
-- **Testing:** `pytest` for Python backend testing.
-- **Addon Integration:** Uses HA **Ingress** to securely surface the UI within the Home Assistant sidebar.
+- **Container Environment:** Standard Home Assistant `alpine` Addon Base utilising the S6-overlay supervisor.
+- **Backend Service:** Python 3 application utilising **aiohttp** for the asynchronous web server.
+- **Database & Persistence:** 
+    - **SQLAlchemy** with **aiosqlite** for relational metadata storage (SQLite database).
+    - Local filesystem for binary assets: `/data/image` for primary source images and `/data/thumbnail` for generated thumbnails.
+- **Frontend UI:** **Lit Web Components** (to match Home Assistant Frontend styling and ecosystem).
+- **Testing:** **pytest** with **pytest-aiohttp** and **pytest-asyncio** for backend verification.
+- **Addon Integration:** Uses Home Assistant **Ingress** to securely surface the UI within the Home Assistant sidebar.
 
 ## Core Conceptual Flow
 
-1. **User Interaction:** The user accesses the Addon via the Home Assistant Sidebar (Ingress).
-2. **Layout Management (UI):** The Lit-based frontend provides interfaces to assign images/content and designate complex layouts spanning multiple displays.
-3. **Processing (Backend):** The backend splits/formats the images given the configuration requirements. 
-4. **Execution (Control):** The backend commands the Home Assistant `OpenDisplay` integration (via HA API or Home Assistant WebSockets) to update the specific eInk panels with the appropriate graphical chunks.
+1. **Asset Management:** Users upload images via the frontend. The backend validates images, calculates SHA-256 hashes to prevent duplicates, generates thumbnails, and persists metadata in SQLite.
+2. **Layout Configuration:** The Lit-based frontend provides interfaces to define layouts spanning multiple displays, selecting from uploaded images and configured display types.
+3. **Image Processing:** Upon layout activation, the backend processes (scales, crops, dithers) the source images according to the layout requirements.
+4. **Panel Execution:** The backend communicates with the Home Assistant `OpenDisplay` integration (via the HA API or WebSockets) to update the specific e-Ink panels with the appropriate graphical segments.
