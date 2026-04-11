@@ -4,7 +4,7 @@ import os
 import uuid
 from collections import Counter
 from PIL import Image as PILImage
-from sqlalchemy import select, func
+from sqlalchemy import select, func, String
 from aiohttp import web
 
 from .. import database, models
@@ -129,36 +129,84 @@ async def handle_image_get(request):
 
 
 async def handle_image_list(request):
-    """Retrieve image metadata from the SQL database with pagination."""
+    """Retrieve image metadata with sorting and pagination."""
+    # 1. Parse sorting parameters
+    sort_query = request.query.get("sort", "name:asc")
+
+    valid_fields = {
+        "name": models.Image.name,
+        "artist": models.Image.artist,
+        "collection": models.Image.collection,
+        "width": models.Image.width,
+        "height": models.Image.height,
+    }
+
+    order_by_clauses = []
+
     try:
-        # Parse pagination parameters
-        try:
-            page = int(request.query.get("page", 1))
-            limit = int(request.query.get("limit", 20))
-        except ValueError:
-            return web.json_response(
-                {"error": "Invalid page or limit parameter"}, status=400
-            )
+        for sort_part in sort_query.split(","):
+            if not sort_part.strip():
+                continue
 
-        if page < 1:
-            page = 1
-        if limit < 1:
-            limit = 20
-        if limit > 100:
-            limit = 100
+            if ":" in sort_part:
+                field_name, order = sort_part.split(":", 1)
+            else:
+                field_name, order = sort_part, "asc"
 
-        offset = (page - 1) * limit
+            field_name = field_name.strip()
+            order = order.strip().lower()
 
+            if field_name not in valid_fields:
+                continue
+
+            field = valid_fields[field_name]
+
+            # Apply case-insensitivity for strings
+            if isinstance(field.type, String):
+                sort_expr = func.lower(field)
+            else:
+                sort_expr = field
+
+            if order == "desc":
+                order_by_clauses.append(sort_expr.desc())
+            else:
+                order_by_clauses.append(sort_expr.asc())
+    except Exception:
+        # Fallback to default if parsing fails
+        order_by_clauses = [func.lower(models.Image.name).asc()]
+
+    if not order_by_clauses:
+        order_by_clauses = [func.lower(models.Image.name).asc()]
+
+    # 2. Parse pagination parameters
+    try:
+        page = int(request.query.get("page", 1))
+        limit = int(request.query.get("limit", 20))
+    except ValueError:
+        return web.json_response(
+            {"error": "Invalid page or limit parameter"}, status=400
+        )
+
+    if page < 1:
+        page = 1
+    if limit < 1:
+        limit = 20
+    if limit > 100:
+        limit = 100
+
+    offset = (page - 1) * limit
+
+    try:
         async with database.get_session() as session:
             # Get total count
             count_stmt = select(func.count()).select_from(models.Image)
             count_result = await session.execute(count_stmt)
             total_count = count_result.scalar() or 0
 
-            # Get paginated results
+            # Get sorted and paginated results
             stmt = (
                 select(models.Image)
-                .order_by(models.Image.name)
+                .order_by(*order_by_clauses)
                 .limit(limit)
                 .offset(offset)
             )
