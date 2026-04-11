@@ -415,19 +415,6 @@ async def handle_image_update(request):
             {"error": "ID in body does not match ID in URL"}, status=400
         )
 
-    # Validation against image schema
-    try:
-        schema = load_schema("image")
-        validate(instance=data, schema=schema)
-    except FileNotFoundError:
-        return web.json_response(
-            {"error": "Schema for image not found"}, status=500
-        )
-    except ValidationError as e:
-        return web.json_response(
-            {"error": "Validation failed", "message": e.message}, status=400
-        )
-
     try:
         async with database.get_session() as session:
             stmt = select(models.Image).where(models.Image.id == image_id)
@@ -436,6 +423,39 @@ async def handle_image_update(request):
 
             if not image:
                 return web.json_response({"error": "Not Found"}, status=404)
+
+            # Pre-populate required fields for validation if missing
+            # This allows partial updates from the frontend while
+            # satisfying the full schema
+            if "id" not in data:
+                data["id"] = image.id
+            if "name" not in data:
+                data["name"] = image.name
+            if "file_type" not in data:
+                data["file_type"] = image.file_type
+            if "dimensions" not in data:
+                data["dimensions"] = {
+                    "width": image.width,
+                    "height": image.height,
+                }
+
+            # Remove status from data if it exists to ensure backend control
+            if "status" in data:
+                del data["status"]
+
+            # Validation against image schema (now without status)
+            try:
+                schema = load_schema("image")
+                validate(instance=data, schema=schema)
+            except FileNotFoundError:
+                return web.json_response(
+                    {"error": "Schema for image not found"}, status=500
+                )
+            except ValidationError as e:
+                return web.json_response(
+                    {"error": "Validation failed", "message": e.message},
+                    status=400,
+                )
 
             # Update fields from sanitized data
             image.name = data.get("name", image.name)
@@ -446,7 +466,9 @@ async def handle_image_update(request):
             image.license = data.get("license", image.license)
             image.source = data.get("source", image.source)
             image.file_type = data.get("file_type", image.file_type)
-            image.status = data.get("status", image.status)
+
+            # Always set status to READY upon update
+            image.status = "READY"
 
             # Dimensions are nested in the dictionary but flat in the model
             dims = data.get("dimensions", {})
