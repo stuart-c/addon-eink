@@ -298,9 +298,46 @@ export class ImagesView extends LitElement {
   @state() private _maxHeight = 4000;
   @state() private _keywords: string[] = [];
   @state() private _sortFields: SortConfig[] = [{ field: 'name', direction: 'asc' }];
-  @state() private _isAddMenuOpen = false;
-  @state() private _draggedIndex: number | null = null;
   @state() private _dragOverIndex: number | null = null;
+  private _debounceTimer: any = null;
+
+  private _triggerFilterChange(immediate = false) {
+    if (this._debounceTimer) {
+      clearTimeout(this._debounceTimer);
+    }
+
+    const trigger = () => {
+      // Convert sort fields to string
+      const sort = this._sortFields
+        .map(s => `${s.field}:${s.direction}`)
+        .join(',');
+
+      const filters = {
+        title: this._filterTitle,
+        description: this._filterDescription,
+        artist: this._filterArtist,
+        collection: this._filterCollection,
+        min_width: this._minWidth > 0 ? this._minWidth : undefined,
+        max_width: this._maxWidth < 4000 ? this._maxWidth : undefined,
+        min_height: this._minHeight > 0 ? this._minHeight : undefined,
+        max_height: this._maxHeight < 4000 ? this._maxHeight : undefined,
+        keyword: this._keywords.length > 0 ? this._keywords.join(',') : undefined,
+        sort: sort || undefined
+      };
+
+      this.dispatchEvent(new CustomEvent('filter-change', {
+        detail: filters,
+        bubbles: true,
+        composed: true
+      }));
+    };
+
+    if (immediate) {
+      trigger();
+    } else {
+      this._debounceTimer = setTimeout(trigger, 300);
+    }
+  }
 
   private _resetFilters() {
     this._filterTitle = '';
@@ -314,6 +351,7 @@ export class ImagesView extends LitElement {
     this._keywords = [];
     this._sortFields = [{ field: 'name', direction: 'asc' }];
     this._isAddMenuOpen = false;
+    this._triggerFilterChange(true);
   }
 
   render() {
@@ -332,7 +370,10 @@ export class ImagesView extends LitElement {
                 type="text" 
                 placeholder="Search by title..."
                 .value="${this._filterTitle}"
-                @input="${(e: any) => this._filterTitle = e.target.value}"
+                @input="${(e: any) => { 
+                  this._filterTitle = e.target.value;
+                  this._triggerFilterChange();
+                }}"
               >
             </div>
             <div class="form-group">
@@ -341,7 +382,10 @@ export class ImagesView extends LitElement {
                 type="text" 
                 placeholder="Search description..."
                 .value="${this._filterDescription}"
-                @input="${(e: any) => this._filterDescription = e.target.value}"
+                @input="${(e: any) => {
+                  this._filterDescription = e.target.value;
+                  this._triggerFilterChange();
+                }}"
               >
             </div>
             <div class="filter-grid">
@@ -351,7 +395,10 @@ export class ImagesView extends LitElement {
                   type="text" 
                   placeholder="Artist"
                   .value="${this._filterArtist}"
-                  @input="${(e: any) => this._filterArtist = e.target.value}"
+                  @input="${(e: any) => {
+                    this._filterArtist = e.target.value;
+                    this._triggerFilterChange();
+                  }}"
                 >
               </div>
               <div class="form-group">
@@ -360,7 +407,10 @@ export class ImagesView extends LitElement {
                   type="text" 
                   placeholder="Collection"
                   .value="${this._filterCollection}"
-                  @input="${(e: any) => this._filterCollection = e.target.value}"
+                  @input="${(e: any) => {
+                    this._filterCollection = e.target.value;
+                    this._triggerFilterChange();
+                  }}"
                 >
               </div>
             </div>
@@ -381,6 +431,7 @@ export class ImagesView extends LitElement {
               @range-change="${(e: CustomEvent) => {
                 this._minWidth = e.detail.low;
                 this._maxWidth = e.detail.high;
+                this._triggerFilterChange(true);
               }}"
             ></range-slider>
             <range-slider
@@ -392,6 +443,7 @@ export class ImagesView extends LitElement {
               @range-change="${(e: CustomEvent) => {
                 this._minHeight = e.detail.low;
                 this._maxHeight = e.detail.high;
+                this._triggerFilterChange(true);
               }}"
             ></range-slider>
           </div>
@@ -407,7 +459,10 @@ export class ImagesView extends LitElement {
               <keyword-input
                 .keywords="${this._keywords}"
                 .validate="${true}"
-                @keywords-changed="${(e: CustomEvent) => this._keywords = e.detail.keywords}"
+                @keywords-changed="${(e: CustomEvent) => {
+                  this._keywords = e.detail.keywords;
+                  this._triggerFilterChange(true);
+                }}"
               ></keyword-input>
             </div>
           </div>
@@ -576,10 +631,12 @@ export class ImagesView extends LitElement {
   private _addSortField(field: SortField) {
     this._sortFields = [...this._sortFields, { field, direction: 'asc' }];
     this._isAddMenuOpen = false;
+    this._triggerFilterChange(true);
   }
 
   private _removeSortField(index: number) {
     this._sortFields = this._sortFields.filter((_, i) => i !== index);
+    this._triggerFilterChange(true);
   }
 
   private _toggleSortDirection(index: number) {
@@ -589,6 +646,7 @@ export class ImagesView extends LitElement {
       direction: newFields[index].direction === 'asc' ? 'desc' : 'asc'
     };
     this._sortFields = newFields;
+    this._triggerFilterChange(true);
   }
 
   private _onDragStart(e: DragEvent, index: number) {
@@ -621,6 +679,7 @@ export class ImagesView extends LitElement {
     newFields.splice(index, 0, item);
     this._sortFields = newFields;
     this._draggedIndex = null;
+    this._triggerFilterChange(true);
   }
 }
 

@@ -66,14 +66,14 @@ export class HaStateController implements ReactiveController {
   /**
    * Refreshes only the image library collection.
    */
-  async refreshImages() {
+  async refreshImages(params: Record<string, any> = {}) {
     if (!this.connected) {
       this.connected = await api.ping();
       if (!this.connected) return;
     }
 
     try {
-      this.images = await api.getImages();
+      this.images = await api.getImages(params);
       this.host.requestUpdate();
     } catch (e: any) {
       console.error('Image fetch failed', e);

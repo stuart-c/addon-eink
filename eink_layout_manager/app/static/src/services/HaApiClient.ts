@@ -144,8 +144,16 @@ export class HaApiClient {
   async getLayouts(): Promise<Layout[]> { return this.getCollection<Layout>('layout'); }
   async updateLayout(id: string, layout: Layout): Promise<Layout> { return this.updateItem<Layout>('layout', id, layout); }
   async getDisplayTypes(): Promise<DisplayType[]> { return this.getCollection<DisplayType>('display_type'); }
-  async getImages(): Promise<Image[]> {
-    const resp = await this._fetch<PaginatedResponse<Image>>('api/image');
+  async getImages(params: Record<string, any> = {}): Promise<Image[]> {
+    const query = new URLSearchParams();
+    for (const [key, value] of Object.entries(params)) {
+      if (value !== undefined && value !== null && value !== '') {
+        query.append(key, value.toString());
+      }
+    }
+    const queryString = query.toString();
+    const endpoint = `api/image${queryString ? `?${queryString}` : ''}`;
+    const resp = await this._fetch<PaginatedResponse<Image>>(endpoint);
     return resp.items;
   }
   async updateImage(id: string, image: Image): Promise<Image> { return this.updateItem<Image>('image', id, image); }

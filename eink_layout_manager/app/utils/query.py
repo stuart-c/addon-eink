@@ -1,4 +1,4 @@
-from sqlalchemy import func, String, select
+from sqlalchemy import func, String, select, or_
 from .. import models
 
 
@@ -114,10 +114,11 @@ def build_image_filters(query_params):
     if collection:
         filters.append(models.Image.collection.ilike(f"%{collection}%"))
 
-    # Keyword filter (comma-separated, AND logic/intersection)
+    # Keyword filter (comma-separated, OR logic/union)
     keyword_query = query_params.get("keyword")
     if keyword_query:
         kws = [k.strip() for k in keyword_query.split(",") if k.strip()]
+        kw_filters = []
         for kw in kws:
             # Subquery to check for keyword in JSON array
             kw_je = func.json_each(models.Image.keywords).table_valued("value")
@@ -127,6 +128,9 @@ def build_image_filters(query_params):
                 .where(kw_je.c.value == kw)
                 .exists()
             )
-            filters.append(kw_subquery)
+            kw_filters.append(kw_subquery)
+
+        if kw_filters:
+            filters.append(or_(*kw_filters))
 
     return filters
