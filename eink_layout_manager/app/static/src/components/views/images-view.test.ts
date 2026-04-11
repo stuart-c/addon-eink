@@ -80,6 +80,41 @@ describe('ImagesView', () => {
 
   it('should show placeholder in sidebar', () => {
     const sidebar = element.shadowRoot?.querySelector('[slot="left-bar"]');
-    expect(sidebar?.textContent).toContain('Filtering coming soon');
+    expect(sidebar?.textContent).toContain('General Search');
+  });
+
+  it('should render range sliders for dimensions', () => {
+    const sliders = element.shadowRoot?.querySelectorAll('range-slider');
+    expect(sliders?.length).toBe(2);
+    expect(Array.from(sliders || []).map(s => (s as any).label)).toContain('Width');
+    expect(Array.from(sliders || []).map(s => (s as any).label)).toContain('Height');
+  });
+
+  it('should render detailed search inputs', () => {
+    const inputs = element.shadowRoot?.querySelectorAll('input[type="text"]');
+    const placeholders = Array.from(inputs || []).map(i => i.placeholder);
+    
+    expect(placeholders).toContain('Search by title...');
+    expect(placeholders).toContain('Search description...');
+    expect(placeholders).toContain('Artist');
+    expect(placeholders).toContain('Collection');
+  });
+
+  it('should render sort dropdown with options', () => {
+    const select = element.shadowRoot?.querySelector('select');
+    expect(select).toBeTruthy();
+    expect(select?.querySelectorAll('option').length).toBeGreaterThan(4);
+  });
+
+  it('should reset filters when reset button is clicked', async () => {
+    element.images = mockImages;
+    (element as any)._filterTitle = 'Modified';
+    await element.updateComplete;
+    
+    const resetButton = element.shadowRoot?.querySelector('.reset-button button') as HTMLElement;
+    resetButton.click();
+    await element.updateComplete;
+    
+    expect((element as any)._filterTitle).toBe('');
   });
 });

@@ -4,6 +4,8 @@ import { Image } from '../../services/HaApiClient';
 import { commonStyles } from '../../styles/common-styles';
 import '../shared/section-layout';
 import '../shared/empty-view';
+import '../shared/range-slider';
+import '../shared/keyword-input';
 
 /**
  * A view component for managing the Image Library.
@@ -82,6 +84,17 @@ export class ImagesView extends LitElement {
 
       .sidebar-content {
         padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        height: 100%;
+        overflow-y: auto;
+      }
+
+      .sidebar-section {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
       }
 
       .sidebar-title {
@@ -90,7 +103,26 @@ export class ImagesView extends LitElement {
         color: var(--text-muted);
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        margin-bottom: 1rem;
+        margin-bottom: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .sidebar-title .material-icons {
+        font-size: 14px;
+      }
+
+      .filter-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+      }
+
+      .reset-button {
+        margin-top: auto;
+        padding-top: 1rem;
+        border-top: 1px solid #eee;
       }
 
       .actions {
@@ -136,14 +168,156 @@ export class ImagesView extends LitElement {
 
   @property({ type: Array }) images: Image[] = [];
 
+  @state() private _filterTitle = '';
+  @state() private _filterDescription = '';
+  @state() private _filterArtist = '';
+  @state() private _filterCollection = '';
+  @state() private _minWidth = 0;
+  @state() private _maxWidth = 4000;
+  @state() private _minHeight = 0;
+  @state() private _maxHeight = 4000;
+  @state() private _keywords: string[] = [];
+  @state() private _sortBy = 'name:asc';
+
+  private _resetFilters() {
+    this._filterTitle = '';
+    this._filterDescription = '';
+    this._filterArtist = '';
+    this._filterCollection = '';
+    this._minWidth = 0;
+    this._maxWidth = 4000;
+    this._minHeight = 0;
+    this._maxHeight = 4000;
+    this._keywords = [];
+    this._sortBy = 'name:asc';
+  }
+
   render() {
     return html`
       <section-layout>
         <div slot="left-bar" class="sidebar-content">
-          <div class="sidebar-title">Library Filters</div>
-          <p style="color: var(--text-muted); font-size: 13px;">
-            Filtering coming soon.
-          </p>
+          <!-- General Search -->
+          <div class="sidebar-section">
+            <div class="sidebar-title">
+              <span class="material-icons">search</span>
+              General Search
+            </div>
+            <div class="form-group">
+              <label>Title / Name</label>
+              <input 
+                type="text" 
+                placeholder="Search by title..."
+                .value="${this._filterTitle}"
+                @input="${(e: any) => this._filterTitle = e.target.value}"
+              >
+            </div>
+            <div class="form-group">
+              <label>Description</label>
+              <input 
+                type="text" 
+                placeholder="Search description..."
+                .value="${this._filterDescription}"
+                @input="${(e: any) => this._filterDescription = e.target.value}"
+              >
+            </div>
+            <div class="filter-grid">
+              <div class="form-group">
+                <label>Artist</label>
+                <input 
+                  type="text" 
+                  placeholder="Artist"
+                  .value="${this._filterArtist}"
+                  @input="${(e: any) => this._filterArtist = e.target.value}"
+                >
+              </div>
+              <div class="form-group">
+                <label>Collection</label>
+                <input 
+                  type="text" 
+                  placeholder="Collection"
+                  .value="${this._filterCollection}"
+                  @input="${(e: any) => this._filterCollection = e.target.value}"
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- Dimensions -->
+          <div class="sidebar-section">
+            <div class="sidebar-title">
+              <span class="material-icons">aspect_ratio</span>
+              Dimensions (px)
+            </div>
+            <range-slider
+              label="Width"
+              .min="${0}"
+              .max="${4000}"
+              .valueLow="${this._minWidth}"
+              .valueHigh="${this._maxWidth}"
+              @range-change="${(e: CustomEvent) => {
+                this._minWidth = e.detail.low;
+                this._maxWidth = e.detail.high;
+              }}"
+            ></range-slider>
+            <range-slider
+              label="Height"
+              .min="${0}"
+              .max="${4000}"
+              .valueLow="${this._minHeight}"
+              .valueHigh="${this._maxHeight}"
+              @range-change="${(e: CustomEvent) => {
+                this._minHeight = e.detail.low;
+                this._maxHeight = e.detail.high;
+              }}"
+            ></range-slider>
+          </div>
+
+          <!-- Classification -->
+          <div class="sidebar-section">
+            <div class="sidebar-title">
+              <span class="material-icons">sell</span>
+              Classification
+            </div>
+            <div class="form-group">
+              <label>Keywords</label>
+              <keyword-input
+                .keywords="${this._keywords}"
+                .validate="${true}"
+                @keywords-changed="${(e: CustomEvent) => this._keywords = e.detail.keywords}"
+              ></keyword-input>
+            </div>
+          </div>
+
+          <!-- Sorting -->
+          <div class="sidebar-section">
+            <div class="sidebar-title">
+              <span class="material-icons">sort</span>
+              Sorting
+            </div>
+            <div class="form-group">
+              <select 
+                .value="${this._sortBy}"
+                @change="${(e: any) => this._sortBy = e.target.value}"
+              >
+                <option value="name:asc">Name (A-Z)</option>
+                <option value="name:desc">Name (Z-A)</option>
+                <option value="artist:asc">Artist (A-Z)</option>
+                <option value="artist:desc">Artist (Z-A)</option>
+                <option value="width:desc">Widest First</option>
+                <option value="width:asc">Narrowest First</option>
+                <option value="height:desc">Tallest First</option>
+                <option value="height:asc">Shortest First</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Reset -->
+          <div class="reset-button">
+            <button class="secondary" style="width: 100%;" @click="${this._resetFilters}">
+              <span class="material-icons">filter_alt_off</span>
+              Reset Filters
+            </button>
+          </div>
         </div>
 
         <div slot="right-top-bar" style="font-weight: 600; color: #333;">
