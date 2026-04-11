@@ -1,10 +1,10 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { live } from 'lit/directives/live.js';
-import { Layout } from '../services/HaApiClient';
-import './shared/base-dialog';
-import { commonStyles } from '../styles/common-styles';
-import { BaseDialog } from './shared/base-dialog';
+import { Layout } from '../../services/HaApiClient';
+import '../shared/base-dialog';
+import { commonStyles } from '../../styles/common-styles';
+import { BaseDialog } from '../shared/base-dialog';
 
 /**
  * A dialog component for configuring layout settings like canvas size and grid snapping.

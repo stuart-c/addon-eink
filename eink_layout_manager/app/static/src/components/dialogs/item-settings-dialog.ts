@@ -1,10 +1,10 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { live } from 'lit/directives/live.js';
-import { LayoutItem, DisplayType } from '../services/HaApiClient';
-import './shared/base-dialog';
-import { commonStyles } from '../styles/common-styles';
-import { BaseDialog } from './shared/base-dialog';
+import { LayoutItem, DisplayType } from '../../services/HaApiClient';
+import '../shared/base-dialog';
+import { commonStyles } from '../../styles/common-styles';
+import { BaseDialog } from '../shared/base-dialog';
 
 /**
  * A dialog component for editing the settings of a display item in the layout.

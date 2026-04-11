@@ -1,7 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { commonStyles } from '../styles/common-styles';
-import { Layout } from '../services/HaApiClient';
+import { commonStyles } from '../../styles/common-styles';
+import { Layout } from '../../services/HaApiClient';
 
 @customElement('app-toolbar')
 export class AppToolbar extends LitElement {

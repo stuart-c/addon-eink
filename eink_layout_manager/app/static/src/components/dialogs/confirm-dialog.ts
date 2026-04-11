@@ -1,8 +1,8 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import './shared/base-dialog';
-import { commonStyles } from '../styles/common-styles';
-import { BaseDialog } from './shared/base-dialog';
+import '../shared/base-dialog';
+import { commonStyles } from '../../styles/common-styles';
+import { BaseDialog } from '../shared/base-dialog';
 
 export interface ConfirmConfig {
   title?: string;

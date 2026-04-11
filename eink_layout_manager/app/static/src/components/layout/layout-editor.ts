@@ -2,7 +2,7 @@ import { LitElement, html, css, PropertyValues } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import interact from 'interactjs';
 import './layout-box';
-import { DisplayType, LayoutItem } from '../services/HaApiClient';
+import { DisplayType, LayoutItem } from '../../services/HaApiClient';
 
 /**
  * The main layout editor workspace.

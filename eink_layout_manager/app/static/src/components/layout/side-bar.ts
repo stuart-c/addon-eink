@@ -1,7 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { commonStyles } from '../styles/common-styles';
-import { DisplayType, Layout } from '../services/HaApiClient';
+import { commonStyles } from '../../styles/common-styles';
+import { DisplayType, Layout } from '../../services/HaApiClient';
 
 @customElement('side-bar')
 export class SideBar extends LitElement {

@@ -1,11 +1,11 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { live } from 'lit/directives/live.js';
-import type { DisplayType } from '../services/HaApiClient';
-import { commonStyles } from '../styles/common-styles';
-import './shared/hardware-preview';
-import './shared/section-layout';
-import './yaml-editor';
+import type { DisplayType } from '../../services/HaApiClient';
+import { commonStyles } from '../../styles/common-styles';
+import '../shared/hardware-preview';
+import '../shared/section-layout';
+import '../layout/yaml-editor';
 
 /**
  * A view component for managing eInk Display Types.
@@ -316,6 +316,14 @@ export class DisplayTypesView extends LitElement {
   @property({ type: String }) viewMode: 'graphical' | 'yaml' = 'graphical';
 
   @state() private _isDirtyState = false;
+
+  get isDirty() {
+    return this._isDirtyState;
+  }
+
+  get canDelete() {
+    return !this.isNew && !!this.displayType;
+  }
 
   private _PRESETS = [
     { name: 'White', colour: '#ffffff' },
