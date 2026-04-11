@@ -4,7 +4,7 @@ import os
 import uuid
 from collections import Counter
 from PIL import Image as PILImage
-from sqlalchemy import select, func, String
+from sqlalchemy import select, func
 from aiohttp import web
 
 from .. import database, models
@@ -15,6 +15,7 @@ from ..utils.converters import (
 )
 from ..utils.images import delete_image_files_and_record
 from ..utils.validation import validate_id, load_schema
+from ..utils.query import parse_image_sort_params, build_image_filters
 from jsonschema import validate, ValidationError
 import json
 
@@ -134,54 +135,12 @@ async def handle_image_get(request):
 async def handle_image_list(request):
     """Retrieve image metadata with sorting and pagination."""
     # 1. Parse sorting parameters
+    # Args:
+    #     sort_query (str): Comma-separated sort string
+    #         (e.g., "name:asc,artist:desc")
     sort_query = request.query.get("sort", "name:asc")
+    order_by_clauses = parse_image_sort_params(sort_query)
 
-    valid_fields = {
-        "name": models.Image.name,
-        "artist": models.Image.artist,
-        "collection": models.Image.collection,
-        "width": models.Image.width,
-        "height": models.Image.height,
-    }
-
-    order_by_clauses = []
-
-    try:
-        for sort_part in sort_query.split(","):
-            if not sort_part.strip():
-                continue
-
-            if ":" in sort_part:
-                field_name, order = sort_part.split(":", 1)
-            else:
-                field_name, order = sort_part, "asc"
-
-            field_name = field_name.strip()
-            order = order.strip().lower()
-
-            if field_name not in valid_fields:
-                continue
-
-            field = valid_fields[field_name]
-
-            # Apply case-insensitivity for strings
-            if isinstance(field.type, String):
-                sort_expr = func.lower(field)
-            else:
-                sort_expr = field
-
-            if order == "desc":
-                order_by_clauses.append(sort_expr.desc())
-            else:
-                order_by_clauses.append(sort_expr.asc())
-    except Exception:
-        # Fallback to default if parsing fails
-        order_by_clauses = [func.lower(models.Image.name).asc()]
-
-    if not order_by_clauses:
-        order_by_clauses = [func.lower(models.Image.name).asc()]
-
-    # 2. Parse pagination parameters
     # 2. Parse pagination parameters
     try:
         page = int(request.query.get("page", 1))
@@ -201,65 +160,10 @@ async def handle_image_list(request):
     offset = (page - 1) * limit
 
     # 3. Parse filtering parameters
-    filters = []
-
-    # Mandatory status filter
-    filters.append(models.Image.status == "READY")
-
-    # Numeric filters
     try:
-        min_width = request.query.get("min_width")
-        if min_width:
-            filters.append(models.Image.width >= int(min_width))
-
-        max_width = request.query.get("max_width")
-        if max_width:
-            filters.append(models.Image.width <= int(max_width))
-
-        min_height = request.query.get("min_height")
-        if min_height:
-            filters.append(models.Image.height >= int(min_height))
-
-        max_height = request.query.get("max_height")
-        if max_height:
-            filters.append(models.Image.height <= int(max_height))
-    except ValueError:
-        return web.json_response(
-            {"error": "Invalid numeric filter parameter"}, status=400
-        )
-
-    # Text filters (Case-insensitive partial match)
-    # title maps to name
-    title = request.query.get("title")
-    if title:
-        filters.append(models.Image.name.ilike(f"%{title}%"))
-
-    description = request.query.get("description")
-    if description:
-        filters.append(models.Image.description.ilike(f"%{description}%"))
-
-    artist = request.query.get("artist")
-    if artist:
-        filters.append(models.Image.artist.ilike(f"%{artist}%"))
-
-    collection = request.query.get("collection")
-    if collection:
-        filters.append(models.Image.collection.ilike(f"%{collection}%"))
-
-    # Keyword filter (comma-separated, AND logic/intersection)
-    keyword_query = request.query.get("keyword")
-    if keyword_query:
-        kws = [k.strip() for k in keyword_query.split(",") if k.strip()]
-        for kw in kws:
-            # Subquery to check for keyword in JSON array
-            kw_je = func.json_each(models.Image.keywords).table_valued("value")
-            kw_subquery = (
-                select(1)
-                .select_from(kw_je)
-                .where(kw_je.c.value == kw)
-                .exists()
-            )
-            filters.append(kw_subquery)
+        filters = build_image_filters(request.query)
+    except ValueError as e:
+        return web.json_response({"error": str(e)}, status=400)
 
     try:
         async with database.get_session() as session:

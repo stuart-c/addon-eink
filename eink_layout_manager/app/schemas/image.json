@@ -66,8 +66,7 @@
     "source": {
       "type": "string",
       "description": "Original source URL or repository"
-    },
-
+    }
   },
   "required": [
     "id",
