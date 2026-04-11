@@ -1,7 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fixture, html } from '@open-wc/testing-helpers';
-import './components/layout/layout-editor';
-import { LayoutEditor } from './components/layout/layout-editor';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import './layout-editor';
+import { LayoutEditor } from './layout-editor';
 
 // Mock interactjs
 vi.mock('interactjs', () => {
@@ -43,14 +42,17 @@ describe('LayoutEditor', () => {
   ];
 
   beforeEach(async () => {
-    element = await fixture(html`
-      <layout-editor 
-        .width_mm="${500}" 
-        .height_mm="${500}"
-        .displayTypes="${mockDisplayTypes}"
-        .items="${mockItems}"
-      ></layout-editor>
-    `);
+    element = document.createElement('layout-editor') as LayoutEditor;
+    element.width_mm = 500;
+    element.height_mm = 500;
+    element.displayTypes = mockDisplayTypes as any;
+    element.items = mockItems as any;
+    document.body.appendChild(element);
+    await element.updateComplete;
+  });
+
+  afterEach(() => {
+    element.remove();
   });
 
   it('should detect when an item is outside boundaries', async () => {

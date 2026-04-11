@@ -1,7 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fixture, html } from '@open-wc/testing-helpers';
-import './components/views/display-types-view';
-import { DisplayTypesView } from './components/views/display-types-view';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import './display-types-view';
+import { DisplayTypesView } from './display-types-view';
 
 describe('DisplayTypesView', () => {
   let element: DisplayTypesView;
@@ -35,11 +34,14 @@ describe('DisplayTypesView', () => {
   ];
 
   beforeEach(async () => {
-    element = await fixture(html`
-      <display-types-view 
-        .displayTypes="${mockDisplayTypes}"
-      ></display-types-view>
-    `);
+    element = document.createElement('display-types-view') as DisplayTypesView;
+    element.displayTypes = mockDisplayTypes as any;
+    document.body.appendChild(element);
+    await element.updateComplete;
+  });
+
+  afterEach(() => {
+    element.remove();
   });
 
   it('should initialize with the first display type selected', () => {

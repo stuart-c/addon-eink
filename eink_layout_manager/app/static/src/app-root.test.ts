@@ -1,5 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fixture, html } from '@open-wc/testing-helpers';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import './app-root';
 import { AppRoot } from './app-root';
 import { api } from './services/HaApiClient';
@@ -21,12 +20,18 @@ describe('AppRoot', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    element = await fixture(html`<app-root></app-root>`);
+    element = document.createElement('app-root') as AppRoot;
+    document.body.appendChild(element);
+    await element.updateComplete;
+  });
+
+  afterEach(() => {
+    element.remove();
   });
 
   it('should render the app header', () => {
     const header = element.shadowRoot?.querySelector('app-header');
-    expect(header).to.exist;
+    expect(header).toBeTruthy();
   });
 
   it('should switch sections when set-section event is received', async () => {
@@ -41,7 +46,7 @@ describe('AppRoot', () => {
     
     // Check if images-view is rendered (it might take an update cycle)
     const imagesView = element.shadowRoot?.querySelector('images-view');
-    expect(imagesView).to.exist;
+    expect(imagesView).toBeTruthy();
   });
 
   it('should toggle view mode when toggle-view-mode event is received', async () => {

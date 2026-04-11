@@ -1,7 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fixture, html } from '@open-wc/testing-helpers';
-import './components/layout/yaml-editor';
-import { YamlEditor } from './components/layout/yaml-editor';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import './yaml-editor';
+import { YamlEditor } from './yaml-editor';
 
 describe('YamlEditor', () => {
   let element: YamlEditor;
@@ -14,9 +13,15 @@ describe('YamlEditor', () => {
   };
 
   beforeEach(async () => {
-    element = await fixture(html`
-      <yaml-editor .data="${mockData}" .schemaName="${'Layout'}"></yaml-editor>
-    `);
+    element = document.createElement('yaml-editor') as YamlEditor;
+    element.data = mockData;
+    element.schemaName = 'Layout';
+    document.body.appendChild(element);
+    await element.updateComplete;
+  });
+
+  afterEach(() => {
+    element.remove();
   });
 
   it('should initialize with YAML representation of data', () => {
@@ -35,8 +40,8 @@ describe('YamlEditor', () => {
     await element.updateComplete;
     
     const yamlText = element.shadowRoot?.querySelector('textarea')?.value;
-    expect(yamlText).not.toContain('invalid: true');
-    expect(yamlText).not.toContain('_metadata');
+    expect(yamlText?.includes('invalid: true')).toBe(false);
+    expect(yamlText?.includes('_metadata')).toBe(false);
   });
 
   it('should emit data-update event when valid YAML is entered', async () => {
@@ -59,9 +64,9 @@ describe('YamlEditor', () => {
     textarea.dispatchEvent(new Event('input', { bubbles: true }));
     
     await element.updateComplete;
-    expect((element as any)._errorMessage).not.toBe('');
+    expect((element as any)._errorMessage === '').toBe(false);
     const status = element.shadowRoot?.querySelector('.status-item.error');
-    expect(status).to.exist;
+    expect(status).toBeTruthy();
   });
 
   it('should show error for non-object YAML', async () => {
