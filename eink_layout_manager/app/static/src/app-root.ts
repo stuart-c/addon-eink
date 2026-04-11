@@ -51,10 +51,12 @@ export class AppRoot extends LitElement {
   
   @query('display-types-view') private _displayTypesView?: DisplayTypesView;
   @query('layouts-view') private _layoutsView?: LayoutsView;
+  @query('images-view') private _imagesView?: any;
 
   private get _activeView(): any {
     return this.state.activeSection === 'layouts' ? this._layoutsView : 
            this.state.activeSection === 'display-types' ? this._displayTypesView : 
+           this.state.activeSection === 'images' ? this._imagesView :
            null;
   }
 
@@ -131,6 +133,20 @@ export class AppRoot extends LitElement {
 
     if (confirmed) {
       await this.state.deleteDisplayType(e.detail);
+    }
+  }
+
+  private async _onDeleteImage(e: CustomEvent<{ image: Image }>) {
+    const confirmed = await this._confirmDialog.show({
+      title: 'Delete Image?',
+      message: `Are you sure you want to permanently remove "${e.detail.image.name}"? This action cannot be undone.`,
+      confirmText: 'Delete',
+      type: 'danger'
+    });
+
+    if (confirmed) {
+      await this.state.deleteImage(e.detail.image);
+      this._updateHeaderState();
     }
   }
 
@@ -240,7 +256,13 @@ export class AppRoot extends LitElement {
     return html`
       <images-view
         .images="${this.state.images}"
+        .selectedImageId="${this.state.selectedImageId}"
         @edit-image="${(e: CustomEvent) => this._imageDialog.show(e.detail.image)}"
+        @image-click="${(e: CustomEvent) => { 
+          this.state.selectedImageId = e.detail.image.id;
+          this._updateHeaderState();
+        }}"
+        @delete-image="${this._onDeleteImage}"
       ></images-view>
     `;
   }
