@@ -390,7 +390,9 @@ async def test_image_list_success(aiohttp_client, app):
     # 1. Retrieve list when empty
     resp_empty = await client.get("/api/image")
     assert resp_empty.status == 200
-    assert await resp_empty.json() == []
+    result_empty = await resp_empty.json()
+    assert result_empty["items"] == []
+    assert result_empty["pagination"]["total_items"] == 0
 
     # 2. Upload an image to populate
     width, height = 50, 50
@@ -411,10 +413,11 @@ async def test_image_list_success(aiohttp_client, app):
     resp = await client.get("/api/image")
     assert resp.status == 200
     result = await resp.json()
-    assert len(result) == 1
+    assert len(result["items"]) == 1
+    assert result["pagination"]["total_items"] == 1
 
     # 4. Verify summary fields
-    img_summary = result[0]
+    img_summary = result["items"][0]
     expected_fields = {"id", "name", "artist", "collection", "description"}
     assert set(img_summary.keys()) == expected_fields
     assert img_summary["name"] == "list_test.png"
@@ -422,3 +425,56 @@ async def test_image_list_success(aiohttp_client, app):
     # Verify internal fields are EXCLUDED
     for field in ["thumbnail_path", "file_path", "file_hash"]:
         assert field not in img_summary
+
+
+@pytest.mark.asyncio
+async def test_image_list_pagination(aiohttp_client, app):
+    """Test pagination query parameters and result sets."""
+    client = await aiohttp_client(app)
+
+    # 1. Create multiple images
+    for i in range(15):
+        # Create unique content for each image to avoid duplicate rejection
+        img = PILImage.new("RGB", (10, 10), color=(0, 0, i))
+        img_byte_arr = io.BytesIO()
+        img.save(img_byte_arr, format="PNG")
+        data = aiohttp.FormData()
+        data.add_field(
+            "file",
+            img_byte_arr.getvalue(),
+            filename=f"image_{i:02d}.png",
+            content_type="image/png",
+        )
+        await client.post("/api/image", data=data)
+
+    # 2. Test default pagination (limit 20)
+    resp = await client.get("/api/image")
+    result = await resp.json()
+    assert len(result["items"]) == 15
+    assert result["pagination"]["total_items"] == 15
+    assert result["pagination"]["page"] == 1
+    assert result["pagination"]["limit"] == 20
+
+    # 3. Test custom limit
+    resp = await client.get("/api/image?limit=5")
+    result = await resp.json()
+    assert len(result["items"]) == 5
+    assert result["pagination"]["total_items"] == 15
+    assert result["pagination"]["total_pages"] == 3
+
+    # 4. Test custom page
+    resp = await client.get("/api/image?page=2&limit=5")
+    result = await resp.json()
+    assert len(result["items"]) == 5
+    assert result["pagination"]["page"] == 2
+    # Verify we get the next set (sorting is by name)
+    assert result["items"][0]["name"] == "image_05.png"
+
+    # 5. Test max limit enforcement (100)
+    resp = await client.get("/api/image?limit=500")
+    result = await resp.json()
+    assert result["pagination"]["limit"] == 100
+
+    # 6. Test invalid parameters
+    resp = await client.get("/api/image?page=invalid")
+    assert resp.status == 400

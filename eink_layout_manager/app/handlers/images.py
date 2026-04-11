@@ -4,7 +4,7 @@ import os
 import uuid
 from collections import Counter
 from PIL import Image as PILImage
-from sqlalchemy import select
+from sqlalchemy import select, func
 from aiohttp import web
 
 from .. import database, models
@@ -129,15 +129,60 @@ async def handle_image_get(request):
 
 
 async def handle_image_list(request):
-    """Retrieve all image metadata from the SQL database."""
+    """Retrieve image metadata from the SQL database with pagination."""
     try:
+        # Parse pagination parameters
+        try:
+            page = int(request.query.get("page", 1))
+            limit = int(request.query.get("limit", 20))
+        except ValueError:
+            return web.json_response(
+                {"error": "Invalid page or limit parameter"}, status=400
+            )
+
+        if page < 1:
+            page = 1
+        if limit < 1:
+            limit = 20
+        if limit > 100:
+            limit = 100
+
+        offset = (page - 1) * limit
+
         async with database.get_session() as session:
-            stmt = select(models.Image).order_by(models.Image.name)
+            # Get total count
+            count_stmt = select(func.count()).select_from(models.Image)
+            count_result = await session.execute(count_stmt)
+            total_count = count_result.scalar() or 0
+
+            # Get paginated results
+            stmt = (
+                select(models.Image)
+                .order_by(models.Image.name)
+                .limit(limit)
+                .offset(offset)
+            )
             result = await session.execute(stmt)
             images = result.scalars().all()
 
             summary_list = [image_model_to_summary_dict(i) for i in images]
-            return web.json_response(summary_list)
+
+            # Calculate total pages
+            total_pages = (
+                (total_count + limit - 1) // limit if total_count > 0 else 0
+            )
+
+            return web.json_response(
+                {
+                    "items": summary_list,
+                    "pagination": {
+                        "page": page,
+                        "limit": limit,
+                        "total_items": total_count,
+                        "total_pages": total_pages,
+                    },
+                }
+            )
     except Exception as e:
         return web.json_response(
             {"error": "Database error", "details": str(e)}, status=500
