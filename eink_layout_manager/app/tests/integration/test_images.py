@@ -49,7 +49,7 @@ async def test_image_upload_success(aiohttp_client, app, tmp_path):
         "source",
     ]:
         assert field in result
-    
+
     # Verify internal fields are ABSENT
     assert "thumbnail_path" not in result
     assert "file_path" not in result
@@ -164,14 +164,13 @@ async def test_image_upload_with_thumbnail(aiohttp_client, app, tmp_path):
         "colour_depth",
         "keywords",
         "description",
-        "file_path",
         "original_archive_file",
         "license",
         "source",
         "status",
     ]:
         assert field in result
-    
+
     # Internal fields should be ABSENT
     for field in ["file_path", "file_hash", "thumbnail_path"]:
         assert field not in result
@@ -217,6 +216,7 @@ async def test_image_delete_success(aiohttp_client, app, tmp_path):
     # Retrieve full record from DB to get internal path for file verification
     from app import database, models
     from sqlalchemy import select
+
     async with database.get_session() as session:
         stmt = select(models.Image).where(models.Image.id == image_id)
         db_result = await session.execute(stmt)
@@ -332,7 +332,7 @@ async def test_get_image_success(aiohttp_client, app):
     assert result["file_type"] == "PNG"
     assert result["dimensions"] == {"width": width, "height": height}
     assert result["status"] == "UPLOADED"
-    
+
     # Verify internal fields are ABSENT
     assert "file_hash" not in result
     assert "file_path" not in result
