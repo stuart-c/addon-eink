@@ -28,7 +28,9 @@ def test_image_model_to_dict():
     assert result["id"] == "test-id"
     assert result["dimensions"] == {"width": 100, "height": 200}
     assert result["keywords"] == ["a", "b"]
-    assert result["thumbnail_path"] == "thumb.png"
+    assert "thumbnail_path" not in result
+    assert "file_path" not in result
+    assert "file_hash" not in result
 
 
 def test_image_model_to_dict_null_keywords():

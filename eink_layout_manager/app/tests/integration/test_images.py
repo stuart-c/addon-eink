@@ -56,8 +56,17 @@ async def test_image_upload_success(aiohttp_client, app, tmp_path):
     assert "file_hash" not in result
 
     # 5. Verify file exists on disk
+    from app import database, models
+    from sqlalchemy import select
+
+    async with database.get_session() as session:
+        stmt = select(models.Image).where(models.Image.id == result["id"])
+        db_result = await session.execute(stmt)
+        image = db_result.scalar_one()
+        filename = image.file_path
+
     storage_path = os.path.join(str(tmp_path), "image")
-    file_path = os.path.join(storage_path, result["file_path"])
+    file_path = os.path.join(storage_path, filename)
     assert os.path.exists(file_path)
     with open(file_path, "rb") as f:
         assert f.read() == img_data
@@ -176,10 +185,17 @@ async def test_image_upload_with_thumbnail(aiohttp_client, app, tmp_path):
         assert field not in result
 
     # 5. Verify thumbnail file exists on disk
+    from app import database, models
+    from sqlalchemy import select
+
+    async with database.get_session() as session:
+        stmt = select(models.Image).where(models.Image.id == result["id"])
+        db_result = await session.execute(stmt)
+        image = db_result.scalar_one()
+        filename = image.file_path
+
     thumb_storage_path = os.path.join(str(tmp_path), "thumbnail")
-    thumb_file_path = os.path.join(
-        thumb_storage_path, result["thumbnail_path"]
-    )
+    thumb_file_path = os.path.join(thumb_storage_path, filename)
     assert os.path.exists(thumb_file_path)
 
     # 6. Verify thumbnail dimensions
