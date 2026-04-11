@@ -317,6 +317,14 @@ export class DisplayTypesView extends LitElement {
 
   @state() private _isDirtyState = false;
 
+  get isDirty() {
+    return this._isDirtyState;
+  }
+
+  get canDelete() {
+    return !this.isNew && !!this.displayType;
+  }
+
   private _PRESETS = [
     { name: 'White', colour: '#ffffff' },
     { name: 'Black', colour: '#000000' },
