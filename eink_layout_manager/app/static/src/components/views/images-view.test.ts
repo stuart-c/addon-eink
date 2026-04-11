@@ -78,6 +78,57 @@ describe('ImagesView', () => {
     expect(spy.mock.calls[0][0].detail).toEqual({ image: mockImages[0] });
   });
 
+  it('should apply selected class to the correct card', async () => {
+    element.selectedImageId = 'img1';
+    await element.updateComplete;
+    
+    const firstCard = element.shadowRoot?.querySelectorAll('.image-card')[0];
+    const secondCard = element.shadowRoot?.querySelectorAll('.image-card')[1];
+    
+    expect(firstCard?.classList.contains('selected')).toBe(true);
+    expect(secondCard?.classList.contains('selected')).toBe(false);
+  });
+
+  it('should dispatch edit-image event when a card is double-clicked', async () => {
+    const spy = vi.fn();
+    element.addEventListener('edit-image', spy);
+    
+    const firstCard = element.shadowRoot?.querySelector('.image-card') as HTMLElement;
+    firstCard?.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, composed: true }));
+    
+    expect(spy).toHaveBeenCalled();
+    expect(spy.mock.calls[0][0].detail).toEqual({ image: mockImages[0] });
+  });
+
+  it('should dispatch edit-image event when the settings icon is clicked', async () => {
+    const spy = vi.fn();
+    element.addEventListener('edit-image', spy);
+    
+    const settingsIcon = element.shadowRoot?.querySelector('.action-icon') as HTMLElement;
+    settingsIcon?.click();
+    
+    expect(spy).toHaveBeenCalled();
+    expect(spy.mock.calls[0][0].detail).toEqual({ image: mockImages[0] });
+  });
+
+  it('should provide canDelete based on selection', async () => {
+    expect(element.canDelete).toBe(false);
+    
+    element.selectedImageId = 'img1';
+    expect(element.canDelete).toBe(true);
+  });
+
+  it('should dispatch delete-image when requestDelete is called', () => {
+    const spy = vi.fn();
+    element.addEventListener('delete-image', spy);
+    
+    element.selectedImageId = 'img1';
+    element.requestDelete();
+    
+    expect(spy).toHaveBeenCalled();
+    expect(spy.mock.calls[0][0].detail).toEqual({ image: mockImages[0] });
+  });
+
   it('should show placeholder in sidebar', () => {
     const sidebar = element.shadowRoot?.querySelector('[slot="left-bar"]');
     expect(sidebar?.textContent).toContain('Filtering coming soon');
