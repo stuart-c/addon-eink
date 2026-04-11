@@ -1,10 +1,10 @@
 import os
 from aiohttp import web
 
-from . import database
-from .middlewares import request_logger_middleware
-from .routes import setup_routes
-from .utils.storage import get_storage_path
+from app import database
+from app.middlewares import request_logger_middleware
+from app.routes import setup_routes
+from app.utils.storage import get_storage_path
 
 
 def init_app():
