@@ -112,9 +112,7 @@ async def test_image_upload_duplicate(aiohttp_client, app):
 
     # 2. Upload for the first time
     data1 = aiohttp.FormData()
-    data1.add_field(
-        "file", img_data, filename="image.png", content_type="image/png"
-    )
+    data1.add_field("file", img_data, filename="image.png", content_type="image/png")
     resp1 = await client.post("/api/image", data=data1)
     assert resp1.status == 201
     result1 = await resp1.json()
@@ -326,9 +324,7 @@ async def test_get_image_success(aiohttp_client, app):
     img_data = img_byte_arr.getvalue()
 
     data = aiohttp.FormData()
-    data.add_field(
-        "file", img_data, filename="test_get.png", content_type="image/png"
-    )
+    data.add_field("file", img_data, filename="test_get.png", content_type="image/png")
 
     upload_resp = await client.post("/api/image", data=data)
     assert upload_resp.status == 201
@@ -411,6 +407,7 @@ async def test_image_list_success(aiohttp_client, app):
     # 2.5 Manually set status to READY so it appears in filtered list
     from app import database, models
     from sqlalchemy import update
+
     async with database.get_session() as session:
         await session.execute(
             update(models.Image)
@@ -463,6 +460,7 @@ async def test_image_list_pagination(aiohttp_client, app):
     # 1.5 Manually set ALL images to READY
     from app import database, models
     from sqlalchemy import update
+
     async with database.get_session() as session:
         await session.execute(
             update(models.Image)

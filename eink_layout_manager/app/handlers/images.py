@@ -22,15 +22,11 @@ async def handle_image_create(request):
         reader = await request.multipart()
         field = await reader.next()
         if not field or field.name != "file":
-            return web.json_response(
-                {"error": 'Missing "file" field'}, status=400
-            )
+            return web.json_response({"error": 'Missing "file" field'}, status=400)
         filename = field.filename
         content = await field.read()
     except Exception as e:
-        return web.json_response(
-            {"error": f"Failed to read: {str(e)}"}, status=400
-        )
+        return web.json_response({"error": f"Failed to read: {str(e)}"}, status=400)
 
     image_id = uuid.uuid4().hex
     try:
@@ -38,9 +34,7 @@ async def handle_image_create(request):
 
         # Check for duplicate image by hash
         async with database.get_session() as session:
-            stmt = select(models.Image).where(
-                models.Image.file_hash == file_hash
-            )
+            stmt = select(models.Image).where(models.Image.file_hash == file_hash)
             result = await session.execute(stmt)
             existing_image = result.scalar_one_or_none()
             if existing_image:
@@ -94,15 +88,11 @@ async def handle_image_create(request):
             session.add(new_image)
             await session.commit()
             await session.refresh(new_image)
-            return web.json_response(
-                image_model_to_dict(new_image), status=201
-            )
+            return web.json_response(image_model_to_dict(new_image), status=201)
     except Exception as e:
         if os.path.exists(file_path):
             os.remove(file_path)
-        return web.json_response(
-            {"error": "DB fail", "details": str(e)}, status=500
-        )
+        return web.json_response({"error": "DB fail", "details": str(e)}, status=500)
 
 
 async def handle_image_get(request):
@@ -250,14 +240,9 @@ async def handle_image_list(request):
         kws = [k.strip() for k in keyword_query.split(",") if k.strip()]
         for kw in kws:
             # Subquery to check for keyword in JSON array
-            kw_je = func.json_each(
-                models.Image.keywords
-            ).table_valued("value")
+            kw_je = func.json_each(models.Image.keywords).table_valued("value")
             kw_subquery = (
-                select(1)
-                .select_from(kw_je)
-                .where(kw_je.c.value == kw)
-                .exists()
+                select(1).select_from(kw_je).where(kw_je.c.value == kw).exists()
             )
             filters.append(kw_subquery)
 
@@ -274,20 +259,14 @@ async def handle_image_list(request):
             total_count = count_result.scalar() or 0
 
             # Get sorted and paginated results
-            stmt = (
-                base_stmt.order_by(*order_by_clauses)
-                .limit(limit)
-                .offset(offset)
-            )
+            stmt = base_stmt.order_by(*order_by_clauses).limit(limit).offset(offset)
             result = await session.execute(stmt)
             images = result.scalars().all()
 
             summary_list = [image_model_to_summary_dict(i) for i in images]
 
             # Calculate total pages
-            total_pages = (
-                (total_count + limit - 1) // limit if total_count > 0 else 0
-            )
+            total_pages = (total_count + limit - 1) // limit if total_count > 0 else 0
 
             return web.json_response(
                 {
@@ -324,9 +303,7 @@ async def handle_image_thumbnail_get(request):
                 return web.json_response({"error": "Not Found"}, status=404)
 
             thumb_storage_path = get_storage_path("thumbnail")
-            thumb_file_path = os.path.join(
-                thumb_storage_path, image.thumbnail_path
-            )
+            thumb_file_path = os.path.join(thumb_storage_path, image.thumbnail_path)
 
             if not os.path.exists(thumb_file_path):
                 return web.json_response({"error": "Not Found"}, status=404)
@@ -382,9 +359,7 @@ async def handle_image_keywords_get(request):
 
             # Convert to list of objects, ordered by count descending.
             # We also sort alphabetically for stable results on equal counts.
-            sorted_kws = sorted(
-                counts.items(), key=lambda x: (-x[1], x[0].lower())
-            )
+            sorted_kws = sorted(counts.items(), key=lambda x: (-x[1], x[0].lower()))
 
             ordered_keywords = [
                 {"keyword": kw, "count": count} for kw, count in sorted_kws

@@ -10,14 +10,24 @@ async def test_image_list_filter_status_ready(aiohttp_client, app):
 
     async with database.get_session() as session:
         img1 = models.Image(
-            id=uuid.uuid4().hex, name="ready", file_type="PNG",
-            width=100, height=100,
-            file_path="ready.png", status="READY", file_hash="h1"
+            id=uuid.uuid4().hex,
+            name="ready",
+            file_type="PNG",
+            width=100,
+            height=100,
+            file_path="ready.png",
+            status="READY",
+            file_hash="h1",
         )
         img2 = models.Image(
-            id=uuid.uuid4().hex, name="uploaded", file_type="PNG",
-            width=100, height=100,
-            file_path="uploaded.png", status="UPLOADED", file_hash="h2"
+            id=uuid.uuid4().hex,
+            name="uploaded",
+            file_type="PNG",
+            width=100,
+            height=100,
+            file_path="uploaded.png",
+            status="UPLOADED",
+            file_hash="h2",
         )
         session.add_all([img1, img2])
         await session.commit()
@@ -36,14 +46,24 @@ async def test_image_list_filter_dimensions(aiohttp_client, app):
 
     async with database.get_session() as session:
         img1 = models.Image(
-            id=uuid.uuid4().hex, name="small", file_type="PNG",
-            width=100, height=100,
-            file_path="s.png", status="READY", file_hash="h3"
+            id=uuid.uuid4().hex,
+            name="small",
+            file_type="PNG",
+            width=100,
+            height=100,
+            file_path="s.png",
+            status="READY",
+            file_hash="h3",
         )
         img2 = models.Image(
-            id=uuid.uuid4().hex, name="large", file_type="PNG",
-            width=500, height=500,
-            file_path="l.png", status="READY", file_hash="h4"
+            id=uuid.uuid4().hex,
+            name="large",
+            file_type="PNG",
+            width=500,
+            height=500,
+            file_path="l.png",
+            status="READY",
+            file_hash="h4",
         )
         session.add_all([img1, img2])
         await session.commit()
@@ -68,16 +88,28 @@ async def test_image_list_filter_text(aiohttp_client, app):
 
     async with database.get_session() as session:
         img1 = models.Image(
-            id=uuid.uuid4().hex, name="Sunset", artist="Bob",
+            id=uuid.uuid4().hex,
+            name="Sunset",
+            artist="Bob",
             collection="Nature",
-            file_type="PNG", width=100, height=100, file_path="1.png",
-            status="READY", file_hash="h5"
+            file_type="PNG",
+            width=100,
+            height=100,
+            file_path="1.png",
+            status="READY",
+            file_hash="h5",
         )
         img2 = models.Image(
-            id=uuid.uuid4().hex, name="City", artist="Alice",
+            id=uuid.uuid4().hex,
+            name="City",
+            artist="Alice",
             collection="Urban",
-            file_type="PNG", width=100, height=100, file_path="2.png",
-            status="READY", file_hash="h6"
+            file_type="PNG",
+            width=100,
+            height=100,
+            file_path="2.png",
+            status="READY",
+            file_hash="h6",
         )
         session.add_all([img1, img2])
         await session.commit()
@@ -102,14 +134,26 @@ async def test_image_list_filter_keywords(aiohttp_client, app):
 
     async with database.get_session() as session:
         img1 = models.Image(
-            id=uuid.uuid4().hex, name="i1", keywords=["tag1", "tag2"],
-            file_type="PNG", width=100, height=100, file_path="k1.png",
-            status="READY", file_hash="hk1"
+            id=uuid.uuid4().hex,
+            name="i1",
+            keywords=["tag1", "tag2"],
+            file_type="PNG",
+            width=100,
+            height=100,
+            file_path="k1.png",
+            status="READY",
+            file_hash="hk1",
         )
         img2 = models.Image(
-            id=uuid.uuid4().hex, name="i2", keywords=["tag1", "tag3"],
-            file_type="PNG", width=100, height=100, file_path="k2.png",
-            status="READY", file_hash="hk2"
+            id=uuid.uuid4().hex,
+            name="i2",
+            keywords=["tag1", "tag3"],
+            file_type="PNG",
+            width=100,
+            height=100,
+            file_path="k2.png",
+            status="READY",
+            file_hash="hk2",
         )
         session.add_all([img1, img2])
         await session.commit()
