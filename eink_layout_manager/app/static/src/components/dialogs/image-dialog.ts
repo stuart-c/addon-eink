@@ -151,12 +151,14 @@ export class ImageDialog extends LitElement {
   @state() private _isUploading = false;
   @state() private _error: string | null = null;
   @state() private _keywords: string[] = [];
+  @state() private _imageName: string = '';
 
   async show() {
     this._uploadedImage = null;
     this._isUploading = false;
     this._error = null;
     this._keywords = [];
+    this._imageName = '';
     await this.updateComplete;
     (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).show();
   }
@@ -209,6 +211,7 @@ export class ImageDialog extends LitElement {
     try {
       const result = await api.uploadImage(file);
       this._uploadedImage = result;
+      this._imageName = result.name;
     } catch (err: any) {
       this._error = err.message || 'Failed to upload image';
       console.error('Upload error:', err);
@@ -239,7 +242,8 @@ export class ImageDialog extends LitElement {
               <input 
                 type="text" 
                 placeholder="Optional - defaults to filename"
-                .value="${this._uploadedImage?.name || ''}"
+                .value="${this._imageName}"
+                @input="${(e: InputEvent) => this._imageName = (e.target as HTMLInputElement).value}"
               >
             </div>
             
@@ -347,11 +351,11 @@ export class ImageDialog extends LitElement {
             Cancel
           </button>
           <button 
-            ?disabled="${this._isUploading || !this._uploadedImage}"
+            ?disabled="${this._isUploading || !this._uploadedImage || !this._imageName.trim()}"
             @click="${() => {}}"
           >
-            <span class="material-icons">publish</span>
-            Upload Image
+            <span class="material-icons">save</span>
+            Save Image
           </button>
         </div>
       </base-dialog>
