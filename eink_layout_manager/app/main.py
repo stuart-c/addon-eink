@@ -457,6 +457,38 @@ async def handle_image_get(request):
         )
 
 
+async def handle_image_thumbnail_get(request):
+    """Serve the thumbnail image file from disk."""
+    image_id = request.match_info["id"]
+    try:
+        image_id = validate_id(image_id)
+    except ValueError as e:
+        return web.json_response({"error": str(e)}, status=400)
+
+    try:
+        async with database.get_session() as session:
+            stmt = select(models.Image).where(models.Image.id == image_id)
+            result = await session.execute(stmt)
+            image = result.scalar_one_or_none()
+
+            if not image or not image.thumbnail_path:
+                return web.json_response({"error": "Not Found"}, status=404)
+
+            thumb_storage_path = get_storage_path("thumbnail")
+            thumb_file_path = os.path.join(
+                thumb_storage_path, image.thumbnail_path
+            )
+
+            if not os.path.exists(thumb_file_path):
+                return web.json_response({"error": "Not Found"}, status=404)
+
+            return web.FileResponse(thumb_file_path)
+    except Exception as e:
+        return web.json_response(
+            {"error": "Database error", "details": str(e)}, status=500
+        )
+
+
 async def handle_image_delete(request):
     """Permanently delete an image record and its files."""
     image_id = request.match_info["id"]
@@ -532,6 +564,7 @@ def init_app():
 
     app.router.add_get(f"{api_prefix}", get_collection)
     app.router.add_get("/api/image/{id}", handle_image_get)
+    app.router.add_get("/api/image/{id}/thumbnail", handle_image_thumbnail_get)
     app.router.add_get(f"{api_prefix}/{{id}}", get_item)
     app.router.add_delete("/api/image/{id}", handle_image_delete)
     app.router.add_post("/api/image", handle_image_create)
