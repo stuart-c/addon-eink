@@ -162,3 +162,56 @@ async def test_image_upload_with_thumbnail(aiohttp_client, app, tmp_path):
         assert th <= 200
         assert tw == 200
         assert th == 150
+
+
+@pytest.mark.asyncio
+async def test_image_delete_success(aiohttp_client, app, tmp_path):
+    """Test successful image and thumbnail deletion."""
+    client = await aiohttp_client(app)
+
+    # 1. Upload an image
+    width, height = 400, 300
+    img = PILImage.new("RGB", (width, height), color="green")
+    img_byte_arr = io.BytesIO()
+    img.save(img_byte_arr, format="JPEG")
+    img_data = img_byte_arr.getvalue()
+
+    data = aiohttp.FormData()
+    data.add_field(
+        "file", img_data, filename="delete_me.jpg", content_type="image/jpeg"
+    )
+    resp = await client.post("/api/image", data=data)
+    assert resp.status == 201
+    result = await resp.json()
+    image_id = result["id"]
+    filename = result["file_path"]
+
+    # 2. Verify files exist
+    storage_path = os.path.join(str(tmp_path), "image")
+    thumb_storage_path = os.path.join(str(tmp_path), "thumbnail")
+    file_path = os.path.join(storage_path, filename)
+    thumb_file_path = os.path.join(thumb_storage_path, filename)
+
+    assert os.path.exists(file_path)
+    assert os.path.exists(thumb_file_path)
+
+    # 3. Delete the image
+    del_resp = await client.delete(f"/api/image/{image_id}")
+    assert del_resp.status == 200
+    assert (await del_resp.json())["status"] == "deleted"
+
+    # 4. Verify files are gone
+    assert not os.path.exists(file_path)
+    assert not os.path.exists(thumb_file_path)
+
+    # 5. Verify 404 on subsequent get
+    get_resp = await client.get(f"/api/image/{image_id}")
+    assert get_resp.status == 404
+
+
+@pytest.mark.asyncio
+async def test_image_delete_not_found(aiohttp_client, app):
+    """Test deleting a non-existent image returns 404."""
+    client = await aiohttp_client(app)
+    resp = await client.delete("/api/image/nonexistent_id")
+    assert resp.status == 404

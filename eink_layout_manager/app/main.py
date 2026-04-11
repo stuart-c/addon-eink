@@ -457,6 +457,50 @@ async def handle_image_get(request):
         )
 
 
+async def handle_image_delete(request):
+    """Permanently delete an image record and its files."""
+    image_id = request.match_info["id"]
+    try:
+        image_id = validate_id(image_id)
+    except ValueError as e:
+        return web.json_response({"error": str(e)}, status=400)
+
+    async with database.get_session() as session:
+        stmt = select(models.Image).where(models.Image.id == image_id)
+        result = await session.execute(stmt)
+        image = result.scalar_one_or_none()
+
+        if not image:
+            return web.json_response({"error": "Not Found"}, status=404)
+
+        filename = image.file_path
+        thumbnail = image.thumbnail_path
+
+        # Delete from DB
+        await session.delete(image)
+        await session.commit()
+
+        # Delete files from disk
+        try:
+            # Delete main image
+            storage_path = get_storage_path("image")
+            file_path = os.path.join(storage_path, filename)
+            if os.path.exists(file_path):
+                os.remove(file_path)
+
+            # Delete thumbnail if it exists
+            if thumbnail:
+                thumb_storage_path = get_storage_path("thumbnail")
+                thumb_file_path = os.path.join(thumb_storage_path, thumbnail)
+                if os.path.exists(thumb_file_path):
+                    os.remove(thumb_file_path)
+        except Exception as e:
+            # Log but don't fail, as DB record is already gone
+            print(f"Error deleting image files for {image_id}: {str(e)}")
+
+    return web.json_response({"status": "deleted"})
+
+
 # --- App Init ---
 def init_app():
     """Initialise the aiohttp application with routes and storage setup."""
@@ -489,6 +533,7 @@ def init_app():
     app.router.add_get(f"{api_prefix}", get_collection)
     app.router.add_get("/api/image/{id}", handle_image_get)
     app.router.add_get(f"{api_prefix}/{{id}}", get_item)
+    app.router.add_delete("/api/image/{id}", handle_image_delete)
     app.router.add_post("/api/image", handle_image_create)
     app.router.add_post(f"{api_prefix}", create_item)
     app.router.add_put(f"{api_prefix}/{{id}}", update_item)
