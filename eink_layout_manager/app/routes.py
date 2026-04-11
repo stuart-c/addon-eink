@@ -18,6 +18,7 @@ def setup_routes(app):
         "/api/image/{id}/thumbnail", images.handle_image_thumbnail_get
     )
     app.router.add_post("/api/image", images.handle_image_create)
+    app.router.add_put("/api/image/{id}", images.handle_image_update)
     app.router.add_delete("/api/image/{id}", images.handle_image_delete)
 
     # Generic item routes
