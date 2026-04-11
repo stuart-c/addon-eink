@@ -8,6 +8,7 @@ import './components/views/layouts-view';
 import './components/views/display-types-view';
 import { DisplayTypesView } from './components/views/display-types-view';
 import { LayoutsView } from './components/views/layouts-view';
+import './components/views/images-view';
 import './components/dialogs/item-settings-dialog';
 import './components/dialogs/image-dialog';
 import './components/dialogs/confirm-dialog';
@@ -175,6 +176,7 @@ export class AppRoot extends LitElement {
 
       ${this.state.activeSection === 'layouts' ? this._renderLayoutsSection() : 
         this.state.activeSection === 'display-types' ? this._renderDisplayTypesSection() :
+        this.state.activeSection === 'images' ? this._renderImagesSection() :
         this._renderEmptySection()}
 
       <item-settings-dialog 
@@ -234,12 +236,19 @@ export class AppRoot extends LitElement {
     `;
   }
 
+  private _renderImagesSection() {
+    return html`
+      <images-view
+        .images="${this.state.images}"
+      ></images-view>
+    `;
+  }
+
   private _renderEmptySection() {
     const sections = {
-      'images': { title: 'Image Library', icon: 'image', message: 'Upload and process images for your displays.' },
       'scenes': { title: 'Smart Scenes', icon: 'landscape', message: 'Compose complex scenes by combining layouts, images and live data.' }
     };
-    const active = sections[this.state.activeSection as Exclude<AppSection, 'layouts' | 'display-types'>];
+    const active = sections[this.state.activeSection as Exclude<AppSection, 'layouts' | 'display-types' | 'images'>];
     
     return html`
       <section-layout>
