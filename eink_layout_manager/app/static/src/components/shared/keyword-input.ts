@@ -44,6 +44,24 @@ export class KeywordInput extends LitElement {
         font-size: 13px;
         font-weight: 500;
         animation: fadeIn 0.2s ease-out;
+        border: 1px solid transparent;
+        transition: all 0.2s;
+      }
+
+      .keyword-chip.invalid {
+        background: #fff1f0;
+        color: var(--danger-colour);
+        border-color: #ffa39e;
+      }
+
+      .keyword-chip .invalid-icon {
+        margin-right: 4px;
+        font-size: 14px;
+        display: none;
+      }
+
+      .keyword-chip.invalid .invalid-icon {
+        display: block;
       }
 
       @keyframes fadeIn {
@@ -99,6 +117,7 @@ export class KeywordInput extends LitElement {
   ];
 
   @property({ type: Array }) keywords: string[] = [];
+  @property({ type: Boolean }) validate = false;
   @state() private _allKeywords: KeywordInfo[] = [];
   @query('input') private _inputElement!: HTMLInputElement;
 
@@ -158,17 +177,21 @@ export class KeywordInput extends LitElement {
   render() {
     return html`
       <div class="keyword-input-container" @click="${() => this._inputElement.focus()}">
-        ${this.keywords.map(kw => html`
-          <div class="keyword-chip">
-            ${kw}
-            <span class="remove-btn" @click="${(e: Event) => {
-              e.stopPropagation();
-              this._removeKeyword(kw);
-            }}">
-              <span class="material-icons">close</span>
-            </span>
-          </div>
-        `)}
+        ${this.keywords.map(kw => {
+          const isInvalid = this.validate && !this._allKeywords.some(k => k.keyword === kw);
+          return html`
+            <div class="keyword-chip ${isInvalid ? 'invalid' : ''}">
+              <span class="material-icons invalid-icon">report_problem</span>
+              ${kw}
+              <span class="remove-btn" @click="${(e: Event) => {
+                e.stopPropagation();
+                this._removeKeyword(kw);
+              }}">
+                <span class="material-icons">close</span>
+              </span>
+            </div>
+          `;
+        })}
         <input 
           type="text" 
           placeholder="${this.keywords.length === 0 ? 'Add keywords...' : ''}"
