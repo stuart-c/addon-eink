@@ -36,24 +36,29 @@ It is vitally important that git worktrees are used to allow multiple agents to 
 - Use `git worktree add .worktrees/<branch-name> <branch-name>` to create a new workspace for your task.
 
 ## 4. Pre-Push Verification
-Tests and lints **MUST** be run locally before being pushed to GitHub.
-- **Linting:** `flake8 .`
-- **Formatting:** `black .`
-- **Tests:** `pytest`
+Tests and lints **MUST** be run locally using the root `venv` before being pushed to GitHub. This is mandatory whenever Python code is modified.
+- **Formatting:** `./venv/bin/black --check --line-length 79 eink_layout_manager/app` (must match Dockerfile parameters).
+- **Linting:** `./venv/bin/flake8 --exclude=venv eink_layout_manager/app`.
+- **Tests:** `PYTHONPATH=eink_layout_manager ./venv/bin/pytest eink_layout_manager/app/tests`.
 
 ## 5. Pull Request Management
-- **Mergeability:** PRs must be checked for mergeability before review. If `main` has moved forward, rebase your branch:
+- **Mergeability:** PRs **MUST** be rebased from the latest `main` branch before any review is requested.
   ```bash
   git fetch origin
   git rebase origin/main
   ```
+- **Local Verification:** You **MUST** ensure all tests and lints pass locally (as per Section 4) before requesting a review.
 - **PR Quality:** Before requesting a review, you **MUST** update the PR title and description to provide a clear explanation of:
     - **Purpose:** Why are these changes being made?
     - **Implementation:** How were the changes implemented? Highlight any significant architectural decisions, complex logic, or new patterns.
 - **Builds:** Ensure all GitHub Action builds for the PR are passing before requesting review.
-- **Auto-Merge:** Always enable auto-merge when creating a pull request to ensure it is merged automatically once checks pass and approvals are met:
+- **Auto-Merge:** You **MUST** enable auto-merge when creating a pull request. This is a mandatory step to keep the development cycle efficient.
   ```bash
   gh pr create --fill --auto
+  ```
+- **Auto-Merge Verification:** If for any reason auto-merge is not enabled during creation, it must be enabled immediately after:
+  ```bash
+  gh pr merge --auto --merge
   ```
 
 ## 6. Post-Merge Cleanup
