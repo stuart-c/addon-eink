@@ -13,12 +13,17 @@ export class ImageDialog extends LitElement {
   static styles = [
     commonStyles,
     css`
+      :host {
+        --dialog-width: 720px;
+      }
+
       .dialog-content {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 1.5rem;
+        gap: 2rem;
         padding: 0.5rem 0;
-        min-width: 600px;
+        width: 100%;
+        box-sizing: border-box;
       }
 
       .metadata-fields {

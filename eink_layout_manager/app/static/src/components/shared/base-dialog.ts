@@ -15,7 +15,7 @@ export class BaseDialog extends LitElement {
         border-radius: 12px;
         padding: 0;
         box-shadow: var(--shadow-large);
-        width: 450px;
+        width: var(--dialog-width, 450px);
         max-width: 95vw;
         background: #fff;
       }
