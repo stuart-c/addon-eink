@@ -197,7 +197,7 @@ export class AppToolbar extends LitElement {
     return html`
       <div class="toolbar-actions">
         <div class="dropdown">
-          <button class="settings-button" @click="${() => this._showDisplayMenu = !this._showDisplayMenu}" title="Add Display Type">
+          <button class="settings-button" @click="${() => { this._showDisplayMenu = !this._showDisplayMenu; if (this._showDisplayMenu) this._showMenu = false; }}" title="Add Display Type">
             <span class="material-icons">add_box</span>
           </button>
           <div class="dropdown-menu ${this._showDisplayMenu ? 'show' : ''}" style="min-width: 280px;">
@@ -229,7 +229,7 @@ export class AppToolbar extends LitElement {
         </button>
 
         <div class="dropdown">
-          <div class="dropdown-trigger ${this._showMenu ? 'active' : ''}" @click="${() => this._showMenu = !this._showMenu}">
+          <div class="dropdown-trigger ${this._showMenu ? 'active' : ''}" @click="${() => { this._showMenu = !this._showMenu; if (this._showMenu) this._showDisplayMenu = false; }}">
             <span>${this.activeLayout?.name || 'Loading...'}</span>
             <div class="chevron">▼</div>
           </div>
