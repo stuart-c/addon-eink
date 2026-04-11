@@ -188,6 +188,18 @@ export class ImageDialog extends LitElement {
     }
   }
 
+  private async _handleCancel() {
+    if (this._uploadedImage) {
+      try {
+        await api.deleteItem('image', this._uploadedImage.id);
+      } catch (err) {
+        console.error('Failed to cleanup uploaded image:', err);
+      }
+    }
+    this._uploadedImage = null;
+    (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).close();
+  }
+
   private async _processFile(file: File) {
     this._isUploading = true;
     this._error = null;
@@ -320,7 +332,7 @@ export class ImageDialog extends LitElement {
         <div slot="footer" class="footer-actions">
           <button 
             class="secondary" 
-            @click="${() => (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).close()}"
+            @click="${this._handleCancel}"
           >
             Cancel
           </button>
