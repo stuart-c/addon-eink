@@ -9,12 +9,14 @@ from aiohttp import web
 
 from .. import database, models
 from ..utils.storage import get_storage_path
-from ..utils.validation import validate_id
 from ..utils.converters import (
     image_model_to_dict,
     image_model_to_summary_dict,
 )
 from ..utils.images import delete_image_files_and_record
+from ..utils.validation import validate_id, load_schema
+from jsonschema import validate, ValidationError
+import json
 
 
 async def handle_image_create(request):
@@ -389,6 +391,74 @@ async def handle_image_keywords_get(request):
             ]
 
             return web.json_response(ordered_keywords)
+    except Exception as e:
+        return web.json_response(
+            {"error": "Database error", "details": str(e)}, status=500
+        )
+
+
+async def handle_image_update(request):
+    """Update image metadata in the SQL database."""
+    image_id = request.match_info["id"]
+
+    try:
+        image_id = validate_id(image_id)
+        data = await request.json()
+    except ValueError as e:
+        return web.json_response({"error": str(e)}, status=400)
+    except json.JSONDecodeError:
+        return web.json_response({"error": "Invalid JSON"}, status=400)
+
+    # Ensure ID in URL matches ID in body (if provided)
+    if "id" in data and data["id"] != image_id:
+        return web.json_response(
+            {"error": "ID in body does not match ID in URL"}, status=400
+        )
+
+    # Validation against image schema
+    try:
+        schema = load_schema("image")
+        validate(instance=data, schema=schema)
+    except FileNotFoundError:
+        return web.json_response(
+            {"error": "Schema for image not found"}, status=500
+        )
+    except ValidationError as e:
+        return web.json_response(
+            {"error": "Validation failed", "message": e.message}, status=400
+        )
+
+    try:
+        async with database.get_session() as session:
+            stmt = select(models.Image).where(models.Image.id == image_id)
+            result = await session.execute(stmt)
+            image = result.scalar_one_or_none()
+
+            if not image:
+                return web.json_response({"error": "Not Found"}, status=404)
+
+            # Update fields from sanitized data
+            image.name = data.get("name", image.name)
+            image.artist = data.get("artist", image.artist)
+            image.collection = data.get("collection", image.collection)
+            image.description = data.get("description", image.description)
+            image.keywords = data.get("keywords", image.keywords)
+            image.license = data.get("license", image.license)
+            image.source = data.get("source", image.source)
+            image.file_type = data.get("file_type", image.file_type)
+            image.status = data.get("status", image.status)
+
+            # Dimensions are nested in the dictionary but flat in the model
+            dims = data.get("dimensions", {})
+            image.width = dims.get("width", image.width)
+            image.height = dims.get("height", image.height)
+
+            image.colour_depth = data.get("colour_depth", image.colour_depth)
+
+            await session.commit()
+            await session.refresh(image)
+
+            return web.json_response(image_model_to_dict(image))
     except Exception as e:
         return web.json_response(
             {"error": "Database error", "details": str(e)}, status=500
