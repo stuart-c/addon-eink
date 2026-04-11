@@ -31,6 +31,18 @@ def test_validate_id_traversal():
     """Test traversal attempts are rejected."""
     with pytest.raises(ValueError, match="Invalid ID format"):
         validate_id("../etc/passwd")
+    with pytest.raises(ValueError, match="Invalid ID format"):
+        validate_id("data/../../etc/shadow")
+    with pytest.raises(ValueError, match="Invalid ID format"):
+        validate_id("./relative")
+
+
+def test_validate_id_empty():
+    """Test empty string is rejected."""
+    with pytest.raises(
+        ValueError, match="Invalid ID: Must be a non-empty string"
+    ):
+        validate_id("")
 
 
 def test_load_schema_success():
@@ -38,6 +50,13 @@ def test_load_schema_success():
     schema = load_schema("display_type")
     assert isinstance(schema, dict)
     assert schema["title"] == "DisplayType"
+    assert "properties" in schema
+    assert "id" in schema["properties"]
+    assert "width_mm" in schema["properties"]
+
+    schema = load_schema("image")
+    assert schema["title"] == "Image"
+    assert "colour_depth" in schema["properties"]
 
 
 def test_load_schema_not_found():
