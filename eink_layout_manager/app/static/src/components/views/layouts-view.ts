@@ -211,11 +211,13 @@ export class LayoutsView extends LitElement {
         <app-toolbar
           slot="right-top-bar"
           .layouts="${this.layouts}"
+          .displayTypes="${this.displayTypes}"
           .activeLayout="${this.activeLayout}"
           .mousePos="${this._mousePos}"
           @switch-layout="${(e: CustomEvent) => this.dispatchEvent(new CustomEvent('switch-layout', { detail: e.detail, bubbles: true, composed: true }))}"
           @create-layout="${this.addNew}"
           @edit-layout="${() => this.activeLayout && this._layoutSettingsDialog.show(this.activeLayout)}"
+          @add-item-to-layout="${this._onAddItemToLayout}"
         ></app-toolbar>
 
         <div slot="right-main" style="height: 100%; display: flex; flex-direction: column;">
