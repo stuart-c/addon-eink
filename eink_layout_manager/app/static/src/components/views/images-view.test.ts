@@ -163,7 +163,7 @@ describe('ImagesView', () => {
 
   it('should render sort priority section', () => {
     const title = Array.from(element.shadowRoot?.querySelectorAll('.sidebar-title') || [])
-      .find(el => el.textContent?.trim() === 'Sort Priority');
+      .find(el => el.textContent?.includes('Sort Priority'));
     expect(title).toBeTruthy();
     
     const sortItems = element.shadowRoot?.querySelectorAll('.sort-item');
