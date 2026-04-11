@@ -9,6 +9,8 @@ vi.mock('./services/HaApiClient', () => {
       ping: vi.fn().mockResolvedValue(true),
       getCollection: vi.fn().mockResolvedValue([]),
       getImages: vi.fn().mockResolvedValue([]),
+      getKeywords: vi.fn().mockResolvedValue([]),
+      createItem: vi.fn().mockResolvedValue({ id: 'new' }),
     },
     HaApiClient: vi.fn()
   };

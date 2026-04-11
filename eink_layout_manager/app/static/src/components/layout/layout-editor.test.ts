@@ -4,22 +4,23 @@ import { LayoutEditor } from './layout-editor';
 
 // Mock interactjs
 vi.mock('interactjs', () => {
-  const mockInteract = {
+  const mockInteractInstance = {
     draggable: vi.fn().mockReturnThis(),
     resizable: vi.fn().mockReturnThis(),
-    modifiers: {
-      restrictRect: vi.fn(),
-      snap: vi.fn(),
-      grid: vi.fn(),
-      restrictSize: vi.fn()
-    },
-    snappers: {
-      grid: vi.fn()
-    },
     unset: vi.fn()
   };
+  const mockInteract: any = vi.fn(() => mockInteractInstance);
+  mockInteract.modifiers = {
+    restrictRect: vi.fn(),
+    snap: vi.fn(),
+    grid: vi.fn(),
+    restrictSize: vi.fn()
+  };
+  mockInteract.snappers = {
+    grid: vi.fn()
+  };
   return {
-    default: vi.fn(() => mockInteract),
+    default: mockInteract,
     __esModule: true
   };
 });

@@ -64,7 +64,8 @@ describe('HaApiClient', () => {
     it('getCollection should use GET', async () => {
        mockFetch.mockResolvedValue({
         ok: true,
-        json: async () => []
+        json: async () => [],
+        headers: new Headers()
       });
       await client.getCollection('layout');
       expect(mockFetch).toHaveBeenCalledWith('api/layout', expect.objectContaining({
@@ -74,9 +75,10 @@ describe('HaApiClient', () => {
 
     it('getItem should use GET with ID', async () => {
         mockFetch.mockResolvedValue({
-         ok: true,
-         json: async () => ({ id: '123' })
-       });
+          ok: true,
+          json: async () => ({ id: '123' }),
+          headers: new Headers()
+        });
        await client.getItem('layout', '123');
        expect(mockFetch).toHaveBeenCalledWith('api/layout/123', expect.any(Object));
      });
@@ -84,7 +86,8 @@ describe('HaApiClient', () => {
     it('createItem should use POST and stringify body', async () => {
        mockFetch.mockResolvedValue({
         ok: true,
-        json: async () => ({ id: 'new' })
+        json: async () => ({ id: 'new' }),
+        headers: new Headers()
       });
       await client.createItem('layout', { name: 'New' });
       expect(mockFetch).toHaveBeenCalledWith('api/layout', expect.objectContaining({
@@ -95,9 +98,10 @@ describe('HaApiClient', () => {
 
     it('updateItem should use PUT and stringify body', async () => {
         mockFetch.mockResolvedValue({
-         ok: true,
-         json: async () => ({ id: '123', name: 'Updated' })
-       });
+          ok: true,
+          json: async () => ({ id: '123', name: 'Updated' }),
+          headers: new Headers()
+        });
        await client.updateItem('layout', '123', { name: 'Updated' });
        expect(mockFetch).toHaveBeenCalledWith('api/layout/123', expect.objectContaining({
          method: 'PUT',
@@ -107,9 +111,10 @@ describe('HaApiClient', () => {
 
      it('deleteItem should use DELETE', async () => {
         mockFetch.mockResolvedValue({
-         ok: true,
-         json: async () => ({ status: 'ok' })
-       });
+          ok: true,
+          json: async () => ({ status: 'ok' }),
+          headers: new Headers()
+        });
        await client.deleteItem('layout', '123');
        expect(mockFetch).toHaveBeenCalledWith('api/layout/123', expect.objectContaining({
          method: 'DELETE'
@@ -119,7 +124,8 @@ describe('HaApiClient', () => {
     it('uploadImage should use FormData and NOT set Content-Type header manually', async () => {
        mockFetch.mockResolvedValue({
         ok: true,
-        json: async () => ({ id: 'img1' })
+        json: async () => ({ id: 'img1' }),
+        headers: new Headers()
       });
       const file = new File([''], 'test.png', { type: 'image/png' });
       await client.uploadImage(file);
@@ -138,7 +144,8 @@ describe('HaApiClient', () => {
         };
         mockFetch.mockResolvedValue({
             ok: true,
-            json: async () => mockResp
+            json: async () => mockResp,
+            headers: new Headers()
         });
         const result = await client.getImages();
         expect(result).toEqual(mockResp.items);
@@ -148,7 +155,8 @@ describe('HaApiClient', () => {
         const mockKeywords = [{ keyword: 'test', count: 5 }];
         mockFetch.mockResolvedValue({
             ok: true,
-            json: async () => mockKeywords
+            json: async () => mockKeywords,
+            headers: new Headers()
         });
         const result = await client.getKeywords();
         expect(result).toEqual(mockKeywords);
