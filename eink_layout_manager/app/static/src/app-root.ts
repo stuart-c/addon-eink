@@ -2,24 +2,21 @@ import { LitElement, html, css } from 'lit';
 import { customElement, state, query } from 'lit/decorators.js';
 import { HaStateController, type AppSection } from './controllers/HaStateController';
 
-import './components/app-header';
-import './components/app-toolbar';
-import './components/side-bar';
-import './components/layout-editor';
-import './components/display-types-view';
-import { DisplayTypesView } from './components/display-types-view';
-import './components/item-settings-dialog';
-import './components/layout-settings-dialog';
-import './components/image-dialog';
-import './components/confirm-dialog';
-import './components/yaml-editor';
-import './components/shared/section-layout';
+import './components/shell/app-header';
+import './components/layout/side-bar';
+import './components/views/layouts-view';
+import './components/views/display-types-view';
+import { DisplayTypesView } from './components/views/display-types-view';
+import { LayoutsView } from './components/views/layouts-view';
+import './components/dialogs/item-settings-dialog';
+import './components/dialogs/image-dialog';
+import './components/dialogs/confirm-dialog';
 import './components/shared/empty-view';
+import './components/shared/section-layout';
 
-import { ItemSettingsDialog } from './components/item-settings-dialog';
-import { LayoutSettingsDialog } from './components/layout-settings-dialog';
-import { ImageDialog } from './components/image-dialog';
-import { ConfirmDialog } from './components/confirm-dialog';
+import { ItemSettingsDialog } from './components/dialogs/item-settings-dialog';
+import { ImageDialog } from './components/dialogs/image-dialog';
+import { ConfirmDialog } from './components/dialogs/confirm-dialog';
 import { DisplayType, Layout } from './services/HaApiClient';
 
 @customElement('app-root')
@@ -41,83 +38,86 @@ export class AppRoot extends LitElement {
       background-color: #f0f2f5;
       overflow: hidden;
     }
-    .editor-container {
-      flex: 1;
-      min-width: 0;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      background: white;
-    }
-    yaml-editor {
-      flex: 1;
-    }
   `;
 
-  @state() private _mousePos: { x: number | null, y: number | null } = { x: null, y: null };
   @state() private _viewMode: 'graphical' | 'yaml' = 'graphical';
-
-  @query('item-settings-dialog') private _itemDialog!: ItemSettingsDialog;
-  @query('layout-settings-dialog') private _layoutSettingsDialog!: LayoutSettingsDialog;
-  @query('image-dialog') private _imageDialog!: ImageDialog;
-  @query('confirm-dialog') private _confirmDialog!: ConfirmDialog;
-
-  private async _handleEditLayout() {
-    if (this.state.activeLayout) {
-      await this._layoutSettingsDialog.show(this.state.activeLayout);
-    }
-  }
-  @query('display-types-view') private _displayTypesView?: DisplayTypesView;
-
-  @state() private _displayTypesDirty = false;
+  @state() private _isDirty = false;
   @state() private _canDelete = false;
 
-  private async _handleSave() {
-    if (this.state.activeSection === 'layouts') {
-      await this.state.saveActiveLayout();
-    } else if (this.state.activeSection === 'display-types') {
-      this._displayTypesView?.save();
+  @query('item-settings-dialog') private _itemDialog!: ItemSettingsDialog;
+  @query('image-dialog') private _imageDialog!: ImageDialog;
+  @query('confirm-dialog') private _confirmDialog!: ConfirmDialog;
+  
+  @query('display-types-view') private _displayTypesView?: DisplayTypesView;
+  @query('layouts-view') private _layoutsView?: LayoutsView;
+
+  private get _activeView(): any {
+    return this.state.activeSection === 'layouts' ? this._layoutsView : 
+           this.state.activeSection === 'display-types' ? this._displayTypesView : 
+           null;
+  }
+
+  protected updated(changedProperties: Map<string | number | symbol, unknown>) {
+    super.updated(changedProperties);
+    if (changedProperties.has('activeSection')) {
+      // Small delay to let the query selectors update if the view changed
+      setTimeout(() => this._updateHeaderState(), 0);
     }
+  }
+
+  private _updateHeaderState() {
+    const view = this._activeView;
+    if (view) {
+      this._isDirty = view.isDirty;
+      this._canDelete = view.canDelete;
+    } else {
+      this._isDirty = false;
+      this._canDelete = false;
+    }
+  }
+
+  private async _handleSave() {
+    await this._activeView?.save();
   }
 
   private async _handleDiscard() {
+    const sectionName = this.state.activeSection === 'layouts' ? 'layout' : 'display type';
     const confirmed = await this._confirmDialog.show({
       title: 'Discard Changes?',
-      message: `Are you sure you want to discard all unsaved changes to this ${this.state.activeSection === 'layouts' ? 'layout' : 'display type'}?`,
+      message: `Are you sure you want to discard all unsaved changes to this ${sectionName}?`,
       confirmText: 'Discard',
       type: 'danger'
     });
 
     if (confirmed) {
-      if (this.state.activeSection === 'layouts') {
-        this.state.discardChanges();
-        this.state.showMessage('Changes discarded', 'info');
-      } else if (this.state.activeSection === 'display-types') {
-        this._displayTypesView?.discard();
-        this.state.showMessage('Changes discarded', 'info');
-      }
+      await this._activeView?.discard();
+      this.state.showMessage('Changes discarded', 'info');
     }
   }
 
-  // Toolbar Actions
-  private async _handleCreateLayout() {
-    const newLayout: Partial<Layout> = {
-      name: 'New Layout',
-      canvas_width_mm: 500,
-      canvas_height_mm: 500,
-      grid_snap_mm: 5,
-      items: []
-    };
-    await this._layoutSettingsDialog.show(newLayout as Layout);
+  private async _onHeaderAddItem() {
+    if (this.state.activeSection === 'images') {
+      this._imageDialog.show();
+    } else {
+      await this._activeView?.addNew();
+    }
   }
 
-  // Sidebar Actions
-  private async _onAddDisplayType() {
-    this.state.setSection('display-types');
+  private async _onHeaderDeleteItem() {
+    await this._activeView?.requestDelete();
   }
 
-  private async _onEditDisplayType(_e: CustomEvent<DisplayType>) {
-    this.state.setSection('display-types');
+  private async _onDeleteLayout(e: CustomEvent<{ layout: Layout }>) {
+    const confirmed = await this._confirmDialog.show({
+      title: 'Delete Layout?',
+      message: `Are you sure you want to permanently remove "${e.detail.layout.name}"? This action cannot be undone.`,
+      confirmText: 'Delete',
+      type: 'danger'
+    });
+
+    if (confirmed) {
+      await this.state.deleteLayout(e.detail.layout);
+    }
   }
 
   private async _onDeleteDisplayType(e: CustomEvent<DisplayType>) {
@@ -130,70 +130,6 @@ export class AppRoot extends LitElement {
 
     if (confirmed) {
       await this.state.deleteDisplayType(e.detail);
-    }
-  }
-
-  private _onAddItemToLayout(e: CustomEvent<DisplayType>) {
-    const id = Math.random().toString(36).substr(2, 9);
-    const newItem = {
-      id,
-      display_type_id: e.detail.id,
-      x_mm: 50,
-      y_mm: 50,
-      orientation: 0 as 0 | 90
-    };
-    this.state.updateActiveLayout({
-      items: [...(this.state.activeLayout?.items || []), newItem]
-    });
-    this.state.selectedItemId = id;
-  }
-
-  // Dialog Callbacks
-  private async _onSaveLayoutSettings(e: CustomEvent) {
-    const settings = e.detail.settings;
-    if (!settings.id) {
-       // New layout logic is handled in HaStateController or here
-       // For now keeping it simple as per original
-    }
-    this.state.updateActiveLayout(settings);
-    this.state.showMessage('Settings applied', 'success');
-  }
-
-  private async _onSaveDisplayType(e: CustomEvent) {
-    await this.state.saveDisplayType(e.detail.displayType);
-  }
-
-  private async _onHeaderDeleteItem() {
-    if (this.state.activeSection === 'display-types') {
-      this._displayTypesView?.requestDelete();
-    } else if (this.state.activeSection === 'layouts' && this.state.activeLayout) {
-      const confirmed = await this._confirmDialog.show({
-        title: 'Delete Layout?',
-        message: `Are you sure you want to permanently remove "${this.state.activeLayout.name}"? This action cannot be undone.`,
-        confirmText: 'Delete',
-        type: 'danger'
-      });
-
-      if (confirmed) {
-        await this.state.deleteLayout(this.state.activeLayout);
-      }
-    }
-  }
-
-  private _onHeaderAddItem() {
-    if (this.state.activeSection === 'display-types') {
-      this._displayTypesView?.addNew();
-    } else if (this.state.activeSection === 'layouts') {
-      this._handleCreateLayout();
-    } else if (this.state.activeSection === 'images') {
-      this._imageDialog.show();
-    }
-  }
-
-  private async _onEditItem(e: CustomEvent<{ id: string }>) {
-    const item = this.state.activeLayout?.items.find(i => i.id === e.detail.id);
-    if (item) {
-      await this._itemDialog.show(item, this.state.displayTypes);
     }
   }
 
@@ -225,10 +161,10 @@ export class AppRoot extends LitElement {
         .connected="${this.state.connected}"
         .message="${this.state.message}"
         .isSaving="${this.state.isSaving}"
-        .isDirty="${this.state.isDirty || this._displayTypesDirty}"
+        .isDirty="${this._isDirty}"
         .viewMode="${this._viewMode}"
         .activeSection="${this.state.activeSection}"
-        .canDelete="${this.state.activeSection === 'layouts' ? !!this.state.activeLayout : this._canDelete}"
+        .canDelete="${this._canDelete}"
         @save-changes="${this._handleSave}"
         @discard-changes="${this._handleDiscard}"
         @delete-item="${this._onHeaderDeleteItem}"
@@ -245,7 +181,6 @@ export class AppRoot extends LitElement {
         @save="${(e: CustomEvent) => this.state.updateItem(e.detail.id, e.detail.updates)}"
         @delete="${(e: CustomEvent) => this._onDeleteItem(e)}"
       ></item-settings-dialog>
-      <layout-settings-dialog @save="${this._onSaveLayoutSettings}"></layout-settings-dialog>
       <image-dialog></image-dialog>
       <confirm-dialog></confirm-dialog>
     `;
@@ -253,58 +188,32 @@ export class AppRoot extends LitElement {
 
   private _renderLayoutsSection() {
     return html`
-      <section-layout>
-        <side-bar
-          slot="left-bar"
-          .displayTypes="${this.state.displayTypes}"
-          .activeLayout="${this.state.activeLayout}"
-          .selectedItemId="${this.state.selectedItemId}"
-          @add-display-type="${this._onAddDisplayType}"
-          @edit-display-type="${this._onEditDisplayType}"
-          @delete-display-type="${this._onDeleteDisplayType}"
-          @add-item-to-layout="${this._onAddItemToLayout}"
-          @select-item="${(e: CustomEvent) => this.state.selectedItemId = e.detail.id}"
-          @edit-item="${this._onEditItem}"
-          @rotate-item="${(e: CustomEvent) => this.state.updateItem(e.detail.id, { orientation: (this.state.activeLayout?.items.find(i => i.id === e.detail.id)?.orientation === 0 ? 90 : 0) })}"
-          @delete-item="${this._onDeleteItem}"
-        ></side-bar>
-
-        <app-toolbar
-          slot="right-top-bar"
-          .layouts="${this.state.layouts}"
-          .activeLayout="${this.state.activeLayout}"
-          .mousePos="${this._mousePos}"
-          @switch-layout="${(e: CustomEvent) => this.state.switchLayout(e.detail)}"
-          @create-layout="${this._handleCreateLayout}"
-          @edit-layout="${this._handleEditLayout}"
-        ></app-toolbar>
-
-        <div slot="right-main" style="height: 100%; display: flex; flex-direction: column;">
-          <layout-editor
-            ?hidden="${this._viewMode !== 'graphical' || !this.state.activeLayout}"
-            .width_mm="${this.state.activeLayout?.canvas_width_mm || 0}"
-            .height_mm="${this.state.activeLayout?.canvas_height_mm || 0}"
-            .gridSnap="${this.state.activeLayout?.grid_snap_mm || 5}"
-            .items="${this.state.activeLayout?.items || []}"
-            .displayTypes="${this.state.displayTypes}"
-            .selectedId="${this.state.selectedItemId}"
-            @item-moved="${(e: CustomEvent) => this.state.updateItem(e.detail.id, { x_mm: e.detail.x, y_mm: e.detail.y })}"
-            @select-item="${(e: CustomEvent) => this.state.selectedItemId = e.detail.id}"
-            @edit-item="${(e: CustomEvent) => this._onEditItem(e)}"
-            @mouse-move="${(e: CustomEvent) => this._mousePos = e.detail}"
-            @rotate-item="${(e: CustomEvent) => this.state.updateItem(e.detail.id, { orientation: (this.state.activeLayout?.items.find(i => i.id === e.detail.id)?.orientation === 0 ? 90 : 0) })}"
-            @item-delete="${(e: CustomEvent) => this._onDeleteItem(e)}"
-            @layout-resized="${(e: CustomEvent) => this.state.updateActiveLayout({ canvas_width_mm: e.detail.width, canvas_height_mm: e.detail.height })}"
-          ></layout-editor>
-
-          <yaml-editor
-            ?hidden="${this._viewMode !== 'yaml' || !this.state.activeLayout}"
-            .data="${this.state.activeLayout}"
-            .schemaName="Layout"
-            @data-update="${(e: CustomEvent) => this.state.updateActiveLayout(e.detail)}"
-          ></yaml-editor>
-        </div>
-      </section-layout>
+      <layouts-view
+        .layouts="${this.state.layouts}"
+        .displayTypes="${this.state.displayTypes}"
+        .activeLayout="${this.state.activeLayout}"
+        .selectedItemId="${this.state.selectedItemId}"
+        .viewMode="${this._viewMode}"
+        .isSaving="${this.state.isSaving}"
+        @switch-layout="${(e: CustomEvent) => this.state.switchLayout(e.detail)}"
+        @update-active-layout="${(e: CustomEvent) => this.state.updateActiveLayout(e.detail)}"
+        @update-item="${(e: CustomEvent) => this.state.updateItem(e.detail.id, e.detail.updates)}"
+        @select-item="${(e: CustomEvent) => this.state.selectedItemId = e.detail.id}"
+        @edit-item="${(e: CustomEvent) => this._itemDialog.show(this.state.activeLayout?.items.find(i => i.id === e.detail.id)!, this.state.displayTypes)}"
+        @delete-item="${this._onDeleteItem}"
+        @delete-layout="${this._onDeleteLayout}"
+        @save-layout="${async () => {
+          await this.state.saveActiveLayout();
+          if (this._layoutsView) {
+            this._layoutsView.resetBaseline();
+          }
+        }}"
+        @dirty-state-change="${(e: CustomEvent) => this._isDirty = e.detail.isDirty}"
+        @can-delete-change="${(e: CustomEvent) => this._canDelete = e.detail.canDelete}"
+        @show-message="${(e: CustomEvent) => this.state.showMessage(e.detail.text, e.detail.type)}"
+        @set-section="${(e: CustomEvent) => this.state.setSection(e.detail)}"
+        @delete-display-type="${this._onDeleteDisplayType}"
+      ></layouts-view>
     `;
   }
 
@@ -312,9 +221,10 @@ export class AppRoot extends LitElement {
     return html`
       <display-types-view
         .displayTypes="${this.state.displayTypes}"
-        @save="${this._onSaveDisplayType}"
+        .viewMode="${this._viewMode}"
+        @save="${(e: CustomEvent) => this.state.saveDisplayType(e.detail.displayType)}"
         @delete-display-type="${this._onDeleteDisplayType}"
-        @dirty-state-change="${(e: CustomEvent) => this._displayTypesDirty = e.detail.isDirty}"
+        @dirty-state-change="${(e: CustomEvent) => this._isDirty = e.detail.isDirty}"
         @can-delete-change="${(e: CustomEvent) => this._canDelete = e.detail.canDelete}"
         @request-confirmation="${async (e: CustomEvent) => {
           const result = await this._confirmDialog.show(e.detail.config);
