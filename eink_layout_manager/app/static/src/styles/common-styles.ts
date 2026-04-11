@@ -106,4 +106,36 @@ export const commonStyles = css`
     outline: none;
     border-color: var(--primary-colour);
   }
+
+  .draggable-item {
+    cursor: grab;
+    user-select: none;
+    transition: background-color 0.2s, opacity 0.2s, transform 0.2s;
+  }
+
+  .draggable-item:active {
+    cursor: grabbing;
+  }
+
+  .draggable-item.dragging {
+    opacity: 0.5;
+    transform: scale(0.98);
+  }
+
+  .drag-handle {
+    cursor: grab;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    transition: color 0.2s;
+  }
+
+  .drag-handle:hover {
+    color: var(--primary-colour);
+  }
+
+  .drag-handle:active {
+    cursor: grabbing;
+  }
 `;

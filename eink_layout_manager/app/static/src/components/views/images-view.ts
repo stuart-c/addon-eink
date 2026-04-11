@@ -7,6 +7,13 @@ import '../shared/empty-view';
 import '../shared/range-slider';
 import '../shared/keyword-input';
 
+type SortField = 'name' | 'artist' | 'collection' | 'width' | 'height';
+
+interface SortConfig {
+  field: SortField;
+  direction: 'asc' | 'desc';
+}
+
 /**
  * A view component for managing the Image Library.
  */
@@ -169,6 +176,97 @@ export class ImagesView extends LitElement {
         color: var(--primary-colour);
         transform: scale(1.1);
       }
+
+      .sort-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .sort-item {
+        display: flex;
+        align-items: center;
+        background: white;
+        padding: 0.5rem;
+        border: 1px solid var(--border-colour);
+        border-radius: var(--border-radius);
+        gap: 0.5rem;
+        font-size: 13px;
+        color: var(--text-colour);
+      }
+
+      .sort-item.drag-over {
+        border-top: 2px solid var(--primary-colour);
+      }
+
+      .sort-item .field-label {
+        flex: 1;
+        font-weight: 500;
+        cursor: default;
+      }
+
+      .sort-item .sort-actions {
+        display: flex;
+        gap: 4px;
+      }
+
+      .sort-action {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--text-muted);
+        border-radius: 4px;
+        transition: all 0.2s;
+      }
+
+      .sort-action:hover {
+        background: #f0f2f5;
+        color: var(--primary-colour);
+      }
+
+      .sort-action.remove:hover {
+        color: var(--danger-colour);
+      }
+
+      .add-sort-container {
+        position: relative;
+        margin-top: 0.5rem;
+      }
+
+      .add-sort-button {
+        width: 100%;
+        font-size: 12px;
+        padding: 6px 12px;
+      }
+
+      .add-sort-menu {
+        position: absolute;
+        bottom: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid var(--border-colour);
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-medium);
+        z-index: 100;
+        margin-bottom: 4px;
+        overflow: hidden;
+      }
+
+      .add-sort-item {
+        padding: 8px 12px;
+        cursor: pointer;
+        font-size: 13px;
+        transition: background 0.2s;
+      }
+
+      .add-sort-item:hover {
+        background: #f0faff;
+        color: var(--primary-colour);
+      }
     `
   ];
 
@@ -199,7 +297,10 @@ export class ImagesView extends LitElement {
   @state() private _minHeight = 0;
   @state() private _maxHeight = 4000;
   @state() private _keywords: string[] = [];
-  @state() private _sortBy = 'name:asc';
+  @state() private _sortFields: SortConfig[] = [{ field: 'name', direction: 'asc' }];
+  @state() private _isAddMenuOpen = false;
+  @state() private _draggedIndex: number | null = null;
+  @state() private _dragOverIndex: number | null = null;
 
   private _resetFilters() {
     this._filterTitle = '';
@@ -211,7 +312,8 @@ export class ImagesView extends LitElement {
     this._minHeight = 0;
     this._maxHeight = 4000;
     this._keywords = [];
-    this._sortBy = 'name:asc';
+    this._sortFields = [{ field: 'name', direction: 'asc' }];
+    this._isAddMenuOpen = false;
   }
 
   render() {
@@ -314,22 +416,32 @@ export class ImagesView extends LitElement {
           <div class="sidebar-section">
             <div class="sidebar-title">
               <span class="material-icons">sort</span>
-              Sorting
+              Sort Priority
             </div>
-            <div class="form-group">
-              <select 
-                .value="${this._sortBy}"
-                @change="${(e: any) => this._sortBy = e.target.value}"
+            
+            <div class="sort-list">
+              ${this._sortFields.map((sort, index) => this._renderSortItem(sort, index))}
+            </div>
+
+            <div class="add-sort-container">
+              <button 
+                class="secondary add-sort-button" 
+                ?disabled="${this._getAvailableFields().length === 0}"
+                @click="${() => this._isAddMenuOpen = !this._isAddMenuOpen}"
               >
-                <option value="name:asc">Name (A-Z)</option>
-                <option value="name:desc">Name (Z-A)</option>
-                <option value="artist:asc">Artist (A-Z)</option>
-                <option value="artist:desc">Artist (Z-A)</option>
-                <option value="width:desc">Widest First</option>
-                <option value="width:asc">Narrowest First</option>
-                <option value="height:desc">Tallest First</option>
-                <option value="height:asc">Shortest First</option>
-              </select>
+                <span class="material-icons" style="font-size: 16px;">add</span>
+                Add Sort Field
+              </button>
+              
+              ${this._isAddMenuOpen ? html`
+                <div class="add-sort-menu">
+                  ${this._getAvailableFields().map(field => html`
+                    <div class="add-sort-item" @click="${() => this._addSortField(field)}">
+                      ${this._getFieldLabel(field)}
+                    </div>
+                  `)}
+                </div>
+              ` : ''}
             </div>
           </div>
 
@@ -412,6 +524,103 @@ export class ImagesView extends LitElement {
       bubbles: true,
       composed: true
     }));
+  }
+
+  private _renderSortItem(sort: SortConfig, index: number) {
+    const isDragging = this._draggedIndex === index;
+    const isDragOver = this._dragOverIndex === index;
+
+    return html`
+      <div 
+        class="sort-item draggable-item ${isDragging ? 'dragging' : ''} ${isDragOver ? 'drag-over' : ''}"
+        draggable="true"
+        @dragstart="${(e: DragEvent) => this._onDragStart(e, index)}"
+        @dragover="${(e: DragEvent) => this._onDragOver(e, index)}"
+        @dragleave="${() => this._dragOverIndex = null}"
+        @dragend="${this._onDragEnd}"
+        @drop="${(e: DragEvent) => this._onDrop(e, index)}"
+      >
+        <span class="material-icons drag-handle">drag_indicator</span>
+        <span class="field-label">${this._getFieldLabel(sort.field)}</span>
+        <div class="sort-actions">
+          <div class="sort-action" @click="${() => this._toggleSortDirection(index)}">
+            <span class="material-icons">
+              ${sort.direction === 'asc' ? 'north' : 'south'}
+            </span>
+          </div>
+          <div class="sort-action remove" @click="${() => this._removeSortField(index)}">
+            <span class="material-icons">close</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  private _getFieldLabel(field: SortField): string {
+    const labels: Record<SortField, string> = {
+      name: 'Name',
+      artist: 'Artist',
+      collection: 'Collection',
+      width: 'Width',
+      height: 'Height'
+    };
+    return labels[field];
+  }
+
+  private _getAvailableFields(): SortField[] {
+    const allFields: SortField[] = ['name', 'artist', 'collection', 'width', 'height'];
+    const activeFields = this._sortFields.map(s => s.field);
+    return allFields.filter(f => !activeFields.includes(f));
+  }
+
+  private _addSortField(field: SortField) {
+    this._sortFields = [...this._sortFields, { field, direction: 'asc' }];
+    this._isAddMenuOpen = false;
+  }
+
+  private _removeSortField(index: number) {
+    this._sortFields = this._sortFields.filter((_, i) => i !== index);
+  }
+
+  private _toggleSortDirection(index: number) {
+    const newFields = [...this._sortFields];
+    newFields[index] = {
+      ...newFields[index],
+      direction: newFields[index].direction === 'asc' ? 'desc' : 'asc'
+    };
+    this._sortFields = newFields;
+  }
+
+  private _onDragStart(e: DragEvent, index: number) {
+    this._draggedIndex = index;
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', index.toString());
+    }
+  }
+
+  private _onDragOver(e: DragEvent, index: number) {
+    e.preventDefault();
+    if (this._draggedIndex === index) return;
+    this._dragOverIndex = index;
+  }
+
+  private _onDragEnd() {
+    this._draggedIndex = null;
+    this._dragOverIndex = null;
+  }
+
+  private _onDrop(e: DragEvent, index: number) {
+    e.preventDefault();
+    this._dragOverIndex = null;
+    
+    if (this._draggedIndex === null || this._draggedIndex === index) return;
+
+    const newFields = [...this._sortFields];
+    const item = newFields.splice(this._draggedIndex, 1)[0];
+    newFields.splice(index, 0, item);
+    this._sortFields = newFields;
+    this._draggedIndex = null;
   }
 }
 
