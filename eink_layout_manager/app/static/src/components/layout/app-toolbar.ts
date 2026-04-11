@@ -197,10 +197,10 @@ export class AppToolbar extends LitElement {
     return html`
       <div class="toolbar-actions">
         <div class="dropdown">
-          <button class="settings-button" @click="${() => { this._showDisplayMenu = !this._showDisplayMenu; if (this._showDisplayMenu) this._showMenu = false; }}" title="Add Display Type">
+          <button id="btn-add-display" class="settings-button" @click="${() => { this._showDisplayMenu = !this._showDisplayMenu; if (this._showDisplayMenu) this._showMenu = false; }}" title="Add Display Type">
             <span class="material-icons">add_box</span>
           </button>
-          <div class="dropdown-menu ${this._showDisplayMenu ? 'show' : ''}" style="min-width: 280px;">
+          <div id="menu-display-types" class="dropdown-menu ${this._showDisplayMenu ? 'show' : ''}" style="min-width: 280px;">
             ${this.displayTypes.map(dt => html`
               <div class="display-type-item" @click="${() => this._dispatch('add-item-to-layout', dt)}">
                 <div class="display-type-preview">
@@ -224,16 +224,16 @@ export class AppToolbar extends LitElement {
           </div>
         </div>
 
-        <button class="settings-button" @click="${() => this._dispatch('edit-layout')}" title="Layout Settings">
+        <button id="btn-layout-settings" class="settings-button" @click="${() => this._dispatch('edit-layout')}" title="Layout Settings">
           <span class="material-icons">settings</span>
         </button>
 
         <div class="dropdown">
-          <div class="dropdown-trigger ${this._showMenu ? 'active' : ''}" @click="${() => { this._showMenu = !this._showMenu; if (this._showMenu) this._showDisplayMenu = false; }}">
+          <div id="trigger-layouts" class="dropdown-trigger ${this._showMenu ? 'active' : ''}" @click="${() => { this._showMenu = !this._showMenu; if (this._showMenu) this._showDisplayMenu = false; }}">
             <span>${this.activeLayout?.name || 'Loading...'}</span>
             <div class="chevron">▼</div>
           </div>
-          <div class="dropdown-menu ${this._showMenu ? 'show' : ''}">
+          <div id="menu-layouts" class="dropdown-menu ${this._showMenu ? 'show' : ''}">
             ${this.layouts.map(l => html`
               <div class="dropdown-item ${this.activeLayout?.id === l.id ? 'selected' : ''}" @click="${() => this._dispatch('switch-layout', l)}">
                 ${l.name}
