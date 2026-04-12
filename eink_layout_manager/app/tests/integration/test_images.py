@@ -429,7 +429,15 @@ async def test_image_list_success(aiohttp_client, app):
 
     # 4. Verify summary fields
     img_summary = result["items"][0]
-    expected_fields = {"id", "name", "artist", "collection", "description"}
+    expected_fields = {
+        "id",
+        "name",
+        "artist",
+        "collection",
+        "description",
+        "file_type",
+        "dimensions",
+    }
     assert set(img_summary.keys()) == expected_fields
     assert img_summary["name"] == "list_test.png"
 
