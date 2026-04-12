@@ -81,8 +81,8 @@ def response_schema(schema_name_or_func):
 
                     # Determine schema name
                     if callable(schema_name_or_func):
-                        # Some handlers might return errors, we shouldn't validate
-                        # those against the success schema.
+                        # Some handlers might return errors, we shouldn't
+                        # validate those against the success schema.
                         if response.status >= 400:
                             actual_schema = "status_response"
                         else:
@@ -100,12 +100,14 @@ def response_schema(schema_name_or_func):
                     # Special case: don't loop if status_response fails
                     if response.status >= 400 and "status_response" in str(e):
                         logger.error(
-                            f"FATAL: status_response validation failed: {str(e)}"
+                            f"FATAL: status_response validation failed: "
+                            f"{str(e)}"
                         )
                         return response
 
                     logger.error(
-                        f"Response validation failed for {actual_schema}: {str(e)}"
+                        f"Response validation failed for {actual_schema}: "
+                        f"{str(e)}"
                     )
                     return web.json_response(
                         {
