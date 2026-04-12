@@ -23,7 +23,7 @@
     "file_type": {
       "type": "string",
       "description": "Image file format",
-      "enum": ["JPG", "PNG", "GIF", "WEBP", "BMP", "TIFF"]
+      "enum": ["JPG", "JPEG", "PNG", "GIF", "WEBP", "BMP", "TIFF"]
     },
     "dimensions": {
       "type": "object",

@@ -595,3 +595,40 @@ async def test_image_update_with_null_metadata(aiohttp_client, app):
     assert updated_result["description"] is None
     assert updated_result["keywords"] == []  # Keywords converts None to []
     assert updated_result["colour_depth"] is None
+
+
+@pytest.mark.asyncio
+async def test_image_upload_and_update_jpeg(aiohttp_client, app):
+    """Test that JPEG format is correctly handled."""
+    client = await aiohttp_client(app)
+
+    # 1. Upload a JPEG image
+    width, height = 100, 100
+    img = PILImage.new("RGB", (width, height), color="red")
+    img_byte_arr = io.BytesIO()
+    img.save(img_byte_arr, format="JPEG")
+    data = aiohttp.FormData()
+    data.add_field(
+        "file",
+        img_byte_arr.getvalue(),
+        filename="test.jpeg",
+        content_type="image/jpeg",
+    )
+    resp = await client.post("/api/image", data=data)
+    assert resp.status == 201
+    result = await resp.json()
+    assert result["file_type"] == "JPEG"
+    image_id = result["id"]
+
+    # 2. Update metadata (triggering schema validation)
+    update_data = {
+        "id": image_id,
+        "name": "Updated JPEG",
+        "file_type": "JPEG",
+        "dimensions": {"width": width, "height": height},
+    }
+    resp = await client.put(f"/api/image/{image_id}", json=update_data)
+    assert resp.status == 200
+    updated_result = await resp.json()
+    assert updated_result["file_type"] == "JPEG"
+    assert updated_result["name"] == "Updated JPEG"
