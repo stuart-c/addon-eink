@@ -14,12 +14,17 @@ from ..utils.converters import (
     image_model_to_summary_dict,
 )
 from ..utils.images import delete_image_files_and_record
-from ..utils.validation import validate_id, load_schema
+from ..utils.validation import (
+    validate_id,
+    load_schema,
+    response_schema,
+)
 from ..utils.query import parse_image_sort_params, build_image_filters
 from jsonschema import validate, ValidationError
 import json
 
 
+@response_schema("image")
 async def handle_image_create(request):
     try:
         reader = await request.multipart()
@@ -108,6 +113,7 @@ async def handle_image_create(request):
         )
 
 
+@response_schema("image")
 async def handle_image_get(request):
     """Retrieve image metadata from the SQL database."""
     image_id = request.match_info["id"]
@@ -132,6 +138,7 @@ async def handle_image_get(request):
         )
 
 
+@response_schema("image_list_response")
 async def handle_image_list(request):
     """Retrieve image metadata with sorting and pagination."""
     # 1. Parse sorting parameters
@@ -242,6 +249,7 @@ async def handle_image_thumbnail_get(request):
         )
 
 
+@response_schema("status_response")
 async def handle_image_delete(request):
     """Permanently delete an image record and its files."""
     image_id = request.match_info["id"]
@@ -269,6 +277,7 @@ async def handle_image_delete(request):
     return web.json_response({"status": "deleted"})
 
 
+@response_schema("keyword_list_response")
 async def handle_image_keywords_get(request):
     """Retrieve an ordered list of keywords and their usage counts."""
     try:
@@ -301,6 +310,7 @@ async def handle_image_keywords_get(request):
         )
 
 
+@response_schema("image")
 async def handle_image_update(request):
     """Update image metadata in the SQL database."""
     image_id = request.match_info["id"]
