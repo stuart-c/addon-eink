@@ -32,9 +32,10 @@ async def test_request_logger_middleware_exception():
     error = ValueError("Something went wrong")
     mock_handler = AsyncMock(side_effect=error)
 
-    with patch("builtins.print") as mock_print, patch(
-        "traceback.print_exc"
-    ) as mock_traceback:
+    with (
+        patch("builtins.print") as mock_print,
+        patch("traceback.print_exc") as mock_traceback,
+    ):
 
         with pytest.raises(ValueError, match="Something went wrong"):
             await request_logger_middleware(mock_request, mock_handler)

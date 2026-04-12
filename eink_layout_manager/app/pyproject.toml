@@ -1,0 +1,15 @@
+[tool.black]
+line-length = 79
+target-version = ['py313']
+
+[tool.flake8]
+max-line-length = 80
+extend-select = "B950"
+extend-ignore = "E203,E501,E701,D,U100"
+inline-quotes = "double"
+exclude = [
+    ".git",
+    "__pycache__",
+    "venv",
+    ".worktrees",
+]

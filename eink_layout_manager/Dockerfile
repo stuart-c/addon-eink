@@ -33,8 +33,6 @@ COPY app /app
 
 # Run all quality checks; the build will fail if any fail
 RUN \
-    black --check --line-length 79 /app && \
-    flake8 /app && \
     PYTHONPATH=/ pytest /app/tests/
 
 # Stage 3: Runner stage (Final)
