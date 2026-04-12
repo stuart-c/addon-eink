@@ -10,6 +10,6 @@ inline-quotes = "double"
 exclude = [
     ".git",
     "__pycache__",
-    "venv",
+    ".venv",
     ".worktrees",
 ]

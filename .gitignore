@@ -220,3 +220,4 @@ yarn-error.log*
 
 # Development data
 dev_data/
+eink_layout_manager/app/static_dist/

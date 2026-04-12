@@ -36,13 +36,9 @@ It is vitally important that git worktrees are used to allow multiple agents to 
 - Use `git worktree add .worktrees/<branch-name> <branch-name>` to create a new workspace for your task.
 
 ## 4. Pre-Push Verification
-Tests and lints **MUST** be run locally using the root `venv` before being pushed to GitHub. This is mandatory whenever Python code is modified.
-- **Formatting:** `./venv/bin/black --check --line-length 79 eink_layout_manager/app` (must match Dockerfile parameters).
-- **Linting:** `./venv/bin/flake8 --exclude=venv eink_layout_manager/app`.
-- **Tests:** `PYTHONPATH=eink_layout_manager ./venv/bin/pytest eink_layout_manager/app/tests`.
-
-> [!NOTE]
-> If the local Node.js version is incompatible with the frontend requirements (>=22.13.0), you are exempt from running `npm test` locally. In this case, you must only run the checks that work and rely on the PR build status for frontend verification.
+Tests and lints **MUST** be run locally before being pushed to GitHub. This is mandatory whenever Python or frontend code is modified.
+- **Create** run scripts/make_venv.sh
+- **Run** run script/run_tests.sh
 
 ## 5. Pull Request Management
 - **Mergeability:** PRs **MUST** be rebased from the latest `main` branch before any review is requested.
