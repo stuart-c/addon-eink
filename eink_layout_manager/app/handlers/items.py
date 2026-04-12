@@ -4,9 +4,19 @@ from aiohttp import web
 from jsonschema import validate, ValidationError
 
 from ..utils.storage import get_storage_path
-from ..utils.validation import validate_id, load_schema
+from ..utils.validation import (
+    validate_id,
+    load_schema,
+    response_schema,
+)
 
 
+def get_resource_schema(request, data):
+    """Helper to determine the schema name from the request."""
+    return request.match_info["resource_type"]
+
+
+@response_schema("item_list_response")
 async def get_collection(request):
     """Fetch all resources for a specific collection type."""
     resource_type = request.match_info["resource_type"]
@@ -34,6 +44,7 @@ async def get_collection(request):
     return web.json_response(items)
 
 
+@response_schema(get_resource_schema)
 async def get_item(request):
     """Fetch a single resource by ID."""
     resource_type = request.match_info["resource_type"]
@@ -58,6 +69,7 @@ async def get_item(request):
         return web.json_response(json.load(f))
 
 
+@response_schema(get_resource_schema)
 async def create_item(request):
     """Create a new resource. Returns 409 if ID already exists."""
     resource_type = request.match_info["resource_type"]
@@ -108,6 +120,7 @@ async def create_item(request):
     return web.json_response(data, status=201)
 
 
+@response_schema(get_resource_schema)
 async def update_item(request):
     """Update an existing resource by ID."""
     resource_type = request.match_info["resource_type"]
@@ -163,6 +176,7 @@ async def update_item(request):
     return web.json_response(data, status=200)
 
 
+@response_schema("status_response")
 async def delete_item(request):
     """Permanently delete a resource by ID."""
     resource_type = request.match_info["resource_type"]
