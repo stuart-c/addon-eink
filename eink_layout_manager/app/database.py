@@ -33,6 +33,12 @@ _engine = None
 _session_factory = None
 
 
+async def drop_redundant_tables(conn):
+    """Drop tables that are no longer used in the database."""
+    await conn.execute(text("DROP TABLE IF EXISTS display_types"))
+    await conn.execute(text("DROP TABLE IF EXISTS layouts"))
+
+
 async def ensure_schema_up_to_date(conn):
     """Ensure the database schema matches the models by adding missing
     columns."""
@@ -76,6 +82,7 @@ async def init_db():
     async with _engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         await ensure_schema_up_to_date(conn)
+        await drop_redundant_tables(conn)
 
     return _engine
 
