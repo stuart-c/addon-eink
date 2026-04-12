@@ -13,9 +13,11 @@ async def test_delete_image_files_and_record_success():
     mock_image.file_path = "test.png"
     mock_image.thumbnail_path = "thumb.png"
 
-    with patch("app.utils.images.get_storage_path") as mock_get_path, patch(
-        "os.path.exists", return_value=True
-    ), patch("os.remove") as mock_remove:
+    with (
+        patch("app.utils.images.get_storage_path") as mock_get_path,
+        patch("os.path.exists", return_value=True),
+        patch("os.remove") as mock_remove,
+    ):
 
         mock_get_path.side_effect = lambda t: f"/data/{t}"
 
@@ -40,9 +42,11 @@ async def test_delete_image_files_and_record_no_thumbnail():
     mock_image.file_path = "test.png"
     mock_image.thumbnail_path = None
 
-    with patch("app.utils.images.get_storage_path") as mock_get_path, patch(
-        "os.path.exists", return_value=True
-    ), patch("os.remove") as mock_remove:
+    with (
+        patch("app.utils.images.get_storage_path") as mock_get_path,
+        patch("os.path.exists", return_value=True),
+        patch("os.remove") as mock_remove,
+    ):
 
         mock_get_path.side_effect = lambda t: f"/data/{t}"
 
@@ -60,9 +64,11 @@ async def test_delete_image_files_and_record_file_missing():
     mock_image.file_path = "test.png"
     mock_image.thumbnail_path = "thumb.png"
 
-    with patch("app.utils.images.get_storage_path"), patch(
-        "os.path.exists", return_value=False
-    ), patch("os.remove") as mock_remove:
+    with (
+        patch("app.utils.images.get_storage_path"),
+        patch("os.path.exists", return_value=False),
+        patch("os.remove") as mock_remove,
+    ):
 
         await delete_image_files_and_record(mock_image, mock_session)
 
@@ -81,11 +87,12 @@ async def test_delete_image_files_and_record_error_path():
     mock_image.file_path = "test.png"
     mock_image.thumbnail_path = "thumb.png"
 
-    with patch("app.utils.images.get_storage_path"), patch(
-        "os.path.exists", return_value=True
-    ), patch("os.remove", side_effect=OSError("Permission denied")), patch(
-        "builtins.print"
-    ) as mock_print:
+    with (
+        patch("app.utils.images.get_storage_path"),
+        patch("os.path.exists", return_value=True),
+        patch("os.remove", side_effect=OSError("Permission denied")),
+        patch("builtins.print") as mock_print,
+    ):
 
         # This should NOT reraise the OSError
         await delete_image_files_and_record(mock_image, mock_session)

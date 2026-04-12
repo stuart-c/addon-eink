@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 import logging
 from datetime import datetime, timedelta
 from sqlalchemy import select
@@ -69,7 +70,5 @@ async def stop_image_cleanup(app):
     task = app.get("image_cleanup_task")
     if task:
         task.cancel()
-        try:
+        with contextlib.suppress(asyncio.CancelledError):
             await task
-        except asyncio.CancelledError:
-            pass
