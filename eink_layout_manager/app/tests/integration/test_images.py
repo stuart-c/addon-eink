@@ -544,3 +544,54 @@ async def test_image_timestamps_stored_but_not_exposed(aiohttp_client, app):
 
         assert isinstance(image.created_at, datetime)
         assert isinstance(image.updated_at, datetime)
+
+
+@pytest.mark.asyncio
+async def test_image_update_with_null_metadata(aiohttp_client, app):
+    """Test metadata update with null values (typical for initial save)."""
+    client = await aiohttp_client(app)
+
+    # 1. Upload an image
+    width, height = 100, 100
+    img = PILImage.new("RGB", (width, height), color="green")
+    img_byte_arr = io.BytesIO()
+    img.save(img_byte_arr, format="PNG")
+    data = aiohttp.FormData()
+    data.add_field(
+        "file",
+        img_byte_arr.getvalue(),
+        filename="null_test.png",
+        content_type="image/png",
+    )
+    resp = await client.post("/api/image", data=data)
+    assert resp.status == 201
+    result = await resp.json()
+    image_id = result["id"]
+
+    # 2. Update with null values for optional fields
+    update_data = {
+        "id": image_id,
+        "name": "Updated Name",
+        "file_type": "PNG",
+        "dimensions": {"width": width, "height": height},
+        "artist": None,
+        "collection": None,
+        "description": None,
+        "keywords": None,
+        "colour_depth": None,
+        "original_archive_file": None,
+        "license": None,
+        "source": None,
+    }
+
+    resp = await client.put(f"/api/image/{image_id}", json=update_data)
+    assert resp.status == 200
+    updated_result = await resp.json()
+
+    # 3. Verify values were updated to None in DB (or remained None)
+    assert updated_result["name"] == "Updated Name"
+    assert updated_result["artist"] is None
+    assert updated_result["collection"] is None
+    assert updated_result["description"] is None
+    assert updated_result["keywords"] == []  # Keywords converts None to []
+    assert updated_result["colour_depth"] is None

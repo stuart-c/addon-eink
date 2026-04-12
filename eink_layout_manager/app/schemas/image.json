@@ -13,11 +13,11 @@
       "description": "Human readable name for the image"
     },
     "artist": {
-      "type": "string",
+      "type": ["string", "null"],
       "description": "The creator of the image"
     },
     "collection": {
-      "type": "string",
+      "type": ["string", "null"],
       "description": "The collection this image belongs to"
     },
     "file_type": {
@@ -40,31 +40,31 @@
       "required": ["width", "height"]
     },
     "colour_depth": {
-      "type": "integer",
+      "type": ["integer", "null"],
       "minimum": 1,
       "description": "Bits per pixel"
     },
     "keywords": {
-      "type": "array",
+      "type": ["array", "null"],
       "items": {
         "type": "string"
       },
       "description": "List of tags associated with the image"
     },
     "description": {
-      "type": "string",
+      "type": ["string", "null"],
       "description": "Long-form description of the image content"
     },
     "original_archive_file": {
-      "type": "string",
+      "type": ["string", "null"],
       "description": "Name of the original archive if imported"
     },
     "license": {
-      "type": "string",
+      "type": ["string", "null"],
       "description": "Usage license (e.g., CC BY-SA 4.0)"
     },
     "source": {
-      "type": "string",
+      "type": ["string", "null"],
       "description": "Original source URL or repository"
     }
   },
