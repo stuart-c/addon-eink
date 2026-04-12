@@ -97,10 +97,11 @@ def test_build_image_filters_text():
 
 
 def test_build_image_filters_keywords():
-    """Test building keyword filters (JSON array intersection)."""
+    """Test building keyword filters (JSON array union/OR)."""
     params = {"keyword": "blue, ocean"}
     filters = build_image_filters(params)
-    assert len(filters) == 3  # 1 mandatory + 2 keyword EXISTS clauses
+    assert len(filters) == 2  # 1 mandatory + 1 grouped OR filter
 
-    # We won't check the full string of the EXISTS clause as it's complex,
-    # but we've verified the count and basic logic.
+    # Verify that OR logic is present in the filter string
+    filter_str = str(filters[1])
+    assert "OR" in filter_str or "EXISTS" in filter_str

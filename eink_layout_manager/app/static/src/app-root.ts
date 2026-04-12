@@ -263,6 +263,7 @@ export class AppRoot extends LitElement {
           this._updateHeaderState();
         }}"
         @delete-image="${this._onDeleteImage}"
+        @filter-change="${(e: CustomEvent) => this.state.refreshImages(e.detail)}"
       ></images-view>
     `;
   }

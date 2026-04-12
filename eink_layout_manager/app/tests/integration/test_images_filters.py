@@ -129,7 +129,7 @@ async def test_image_list_filter_text(aiohttp_client, app):
 
 @pytest.mark.asyncio
 async def test_image_list_filter_keywords(aiohttp_client, app):
-    """Test keyword exact search with AND logic."""
+    """Test keyword exact search with OR logic (Union)."""
     client = await aiohttp_client(app)
 
     async with database.get_session() as session:
@@ -164,13 +164,15 @@ async def test_image_list_filter_keywords(aiohttp_client, app):
     assert len(result["items"]) == 1
     assert result["items"][0]["name"] == "i1"
 
-    # Multiple keywords (Intersection)
-    resp = await client.get("/api/image?keyword=tag1,tag3")
+    # Multiple keywords (Union/OR)
+    resp = await client.get("/api/image?keyword=tag2,tag3")
     result = await resp.json()
-    assert len(result["items"]) == 1
-    assert result["items"][0]["name"] == "i2"
+    assert len(result["items"]) == 2
+    names = [i["name"] for i in result["items"]]
+    assert "i1" in names
+    assert "i2" in names
 
     # keywords that none have
-    resp = await client.get("/api/image?keyword=tag2,tag3")
+    resp = await client.get("/api/image?keyword=tag4,tag5")
     result = await resp.json()
     assert len(result["items"]) == 0
