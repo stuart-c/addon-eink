@@ -298,6 +298,8 @@ export class ImagesView extends LitElement {
   @state() private _maxHeight = 4000;
   @state() private _keywords: string[] = [];
   @state() private _sortFields: SortConfig[] = [{ field: 'name', direction: 'asc' }];
+  @state() private _isAddMenuOpen = false;
+  @state() private _draggedIndex: number | null = null;
   @state() private _dragOverIndex: number | null = null;
   private _debounceTimer: any = null;
 
