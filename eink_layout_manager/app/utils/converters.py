@@ -27,4 +27,9 @@ def image_model_to_summary_dict(image):
         "artist": image.artist,
         "collection": image.collection,
         "description": image.description,
+        "file_type": image.file_type,
+        "dimensions": {
+            "width": image.width,
+            "height": image.height,
+        },
     }
