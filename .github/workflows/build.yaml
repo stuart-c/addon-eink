@@ -169,26 +169,8 @@ jobs:
           key: npm-e2e-${{ runner.os }}-${{ hashFiles('eink_layout_manager/e2e/package-lock.json', 'eink_layout_manager/e2e/package.json') }}
           restore-keys: npm-e2e-${{ runner.os }}-
 
-      - name: Cache Playwright browsers
-        id: playwright-cache
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('eink_layout_manager/e2e/package-lock.json', 'eink_layout_manager/e2e/package.json') }}
-          restore-keys: playwright-chromium-${{ runner.os }}-
-
       - name: Install E2E npm dependencies
         run: npm install
-        working-directory: eink_layout_manager/e2e
-
-      - name: Install Playwright browsers and system dependencies
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps chromium
-        working-directory: eink_layout_manager/e2e
-
-      - name: Install Playwright system dependencies
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium
         working-directory: eink_layout_manager/e2e
 
       - name: Wait for application to start
@@ -202,7 +184,13 @@ jobs:
           fi
 
       - name: Run E2E tests
-        run: npm test
+        run: |
+          docker run --rm \
+            --network host \
+            -v $(pwd)/../../:/work \
+            -w /work/eink_layout_manager/e2e \
+            mcr.microsoft.com/playwright:v1.50.1-noble \
+            npx playwright test
         working-directory: eink_layout_manager/e2e
 
       - name: Upload Playwright report
