@@ -11,8 +11,8 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
         gnupg \
         sudo
 
-# Install Node.js 22
-RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+# Install Node.js 24
+RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
     && apt-get install -y nodejs
 
 # Install GitHub CLI
