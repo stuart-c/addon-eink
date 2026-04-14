@@ -21,7 +21,7 @@ We utilise **VS Code Dev Containers** to provide a consistent, reproducible deve
 
 The frontend UI is located in `eink_layout_manager/app/static`.
 
-- **Node.js Requirement:** The frontend requires **Node.js >=22.13.0**.
+- **Node.js Requirement:** The frontend requires **Node.js >=24.14.1**.
 - **Local Environment Note:** The local development environment may have an older version of Node.js (e.g., v18.x). In such cases, full test suites (`npm test`) may fail locally.
 - **Testing Strategy:** When local Node.js is incompatible, agents should only run checks that are known to work (e.g., basic linting or type checking if possible) and **MUST** rely on the GitHub Actions PR build status to verify frontend correctness.
 

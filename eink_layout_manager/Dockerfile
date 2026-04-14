@@ -1,7 +1,7 @@
 ARG BUILD_FROM="ghcr.io/home-assistant/base-python:3.13-alpine3.23"
 
 # Stage 0: Node.js Frontend Build
-FROM node:22-alpine AS node-builder
+FROM node:24-alpine AS node-builder
 WORKDIR /app/static
 COPY app/static .
 RUN npm install && npm run build
