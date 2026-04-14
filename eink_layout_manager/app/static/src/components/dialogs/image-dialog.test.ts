@@ -99,4 +99,33 @@ describe('ImageDialog', () => {
       artist: 'Test Artist'
     }));
   });
+
+  it('should not call deleteItem when cancelling in edit mode', async () => {
+    await element.show(mockImage);
+    await element.updateComplete;
+
+    const cancelBtn = Array.from(element.shadowRoot?.querySelectorAll('button') || [])
+      .find(b => b.textContent?.trim() === 'Cancel') as HTMLButtonElement;
+
+    await cancelBtn.click();
+
+    expect(api.deleteItem).toHaveBeenCalledTimes(0);
+  });
+
+  it('should call deleteItem when cancelling after uploading a new image', async () => {
+    await element.show();
+    await element.updateComplete;
+
+    // Simulate an upload by manually setting the private state
+    const uploadedImage: Image = { ...mockImage, id: 'new-img' };
+    (element as any)._uploadedImage = uploadedImage;
+    await element.updateComplete;
+
+    const cancelBtn = Array.from(element.shadowRoot?.querySelectorAll('button') || [])
+      .find(b => b.textContent?.trim() === 'Cancel') as HTMLButtonElement;
+
+    await cancelBtn.click();
+
+    expect(api.deleteItem).toHaveBeenCalledWith('image', 'new-img');
+  });
 });

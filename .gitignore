@@ -217,6 +217,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnp*
 .pnp.js
+.npm_home/
+.npm_cache/
+.home/
 
 # Development data
 dev_data/

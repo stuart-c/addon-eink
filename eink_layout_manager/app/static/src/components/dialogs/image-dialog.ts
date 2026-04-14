@@ -192,7 +192,9 @@ export class ImageDialog extends LitElement {
   }
 
   private async _handleCancel() {
-    if (this._uploadedImage) {
+    // Only delete the image if it was a new upload that hasn't been saved yet.
+    // If we are editing an existing image, we should NOT delete it.
+    if (!this._editingImage && this._uploadedImage) {
       try {
         await api.deleteItem('image', this._uploadedImage.id);
       } catch (err) {
@@ -200,6 +202,7 @@ export class ImageDialog extends LitElement {
       }
     }
     this._uploadedImage = null;
+    this._editingImage = null;
     (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).close();
   }
 
