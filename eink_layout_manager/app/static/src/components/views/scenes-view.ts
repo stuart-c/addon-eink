@@ -63,6 +63,43 @@ export class ScenesView extends LitElement {
         font-size: 14px;
         color: var(--text-colour);
       }
+      .toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 1rem;
+        width: 100%;
+      }
+      .toolbar-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #333;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .settings-button {
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f0f2f5;
+        border: 1px solid #ddd;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: #555;
+      }
+      .settings-button:hover {
+        background: #e4e6e9;
+        border-color: #ccc;
+        color: #333;
+      }
+      .settings-button .material-icons {
+        font-size: 20px;
+      }
     `
   ];
 
@@ -111,8 +148,17 @@ export class ScenesView extends LitElement {
           </div>
         </div>
 
-        <div slot="right-top-bar" style="font-weight: 600; color: #333;">
-          ${activeScene ? `Scene: ${activeScene.name}` : 'Smart Scenes Toolbar'}
+        <div slot="right-top-bar" class="toolbar">
+          ${activeScene ? html`
+            <button id="btn-scene-settings" class="settings-button" @click="${() => this._sceneDialog.show(activeScene)}" title="Scene Settings">
+              <span class="material-icons">settings</span>
+            </button>
+            <div class="toolbar-title">
+              <span>${activeScene.name}</span>
+            </div>
+          ` : html`
+            <div class="toolbar-title">Smart Scenes Toolbar</div>
+          `}
         </div>
 
         <empty-view 
@@ -122,7 +168,10 @@ export class ScenesView extends LitElement {
           message="${activeScene ? `You have selected "${activeScene.name}". Scene editing is coming soon.` : 'Compose complex scenes by combining layouts, images and live data.'}"
         ></empty-view>
       </section-layout>
-      <scene-dialog @create="${(e: CustomEvent) => this.state.createScene(e.detail.name)}"></scene-dialog>
+      <scene-dialog 
+        @create="${(e: CustomEvent) => this.state.createScene(e.detail.name)}"
+        @save="${(e: CustomEvent) => this.state.updateScene(e.detail.id, { name: e.detail.name })}"
+      ></scene-dialog>
     `;
   }
 }

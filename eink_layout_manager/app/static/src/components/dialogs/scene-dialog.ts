@@ -1,8 +1,9 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement, state, property } from 'lit/decorators.js';
 import { commonStyles } from '../../styles/common-styles';
 import '../shared/base-dialog';
 import { BaseDialog } from '../shared/base-dialog';
+import { Scene } from '../../services/HaApiClient';
 
 @customElement('scene-dialog')
 export class SceneDialog extends LitElement {
@@ -44,18 +45,24 @@ export class SceneDialog extends LitElement {
   ];
 
   @state() private _name = '';
+  @property({ type: Object }) scene: Scene | null = null;
 
-  async show() {
-    this._name = '';
+  async show(scene: Scene | null = null) {
+    this.scene = scene;
+    this._name = scene ? scene.name : '';
     await this.updateComplete;
     (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).show();
   }
 
-  private _handleCreate() {
+  private _handleSubmit() {
     if (!this._name.trim()) return;
     
-    this.dispatchEvent(new CustomEvent('create', {
-      detail: { name: this._name },
+    const eventName = this.scene ? 'save' : 'create';
+    this.dispatchEvent(new CustomEvent(eventName, {
+      detail: { 
+        name: this._name,
+        id: this.scene?.id
+      },
       bubbles: true,
       composed: true
     }));
@@ -69,7 +76,7 @@ export class SceneDialog extends LitElement {
 
   render() {
     return html`
-      <base-dialog title="Create New Smart Scene">
+      <base-dialog .title="${this.scene ? 'Edit Smart Scene' : 'Create New Smart Scene'}">
         <div class="form-group">
           <label>Scene Name</label>
           <input 
@@ -77,16 +84,16 @@ export class SceneDialog extends LitElement {
             placeholder="e.g. Movie Night" 
             .value="${this._name}"
             @input="${(e: InputEvent) => this._name = (e.target as HTMLInputElement).value}"
-            @keyup="${(e: KeyboardEvent) => e.key === 'Enter' && this._handleCreate()}"
+            @keyup="${(e: KeyboardEvent) => e.key === 'Enter' && this._handleSubmit()}"
             autofocus
           >
         </div>
 
         <div slot="footer" class="footer-actions">
           <button class="secondary" @click="${this._handleCancel}">Cancel</button>
-          <button class="primary" ?disabled="${!this._name.trim()}" @click="${this._handleCreate}">
-            <span class="material-icons">add</span>
-            Create Scene
+          <button class="primary" ?disabled="${!this._name.trim()}" @click="${this._handleSubmit}">
+            <span class="material-icons">${this.scene ? 'save' : 'add'}</span>
+            ${this.scene ? 'Save Changes' : 'Create Scene'}
           </button>
         </div>
       </base-dialog>
