@@ -37,8 +37,8 @@ All agents and contributors must follow the mandatory workflow defined in the [A
 ### End-to-End (E2E) Testing
 We use **Playwright** for E2E testing to verify the full application stack.
 - **Run E2E Tests**: Use the `./scripts/run_e2e.sh` script.
-- **Requirements**: Playwright browsers must be installed (handled by `./scripts/make_venv.sh`).
-- **Location**: E2E tests are located in `eink_layout_manager/app/tests/e2e/`.
+- **Requirements**: Playwright browsers and specific E2E dependencies must be installed (handled by `./scripts/make_venv.sh` which uses `requirements_e2e.txt`).
+- **Location**: E2E tests are located in `eink_layout_manager/app/tests/e2e/` (Node.js) and `eink_layout_manager/e2e_python/` (Python).
 
 ### API Consistency Rule
 To simplify frontend state management, **POST (creation) responses MUST exactly match GET (retrieval) responses** for the same resource. This ensures the frontend receives the complete metadata object immediately upon resource creation.
