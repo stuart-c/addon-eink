@@ -136,25 +136,31 @@ export class AppHeader extends LitElement {
         <div class="header-actions">
           ${this.message ? html`<span class="message-badge">${this.message}</span>` : ''}
           
+          ${this.activeSection !== 'images' ? html`
           <button class="secondary" @click="${() => this._dispatch('toggle-view-mode')}" title="Switch to ${this.viewMode === 'graphical' ? 'YAML' : 'Graphical'} Mode">
             <span class="material-icons">${this.viewMode === 'graphical' ? 'code' : 'dashboard'}</span>
           </button>
+          ` : ''}
 
           <button class="secondary" @click="${() => this._dispatch('add-item')}" title="Add New Item">
             <span class="material-icons">add</span>
           </button>
 
+          ${this.activeSection !== 'images' ? html`
           <button class="secondary" @click="${() => this._dispatch('discard-changes')}" ?disabled="${!this.isDirty || this.isSaving}" title="Discard Changes">
             <span class="material-icons">history</span>
           </button>
+          ` : ''}
 
           <button class="secondary" @click="${() => this._dispatch('delete-item')}" ?disabled="${!this.canDelete || this.isSaving}" title="Delete Current Item">
             <span class="material-icons" style="color: var(--danger-colour);">delete</span>
           </button>
           
+          ${this.activeSection !== 'images' ? html`
           <button class="secondary" @click="${() => this._dispatch('save-changes')}" ?disabled="${this.isSaving}" title="${this.isSaving ? 'Saving...' : 'Save Changes'}">
             <span class="material-icons">${this.isSaving ? 'sync' : 'save'}</span>
           </button>
+          ` : ''}
 
           <span class="status-dot">${this.connected ? 'Online' : 'Offline'}</span>
         </div>
