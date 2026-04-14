@@ -30,8 +30,8 @@ describe('LayoutBox', () => {
     expect(element.style.height).toBe('80px');
   });
 
-  it('should swap dimensions when rotated 90 degrees', async () => {
-    element.orientation = 90;
+  it('should swap dimensions when portrait orientation is set', async () => {
+    element.orientation = 'portrait';
     await element.updateComplete;
     
     expect(element.style.width).toBe('80px');

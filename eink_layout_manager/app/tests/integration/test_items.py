@@ -204,7 +204,7 @@ async def test_delete_display_type_protection(aiohttp_client, app):
                 "display_type_id": "protected_dt",
                 "x_mm": 0,
                 "y_mm": 0,
-                "orientation": 0,
+                "orientation": "landscape",
             }
         ],
     }

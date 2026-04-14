@@ -39,7 +39,7 @@ export class ItemSettingsDialog extends LitElement {
                 x_mm: parseInt(this.item.x_mm as any),
                 y_mm: parseInt(this.item.y_mm as any),
                 display_type_id: this.item.display_type_id,
-                orientation: parseInt(this.item.orientation as any)
+                orientation: this.item.orientation
             }
         } 
     }));
@@ -89,11 +89,11 @@ export class ItemSettingsDialog extends LitElement {
           <div class="form-group">
             <label>Orientation</label>
             <select 
-              .value="${live(this.item?.orientation.toString() || '0')}" 
+              .value="${live(this.item?.orientation || 'landscape')}" 
               @change="${(e: any) => this.item ? this.item.orientation = e.target.value : null}"
             >
-              <option value="0">Horizontal (0°)</option>
-              <option value="90">Vertical (90°)</option>
+              <option value="landscape">Landscape</option>
+              <option value="portrait">Portrait</option>
             </select>
           </div>
         </form>

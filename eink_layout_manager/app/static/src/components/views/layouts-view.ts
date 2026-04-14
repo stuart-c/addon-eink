@@ -138,7 +138,7 @@ export class LayoutsView extends LitElement {
       display_type_id: e.detail.id,
       x_mm: 50,
       y_mm: 50,
-      orientation: 0 as 0 | 90
+      orientation: 'landscape' as 'landscape' | 'portrait'
     };
     
     if (this.activeLayout) {
@@ -204,7 +204,7 @@ export class LayoutsView extends LitElement {
           @add-item-to-layout="${this._onAddItemToLayout}"
           @select-item="${(e: CustomEvent) => this._selectItem(e.detail.id)}"
           @edit-item="${this._onEditItem}"
-          @rotate-item="${(e: CustomEvent) => this._updateItem(e.detail.id, { orientation: (this.activeLayout?.items.find(i => i.id === e.detail.id)?.orientation === 0 ? 90 : 0) })}"
+          @rotate-item="${(e: CustomEvent) => this._updateItem(e.detail.id, { orientation: (this.activeLayout?.items.find(i => i.id === e.detail.id)?.orientation === 'landscape' ? 'portrait' : 'landscape') })}"
           @delete-item="${this._onDeleteItem}"
         ></side-bar>
 
@@ -233,7 +233,7 @@ export class LayoutsView extends LitElement {
             @select-item="${(e: CustomEvent) => this._selectItem(e.detail.id)}"
             @edit-item="${(e: CustomEvent) => this._onEditItem(e)}"
             @mouse-move="${(e: CustomEvent) => this._mousePos = e.detail}"
-            @rotate-item="${(e: CustomEvent) => this._updateItem(e.detail.id, { orientation: (this.activeLayout?.items.find(i => i.id === e.detail.id)?.orientation === 0 ? 90 : 0) })}"
+            @rotate-item="${(e: CustomEvent) => this._updateItem(e.detail.id, { orientation: (this.activeLayout?.items.find(i => i.id === e.detail.id)?.orientation === 'landscape' ? 'portrait' : 'landscape') })}"
             @item-delete="${(e: CustomEvent) => this._onDeleteItem(e)}"
             @layout-resized="${(e: CustomEvent) => this._updateActiveLayout({ canvas_width_mm: e.detail.width, canvas_height_mm: e.detail.height })}"
           ></layout-editor>

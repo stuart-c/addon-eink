@@ -81,7 +81,7 @@ export class LayoutBox extends LitElement {
   @property({ type: Number }) y = 0;
   @property({ type: Number }) width = 0;
   @property({ type: Number }) height = 0;
-  @property({ type: Number }) orientation = 0; // 0 or 90
+  @property({ type: String }) orientation: 'landscape' | 'portrait' = 'landscape';
   @property({ type: Number }) itemIndex = 0;
   @property({ type: String }) name = '';
   @property({ type: Boolean, reflect: true }) selected = false;
@@ -99,9 +99,9 @@ export class LayoutBox extends LitElement {
       this.style.transform = `translate(${this.x}px, ${this.y}px)`;
     }
     if (changedProperties.has('orientation') || changedProperties.has('width') || changedProperties.has('height')) {
-      const isRotated = this.orientation === 90;
-      this.style.width = `${isRotated ? this.height : this.width}px`;
-      this.style.height = `${isRotated ? this.width : this.height}px`;
+      const isPortrait = this.orientation === 'portrait';
+      this.style.width = `${isPortrait ? this.height : this.width}px`;
+      this.style.height = `${isPortrait ? this.width : this.height}px`;
     }
   }
 

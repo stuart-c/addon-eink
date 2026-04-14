@@ -28,7 +28,7 @@ export interface LayoutItem {
   display_type_id: string;
   x_mm: number;
   y_mm: number;
-  orientation: number;
+  orientation: 'landscape' | 'portrait';
   invalid?: boolean;
 }
 
