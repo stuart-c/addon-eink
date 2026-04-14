@@ -249,8 +249,9 @@ export class LayoutEditor extends LitElement {
       const dt1 = this.displayTypes.find(t => t.id === item1.display_type_id);
       if (!dt1) continue;
 
-      const w1 = item1.orientation === 90 ? dt1.height_mm : dt1.width_mm;
-      const h1 = item1.orientation === 90 ? dt1.width_mm : dt1.height_mm;
+      const isPortrait = item1.orientation === 'portrait';
+      const w1 = isPortrait ? dt1.height_mm : dt1.width_mm;
+      const h1 = isPortrait ? dt1.width_mm : dt1.height_mm;
 
       // Check boundary overlap
       if (item1.x_mm < 0 || item1.y_mm < 0 || item1.x_mm + w1 > this.width_mm || item1.y_mm + h1 > this.height_mm) {
@@ -264,10 +265,13 @@ export class LayoutEditor extends LitElement {
 
         if (!dt1_check || !dt2) continue;
 
-        const w1_check = item1_check.orientation === 90 ? dt1_check.height_mm : dt1_check.width_mm;
-        const h1_check = item1_check.orientation === 90 ? dt1_check.width_mm : dt1_check.height_mm;
-        const w2 = item2.orientation === 90 ? dt2.height_mm : dt2.width_mm;
-        const h2 = item2.orientation === 90 ? dt2.width_mm : dt2.height_mm;
+        const isPortrait1 = item1_check.orientation === 'portrait';
+        const w1_check = isPortrait1 ? dt1_check.height_mm : dt1_check.width_mm;
+        const h1_check = isPortrait1 ? dt1_check.width_mm : dt1_check.height_mm;
+        
+        const isPortrait2 = item2.orientation === 'portrait';
+        const w2 = isPortrait2 ? dt2.height_mm : dt2.width_mm;
+        const h2 = isPortrait2 ? dt2.width_mm : dt2.height_mm;
 
         if (
           item1_check.x_mm < item2.x_mm + w2 &&

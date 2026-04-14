@@ -39,7 +39,7 @@ describe('LayoutEditor', () => {
     }
   ];
   const mockItems = [
-    { id: 'item1', display_type_id: 'dt1', x_mm: 10, y_mm: 10, orientation: 0 }
+    { id: 'item1', display_type_id: 'dt1', x_mm: 10, y_mm: 10, orientation: 'landscape' }
   ];
 
   beforeEach(async () => {
@@ -59,7 +59,7 @@ describe('LayoutEditor', () => {
   it('should detect when an item is outside boundaries', async () => {
     // Move item1 outside the 500x500 canvas
     element.items = [
-      { id: 'item1', display_type_id: 'dt1', x_mm: 450, y_mm: 450, orientation: 0 }
+      { id: 'item1', display_type_id: 'dt1', x_mm: 450, y_mm: 450, orientation: 'landscape' }
     ];
     // 450 + 100 = 550 > 500
     
@@ -69,8 +69,8 @@ describe('LayoutEditor', () => {
 
   it('should detect overlap between two items', async () => {
     element.items = [
-      { id: 'item1', display_type_id: 'dt1', x_mm: 10, y_mm: 10, orientation: 0 },
-      { id: 'item2', display_type_id: 'dt1', x_mm: 50, y_mm: 50, orientation: 0 }
+      { id: 'item1', display_type_id: 'dt1', x_mm: 10, y_mm: 10, orientation: 'landscape' },
+      { id: 'item2', display_type_id: 'dt1', x_mm: 50, y_mm: 50, orientation: 'landscape' }
     ];
     // item1 is 10-110, 10-110
     // item2 is 50-150, 50-150 -> Overlap!
@@ -86,8 +86,8 @@ describe('LayoutEditor', () => {
     element.displayTypes = [...mockDisplayTypes, oblongDT] as any;
     
     element.items = [
-      { id: 'item1', display_type_id: 'dt-oblong', x_mm: 0, y_mm: 0, orientation: 0 },   // 200x100
-      { id: 'item2', display_type_id: 'dt-oblong', x_mm: 210, y_mm: 0, orientation: 90 } // 100x200 (rotated)
+      { id: 'item1', display_type_id: 'dt-oblong', x_mm: 0, y_mm: 0, orientation: 'landscape' },   // 200x100
+      { id: 'item2', display_type_id: 'dt-oblong', x_mm: 210, y_mm: 0, orientation: 'portrait' } // 100x200 (rotated)
     ];
     
     (element as any)._validateLayout();

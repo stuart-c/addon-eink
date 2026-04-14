@@ -87,7 +87,7 @@ export class SideBar extends LitElement {
               <div class="item-details">
                 <div class="item-info">
                   <span class="item-name">#${index + 1}: ${dt?.name || 'Unknown'}</span>
-                  <span class="item-meta">Pos: ${item.x_mm}, ${item.y_mm} | Rot: ${item.orientation}°</span>
+                  <span class="item-meta">Pos: ${item.x_mm}, ${item.y_mm} | Orient: ${item.orientation}</span>
                 </div>
                 <div class="item-actions">
                   <button class="secondary" title="Settings" @click="${(e: Event) => { e.stopPropagation(); this._dispatch('edit-item', { id: item.id }); }}">

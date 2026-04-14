@@ -35,8 +35,8 @@
             "minimum": 0
           },
           "orientation": {
-            "type": "integer",
-            "enum": [0, 90]
+            "type": "string",
+            "enum": ["landscape", "portrait"]
           }
         },
         "required": ["display_type_id", "x_mm", "y_mm", "orientation"]
