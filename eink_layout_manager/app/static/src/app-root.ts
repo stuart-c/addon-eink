@@ -19,6 +19,7 @@ import { ItemSettingsDialog } from './components/dialogs/item-settings-dialog';
 import { ImageDialog } from './components/dialogs/image-dialog';
 import { ConfirmDialog } from './components/dialogs/confirm-dialog';
 import './components/views/scenes-view';
+import { ScenesView } from './components/views/scenes-view';
 import { Scene, DisplayType, Layout, Image } from './services/HaApiClient';
 
 @customElement('app-root')
@@ -53,11 +54,13 @@ export class AppRoot extends LitElement {
   @query('display-types-view') private _displayTypesView?: DisplayTypesView;
   @query('layouts-view') private _layoutsView?: LayoutsView;
   @query('images-view') private _imagesView?: any;
+  @query('scenes-view') private _scenesView?: ScenesView;
 
   private get _activeView(): any {
     return this.state.activeSection === 'layouts' ? this._layoutsView : 
            this.state.activeSection === 'display-types' ? this._displayTypesView : 
            this.state.activeSection === 'images' ? this._imagesView :
+           this.state.activeSection === 'scenes' ? this._scenesView :
            null;
   }
 
@@ -273,6 +276,7 @@ export class AppRoot extends LitElement {
   private _renderScenesSection() {
     return html`
       <scenes-view
+        .state="${this.state}"
         .scenes="${this.state.scenes}"
         .activeScene="${this.state.activeScene}"
         @select-scene="${(e: CustomEvent<{ scene: Scene }>) => this.state.activeScene = e.detail.scene}"
