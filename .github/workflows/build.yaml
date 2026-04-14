@@ -24,7 +24,8 @@ jobs:
       version: ${{ steps.version.outputs.version }}
       tag: ${{ steps.version.outputs.tag }}
     steps:
-      - id: version
+      - name: Initialise Version Metadata
+        id: version
         run: |
           VERSION="${{ github.event.release.tag_name || github.event.pull_request.head.sha || github.sha }}"
           VERSION="${VERSION#v}"
