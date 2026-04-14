@@ -7,4 +7,5 @@ async def test_ping(aiohttp_client, app):
     client = await aiohttp_client(app)
     resp = await client.get("/api/ping")
     assert resp.status == 200
-    assert await resp.text() == "pong"
+    result = await resp.json()
+    assert result == {"status": "pong"}
