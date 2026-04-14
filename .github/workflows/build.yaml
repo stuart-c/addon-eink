@@ -80,6 +80,52 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.arch }}
           cache-to: type=gha,mode=max,scope=${{ matrix.arch }}
 
+      - name: Build local image for testing
+        if: matrix.arch == 'amd64'
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        with:
+          context: eink_layout_manager
+          load: true
+          tags: eink-layout-manager:test
+          build-args: |
+            BUILD_FROM=${{ matrix.build_from }}
+            BUILD_ARCH=${{ matrix.arch }}
+            BUILD_VERSION=${{ needs.prepare.outputs.version }}
+          cache-from: type=gha,scope=${{ matrix.arch }}
+
+      - name: Setup Node.js
+        if: matrix.arch == 'amd64'
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: '24'
+
+      - name: Run E2E tests
+        if: matrix.arch == 'amd64'
+        run: |
+          mkdir -p $(pwd)/test_data
+          docker run -d \
+            -p 8099:8099 \
+            --name test-app \
+            -v $(pwd)/test_data:/data \
+            -e INGRESS_PORT=8099 \
+            -e DATA_DIR=/data \
+            eink-layout-manager:test
+          
+          cd eink_layout_manager/e2e
+          npm install
+          npx playwright install --with-deps chromium
+          
+          echo "Waiting for app to start..."
+          if ! timeout 60s bash -c 'until curl -s http://localhost:8099/api/ping; do sleep 2; echo "Still waiting..."; done'; then
+            echo "App failed to start in time. Container logs:"
+            docker logs test-app
+            docker inspect test-app
+            exit 1
+          fi
+          
+          npm test
+          docker stop test-app
+
   publish:
     name: Publish Multi-Arch Manifest
     needs: [prepare, build]
