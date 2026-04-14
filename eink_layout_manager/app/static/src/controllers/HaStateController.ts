@@ -224,6 +224,21 @@ export class HaStateController implements ReactiveController {
     }
   }
 
+  async deleteScene(scene: Scene): Promise<boolean> {
+    try {
+      await api.deleteItem('scene', scene.id);
+      if (this.activeScene?.id === scene.id) {
+        this.activeScene = null;
+      }
+      await this.refresh();
+      this.showMessage(`Scene "${scene.name}" deleted.`, 'success');
+      return true;
+    } catch (e: any) {
+      this.showMessage(`Failed to delete scene: ${e.message}`, 'error');
+      return false;
+    }
+  }
+
   showMessage(text: string, _type: 'info' | 'success' | 'error' = 'info') {
     this.message = text;
     this.host.requestUpdate();

@@ -1,9 +1,11 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, query } from 'lit/decorators.js';
+import { PropertyValues } from 'lit';
 import { Scene } from '../../services/HaApiClient';
 import { commonStyles } from '../../styles/common-styles';
 import '../shared/section-layout';
 import '../shared/empty-view';
+import '../layout/yaml-editor';
 import '../dialogs/scene-dialog';
 import { SceneDialog } from '../dialogs/scene-dialog';
 
@@ -105,15 +107,41 @@ export class ScenesView extends LitElement {
 
   @property({ type: Array }) scenes: Scene[] = [];
   @property({ type: Object }) activeScene: Scene | null = null;
+  @property({ type: String }) viewMode: 'graphical' | 'yaml' = 'graphical';
 
   @query('scene-dialog') private _sceneDialog!: SceneDialog;
+
+  protected updated(changedProperties: PropertyValues) {
+    super.updated(changedProperties);
+    if (changedProperties.has('activeScene')) {
+      this.dispatchEvent(new CustomEvent('can-delete-change', {
+        detail: { canDelete: !!this.activeScene },
+        bubbles: true,
+        composed: true
+      }));
+      this.dispatchEvent(new CustomEvent('dirty-state-change', {
+        detail: { isDirty: false },
+        bubbles: true,
+        composed: true
+      }));
+    }
+  }
 
   public addNew() {
     this._sceneDialog.show();
   }
 
+  public async requestDelete() {
+    if (!this.activeScene) return;
+    this.dispatchEvent(new CustomEvent('delete-scene', {
+      detail: { scene: this.activeScene },
+      bubbles: true,
+      composed: true
+    }));
+  }
+
   get isDirty() { return false; }
-  get canDelete() { return false; }
+  get canDelete() { return !!this.activeScene; }
 
   private _handleSelect(scene: Scene) {
     this.dispatchEvent(new CustomEvent('select-scene', {
@@ -161,12 +189,21 @@ export class ScenesView extends LitElement {
           `}
         </div>
 
-        <empty-view 
-          slot="right-main"
-          title="Smart Scenes"
-          icon="landscape"
-          message="${activeScene ? `You have selected "${activeScene.name}". Scene editing is coming soon.` : 'Compose complex scenes by combining layouts, images and live data.'}"
-        ></empty-view>
+        ${this.viewMode === 'yaml' && activeScene ? html`
+          <yaml-editor
+            slot="right-main"
+            .data="${activeScene}"
+            .schemaName="Scene"
+            @data-update="${(e: CustomEvent) => this.state.updateScene(activeScene.id, e.detail)}"
+          ></yaml-editor>
+        ` : html`
+          <empty-view 
+            slot="right-main"
+            title="Smart Scenes"
+            icon="landscape"
+            message="${activeScene ? `You have selected "${activeScene.name}". Scene editing is coming soon.` : 'Compose complex scenes by combining layouts, images and live data.'}"
+          ></empty-view>
+        `}
       </section-layout>
       <scene-dialog 
         @create="${(e: CustomEvent) => this.state.createScene(e.detail.name)}"

@@ -140,6 +140,20 @@ export class AppRoot extends LitElement {
     }
   }
 
+  private async _onDeleteScene(e: CustomEvent<{ scene: Scene }>) {
+    const confirmed = await this._confirmDialog.show({
+      title: 'Delete Scene?',
+      message: `Are you sure you want to permanently remove "${e.detail.scene.name}"? This action cannot be undone.`,
+      confirmText: 'Delete',
+      type: 'danger'
+    });
+
+    if (confirmed) {
+      await this.state.deleteScene(e.detail.scene);
+      this._updateHeaderState();
+    }
+  }
+
   private async _onDeleteImage(e: CustomEvent<{ image: Image }>) {
     const confirmed = await this._confirmDialog.show({
       title: 'Delete Image?',
@@ -279,7 +293,14 @@ export class AppRoot extends LitElement {
         .state="${this.state}"
         .scenes="${this.state.scenes}"
         .activeScene="${this.state.activeScene}"
-        @select-scene="${(e: CustomEvent<{ scene: Scene }>) => this.state.activeScene = e.detail.scene}"
+        .viewMode="${this._viewMode}"
+        @select-scene="${(e: CustomEvent<{ scene: Scene }>) => {
+          this.state.activeScene = e.detail.scene;
+          this._updateHeaderState();
+        }}"
+        @delete-scene="${this._onDeleteScene}"
+        @can-delete-change="${(e: CustomEvent) => this._canDelete = e.detail.canDelete}"
+        @dirty-state-change="${(e: CustomEvent) => this._isDirty = e.detail.isDirty}"
       ></scenes-view>
     `;
   }
