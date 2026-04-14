@@ -21,4 +21,10 @@ else
     echo "Nodeenv already initialised."
 fi
 
-echo "Done. You can now run ./scripts/run_tests.sh"
+echo "--- Installing Playwright (Python) ---"
+pip install -q playwright pytest-playwright requests
+
+echo "--- Installing Playwright Browsers ---"
+playwright install chromium
+
+echo "Done. You can now run ./scripts/run_tests.sh or ./scripts/run_e2e.sh"
