@@ -53,3 +53,17 @@ To simplify frontend state management, **POST (creation) responses MUST exactly 
 
 ### Infrastructure
 - **Debian-based Dev Container:** We chose `bookworm` (Debian) for the dev environment to provide better compatibility with debugging tools and VS Code extensions compared to Alpine, while maintaining a mirrored Python version (3.12) with the production environment.
+
+## Workflow Infrastructure
+
+### GitHub Actions Pinning
+To ensure security and build reproducibility, all GitHub Actions used in this repository **MUST** be pinned to an immutable commit SHA.
+- Always include the human-readable version as a comment (e.g., `uses: actions/checkout@de0fac2e450... # v6.0.2`).
+- Pinning prevents supply chain attacks and ensures that workflows do not break unexpectedly due to tag mutability.
+
+### Workflow File Naming
+All GitHub workflow files must use the `.yaml` extension (standard YAML) rather than `.yml`. They are located in `.github/workflows/`.
+- Example: `build.yaml`, `lint.yaml`.
+
+> [!NOTE]
+> Configuration files in the `.github/` root directory (e.g., `dependabot.yml`, `release-drafter.yml`) should typically maintain the `.yml` extension to ensure compatibility with GitHub Actions that may not yet support the `.yaml` extension for their configuration inputs.
