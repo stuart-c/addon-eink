@@ -102,14 +102,26 @@ jobs:
       - name: Run E2E tests
         if: matrix.arch == 'amd64'
         run: |
-          docker run -d -p 8099:8099 --name test-app eink-layout-manager:test
+          mkdir -p $(pwd)/test_data
+          docker run -d \
+            -p 8099:8099 \
+            --name test-app \
+            -v $(pwd)/test_data:/data \
+            -e INGRESS_PORT=8099 \
+            -e DATA_DIR=/data \
+            eink-layout-manager:test
+          
           cd eink_layout_manager/e2e
           npm install
           npx playwright install --with-deps chromium
           
-          # Wait for app to be ready (up to 30 seconds)
           echo "Waiting for app to start..."
-          timeout 30s bash -c 'until curl -s http://localhost:8099/api/ping; do sleep 1; done'
+          if ! timeout 60s bash -c 'until curl -s http://localhost:8099/api/ping; do sleep 2; echo "Still waiting..."; done'; then
+            echo "App failed to start in time. Container logs:"
+            docker logs test-app
+            docker inspect test-app
+            exit 1
+          fi
           
           npm test
           docker stop test-app
