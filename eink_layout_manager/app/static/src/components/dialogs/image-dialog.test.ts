@@ -109,7 +109,7 @@ describe('ImageDialog', () => {
 
     await cancelBtn.click();
 
-    expect(api.deleteItem).not.toHaveBeenCalled();
+    expect(api.deleteItem).toHaveBeenCalledTimes(0);
   });
 
   it('should call deleteItem when cancelling after uploading a new image', async () => {
