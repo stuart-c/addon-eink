@@ -39,12 +39,12 @@ export class HardwarePreview extends LitElement {
   @property({ type: Number }) orientation = 0; // 0 or 90
 
   render() {
-    const isRotated = this.orientation === 90;
-    const frameW = isRotated ? (this.height_mm || 0) : (this.width_mm || 0);
-    const frameH = isRotated ? (this.width_mm || 0) : (this.height_mm || 0);
+    const isPortrait = this.orientation === 90;
+    const frameW = isPortrait ? (this.height_mm || 0) : (this.width_mm || 0);
+    const frameH = isPortrait ? (this.width_mm || 0) : (this.height_mm || 0);
     const border = this.border_width_mm || 0;
-    const panelW = isRotated ? (this.panel_height_mm || 0) : (this.panel_width_mm || 0);
-    const panelH = isRotated ? (this.panel_width_mm || 0) : (this.panel_height_mm || 0);
+    const panelW = isPortrait ? (this.panel_height_mm || 0) : (this.panel_width_mm || 0);
+    const panelH = isPortrait ? (this.panel_width_mm || 0) : (this.panel_height_mm || 0);
 
     const matW = frameW - (2 * border);
     const matH = frameH - (2 * border);

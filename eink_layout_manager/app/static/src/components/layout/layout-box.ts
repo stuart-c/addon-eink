@@ -99,9 +99,9 @@ export class LayoutBox extends LitElement {
       this.style.transform = `translate(${this.x}px, ${this.y}px)`;
     }
     if (changedProperties.has('orientation') || changedProperties.has('width') || changedProperties.has('height')) {
-      const isRotated = this.orientation === 90;
-      this.style.width = `${isRotated ? this.height : this.width}px`;
-      this.style.height = `${isRotated ? this.width : this.height}px`;
+      const isPortrait = this.orientation === 90;
+      this.style.width = `${isPortrait ? this.height : this.width}px`;
+      this.style.height = `${isPortrait ? this.width : this.height}px`;
     }
   }
 

@@ -92,8 +92,8 @@ export class ItemSettingsDialog extends LitElement {
               .value="${live(this.item?.orientation.toString() || '0')}" 
               @change="${(e: any) => this.item ? this.item.orientation = e.target.value : null}"
             >
-              <option value="0">Horizontal (0°)</option>
-              <option value="90">Vertical (90°)</option>
+              <option value="0">Landscape (0°)</option>
+              <option value="90">Portrait (90°)</option>
             </select>
           </div>
         </form>
