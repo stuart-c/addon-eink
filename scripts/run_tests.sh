@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 TOP_DIR=$( git rev-parse --show-toplevel )
 
