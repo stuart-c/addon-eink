@@ -131,24 +131,7 @@ export class LayoutsView extends LitElement {
     }));
   }
 
-  private _onAddItemToLayout(e: CustomEvent<DisplayType>) {
-    const id = Math.random().toString(36).substr(2, 9);
-    const newItem = {
-      id,
-      display_type_id: e.detail.id,
-      x_mm: 50,
-      y_mm: 50,
-      orientation: 'landscape' as 'landscape' | 'portrait'
-    };
-    
-    if (this.activeLayout) {
-      const updates = {
-        items: [...(this.activeLayout.items || []), newItem]
-      };
-      this._updateActiveLayout(updates);
-      this._selectItem(id);
-    }
-  }
+
 
   private _updateActiveLayout(updates: Partial<Layout>) {
     this.dispatchEvent(new CustomEvent('update-active-layout', {
@@ -198,10 +181,6 @@ export class LayoutsView extends LitElement {
           .displayTypes="${this.displayTypes}"
           .activeLayout="${this.activeLayout}"
           .selectedItemId="${this.selectedItemId}"
-          @add-display-type="${() => this.dispatchEvent(new CustomEvent('set-section', { detail: 'display-types', bubbles: true, composed: true }))}"
-          @edit-display-type="${() => this.dispatchEvent(new CustomEvent('set-section', { detail: 'display-types', bubbles: true, composed: true }))}"
-          @delete-display-type="${(e: CustomEvent) => this.dispatchEvent(new CustomEvent('delete-display-type', { detail: e.detail, bubbles: true, composed: true }))}"
-          @add-item-to-layout="${this._onAddItemToLayout}"
           @select-item="${(e: CustomEvent) => this._selectItem(e.detail.id)}"
           @edit-item="${this._onEditItem}"
           @rotate-item="${(e: CustomEvent) => this._updateItem(e.detail.id, { orientation: (this.activeLayout?.items.find(i => i.id === e.detail.id)?.orientation === 'landscape' ? 'portrait' : 'landscape') })}"
@@ -211,13 +190,11 @@ export class LayoutsView extends LitElement {
         <app-toolbar
           slot="right-top-bar"
           .layouts="${this.layouts}"
-          .displayTypes="${this.displayTypes}"
           .activeLayout="${this.activeLayout}"
           .mousePos="${this._mousePos}"
           @switch-layout="${(e: CustomEvent) => this.dispatchEvent(new CustomEvent('switch-layout', { detail: e.detail, bubbles: true, composed: true }))}"
           @create-layout="${this.addNew}"
           @edit-layout="${() => this.activeLayout && this._layoutSettingsDialog.show(this.activeLayout)}"
-          @add-item-to-layout="${this._onAddItemToLayout}"
         ></app-toolbar>
 
         <div slot="right-main" style="height: 100%; display: flex; flex-direction: column;">

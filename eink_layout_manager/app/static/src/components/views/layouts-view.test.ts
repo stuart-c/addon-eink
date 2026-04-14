@@ -98,20 +98,7 @@ describe('LayoutsView', () => {
     }));
   });
 
-  it('should dispatch update-active-layout when an item is added', async () => {
-    const spy = vi.fn();
-    element.addEventListener('update-active-layout', spy);
-    
-    const sideBar = element.shadowRoot?.querySelector('side-bar');
-    sideBar?.dispatchEvent(new CustomEvent('add-item-to-layout', {
-      detail: mockDisplayTypes[0]
-    }));
-    
-    expect(spy).toHaveBeenCalled();
-    const updates = spy.mock.calls[0][0].detail;
-    expect(updates.items.length).toBe(1);
-    expect(updates.items[0].display_type_id).toBe('dt1');
-  });
+
 
   it('should dispatch select-item when an item is selected in editor', async () => {
     const spy = vi.fn();

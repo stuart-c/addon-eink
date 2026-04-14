@@ -1,8 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { commonStyles } from '../../styles/common-styles';
-import { DisplayType, Layout } from '../../services/HaApiClient';
-import '../shared/hardware-preview';
+import { Layout } from '../../services/HaApiClient';
 
 @customElement('app-toolbar')
 export class AppToolbar extends LitElement {
@@ -105,43 +104,7 @@ export class AppToolbar extends LitElement {
         font-size: 20px;
       }
       
-      .display-type-item {
-        padding: 0.5rem;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        transition: background 0.2s;
-        border-bottom: 1px solid #f0f0f0;
-      }
-      .display-type-item:last-child { border-bottom: none; }
-      .display-type-item:hover { background: #f0faff; }
-      
-      .display-type-preview {
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #f9f9f9;
-        border-radius: 4px;
-        flex-shrink: 0;
-      }
-      
-      .display-type-info {
-        display: flex;
-        flex-direction: column;
-        line-height: 1.2;
-      }
-      .display-type-name {
-        font-weight: 600;
-        font-size: 0.9rem;
-        color: #333;
-      }
-      .display-type-meta {
-        font-size: 0.75rem;
-        color: #888;
-      }
+
 
       .mouse-info { 
         font-size: 12px; 
@@ -155,12 +118,11 @@ export class AppToolbar extends LitElement {
   ];
 
   @property({ type: Array }) layouts: Layout[] = [];
-  @property({ type: Array }) displayTypes: DisplayType[] = [];
+
   @property({ type: Object }) activeLayout: Layout | null = null;
   @property({ type: Object }) mousePos: { x: number | null, y: number | null } = { x: null, y: null };
 
   @state() private _showMenu = false;
-  @state() private _showDisplayMenu = false;
 
   private _handleGlobalClick?: (e: MouseEvent) => void;
 
@@ -172,9 +134,6 @@ export class AppToolbar extends LitElement {
       
       if (this._showMenu && !isDropdown) {
         this._showMenu = false;
-      }
-      if (this._showDisplayMenu && !isDropdown) {
-        this._showDisplayMenu = false;
       }
     };
     window.addEventListener('click', this._handleGlobalClick);
@@ -190,46 +149,19 @@ export class AppToolbar extends LitElement {
   private _dispatch(name: string, detail?: any) {
     this.dispatchEvent(new CustomEvent(name, { detail, bubbles: true, composed: true }));
     this._showMenu = false;
-    this._showDisplayMenu = false;
   }
 
   render() {
     return html`
       <div class="toolbar-actions">
-        <div class="dropdown">
-          <button id="btn-add-display" class="settings-button" @click="${() => { this._showDisplayMenu = !this._showDisplayMenu; if (this._showDisplayMenu) this._showMenu = false; }}" title="Add Display Type">
-            <span class="material-icons">add_box</span>
-          </button>
-          <div id="menu-display-types" class="dropdown-menu ${this._showDisplayMenu ? 'show' : ''}" style="min-width: 280px;">
-            ${this.displayTypes.map(dt => html`
-              <div class="display-type-item" @click="${() => this._dispatch('add-item-to-layout', dt)}">
-                <div class="display-type-preview">
-                  <hardware-preview
-                    .width_mm="${dt.width_mm}"
-                    .height_mm="${dt.height_mm}"
-                    .border_width_mm="${dt.frame.border_width_mm}"
-                    .panel_width_mm="${dt.panel_width_mm}"
-                    .panel_height_mm="${dt.panel_height_mm}"
-                    .frame_colour="${dt.frame.colour}"
-                    .mat_colour="${dt.mat.colour}"
-                    .scale="${40 / Math.max(dt.width_mm, dt.height_mm)}"
-                  ></hardware-preview>
-                </div>
-                <div class="display-type-info">
-                  <span class="display-type-name">${dt.name}</span>
-                  <span class="display-type-meta">${dt.width_mm}x${dt.height_mm}mm | ${dt.colour_type}</span>
-                </div>
-              </div>
-            `)}
-          </div>
-        </div>
+
 
         <button id="btn-layout-settings" class="settings-button" @click="${() => this._dispatch('edit-layout')}" title="Layout Settings">
           <span class="material-icons">settings</span>
         </button>
 
         <div class="dropdown">
-          <div id="trigger-layouts" class="dropdown-trigger ${this._showMenu ? 'active' : ''}" @click="${() => { this._showMenu = !this._showMenu; if (this._showMenu) this._showDisplayMenu = false; }}">
+          <div id="trigger-layouts" class="dropdown-trigger ${this._showMenu ? 'active' : ''}" @click="${() => { this._showMenu = !this._showMenu; }}">
             <span>${this.activeLayout?.name || 'Loading...'}</span>
             <div class="chevron">▼</div>
           </div>
