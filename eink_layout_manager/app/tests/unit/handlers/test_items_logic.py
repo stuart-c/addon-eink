@@ -26,7 +26,9 @@ async def test_delete_item_display_type_in_use():
         patch("os.path.realpath", side_effect=lambda x: x),
         patch("os.listdir", return_value=["layout1.json"]),
         patch("builtins.open", mock_open(read_data=json.dumps(layout_data))),
-        patch("app.utils.validation.load_schema", return_value={"type": "object"}),
+        patch(
+            "app.utils.validation.load_schema", return_value={"type": "object"}
+        ),
         patch("os.remove") as mock_remove,
     ):
 
@@ -63,7 +65,9 @@ async def test_delete_item_display_type_not_in_use():
         patch("os.path.realpath", side_effect=lambda x: x),
         patch("os.listdir", return_value=["layout1.json"]),
         patch("builtins.open", mock_open(read_data=json.dumps(layout_data))),
-        patch("app.utils.validation.load_schema", return_value={"type": "object"}),
+        patch(
+            "app.utils.validation.load_schema", return_value={"type": "object"}
+        ),
         patch("os.remove") as mock_remove,
     ):
 

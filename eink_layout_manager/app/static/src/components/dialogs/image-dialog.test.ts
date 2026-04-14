@@ -39,7 +39,7 @@ describe('ImageDialog', () => {
     element.remove();
   });
 
-  it('should initialize for adding new image', async () => {
+  it('should initialise for adding new image', async () => {
     await element.show();
     await element.updateComplete;
     

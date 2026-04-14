@@ -24,7 +24,7 @@ describe('YamlEditor', () => {
     element.remove();
   });
 
-  it('should initialize with YAML representation of data', () => {
+  it('should initialise with YAML representation of data', () => {
     const textarea = element.shadowRoot?.querySelector('textarea');
     expect(textarea?.value).toContain('name: Test Layout');
     expect(textarea?.value).toContain('canvas_width_mm: 500');
