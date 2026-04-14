@@ -8,7 +8,7 @@ def setup_routes(app):
 
     # RESTful API
     # Valid resource types: display_type, layout, image
-    api_prefix = "/api/{resource_type:(?:display_type|layout|image)}"
+    api_prefix = "/api/{resource_type:(?:display_type|layout|image|scene)}"
 
     # Image specific routes (more specific routes first)
     app.router.add_get("/api/image/keywords", images.handle_image_keywords_get)
