@@ -31,7 +31,7 @@ describe('HaStateController', () => {
     controller = new HaStateController(mockHost as any);
   });
 
-  it('should initialize with default values', () => {
+  it('should initialise with default values', () => {
     expect(controller.connected).toBe(false);
     expect(controller.displayTypes).toEqual([]);
     expect(controller.layouts).toEqual([]);

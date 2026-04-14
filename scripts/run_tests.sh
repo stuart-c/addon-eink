@@ -2,16 +2,35 @@
 set -e
 
 TOP_DIR=$( git rev-parse --show-toplevel )
+VENV_PATH="$TOP_DIR/eink_layout_manager/app/.venv"
 
-source $TOP_DIR/eink_layout_manager/app/.venv/bin/activate
+if [ ! -d "$VENV_PATH" ]; then
+    echo "Error: Virtual environment not found at $VENV_PATH"
+    echo "Please run ./scripts/make_venv.sh first."
+    exit 1
+fi
 
-cd $TOP_DIR/eink_layout_manager/app
+source "$VENV_PATH/bin/activate"
 
-pip install -r requirements.txt -r requirements_test.txt
+echo "--- Installing Python Dependencies ---"
+cd "$TOP_DIR/eink_layout_manager/app"
+pip install -q -r requirements.txt -r requirements_test.txt
+
+echo "--- Running Python Lints (Black & Flake8) ---"
 black .
 flake8 .
+
+echo "--- Running Backend Tests (Pytest) ---"
 pytest tests/
 
-cd $TOP_DIR/eink_layout_manager/app/static
+echo "--- Installing Frontend Dependencies ---"
+cd "$TOP_DIR/eink_layout_manager/app/static"
+# Use local cache directory to avoid permission issues in sandboxed environments
+export NPM_CONFIG_CACHE="$PWD/.npm-cache"
+npm install --no-audit
 
-npm install && npx tsc --noEmit && npm test -- --run
+echo "--- Running Frontend Type Checks (TSC) ---"
+npx tsc --noEmit
+
+echo "--- Running Frontend Tests (Vitest) ---"
+npm test -- --run

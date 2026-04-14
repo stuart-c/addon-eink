@@ -15,10 +15,7 @@ async def test_create_and_get_scene(aiohttp_client, app):
     """Test creating and then fetching a scene."""
     client = await aiohttp_client(app)
 
-    scene_data = {
-        "id": "morning-routine",
-        "name": "Morning Routine"
-    }
+    scene_data = {"id": "morning-routine", "name": "Morning Routine"}
 
     # Create
     resp = await client.post("/api/scene", json=scene_data)
@@ -52,10 +49,7 @@ async def test_create_scene_invalid_schema(aiohttp_client, app):
 async def test_delete_scene(aiohttp_client, app):
     """Test scene deletion."""
     client = await aiohttp_client(app)
-    scene_data = {
-        "id": "del_me",
-        "name": "Delete Me"
-    }
+    scene_data = {"id": "del_me", "name": "Delete Me"}
     await client.post("/api/scene", json=scene_data)
 
     resp = await client.delete("/api/scene/del_me")

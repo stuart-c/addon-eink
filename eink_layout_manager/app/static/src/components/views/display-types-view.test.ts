@@ -44,7 +44,7 @@ describe('DisplayTypesView', () => {
     element.remove();
   });
 
-  it('should initialize with the first display type selected', () => {
+  it('should initialise with the first display type selected', () => {
     expect(element.displayType?.id).toBe('dt1');
     expect(element.isNew).toBe(false);
   });

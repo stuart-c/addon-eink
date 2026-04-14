@@ -87,7 +87,7 @@ export class ScenesView extends LitElement {
   }
 
   render() {
-    const scenes = this.state?.scenes || this.scenes || [];
+    const scenes = (this.state?.scenes || this.scenes || []) as Scene[];
     const activeScene = this.state?.activeScene || this.activeScene;
 
     return html`

@@ -2,8 +2,23 @@
 set -e
 
 TOP_DIR=$( git rev-parse --show-toplevel )
+VENV_PATH="$TOP_DIR/eink_layout_manager/app/.venv"
 
-python3 -m venv $TOP_DIR/eink_layout_manager/app/.venv
-source $TOP_DIR/eink_layout_manager/app/.venv/bin/activate
-pip install nodeenv
-nodeenv -p --node=24.14.1
+echo "--- Creating Python Virtual Environment ---"
+if [ ! -d "$VENV_PATH" ]; then
+    python3 -m venv "$VENV_PATH"
+fi
+
+source "$VENV_PATH/bin/activate"
+
+echo "--- Installing Nodeenv ---"
+pip install -q nodeenv
+
+echo "--- Initialising Nodeenv (Node 24.14.1) ---"
+if [ ! -f "$VENV_PATH/bin/node" ]; then
+    nodeenv -p --node=24.14.1
+else
+    echo "Nodeenv already initialised."
+fi
+
+echo "Done. You can now run ./scripts/run_tests.sh"
