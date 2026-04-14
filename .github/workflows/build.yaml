@@ -103,7 +103,7 @@ jobs:
 
       - name: Upload image artifact for E2E testing
         if: matrix.arch == 'amd64' && github.event_name == 'pull_request'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@6f51ac03b9356f520e9a4188fa93ced7cf354e38 # v4.13.0
         with:
           name: eink-docker-image
           path: /tmp/eink-image.tar.gz
@@ -137,7 +137,7 @@ jobs:
       # On PR runs, download the image artifact exported by the build job.
       - name: Download image artifact
         if: github.event_name == 'pull_request'
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@c7890b05b63756d5e7592e354029eb777494f1ea # v4.4.2
         with:
           name: eink-docker-image
           path: /tmp
@@ -163,7 +163,7 @@ jobs:
           node-version: '24'
 
       - name: Cache E2E npm dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: eink_layout_manager/e2e/node_modules
           key: npm-e2e-${{ runner.os }}-${{ hashFiles('eink_layout_manager/e2e/package-lock.json', 'eink_layout_manager/e2e/package.json') }}
@@ -171,7 +171,7 @@ jobs:
 
       - name: Cache Playwright browsers
         id: playwright-cache
-        uses: actions/cache@v4
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: ~/.cache/ms-playwright
           key: playwright-chromium-${{ runner.os }}-${{ hashFiles('eink_layout_manager/e2e/package-lock.json', 'eink_layout_manager/e2e/package.json') }}
