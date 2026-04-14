@@ -87,20 +87,23 @@ export class ScenesView extends LitElement {
   }
 
   render() {
+    const scenes = this.state?.scenes || this.scenes || [];
+    const activeScene = this.state?.activeScene || this.activeScene;
+
     return html`
       <section-layout>
         <div slot="left-bar" class="scenes-sidebar">
           <div class="sidebar-items">
-            ${this.scenes.map(scene => html`
+            ${scenes.map(scene => html`
               <div 
-                class="sidebar-item ${this.activeScene?.id === scene.id ? 'selected' : ''}" 
+                class="sidebar-item ${activeScene?.id === scene.id ? 'selected' : ''}" 
                 @click="${() => this._handleSelect(scene)}"
               >
                 <span class="material-icons sidebar-item-icon">landscape</span>
                 <span class="sidebar-item-name">${scene.name}</span>
               </div>
             `)}
-            ${this.scenes.length === 0 ? html`
+            ${scenes.length === 0 ? html`
               <div style="padding: 1rem; color: #666; font-size: 14px; text-align: center;">
                 No scenes found.
               </div>
@@ -109,14 +112,14 @@ export class ScenesView extends LitElement {
         </div>
 
         <div slot="right-top-bar" style="font-weight: 600; color: #333;">
-          ${this.activeScene ? `Scene: ${this.activeScene.name}` : 'Smart Scenes Toolbar'}
+          ${activeScene ? `Scene: ${activeScene.name}` : 'Smart Scenes Toolbar'}
         </div>
 
         <empty-view 
           slot="right-main"
           title="Smart Scenes"
           icon="landscape"
-          message="${this.activeScene ? `You have selected "${this.activeScene.name}". Scene editing is coming soon.` : 'Compose complex scenes by combining layouts, images and live data.'}"
+          message="${activeScene ? `You have selected "${activeScene.name}". Scene editing is coming soon.` : 'Compose complex scenes by combining layouts, images and live data.'}"
         ></empty-view>
       </section-layout>
       <scene-dialog @create="${(e: CustomEvent) => this.state.createScene(e.detail.name)}"></scene-dialog>
