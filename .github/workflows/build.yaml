@@ -24,8 +24,7 @@ jobs:
       version: ${{ steps.version.outputs.version }}
       tag: ${{ steps.version.outputs.tag }}
     steps:
-      - name: Initialise Version Metadata
-        id: version
+      - id: version
         run: |
           VERSION="${{ github.event.release.tag_name || github.event.pull_request.head.sha || github.sha }}"
           VERSION="${VERSION#v}"
@@ -65,7 +64,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push image
+      - name: Build image
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           context: eink_layout_manager
@@ -77,15 +76,12 @@ jobs:
             BUILD_FROM=${{ matrix.build_from }}
             BUILD_ARCH=${{ matrix.arch }}
             BUILD_VERSION=${{ needs.prepare.outputs.version }}
-          outputs: ${{ github.event_name != 'pull_request' && 'type=image,compression=zstd,compression-level=9,force-compression=true' || '' }}
+          outputs: type=image,compression=zstd,compression-level=9,force-compression=true
           cache-from: type=gha,scope=${{ matrix.arch }}
           cache-to: type=gha,mode=max,scope=${{ matrix.arch }}
 
-      # On pull requests the image is not pushed to the registry, so we load it
-      # locally on the amd64 runner and export it as an artifact for the E2E job.
-      # The GHA build cache means this second build is a near-instant cache hit.
-      - name: Load image locally for E2E testing
-        if: matrix.arch == 'amd64' && github.event_name == 'pull_request'
+      - name: Build local image for testing
+        if: matrix.arch == 'amd64'
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           context: eink_layout_manager
@@ -97,56 +93,14 @@ jobs:
             BUILD_VERSION=${{ needs.prepare.outputs.version }}
           cache-from: type=gha,scope=${{ matrix.arch }}
 
-      - name: Export image for E2E testing
-        if: matrix.arch == 'amd64' && github.event_name == 'pull_request'
-        run: docker save eink-layout-manager:test | gzip > /tmp/eink-image.tar.gz
-
-      - name: Upload image artifact for E2E testing
-        if: matrix.arch == 'amd64' && github.event_name == 'pull_request'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - name: Setup Node.js
+        if: matrix.arch == 'amd64'
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
-          name: eink-docker-image
-          path: /tmp/eink-image.tar.gz
-          retention-days: 1
+          node-version: '24'
 
-  e2e:
-    name: E2E Tests
-    needs: [prepare, build]
-    if: always() && (needs.build.result == 'success')
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      # On non-PR runs the image was pushed to the registry; pull it directly.
-      # This eliminates the need for a second Docker build in the build job.
-      - name: Login to GHCR
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Pull test image from registry
-        if: github.event_name != 'pull_request'
-        run: |
-          docker pull ghcr.io/${{ github.repository_owner }}/eink-layout-manager/amd64:${{ needs.prepare.outputs.version }}
-          docker tag ghcr.io/${{ github.repository_owner }}/eink-layout-manager/amd64:${{ needs.prepare.outputs.version }} eink-layout-manager:test
-
-      # On PR runs, download the image artifact exported by the build job.
-      - name: Download image artifact
-        if: github.event_name == 'pull_request'
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: eink-docker-image
-          path: /tmp
-
-      - name: Load image from artifact
-        if: github.event_name == 'pull_request'
-        run: docker load < /tmp/eink-image.tar.gz
-
-      - name: Start application container
+      - name: Run E2E tests
+        if: matrix.arch == 'amd64'
         run: |
           mkdir -p $(pwd)/test_data
           docker run -d \
@@ -156,43 +110,11 @@ jobs:
             -e INGRESS_PORT=8099 \
             -e DATA_DIR=/data \
             eink-layout-manager:test
-
-      - name: Set up Node.js
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
-        with:
-          node-version: '24'
-
-      - name: Cache E2E npm dependencies
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: eink_layout_manager/e2e/node_modules
-          key: npm-e2e-${{ runner.os }}-${{ hashFiles('eink_layout_manager/e2e/package-lock.json', 'eink_layout_manager/e2e/package.json') }}
-          restore-keys: npm-e2e-${{ runner.os }}-
-
-      - name: Cache Playwright browsers
-        id: playwright-cache
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('eink_layout_manager/e2e/package-lock.json', 'eink_layout_manager/e2e/package.json') }}
-          restore-keys: playwright-chromium-${{ runner.os }}-
-
-      - name: Install E2E npm dependencies
-        run: npm install
-        working-directory: eink_layout_manager/e2e
-
-      - name: Install Playwright browsers and system dependencies
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps chromium
-        working-directory: eink_layout_manager/e2e
-
-      - name: Install Playwright system dependencies
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium
-        working-directory: eink_layout_manager/e2e
-
-      - name: Wait for application to start
-        run: |
+          
+          cd eink_layout_manager/e2e
+          npm install
+          npx playwright install --with-deps chromium
+          
           echo "Waiting for app to start..."
           if ! timeout 60s bash -c 'until curl -s http://localhost:8099/api/ping; do sleep 2; echo "Still waiting..."; done'; then
             echo "App failed to start in time. Container logs:"
@@ -200,27 +122,14 @@ jobs:
             docker inspect test-app
             exit 1
           fi
-
-      - name: Run E2E tests
-        run: npm test
-        working-directory: eink_layout_manager/e2e
-
-      - name: Upload Playwright report
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: playwright-report
-          path: eink_layout_manager/e2e/playwright-report/
-          retention-days: 30
-
-      - name: Stop application container
-        if: always()
-        run: docker stop test-app || true
+          
+          npm test
+          docker stop test-app
 
   publish:
     name: Publish Multi-Arch Manifest
-    needs: [prepare, build, e2e]
-    if: always() && (needs.build.result == 'success') && (needs.e2e.result == 'success') && github.event_name != 'pull_request'
+    needs: [prepare, build]
+    if: always() && (needs.build.result == 'success') && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Login to GHCR

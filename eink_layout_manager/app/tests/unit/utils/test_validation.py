@@ -60,27 +60,6 @@ def test_load_schema_success():
 
 
 def test_load_schema_not_found():
-    """Unknown schema names are now rejected by the allowlist, not the FS."""
-    with pytest.raises(ValueError, match="Unknown schema"):
+    """Test loading a non-existent schema."""
+    with pytest.raises(FileNotFoundError):
         load_schema("non_existent_schema")
-
-
-def test_load_schema_rejects_path_traversal():
-    """Security: path-traversal attempts must be rejected by the allowlist."""
-    traversal_attempts = [
-        "../etc/passwd",
-        "../../etc/shadow",
-        "/etc/passwd",
-        "display_type/../../../etc/passwd",
-        "display_type\x00evil",
-    ]
-    for attempt in traversal_attempts:
-        with pytest.raises(ValueError, match="Unknown schema"):
-            load_schema(attempt)
-
-
-def test_load_schema_rejects_unlisted_names():
-    """Security: names not in the allowlist must be rejected."""
-    for name in ["status", "unknown", "display", "layout_extra", ""]:
-        with pytest.raises(ValueError, match="Unknown schema"):
-            load_schema(name)

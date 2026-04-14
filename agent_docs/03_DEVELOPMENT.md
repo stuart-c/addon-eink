@@ -32,10 +32,13 @@ All agents and contributors must follow the mandatory workflow defined in the [A
 > [!IMPORTANT]
 > **Enabling auto-merge is mandatory.** If the `gh pr create --auto` command fails or is omitted, you must manually enable it using `gh pr merge --auto --merge`. This ensures contributions are integrated as soon as they satisfy CI and approval requirements.
 
-### Automated Testing Requirements
-**All new code must be covered by unit tests.** 
-- Ensure that any new logic, API endpoints, or schema changes have corresponding test cases in the `tests/` directory.
 - **Mandatory Verification**: You **MUST** verify that your tests and lints pass locally using the root `venv` before submitting a PR or requesting a review, as per the parameters in the [Workflow Guide](../agents.md).
+
+### End-to-End (E2E) Testing
+We use **Playwright** for E2E testing to verify the full application stack.
+- **Run E2E Tests**: Use the `./scripts/run_e2e.sh` script.
+- **Requirements**: Playwright browsers must be installed (handled by `./scripts/make_venv.sh`).
+- **Location**: E2E tests are located in `eink_layout_manager/app/tests/e2e/`.
 
 ### API Consistency Rule
 To simplify frontend state management, **POST (creation) responses MUST exactly match GET (retrieval) responses** for the same resource. This ensures the frontend receives the complete metadata object immediately upon resource creation.
@@ -53,17 +56,3 @@ To simplify frontend state management, **POST (creation) responses MUST exactly 
 
 ### Infrastructure
 - **Debian-based Dev Container:** We chose `bookworm` (Debian) for the dev environment to provide better compatibility with debugging tools and VS Code extensions compared to Alpine, while maintaining a mirrored Python version (3.12) with the production environment.
-
-## Workflow Infrastructure
-
-### GitHub Actions Pinning
-To ensure security and build reproducibility, all GitHub Actions used in this repository **MUST** be pinned to an immutable commit SHA.
-- Always include the human-readable version as a comment (e.g., `uses: actions/checkout@de0fac2e450... # v6.0.2`).
-- Pinning prevents supply chain attacks and ensures that workflows do not break unexpectedly due to tag mutability.
-
-### Workflow File Naming
-All GitHub workflow files must use the `.yaml` extension (standard YAML) rather than `.yml`. They are located in `.github/workflows/`.
-- Example: `build.yaml`, `lint.yaml`.
-
-> [!NOTE]
-> Configuration files in the `.github/` root directory (e.g., `dependabot.yml`, `release-drafter.yml`) should typically maintain the `.yml` extension to ensure compatibility with GitHub Actions that may not yet support the `.yaml` extension for their configuration inputs.

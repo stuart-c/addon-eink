@@ -29,4 +29,10 @@ Run the script from the **project root directory**:
 4.  **Browser**: Automatically attempts to open `http://localhost:8099` in your default browser.
 5.  **Logs**: Starts following the container logs in your terminal. **Press `Ctrl+C` to stop the logs and shut down the container.**
 
+## `run_tests.sh`
 
+Runs all unit and integration tests for both backend (Python) and frontend (TypeScript). It also runs linters (`black`, `flake8`) and type checks (`tsc`).
+
+## `run_e2e.sh`
+
+Runs End-to-End tests using **Playwright**. This script builds the frontend and starts the backend to verify the full user flow.

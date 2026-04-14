@@ -11,6 +11,11 @@ fi
 
 source "$VENV_PATH/bin/activate"
 
+echo "--- Installing Python Dependencies ---"
+pip install -r eink_layout_manager/app/requirements.txt \
+            -r eink_layout_manager/app/requirements_test.txt \
+            -r eink_layout_manager/app/requirements_e2e.txt
+
 echo "--- Installing Nodeenv ---"
 pip install -q nodeenv
 
@@ -21,4 +26,7 @@ else
     echo "Nodeenv already initialised."
 fi
 
-echo "Done. You can now run ./scripts/run_tests.sh"
+echo "--- Installing Playwright Browsers ---"
+playwright install chromium
+
+echo "Done. You can now run ./scripts/run_tests.sh or ./scripts/run_e2e.sh"
