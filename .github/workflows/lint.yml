@@ -19,12 +19,12 @@ jobs:
       - run: pip install flake8==7.3.0 flake8-pyproject==1.2.3
       - run: pip install flake8-docstrings flake8-simplify flake8-unused-arguments flake8-quotes flake8-bugbear
       - name: flake8 Lint
-        uses: reviewdog/action-flake8@b65981e158319f08cb7d0132f28bc0081e110adc # v3.15.2
+        uses: reviewdog/action-flake8@467a79e1282f0babab13bd7b02bb09a81abdff0b # v3.15.2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           workdir: eink_layout_manager/app
       - run: pip install black==26.3.1
-      - uses: reviewdog/action-black@644053a260402bc4278a865906107bd8aef7fae8 # v3.22.4
+      - uses: reviewdog/action-black@60b9acd32ed12adde31a1fd82ad33369fe363c12 # v3.22.4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-check

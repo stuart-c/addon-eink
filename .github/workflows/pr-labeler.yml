@@ -19,6 +19,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # runs autolabeler
-      - uses: release-drafter/release-drafter/autolabeler@v7
+      - uses: release-drafter/release-drafter/autolabeler@a6a982fee9675c45c1765e9fa5308f7d6c3ecbd4 # v7.2.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
