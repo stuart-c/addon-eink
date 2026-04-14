@@ -36,6 +36,8 @@ All agents and contributors must follow the mandatory workflow defined in the [A
 **All new code must be covered by unit tests.** 
 - Ensure that any new logic, API endpoints, or schema changes have corresponding test cases in the `tests/` directory.
 - **Mandatory Verification**: You **MUST** verify that your tests and lints pass locally using the root `venv` before submitting a PR or requesting a review, as per the parameters in the [Workflow Guide](../agents.md).
+  - **Unit Tests & Lints**: Run `./scripts/run_tests.sh`
+  - **End-to-End Tests**: Run `./scripts/run_e2e.sh`
 
 ### API Consistency Rule
 To simplify frontend state management, **POST (creation) responses MUST exactly match GET (retrieval) responses** for the same resource. This ensures the frontend receives the complete metadata object immediately upon resource creation.
