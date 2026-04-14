@@ -61,6 +61,11 @@ export interface Image {
   file_hash: string;
 }
 
+export interface Scene {
+  id: string;
+  name: string;
+}
+
 export interface KeywordInfo {
   keyword: string;
   count: number;
@@ -76,7 +81,7 @@ export interface PaginatedResponse<T> {
   };
 }
 
-export type ResourceType = 'display_type' | 'layout' | 'image';
+export type ResourceType = 'display_type' | 'layout' | 'image' | 'scene';
 
 export class HaApiClient {
   private baseUrl: string;

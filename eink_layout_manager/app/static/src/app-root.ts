@@ -18,7 +18,8 @@ import './components/shared/section-layout';
 import { ItemSettingsDialog } from './components/dialogs/item-settings-dialog';
 import { ImageDialog } from './components/dialogs/image-dialog';
 import { ConfirmDialog } from './components/dialogs/confirm-dialog';
-import { DisplayType, Layout, Image } from './services/HaApiClient';
+import './components/views/scenes-view';
+import { Scene, DisplayType, Layout, Image } from './services/HaApiClient';
 
 @customElement('app-root')
 export class AppRoot extends LitElement {
@@ -193,6 +194,7 @@ export class AppRoot extends LitElement {
       ${this.state.activeSection === 'layouts' ? this._renderLayoutsSection() : 
         this.state.activeSection === 'display-types' ? this._renderDisplayTypesSection() :
         this.state.activeSection === 'images' ? this._renderImagesSection() :
+        this.state.activeSection === 'scenes' ? this._renderScenesSection() :
         this._renderEmptySection()}
 
       <item-settings-dialog 
@@ -265,6 +267,16 @@ export class AppRoot extends LitElement {
         @delete-image="${this._onDeleteImage}"
         @filter-change="${(e: CustomEvent) => this.state.refreshImages(e.detail)}"
       ></images-view>
+    `;
+  }
+
+  private _renderScenesSection() {
+    return html`
+      <scenes-view
+        .scenes="${this.state.scenes}"
+        .activeScene="${this.state.activeScene}"
+        @select-scene="${(e: CustomEvent<{ scene: Scene }>) => this.state.activeScene = e.detail.scene}"
+      ></scenes-view>
     `;
   }
 
