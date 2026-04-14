@@ -38,7 +38,7 @@ jobs:
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
       - name: Prune images
-        uses: vlaurin/action-ghcr-prune@0ca88117ed406e99ff396691511c6a267643166f # v0.6.0
+        uses: vlaurin/action-ghcr-prune@0cf7d39f88546edd31965acba78cdcb0be14d641 # v0.6.0
         with:
           token: ${{ steps.app-token.outputs.token }}
           container: ${{ matrix.package }}
