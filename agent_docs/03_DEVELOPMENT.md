@@ -64,3 +64,6 @@ To ensure security and build reproducibility, all GitHub Actions used in this re
 ### Workflow File Naming
 All GitHub workflow files must use the `.yaml` extension (standard YAML) rather than `.yml`. They are located in `.github/workflows/`.
 - Example: `build.yaml`, `lint.yaml`.
+
+> [!NOTE]
+> Configuration files in the `.github/` root directory (e.g., `dependabot.yml`, `release-drafter.yml`) should typically maintain the `.yml` extension to ensure compatibility with GitHub Actions that may not yet support the `.yaml` extension for their configuration inputs.
