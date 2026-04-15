@@ -36,11 +36,6 @@ def model_to_dict(item):
         # Handle cases where value might be a list/dict (JSON column)
         data[column.name] = value
 
-    # Remove internal fields if necessary, but here they match the schema
-    # except maybe created_at/updated_at which are usually fine to include
-    # or can be filtered out if strictly following the schema.
-    # The schemas for display_type and layout don't include created_at/updated_at.
-
     allowed_fields = {
         "display_type": [
             "id",
@@ -71,6 +66,27 @@ def model_to_dict(item):
     return {
         k: v for k, v in data.items() if k in allowed_fields[resource_type]
     }
+
+
+def ensure_landscape(data):
+    """Ensure dimensions are in landscape orientation (width >= height)."""
+    if data.get("height_mm", 0) > data.get("width_mm", 0):
+        # Swap outer dimensions
+        data["width_mm"], data["height_mm"] = (
+            data["height_mm"],
+            data["width_mm"],
+        )
+        # Swap panel dimensions
+        data["panel_width_mm"], data["panel_height_mm"] = (
+            data["panel_height_mm"],
+            data["panel_width_mm"],
+        )
+        # Swap pixel dimensions
+        data["width_px"], data["height_px"] = (
+            data["height_px"],
+            data["width_px"],
+        )
+    return data
 
 
 @response_schema("item_list_response")
@@ -132,6 +148,9 @@ async def create_item(request):
             {"error": "Validation failed", "message": e.message}, status=400
         )
 
+    if resource_type == "display_type":
+        data = ensure_landscape(data)
+
     item_id = data.get("id")
     try:
         model_class = get_model_class(resource_type)
@@ -188,6 +207,9 @@ async def update_item(request):
         return web.json_response(
             {"error": "Validation failed", "message": e.message}, status=400
         )
+
+    if resource_type == "display_type":
+        data = ensure_landscape(data)
 
     try:
         model_class = get_model_class(resource_type)
