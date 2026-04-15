@@ -9,6 +9,8 @@ from ..utils.validation import (
     load_schema,
     response_schema,
 )
+from sqlalchemy import select
+from .. import database, models
 
 
 def get_resource_schema(request, data):
@@ -231,6 +233,26 @@ async def delete_item(request):
                                     )
                         except (json.JSONDecodeError, KeyError):
                             continue
+
+    # Referential Integrity: Don't delete layout if used in any scene
+    if resource_type == "layout":
+        try:
+            async with database.get_session() as session:
+                stmt = select(models.Scene).where(
+                    models.Scene.layout_id == item_id
+                )
+                result = await session.execute(stmt)
+                scene = result.scalars().first()
+                if scene:
+                    msg = f"Layout in use: {scene.name}"
+                    return web.json_response(
+                        {"error": "Conflict", "message": msg},
+                        status=400,
+                    )
+        except Exception as e:
+            return web.json_response(
+                {"error": "Database error", "details": str(e)}, status=500
+            )
 
     os.remove(file_real)
     return web.json_response({"status": "deleted"})
