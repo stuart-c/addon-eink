@@ -231,3 +231,11 @@ eink_layout_manager/e2e/playwright-report/
 eink_layout_manager/e2e/test-results/
 eink_layout_manager/app/static_dist/
 eink_layout_manager/app/static/.npm-cache
+
+# E2E Test Artifacts
+.npm-cache/
+test_data*/
+server.pid
+*.png
+eink_layout_manager/e2e/playwright-report/
+eink_layout_manager/e2e/test-results/
