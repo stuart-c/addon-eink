@@ -93,6 +93,7 @@ async def handle_scene_create(request):
                 id=scene_id,
                 name=data["name"],
                 layout_id=data["layout"],
+                items=data.get("items"),
             )
             session.add(new_scene)
             await session.commit()
@@ -151,6 +152,8 @@ async def handle_scene_update(request):
 
             scene.name = data["name"]
             scene.layout_id = data["layout"]
+            if "items" in data:
+                scene.items = data["items"]
             await session.commit()
             await session.refresh(scene)
             return web.json_response(scene_model_to_dict(scene))

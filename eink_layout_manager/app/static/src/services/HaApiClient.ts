@@ -65,6 +65,17 @@ export interface Scene {
   id: string;
   name: string;
   layout: string;
+  status?: 'draft' | 'ready';
+  items?: {
+    id: string;
+    type: 'image' | 'tile';
+    displays: string[];
+    images: {
+      image_id: string;
+      scaling_factor: number;
+      offset: { x: number; y: number };
+    }[];
+  }[];
 }
 
 export interface KeywordInfo {
