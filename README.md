@@ -24,3 +24,11 @@ The recommended way to develop for this repository is using **VS Code Dev Contai
 For detailed development processes, architectural overview, and mandatory agent workflows, see:
 - [Agent Workflow Guide](agents.md)
 - [Agent Documentation Index](agent_docs/00_INDEX.md)
+### Testing
+
+Local testing is mandatory for all contributions. We provide several scripts in the `scripts/` directory to facilitate this:
+
+- **`./scripts/run_tests.sh`**: Runs Python lints, unit tests, and frontend tests.
+- **`./scripts/run_e2e.sh`**: Runs end-to-end integration tests using Playwright.
+
+These scripts will automatically provision their own environments if necessary. For more details on available scripts, see [scripts/README.md](scripts/README.md).
