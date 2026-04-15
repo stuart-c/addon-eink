@@ -53,6 +53,7 @@ export interface Layout {
 export interface Scene {
   id: string;
   name: string;
+  layout: string;
 }
 
 export interface ImageDimensions {
@@ -113,6 +114,7 @@ export const DEFAULT_LAYOUT: Layout = {
 export const DEFAULT_SCENE: Scene = {
   id: 'test-scene',
   name: 'Test Scene',
+  layout: 'test-layout',
 };
 
 

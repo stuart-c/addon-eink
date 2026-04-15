@@ -64,6 +64,7 @@ export interface Image {
 export interface Scene {
   id: string;
   name: string;
+  layout: string;
 }
 
 export interface KeywordInfo {
