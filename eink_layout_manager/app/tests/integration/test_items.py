@@ -230,3 +230,45 @@ async def test_delete_display_type_protection(aiohttp_client, app):
     resp = await client.delete("/api/display_type/protected_dt")
     assert resp.status == 200
     assert (await resp.json())["status"] == "deleted"
+
+
+@pytest.mark.asyncio
+async def test_delete_layout_protection(aiohttp_client, app):
+    """Test that a layout cannot be deleted if used in a scene."""
+    client = await aiohttp_client(app)
+
+    # 1. Create a layout
+    layout_data = {
+        "id": "protected_layout",
+        "name": "Protected Layout",
+        "canvas_width_mm": 100,
+        "canvas_height_mm": 100,
+        "items": [],
+    }
+    resp = await client.post("/api/layout", json=layout_data)
+    assert resp.status == 201
+
+    # 2. Create a scene referencing it
+    scene_data = {
+        "id": "using_scene",
+        "name": "Using Scene",
+        "layout": "protected_layout",
+    }
+    resp = await client.post("/api/scene", json=scene_data)
+    assert resp.status == 201
+
+    # 3. Attempt to delete layout (should fail)
+    resp = await client.delete("/api/layout/protected_layout")
+    assert resp.status == 400
+    result = await resp.json()
+    assert "Conflict" in result["error"]
+    assert "Using Scene" in result["message"]
+
+    # 4. Delete the scene
+    resp = await client.delete("/api/scene/using_scene")
+    assert resp.status == 200
+
+    # 5. Attempt to delete layout again (should succeed)
+    resp = await client.delete("/api/layout/protected_layout")
+    assert resp.status == 200
+    assert (await resp.json())["status"] == "deleted"
