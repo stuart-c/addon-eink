@@ -5,7 +5,9 @@ from sqlalchemy.ext.asyncio import (
     AsyncSession,
 )
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy import text
+from sqlalchemy import text, select
+import logging
+import json
 
 
 class Base(DeclarativeBase):
@@ -33,10 +35,56 @@ _engine = None
 _session_factory = None
 
 
-async def drop_redundant_tables(conn):
-    """Drop tables that are no longer used in the database."""
-    await conn.execute(text("DROP TABLE IF EXISTS display_types"))
-    await conn.execute(text("DROP TABLE IF EXISTS layouts"))
+async def migrate_json_to_db():
+    """Migrate display_type and layout JSON files to the database."""
+    from .utils.storage import get_storage_path
+
+    logger = logging.getLogger(__name__)
+
+    async def _migrate_resource(resource_type, model_class):
+        try:
+            storage_path = get_storage_path(resource_type)
+        except Exception:
+            return
+
+        if not os.path.exists(storage_path):
+            return
+
+        for filename in os.listdir(storage_path):
+            if filename.endswith(".json"):
+                file_path = os.path.join(storage_path, filename)
+                try:
+                    with open(file_path, "r") as f:
+                        data = json.load(f)
+
+                    item_id = data.get("id")
+                    if not item_id:
+                        continue
+
+                    async with get_session() as session:
+                        stmt = select(model_class).where(
+                            model_class.id == item_id
+                        )
+                        result = await session.execute(stmt)
+                        if result.scalars().first():
+                            logger.debug(
+                                f"{resource_type} {item_id} already in DB"
+                            )
+                        else:
+                            item = model_class(**data)
+                            session.add(item)
+                            await session.commit()
+                            logger.info(
+                                f"Migrated {resource_type} {item_id} to DB"
+                            )
+
+                    # Rename file to prevent re-migration
+                    os.rename(file_path, file_path + ".migrated")
+                except Exception as e:
+                    logger.error(f"Failed to migrate {file_path}: {str(e)}")
+
+    await _migrate_resource("display_type", models.DisplayType)
+    await _migrate_resource("layout", models.Layout)
 
 
 async def ensure_schema_up_to_date(conn):
@@ -94,7 +142,9 @@ async def init_db():
     async with _engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         await ensure_schema_up_to_date(conn)
-        await drop_redundant_tables(conn)
+
+    # Perform migration
+    await migrate_json_to_db()
 
     return _engine
 

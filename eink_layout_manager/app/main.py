@@ -30,8 +30,6 @@ def init_app():
 
     # Data directory setup
     try:
-        os.makedirs(get_storage_path("display_type"), exist_ok=True)
-        os.makedirs(get_storage_path("layout"), exist_ok=True)
         os.makedirs(get_storage_path("image"), exist_ok=True)
         os.makedirs(get_storage_path("thumbnail"), exist_ok=True)
     except ValueError as e:
