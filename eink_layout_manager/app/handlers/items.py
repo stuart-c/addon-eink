@@ -1,7 +1,7 @@
 import json
 from aiohttp import web
 from jsonschema import validate, ValidationError
-from sqlalchemy import select, delete
+from sqlalchemy import select
 
 from .. import database, models
 from ..utils.validation import (
@@ -35,26 +35,42 @@ def model_to_dict(item):
         value = getattr(item, column.name)
         # Handle cases where value might be a list/dict (JSON column)
         data[column.name] = value
-    
+
     # Remove internal fields if necessary, but here they match the schema
     # except maybe created_at/updated_at which are usually fine to include
     # or can be filtered out if strictly following the schema.
     # The schemas for display_type and layout don't include created_at/updated_at.
-    
+
     allowed_fields = {
         "display_type": [
-            "id", "name", "width_mm", "height_mm", "panel_width_mm",
-            "panel_height_mm", "width_px", "height_px", "colour_type",
-            "frame", "mat"
+            "id",
+            "name",
+            "width_mm",
+            "height_mm",
+            "panel_width_mm",
+            "panel_height_mm",
+            "width_px",
+            "height_px",
+            "colour_type",
+            "frame",
+            "mat",
         ],
         "layout": [
-            "id", "name", "canvas_width_mm", "canvas_height_mm", "items"
-        ]
+            "id",
+            "name",
+            "canvas_width_mm",
+            "canvas_height_mm",
+            "items",
+        ],
     }
-    
-    resource_type = "display_type" if isinstance(item, models.DisplayType) else "layout"
-    
-    return {k: v for k, v in data.items() if k in allowed_fields[resource_type]}
+
+    resource_type = (
+        "display_type" if isinstance(item, models.DisplayType) else "layout"
+    )
+
+    return {
+        k: v for k, v in data.items() if k in allowed_fields[resource_type]
+    }
 
 
 @response_schema("item_list_response")
@@ -190,7 +206,7 @@ async def update_item(request):
         # Update fields
         for key, value in data.items():
             setattr(item, key, value)
-        
+
         response_data = model_to_dict(item)
         await session.commit()
         return web.json_response(response_data, status=200)

@@ -20,7 +20,7 @@ async def test_delete_item_display_type_in_use():
         name="Test Layout",
         items=[{"display_type_id": "display1"}],
         canvas_width_mm=100,
-        canvas_height_mm=100
+        canvas_height_mm=100,
     )
 
     # Setup the mock session as an async context manager
@@ -28,7 +28,7 @@ async def test_delete_item_display_type_in_use():
     mock_result = MagicMock()
     mock_result.scalars.return_value.all.return_value = [mock_layout]
     mock_session.execute.return_value = mock_result
-    
+
     # database.get_session() returns the context manager
     mock_get_session = MagicMock()
     mock_get_session.return_value.__aenter__.return_value = mock_session
@@ -62,21 +62,21 @@ async def test_delete_item_display_type_not_in_use():
         name="Other Layout",
         items=[{"display_type_id": "other_display"}],
         canvas_width_mm=100,
-        canvas_height_mm=100
+        canvas_height_mm=100,
     )
-    
+
     mock_display_type = models.DisplayType(id="display1", name="Display 1")
 
     mock_session = AsyncMock()
-    
+
     mock_result_layouts = MagicMock()
     mock_result_layouts.scalars.return_value.all.return_value = [mock_layout]
-    
+
     mock_result_dt = MagicMock()
     mock_result_dt.scalars.return_value.first.return_value = mock_display_type
-    
+
     mock_session.execute.side_effect = [mock_result_layouts, mock_result_dt]
-    
+
     mock_get_session = MagicMock()
     mock_get_session.return_value.__aenter__.return_value = mock_session
 
@@ -101,15 +101,15 @@ async def test_delete_item_not_found():
     mock_request.match_info = {"resource_type": "layout", "id": "missing"}
 
     mock_session = AsyncMock()
-    
+
     mock_result_scene = MagicMock()
     mock_result_scene.scalars.return_value.first.return_value = None
-    
+
     mock_result_item = MagicMock()
     mock_result_item.scalars.return_value.first.return_value = None
-    
+
     mock_session.execute.side_effect = [mock_result_scene, mock_result_item]
-    
+
     mock_get_session = MagicMock()
     mock_get_session.return_value.__aenter__.return_value = mock_session
 
