@@ -219,9 +219,15 @@ yarn-error.log*
 .pnp.js
 .npm_home/
 .npm_cache/
+.npm-cache/
 .home/
 
 # Development data
 dev_data/
+test_data*/
+server.pid
+*.png
+eink_layout_manager/e2e/playwright-report/
+eink_layout_manager/e2e/test-results/
 eink_layout_manager/app/static_dist/
 eink_layout_manager/app/static/.npm-cache
