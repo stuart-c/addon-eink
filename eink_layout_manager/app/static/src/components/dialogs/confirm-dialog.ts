@@ -20,6 +20,9 @@ export class ConfirmDialog extends LitElement {
   static styles = [
     commonStyles,
     css`
+      :host {
+        display: block;
+      }
       p { color: var(--text-muted); line-height: 1.5; margin: 0; }
     `
   ];

@@ -10,6 +10,9 @@ export class SceneDialog extends LitElement {
   static styles = [
     commonStyles,
     css`
+      :host {
+        display: block;
+      }
       .form-group {
         margin-bottom: 1.5rem;
       }

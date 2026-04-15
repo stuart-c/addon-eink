@@ -14,6 +14,9 @@ fi
 # Activate the virtual environment
 source "$VENV_PATH/bin/activate"
 
+echo "--- Installing Python Dependencies ---"
+pip install -q -r "$TOP_DIR/eink_layout_manager/app/requirements.txt"
+
 echo "--- Provisioning Playwright ---"
 # Ensure playwright and its browsers are ready
 pip install -q playwright pytest-playwright requests
