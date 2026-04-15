@@ -5,9 +5,8 @@ TOP_DIR=$( git rev-parse --show-toplevel )
 VENV_PATH="$TOP_DIR/eink_layout_manager/app/.venv"
 
 if [ ! -d "$VENV_PATH" ]; then
-    echo "Error: Virtual environment not found at $VENV_PATH"
-    echo "Please run ./scripts/make_venv.sh first."
-    exit 1
+    echo "--- Virtual environment not found. Building... ---"
+    "$TOP_DIR/scripts/make_venv.sh"
 fi
 
 source "$VENV_PATH/bin/activate"
