@@ -255,6 +255,11 @@ export class HaStateController implements ReactiveController {
     this.host.requestUpdate();
   }
 
+  switchScene(scene: Scene) {
+    this.activeScene = scene;
+    this.host.requestUpdate();
+  }
+
   discardChanges() {
     if (!this.activeLayout || !this._originalLayout) return;
     this.activeLayout = JSON.parse(this._originalLayout);

@@ -295,7 +295,7 @@ export class AppRoot extends LitElement {
         .activeScene="${this.state.activeScene}"
         .viewMode="${this._viewMode}"
         @select-scene="${(e: CustomEvent<{ scene: Scene }>) => {
-          this.state.activeScene = e.detail.scene;
+          this.state.switchScene(e.detail.scene);
           this._updateHeaderState();
         }}"
         @delete-scene="${this._onDeleteScene}"
