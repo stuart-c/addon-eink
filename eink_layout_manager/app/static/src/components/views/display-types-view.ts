@@ -371,18 +371,15 @@ export class DisplayTypesView extends LitElement {
     const found = this.selectedId ? this.displayTypes.find(dt => dt.id === this.selectedId) : null;
     
     if (found) {
-      // Switch to existing only if different or currently in 'new' mode
       if (this.displayType?.id !== found.id || this.isNew) {
         this.displayType = JSON.parse(JSON.stringify(found));
         this.isNew = false;
       }
     } else {
-      // No valid selection, enter 'new' mode
       if (!this.isNew || !this.displayType) {
         this.displayType = this._getDefaultDisplayType();
         this.isNew = true;
       }
-    }
     }
   }
 
