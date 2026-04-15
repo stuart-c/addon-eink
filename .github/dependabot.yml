@@ -3,7 +3,7 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "daily"
     groups:
       github-actions:
         patterns:
@@ -12,7 +12,7 @@ updates:
   - package-ecosystem: "docker"
     directory: "/eink_layout_manager"
     schedule:
-      interval: "weekly"
+      interval: "daily"
     groups:
       docker-dependencies:
         patterns:
@@ -21,7 +21,7 @@ updates:
   - package-ecosystem: "pip"
     directory: "/eink_layout_manager/app"
     schedule:
-      interval: "weekly"
+      interval: "daily"
     groups:
       python-dependencies:
         patterns:
