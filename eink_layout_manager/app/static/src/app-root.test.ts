@@ -83,4 +83,33 @@ describe('AppRoot', () => {
       title: 'Discard Changes?'
     }));
   });
+
+  it('should update active scene when select-scene event is received', async () => {
+    // Switch to scenes section first
+    const header = element.shadowRoot?.querySelector('app-header');
+    header?.dispatchEvent(new CustomEvent('set-section', {
+      detail: 'scenes',
+      bubbles: true,
+      composed: true
+    }));
+    await element.updateComplete;
+
+    const scenesView = element.shadowRoot?.querySelector('scenes-view');
+    expect(scenesView).toBeTruthy();
+
+    const testScene = { id: 'test_scene', name: 'Test Scene' };
+    
+    // Dispatch select-scene event from scenes-view
+    scenesView?.dispatchEvent(new CustomEvent('select-scene', {
+      detail: { scene: testScene },
+      bubbles: true,
+      composed: true
+    }));
+
+    // Wait for app-root to update and pass property down
+    await element.updateComplete;
+    
+    // Check if scenes-view received the new activeScene
+    expect((scenesView as any).activeScene).toEqual(testScene);
+  });
 });
