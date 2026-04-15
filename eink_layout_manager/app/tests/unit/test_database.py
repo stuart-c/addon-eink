@@ -36,15 +36,15 @@ async def test_get_session_connectivity(db_setup):
         result = await session.execute(text("SELECT 1"))
         assert result.scalar() == 1
 
-        # Verify redundant tables are gone
-        for table in ["display_types", "layouts"]:
+        # Verify storage tables exist
+        for table in ["display_types", "layouts", "images", "scenes"]:
             res = await session.execute(
                 text(
                     "SELECT name FROM sqlite_master "
                     f"WHERE type='table' AND name='{table}'"
                 )
             )
-            assert res.scalar() is None
+            assert res.scalar() is not None
 
 
 @pytest.mark.asyncio
