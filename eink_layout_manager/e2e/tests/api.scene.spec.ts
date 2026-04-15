@@ -111,12 +111,13 @@ test('PUT /api/scene/:id — updates and returns 200', async ({ request }) => {
   const id = uid('update');
   await createScene(request, { id });
 
-  const updated: Scene = { id, name: 'Updated Scene Name' };
+  const updated: Scene = { id, name: 'Updated Scene Name', layout: 'test-layout' };
 
   const response = await request.put(`/api/scene/${id}`, { data: updated });
   expect(response.status()).toBe(200);
   const body: Scene = await response.json();
   expect(body.name).toBe('Updated Scene Name');
+  expect(body.layout).toBe('test-layout');
 });
 
 test('PUT /api/scene/:id — returns 400 when body ID mismatches URL ID', async ({ request }) => {
@@ -124,16 +125,25 @@ test('PUT /api/scene/:id — returns 400 when body ID mismatches URL ID', async 
   await createScene(request, { id });
 
   const response = await request.put(`/api/scene/${id}`, {
-    data: { id: 'wrong-id', name: 'Mismatch' },
+    data: { id: 'wrong-id', name: 'Mismatch', layout: 'test-layout' },
   });
   expect(response.status()).toBe(400);
 });
 
 test('PUT /api/scene/:id — returns 404 for non-existent ID', async ({ request }) => {
   const response = await request.put('/api/scene/ghost-id', {
-    data: { id: 'ghost-id', name: 'Ghost' },
+    data: { id: 'ghost-id', name: 'Ghost', layout: 'test-layout' },
   });
   expect(response.status()).toBe(404);
+});
+
+test('POST /api/scene — returns 400 for missing required layout field', async ({ request }) => {
+  const response = await request.post('/api/scene', {
+    data: { id: uid('no-layout'), name: 'No Layout Scene' },
+  });
+  expect(response.status()).toBe(400);
+  const body = await response.json();
+  expect(body.error).toBe('Validation failed');
 });
 
 // ---------------------------------------------------------------------------

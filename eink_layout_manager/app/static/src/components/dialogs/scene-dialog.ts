@@ -48,22 +48,26 @@ export class SceneDialog extends LitElement {
   ];
 
   @state() private _name = '';
+  @state() private _layout = '';
+  @property({ type: Array }) layouts: {id: string, name: string}[] = [];
   @property({ type: Object }) scene: Scene | null = null;
 
   async show(scene: Scene | null = null) {
     this.scene = scene;
     this._name = scene ? scene.name : '';
+    this._layout = scene ? scene.layout : (this.layouts.length > 0 ? this.layouts[0].id : '');
     await this.updateComplete;
     (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).show();
   }
 
   private _handleSubmit() {
-    if (!this._name.trim()) return;
+    if (!this._name.trim() || !this._layout) return;
     
     const eventName = this.scene ? 'save' : 'create';
     this.dispatchEvent(new CustomEvent(eventName, {
       detail: { 
         name: this._name,
+        layout: this._layout,
         id: this.scene?.id
       },
       bubbles: true,
@@ -92,9 +96,22 @@ export class SceneDialog extends LitElement {
           >
         </div>
 
+        <div class="form-group">
+          <label>Layout</label>
+          <select 
+            .value="${this._layout}"
+            @change="${(e: Event) => this._layout = (e.target as HTMLSelectElement).value}"
+          >
+            ${this.layouts.length === 0 ? html`<option value="" disabled>No layouts available</option>` : ''}
+            ${this.layouts.map(l => html`
+              <option value="${l.id}" ?selected="${this._layout === l.id}">${l.name}</option>
+            `)}
+          </select>
+        </div>
+
         <div slot="footer" class="footer-actions">
           <button class="secondary" @click="${this._handleCancel}">Cancel</button>
-          <button class="primary" ?disabled="${!this._name.trim()}" @click="${this._handleSubmit}">
+          <button class="primary" ?disabled="${!this._name.trim() || !this._layout}" @click="${this._handleSubmit}">
             <span class="material-icons">${this.scene ? 'save' : 'add'}</span>
             ${this.scene ? 'Save Changes' : 'Create Scene'}
           </button>

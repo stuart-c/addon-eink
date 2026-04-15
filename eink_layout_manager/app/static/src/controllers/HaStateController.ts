@@ -186,12 +186,12 @@ export class HaStateController implements ReactiveController {
     }
   }
 
-  async createScene(name: string): Promise<Scene | null> {
+  async createScene(name: string, layout: string): Promise<Scene | null> {
     this.isSaving = true;
     this.host.requestUpdate();
     try {
       const id = name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-      const newScene: Scene = { id, name };
+      const newScene: Scene = { id, name, layout };
       const result = await api.createItem<Scene>('scene', newScene);
       await this.refresh();
       this.activeScene = this.scenes.find(s => s.id === result.id) || result;
