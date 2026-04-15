@@ -56,6 +56,21 @@ To simplify frontend state management, **POST (creation) responses MUST exactly 
 ### Infrastructure
 - **Debian-based Dev Container:** We chose `bookworm` (Debian) for the dev environment to provide better compatibility with debugging tools and VS Code extensions compared to Alpine, while maintaining a mirrored Python version (3.12) with the production environment.
 
+### Relational Metadata Migration
+- **Database Transition:** All metadata (Images, Display Types, Layouts, and Scenes) has been migrated from JSON storage to a centralised **SQLite database**. 
+- **Migration Logic:** The backend includes automated migration logic to ingest existing JSON files into the database on startup, ensuring no data loss during the transition.
+
+### Display Type Normalisation
+- **Landscape Storage Enforcement:** To ensure consistency in dimension handling and coordinate math, all `DisplayType` records are now normalised to **landscape orientation** during storage. The backend automatically swaps dimensions if a portrait-oriented display is submitted.
+
+### Scene Schema Refactoring
+- **Mandatory Layouts:** Each Scene must now specify a valid `layout_id` upon creation.
+- **Items List Transition:** The `items` field in the Scene schema has transitioned from a key-value map to an **ordered list of objects**, each containing a unique `id`. This supports future features like reordering and duplicate assets within a single scene.
+
+### Data Integrity & Schema Safety
+- **Referential Integrity:** Protections have been implemented to prevent the deletion of `Layout` records that are currently referenced by one or more `Scene` objects.
+- **Read-Only Enforcements:** API schemas now utilise the `readOnly: true` constraint for server-managed fields (e.g., `id`, `created_at`, `file_type`), preventing accidental client-side modification of immutable metadata.
+
 ## Workflow Infrastructure
 
 ### GitHub Actions Pinning
