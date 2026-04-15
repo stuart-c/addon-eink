@@ -42,5 +42,5 @@ def scene_model_to_dict(scene):
         "name": scene.name,
         "layout": scene.layout_id,
         "status": scene.status,
-        "items": scene.items if scene.items is not None else {},
+        "items": scene.items if scene.items is not None else [],
     }

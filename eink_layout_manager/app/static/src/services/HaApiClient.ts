@@ -66,7 +66,8 @@ export interface Scene {
   name: string;
   layout: string;
   status?: 'draft' | 'ready';
-  items?: Record<string, {
+  items?: {
+    id: string;
     type: 'image' | 'tile';
     displays: string[];
     images: {
@@ -74,7 +75,7 @@ export interface Scene {
       scaling_factor: number;
       offset: { x: number; y: number };
     }[];
-  }>;
+  }[];
 }
 
 export interface KeywordInfo {

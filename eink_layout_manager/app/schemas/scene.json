@@ -25,11 +25,15 @@
       "default": "draft"
     },
     "items": {
-      "type": "object",
-      "description": "Map of component IDs to their configuration",
-      "additionalProperties": {
+      "type": "array",
+      "description": "List of components in the scene",
+      "items": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for this component within the scene"
+          },
           "type": {
             "type": "string",
             "enum": ["image", "tile"]
@@ -65,7 +69,7 @@
             }
           }
         },
-        "required": ["type", "displays", "images"]
+        "required": ["id", "type", "displays", "images"]
       }
     }
   },

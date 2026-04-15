@@ -24,7 +24,7 @@ async def test_create_and_get_scene(aiohttp_client, app):
     expected_data = {
         **scene_data,
         "status": "draft",
-        "items": {},
+        "items": [],
     }
 
     # Create
@@ -64,8 +64,9 @@ async def test_create_scene_with_items(aiohttp_client, app):
         "id": "complex-scene",
         "name": "Complex Scene",
         "layout": "living-room",
-        "items": {
-            "comp-1": {
+        "items": [
+            {
+                "id": "comp-1",
                 "type": "image",
                 "displays": ["display-1", "display-2"],
                 "images": [
@@ -76,7 +77,7 @@ async def test_create_scene_with_items(aiohttp_client, app):
                     }
                 ],
             }
-        },
+        ],
     }
 
     resp = await client.post("/api/scene", json=scene_data)
@@ -84,8 +85,9 @@ async def test_create_scene_with_items(aiohttp_client, app):
 
     result = await resp.json()
     assert result["id"] == "complex-scene"
-    assert result["items"]["comp-1"]["type"] == "image"
-    assert result["items"]["comp-1"]["images"][0]["scaling_factor"] == 1.5
+    assert result["items"][0]["id"] == "comp-1"
+    assert result["items"][0]["type"] == "image"
+    assert result["items"][0]["images"][0]["scaling_factor"] == 1.5
     assert result["status"] == "draft"
 
 
