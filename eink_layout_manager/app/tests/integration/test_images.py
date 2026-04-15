@@ -632,3 +632,41 @@ async def test_image_upload_and_update_jpeg(aiohttp_client, app):
     updated_result = await resp.json()
     assert updated_result["file_type"] == "JPEG"
     assert updated_result["name"] == "Updated JPEG"
+
+
+@pytest.mark.asyncio
+async def test_image_update_readonly_rejection(aiohttp_client, app):
+    """Test that updating read-only fields in an image is rejected."""
+    client = await aiohttp_client(app)
+
+    # 1. Upload an image
+    img = PILImage.new("RGB", (10, 10), color="blue")
+    img_byte_arr = io.BytesIO()
+    img.save(img_byte_arr, format="PNG")
+    data = aiohttp.FormData()
+    data.add_field(
+        "file",
+        img_byte_arr.getvalue(),
+        filename="readonly_test.png",
+        content_type="image/png",
+    )
+    resp = await client.post("/api/image", data=data)
+    assert resp.status == 201
+    created = await resp.json()
+    image_id = created["id"]
+
+    # 2. Attempt to update read-only field 'file_type'
+    created["file_type"] = "JPG"
+    resp = await client.put(f"/api/image/{image_id}", json=created)
+    assert resp.status == 400
+    result = await resp.json()
+    assert "Cannot update read-only fields: file_type" in result["message"]
+
+    # 3. Attempt to update read-only field 'dimensions'
+    # We should use a fresh 'created' or revert the change to file_type
+    created["file_type"] = "PNG"
+    created["dimensions"] = {"width": 999, "height": 999}
+    resp = await client.put(f"/api/image/{image_id}", json=created)
+    assert resp.status == 400
+    result = await resp.json()
+    assert "Cannot update read-only fields: dimensions" in result["message"]
