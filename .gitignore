@@ -239,3 +239,5 @@ server.pid
 *.png
 eink_layout_manager/e2e/playwright-report/
 eink_layout_manager/e2e/test-results/
+
+.data/

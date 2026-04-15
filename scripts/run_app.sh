@@ -21,4 +21,6 @@ pip install -q -r requirements.txt
 echo "--- Running Application ---"
 # Set PYTHONPATH so 'import app' works from the root of the app directory
 export PYTHONPATH="$TOP_DIR/eink_layout_manager"
+export DATA_DIR="$TOP_DIR/.data"
+mkdir -p "$DATA_DIR"
 python3 -m app.main
