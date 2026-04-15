@@ -59,12 +59,40 @@ Like `run_tests.sh`, this script will automatically provision the virtual enviro
 
 ## `make_venv.sh`
 
-A helper script used by the testing tools to create a Python virtual environment and initialize `nodeenv` with the correct Node.js version.
+A helper script used by the testing tools to create a Python virtual environment and initialise `nodeenv` with the correct Node.js version.
 
 ### Usage
 
 ```bash
 ./scripts/make_venv.sh
 ```
+
+## `build_frontend.sh`
+
+This script builds the frontend assets.
+
+### Usage
+
+```bash
+./scripts/build_frontend.sh
+```
+
+### Auto-provisioning
+
+If the Python virtual environment is not found, it will automatically run `./scripts/make_venv.sh`.
+
+## `run_app.sh`
+
+This script runs the backend application locally within the virtual environment.
+
+### Usage
+
+```bash
+./scripts/run_app.sh
+```
+
+### Auto-provisioning
+
+If the Python virtual environment is not found, it will automatically run `./scripts/make_venv.sh`.
 
 
