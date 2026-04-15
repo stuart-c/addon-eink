@@ -20,12 +20,12 @@ async def test_create_and_get_item(aiohttp_client, app):
     display_data = {
         "id": "epd_2in13",
         "name": "2.13 inch EPD",
-        "width_mm": 50,
-        "height_mm": 100,
-        "panel_width_mm": 25,
-        "panel_height_mm": 50,
-        "width_px": 122,
-        "height_px": 250,
+        "width_mm": 100,
+        "height_mm": 50,
+        "panel_width_mm": 50,
+        "panel_height_mm": 25,
+        "width_px": 250,
+        "height_px": 122,
         "colour_type": "BWR",
         "frame": {"border_width_mm": 5, "colour": "#000000"},
         "mat": {"colour": "#FFFFFF"},
@@ -45,6 +45,49 @@ async def test_create_and_get_item(aiohttp_client, app):
     resp = await client.get("/api/display_type")
     assert resp.status == 200
     assert await resp.json() == [display_data]
+
+
+@pytest.mark.asyncio
+async def test_create_display_type_portrait_swap(aiohttp_client, app):
+    """Test that portrait display type is swapped to landscape on creation."""
+    client = await aiohttp_client(app)
+
+    # Portrait data (height > width)
+    portrait_data = {
+        "id": "portrait_epd",
+        "name": "Portrait EPD",
+        "width_mm": 50,
+        "height_mm": 100,
+        "panel_width_mm": 25,
+        "panel_height_mm": 50,
+        "width_px": 122,
+        "height_px": 250,
+        "colour_type": "BWR",
+        "frame": {"border_width_mm": 5, "colour": "#000000"},
+        "mat": {"colour": "#FFFFFF"},
+    }
+
+    # Expected swapped data
+    expected_data = portrait_data.copy()
+    expected_data.update(
+        {
+            "width_mm": 100,
+            "height_mm": 50,
+            "panel_width_mm": 50,
+            "panel_height_mm": 25,
+            "width_px": 250,
+            "height_px": 122,
+        }
+    )
+
+    resp = await client.post("/api/display_type", json=portrait_data)
+    assert resp.status == 201
+    assert await resp.json() == expected_data
+
+    # Verify storage
+    resp = await client.get("/api/display_type/portrait_epd")
+    assert resp.status == 200
+    assert await resp.json() == expected_data
 
 
 @pytest.mark.asyncio
@@ -180,12 +223,12 @@ async def test_delete_display_type_protection(aiohttp_client, app):
     dt_data = {
         "id": "protected_dt",
         "name": "Protected",
-        "width_mm": 50,
-        "height_mm": 100,
-        "panel_width_mm": 25,
-        "panel_height_mm": 50,
-        "width_px": 122,
-        "height_px": 250,
+        "width_mm": 100,
+        "height_mm": 50,
+        "panel_width_mm": 50,
+        "panel_height_mm": 25,
+        "width_px": 250,
+        "height_px": 122,
         "colour_type": "MONO",
         "frame": {"border_width_mm": 5, "colour": "#000000"},
         "mat": {"colour": "#FFFFFF"},
