@@ -92,6 +92,7 @@ async def handle_scene_create(request):
             new_scene = models.Scene(
                 id=scene_id,
                 name=data["name"],
+                layout_id=data["layout"],
             )
             session.add(new_scene)
             await session.commit()
@@ -149,6 +150,7 @@ async def handle_scene_update(request):
                 return web.json_response({"error": "Not Found"}, status=404)
 
             scene.name = data["name"]
+            scene.layout_id = data["layout"]
             await session.commit()
             await session.refresh(scene)
             return web.json_response(scene_model_to_dict(scene))

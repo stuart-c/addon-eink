@@ -67,6 +67,18 @@ async def ensure_schema_up_to_date(conn):
             )
         )
 
+    # Check 'scenes' table for recently added columns
+    result = await conn.execute(text("PRAGMA table_info(scenes)"))
+    columns = [row[1] for row in result.fetchall()]
+
+    if "layout_id" not in columns:
+        # Since it's mandatory, we add it with a default or as nullable
+        # for the migration. SQLite doesn't support NOT NULL without a
+        # default for existing rows.
+        await conn.execute(
+            text("ALTER TABLE scenes ADD COLUMN layout_id VARCHAR DEFAULT ''")
+        )
+
 
 async def init_db():
     """Initialise the database engine and create tables."""

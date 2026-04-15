@@ -11,10 +11,15 @@
     "name": {
       "type": "string",
       "description": "Human readable name for the scene"
+    },
+    "layout": {
+      "type": "string",
+      "description": "ID of the layout used by this scene"
     }
   },
   "required": [
     "id",
-    "name"
+    "name",
+    "layout"
   ]
 }

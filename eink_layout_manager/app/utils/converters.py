@@ -40,4 +40,5 @@ def scene_model_to_dict(scene):
     return {
         "id": scene.id,
         "name": scene.name,
+        "layout": scene.layout_id,
     }
