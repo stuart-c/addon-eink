@@ -48,8 +48,7 @@ export class LayoutsView extends LitElement {
 
   @query('layout-settings-dialog') private _layoutSettingsDialog!: LayoutSettingsDialog;
 
-  protected updated(changedProperties: Map<string | number | symbol, unknown>) {
-    super.updated(changedProperties);
+  protected willUpdate(changedProperties: Map<string | number | symbol, unknown>) {
     if (changedProperties.has('activeLayout')) {
       const oldLayout = changedProperties.get('activeLayout') as Layout | null;
       // Only reset the baseline if we switched to a DIFFERENT layout (different ID)
@@ -59,6 +58,10 @@ export class LayoutsView extends LitElement {
       }
       this._updateState();
     }
+  }
+
+  protected updated(changedProperties: Map<string | number | symbol, unknown>) {
+    super.updated(changedProperties);
   }
 
   /**

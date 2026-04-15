@@ -353,15 +353,18 @@ export class DisplayTypesView extends LitElement {
     this._updateDirtyState();
   }
 
-  protected updated(changedProperties: Map<string | number | symbol, unknown>) {
-    super.updated(changedProperties);
-    if (changedProperties.has('displayType') || changedProperties.has('displayTypes')) {
+  protected willUpdate(changedProperties: Map<string | number | symbol, unknown>) {
+    if (changedProperties.has('displayType') || changedProperties.has('displayTypes') || changedProperties.has('isNew')) {
       this._updateDirtyState();
       this._updateDeleteState();
     }
-    if (changedProperties.has('selectedId')) {
+    if (changedProperties.has('selectedId') || changedProperties.has('displayTypes')) {
       this._syncSelection();
     }
+  }
+
+  protected updated(changedProperties: Map<string | number | symbol, unknown>) {
+    super.updated(changedProperties);
   }
 
   private _syncSelection() {
@@ -380,7 +383,7 @@ export class DisplayTypesView extends LitElement {
         this.isNew = true;
       }
     }
-    this.requestUpdate();
+    }
   }
 
   private _updateDeleteState() {

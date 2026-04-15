@@ -40,7 +40,6 @@ export class HaStateController implements ReactiveController {
   async hostConnected() {
     window.addEventListener('hashchange', () => this._applyHash());
     await this.refresh();
-    this._applyHash();
   }
 
   async refresh() {
@@ -65,6 +64,7 @@ export class HaStateController implements ReactiveController {
         await this.createDefaultLayout();
       }
       this.host.requestUpdate();
+      this._applyHash();
     } catch (e: any) {
       console.error('Fetch failed', e);
       this.showMessage(`Fetch failed: ${e.message}`, 'error');
