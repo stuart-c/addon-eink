@@ -3,10 +3,10 @@
   "title": "StatusResponse",
   "type": "object",
   "properties": {
-    "status": { "type": "string" },
-    "id": { "type": "string" },
-    "error": { "type": "string" },
-    "message": { "type": "string" }
+    "status": { "type": "string", "readOnly": true },
+    "id": { "type": "string", "readOnly": true },
+    "error": { "type": "string", "readOnly": true },
+    "message": { "type": "string", "readOnly": true }
   },
   "anyOf": [
     { "required": ["status"] },

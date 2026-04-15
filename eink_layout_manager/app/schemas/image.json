@@ -6,7 +6,8 @@
   "properties": {
     "id": {
       "type": "string",
-      "description": "Unique identifier for this image"
+      "description": "Unique identifier for this image",
+      "readOnly": true
     },
     "name": {
       "type": "string",
@@ -23,18 +24,22 @@
     "file_type": {
       "type": "string",
       "description": "Image file format",
-      "enum": ["JPG", "JPEG", "PNG", "GIF", "WEBP", "BMP", "TIFF"]
+      "enum": ["JPG", "JPEG", "PNG", "GIF", "WEBP", "BMP", "TIFF"],
+      "readOnly": true
     },
     "dimensions": {
       "type": "object",
+      "readOnly": true,
       "properties": {
         "width": {
           "type": "integer",
-          "minimum": 1
+          "minimum": 1,
+          "readOnly": true
         },
         "height": {
           "type": "integer",
-          "minimum": 1
+          "minimum": 1,
+          "readOnly": true
         }
       },
       "required": ["width", "height"]
@@ -42,7 +47,8 @@
     "colour_depth": {
       "type": ["integer", "null"],
       "minimum": 1,
-      "description": "Bits per pixel"
+      "description": "Bits per pixel",
+      "readOnly": true
     },
     "keywords": {
       "type": ["array", "null"],
