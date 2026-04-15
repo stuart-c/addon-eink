@@ -10,6 +10,9 @@ export class BaseDialog extends LitElement {
   static styles = [
     commonStyles,
     css`
+      :host {
+        display: block;
+      }
       dialog {
         border: none;
         border-radius: 12px;
