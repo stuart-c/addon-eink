@@ -33,3 +33,11 @@ def image_model_to_summary_dict(image):
             "height": image.height,
         },
     }
+
+
+def scene_model_to_dict(scene):
+    """Convert a Scene model instance to a dictionary according to schema."""
+    return {
+        "id": scene.id,
+        "name": scene.name,
+    }

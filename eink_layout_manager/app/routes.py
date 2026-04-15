@@ -1,14 +1,14 @@
 import os
 from aiohttp import web
-from .handlers import common, items, images
+from .handlers import common, items, images, scenes
 
 
 def setup_routes(app):
     """Register all API and static routes."""
 
     # RESTful API
-    # Valid resource types: display_type, layout, image
-    api_prefix = "/api/{resource_type:(?:display_type|layout|image|scene)}"
+    # Valid resource types: display_type, layout
+    api_prefix = "/api/{resource_type:(?:display_type|layout)}"
 
     # Image specific routes (more specific routes first)
     app.router.add_get("/api/image/keywords", images.handle_image_keywords_get)
@@ -20,6 +20,13 @@ def setup_routes(app):
     app.router.add_post("/api/image", images.handle_image_create)
     app.router.add_put("/api/image/{id}", images.handle_image_update)
     app.router.add_delete("/api/image/{id}", images.handle_image_delete)
+
+    # Scene specific routes
+    app.router.add_get("/api/scene", scenes.handle_scene_list)
+    app.router.add_get("/api/scene/{id}", scenes.handle_scene_get)
+    app.router.add_post("/api/scene", scenes.handle_scene_create)
+    app.router.add_put("/api/scene/{id}", scenes.handle_scene_update)
+    app.router.add_delete("/api/scene/{id}", scenes.handle_scene_delete)
 
     # Generic item routes
     app.router.add_get(f"{api_prefix}", items.get_collection)
