@@ -54,7 +54,7 @@ describe('AppRoot', () => {
     const header = element.shadowRoot?.querySelector('app-header');
     
     // Initial mode should be graphical
-    expect((element as any)._viewMode).toBe('graphical');
+    expect((element as any).state.viewMode).toBe('graphical');
     
     header?.dispatchEvent(new CustomEvent('toggle-view-mode', {
       bubbles: true,
@@ -62,7 +62,7 @@ describe('AppRoot', () => {
     }));
 
     await element.updateComplete;
-    expect((element as any)._viewMode).toBe('yaml');
+    expect((element as any).state.viewMode).toBe('yaml');
   });
 
   it('should show confirm dialog when discarding changes', async () => {
@@ -98,6 +98,7 @@ describe('AppRoot', () => {
     expect(scenesView).toBeTruthy();
 
     const testScene = { id: 'test_scene', name: 'Test Scene' };
+    (element as any).state.scenes = [testScene];
     
     // Dispatch select-scene event from scenes-view
     scenesView?.dispatchEvent(new CustomEvent('select-scene', {

@@ -43,7 +43,6 @@ export class AppRoot extends LitElement {
     }
   `;
 
-  @state() private _viewMode: 'graphical' | 'yaml' = 'graphical';
   @state() private _isDirty = false;
   @state() private _canDelete = false;
 
@@ -67,8 +66,7 @@ export class AppRoot extends LitElement {
   protected updated(changedProperties: Map<string | number | symbol, unknown>) {
     super.updated(changedProperties);
     if (changedProperties.has('activeSection')) {
-      // Small delay to let the query selectors update if the view changed
-      setTimeout(() => this._updateHeaderState(), 0);
+      this._updateHeaderState();
     }
   }
 
@@ -105,6 +103,8 @@ export class AppRoot extends LitElement {
   private async _onHeaderAddItem() {
     if (this.state.activeSection === 'images') {
       this._imageDialog.show();
+    } else if (this.state.activeSection === 'display-types') {
+      this.state.selectDisplayType(null);
     } else {
       await this._activeView?.addNew();
     }
@@ -184,7 +184,7 @@ export class AppRoot extends LitElement {
         items: this.state.activeLayout?.items.filter(i => i.id !== e.detail.id)
       });
       if (this.state.selectedItemId === e.detail.id) {
-        this.state.selectedItemId = null;
+        this.state.selectItem(null);
       }
       this.state.showMessage('Item deleted', 'success');
     }
@@ -197,14 +197,14 @@ export class AppRoot extends LitElement {
         .message="${this.state.message}"
         .isSaving="${this.state.isSaving}"
         .isDirty="${this._isDirty}"
-        .viewMode="${this._viewMode}"
+        .viewMode="${this.state.viewMode}"
         .activeSection="${this.state.activeSection}"
         .canDelete="${this._canDelete}"
         @save-changes="${this._handleSave}"
         @discard-changes="${this._handleDiscard}"
         @delete-item="${this._onHeaderDeleteItem}"
         @add-item="${this._onHeaderAddItem}"
-        @toggle-view-mode="${() => this._viewMode = (this._viewMode === 'graphical' ? 'yaml' : 'graphical')}"
+        @toggle-view-mode="${() => this.state.setViewMode(this.state.viewMode === 'graphical' ? 'yaml' : 'graphical')}"
         @set-section="${(e: CustomEvent) => this.state.setSection(e.detail)}"
       ></app-header>
 
@@ -230,12 +230,12 @@ export class AppRoot extends LitElement {
         .displayTypes="${this.state.displayTypes}"
         .activeLayout="${this.state.activeLayout}"
         .selectedItemId="${this.state.selectedItemId}"
-        .viewMode="${this._viewMode}"
+        .viewMode="${this.state.viewMode}"
         .isSaving="${this.state.isSaving}"
         @switch-layout="${(e: CustomEvent) => this.state.switchLayout(e.detail)}"
         @update-active-layout="${(e: CustomEvent) => this.state.updateActiveLayout(e.detail)}"
         @update-item="${(e: CustomEvent) => this.state.updateItem(e.detail.id, e.detail.updates)}"
-        @select-item="${(e: CustomEvent) => this.state.selectedItemId = e.detail.id}"
+        @select-item="${(e: CustomEvent) => this.state.selectItem(e.detail.id)}"
         @edit-item="${(e: CustomEvent) => this._itemDialog.show(this.state.activeLayout?.items.find(i => i.id === e.detail.id)!, this.state.displayTypes)}"
         @delete-item="${this._onDeleteItem}"
         @delete-layout="${this._onDeleteLayout}"
@@ -258,7 +258,9 @@ export class AppRoot extends LitElement {
     return html`
       <display-types-view
         .displayTypes="${this.state.displayTypes}"
-        .viewMode="${this._viewMode}"
+        .selectedId="${this.state.selectedDisplayTypeId}"
+        .viewMode="${this.state.viewMode}"
+        @select-display-type="${(e: CustomEvent) => this.state.selectDisplayType(e.detail.id)}"
         @save="${(e: CustomEvent) => this.state.saveDisplayType(e.detail.displayType)}"
         @delete-display-type="${this._onDeleteDisplayType}"
         @dirty-state-change="${(e: CustomEvent) => this._isDirty = e.detail.isDirty}"
@@ -278,7 +280,7 @@ export class AppRoot extends LitElement {
         .selectedImageId="${this.state.selectedImageId}"
         @edit-image="${(e: CustomEvent) => this._imageDialog.show(e.detail.image)}"
         @image-click="${(e: CustomEvent) => { 
-          this.state.selectedImageId = e.detail.image.id;
+          this.state.selectImage(e.detail.image.id);
           this._updateHeaderState();
         }}"
         @delete-image="${this._onDeleteImage}"
@@ -293,7 +295,7 @@ export class AppRoot extends LitElement {
         .state="${this.state}"
         .scenes="${this.state.scenes}"
         .activeScene="${this.state.activeScene}"
-        .viewMode="${this._viewMode}"
+        .viewMode="${this.state.viewMode}"
         @select-scene="${(e: CustomEvent<{ scene: Scene }>) => {
           this.state.switchScene(e.detail.scene);
           this._updateHeaderState();

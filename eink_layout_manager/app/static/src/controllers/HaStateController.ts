@@ -9,6 +9,7 @@ import { api, DisplayType, Layout, LayoutItem, Image, Scene } from '../services/
  * - Backend connectivity
  */
 export type AppSection = 'display-types' | 'layouts' | 'images' | 'scenes';
+export type ViewMode = 'graphical' | 'yaml';
 
 export class HaStateController implements ReactiveController {
   public connected = false;
@@ -20,10 +21,12 @@ export class HaStateController implements ReactiveController {
   public activeScene: Scene | null = null;
   public selectedItemId: string | null = null;
   public selectedImageId: string | null = null;
+  public selectedDisplayTypeId: string | null = null;
   public activeSection: AppSection = 'layouts';
   public message: string = '';
   private _originalLayout: string | null = null;
   public isSaving = false;
+  public viewMode: ViewMode = 'graphical';
 
   constructor(private host: ReactiveControllerHost) {
     this.host.addController(this);
@@ -35,7 +38,9 @@ export class HaStateController implements ReactiveController {
   }
 
   async hostConnected() {
+    window.addEventListener('hashchange', () => this._applyHash());
     await this.refresh();
+    this._applyHash();
   }
 
   async refresh() {
@@ -109,6 +114,7 @@ export class HaStateController implements ReactiveController {
       this._originalLayout = JSON.stringify(this.activeLayout);
       this.showMessage('Layout saved!', 'success');
       await this.refresh();
+      this._updateHash();
     } catch (e: any) {
       this.showMessage(`Failed to save: ${e.message}`, 'error');
     } finally {
@@ -129,6 +135,7 @@ export class HaStateController implements ReactiveController {
       }
       this.showMessage(`Display type "${dt.name}" saved!`, 'success');
       await this.refresh();
+      this._updateHash();
     } catch (e: any) {
       this.showMessage(`Failed to save display type: ${e.message}`, 'error');
     } finally {
@@ -148,6 +155,10 @@ export class HaStateController implements ReactiveController {
       await api.deleteItem('display_type', dt.id);
       await this.refresh();
       this.showMessage(`Display type "${dt.name}" deleted.`, 'success');
+      if (this.selectedDisplayTypeId === dt.id) {
+        this.selectedDisplayTypeId = null;
+      }
+      this._updateHash();
       return true;
     } catch (e: any) {
       this.showMessage(`Failed to delete: ${e.message}`, 'error');
@@ -164,6 +175,7 @@ export class HaStateController implements ReactiveController {
       }
       await this.refresh();
       this.showMessage(`Layout "${layout.name}" deleted.`, 'success');
+      this._updateHash();
       return true;
     } catch (e: any) {
       this.showMessage(`Failed to delete: ${e.message}`, 'error');
@@ -179,6 +191,7 @@ export class HaStateController implements ReactiveController {
       }
       await this.refresh();
       this.showMessage(`Image "${image.name}" deleted.`, 'success');
+      this._updateHash();
       return true;
     } catch (e: any) {
       this.showMessage(`Failed to delete image: ${e.message}`, 'error');
@@ -196,6 +209,7 @@ export class HaStateController implements ReactiveController {
       await this.refresh();
       this.activeScene = this.scenes.find(s => s.id === result.id) || result;
       this.showMessage(`Scene "${name}" created!`, 'success');
+      this._updateHash();
       return result;
     } catch (e: any) {
       this.showMessage(`Failed to create scene: ${e.message}`, 'error');
@@ -216,6 +230,7 @@ export class HaStateController implements ReactiveController {
         this.activeScene = this.scenes.find(s => s.id === id) || this.activeScene;
       }
       this.showMessage('Scene updated!', 'success');
+      this._updateHash();
     } catch (e: any) {
       this.showMessage(`Failed to update scene: ${e.message}`, 'error');
     } finally {
@@ -232,6 +247,7 @@ export class HaStateController implements ReactiveController {
       }
       await this.refresh();
       this.showMessage(`Scene "${scene.name}" deleted.`, 'success');
+      this._updateHash();
       return true;
     } catch (e: any) {
       this.showMessage(`Failed to delete scene: ${e.message}`, 'error');
@@ -253,11 +269,17 @@ export class HaStateController implements ReactiveController {
     this._originalLayout = JSON.stringify(layout);
     this.selectedItemId = null;
     this.host.requestUpdate();
+    this._updateHash();
   }
 
   switchScene(scene: Scene) {
-    this.activeScene = scene;
+    this.selectScene(scene.id);
+  }
+
+  public selectScene(id: string | null) {
+    this.activeScene = this.scenes.find(s => s.id === id) || null;
     this.host.requestUpdate();
+    this._updateHash();
   }
 
   discardChanges() {
@@ -285,6 +307,102 @@ export class HaStateController implements ReactiveController {
 
   setSection(section: AppSection) {
     this.activeSection = section;
+    this.host.requestUpdate();
+    this._updateHash();
+  }
+
+  public selectItem(itemId: string | null) {
+    this.selectedItemId = itemId;
+    this.host.requestUpdate();
+    this._updateHash();
+  }
+
+  public selectImage(imageId: string | null) {
+    this.selectedImageId = imageId;
+    this.host.requestUpdate();
+    this._updateHash();
+  }
+
+  public selectDisplayType(id: string | null) {
+    this.selectedDisplayTypeId = id;
+    this.host.requestUpdate();
+    this._updateHash();
+  }
+
+  public setViewMode(mode: ViewMode) {
+    this.viewMode = mode;
+    this.host.requestUpdate();
+    this._updateHash();
+  }
+
+  private _updateHash() {
+    let hash = `#/${this.activeSection}`;
+    
+    if (this.activeSection === 'layouts' && this.activeLayout) {
+      hash += `/${this.activeLayout.id}`;
+      if (this.selectedItemId) {
+        hash += `/item/${this.selectedItemId}`;
+      }
+    } else if (this.activeSection === 'scenes' && this.activeScene) {
+      hash += `/${this.activeScene.id}`;
+    } else if (this.activeSection === 'images' && this.selectedImageId) {
+      hash += `/${this.selectedImageId}`;
+    } else if (this.activeSection === 'display-types' && this.selectedDisplayTypeId) {
+      hash += `/${this.selectedDisplayTypeId}`;
+    }
+
+    if (this.viewMode === 'yaml') {
+      hash += '?mode=yaml';
+    }
+
+    if (window.location.hash === hash) return;
+
+    window.location.hash = hash;
+  }
+
+  private _applyHash() {
+
+    const hash = window.location.hash || '#/layouts';
+    const [pathPart, queryPart] = hash.split('?');
+    const path = pathPart.substring(2); // Remove '#/'
+    const segments = path.split('/');
+    
+    const params = new URLSearchParams(queryPart || '');
+    const mode = params.get('mode') as ViewMode;
+    if (mode === 'yaml' || mode === 'graphical') {
+      this.viewMode = mode;
+    }
+
+    const section = segments[0] as AppSection;
+    if (['display-types', 'layouts', 'images', 'scenes'].includes(section)) {
+      if (this.activeSection !== section) this.activeSection = section;
+    }
+
+    if (this.activeSection === 'layouts') {
+      const layoutId = segments[1];
+      if (layoutId) {
+        const layout = this.layouts.find(l => l.id === layoutId);
+        if (layout && this.activeLayout?.id !== layoutId) {
+          this.activeLayout = layout;
+          this._originalLayout = JSON.stringify(layout);
+        }
+      }
+      const newItemId = (segments[2] === 'item' && segments[3]) ? segments[3] : null;
+      if (this.selectedItemId !== newItemId) this.selectedItemId = newItemId;
+    } else if (this.activeSection === 'scenes') {
+      const sceneId = segments[1] || null;
+      if (this.activeScene?.id !== sceneId) {
+        const scene = sceneId ? this.scenes.find(s => s.id === sceneId) : null;
+        this.activeScene = scene || null;
+      }
+    } else if (this.activeSection === 'images') {
+      const imageId = segments[1] || null;
+      if (this.selectedImageId !== imageId) this.selectedImageId = imageId;
+    } else if (this.activeSection === 'display-types') {
+      const displayTypeId = segments[1] || null;
+      if (this.selectedDisplayTypeId !== displayTypeId) this.selectedDisplayTypeId = displayTypeId;
+    }
+
     this.host.requestUpdate();
   }
 }

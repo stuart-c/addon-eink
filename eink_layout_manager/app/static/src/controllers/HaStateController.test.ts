@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { HaStateController } from './HaStateController';
 import { api } from '../services/HaApiClient';
 
@@ -139,5 +139,78 @@ describe('HaStateController', () => {
     expect(api.deleteItem).toHaveBeenCalledWith('image', 'img1');
     expect(controller.selectedImageId).toBe(null);
     expect(api.getImages).toHaveBeenCalled();
+  });
+
+  describe('Deep Linking', () => {
+    beforeEach(() => {
+      window.location.hash = '';
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('should update hash when section changes', () => {
+      controller.setSection('images');
+      expect(window.location.hash).toBe('#/images');
+    });
+
+    it('should update hash when layout changes', () => {
+      const layout = { id: 'test_layout', name: 'Test', items: [] } as any;
+      controller.layouts = [layout];
+      controller.switchLayout(layout);
+      expect(window.location.hash).toBe('#/layouts/test_layout');
+    });
+
+    it('should update hash when item is selected', () => {
+      const layout = { id: 'test_layout', name: 'Test', items: [] } as any;
+      controller.layouts = [layout];
+      controller.activeLayout = layout;
+      controller.selectItem('item_123');
+      expect(window.location.hash).toBe('#/layouts/test_layout/item/item_123');
+    });
+
+    it('should update hash when view mode changes', () => {
+      controller.setViewMode('yaml');
+      expect(window.location.hash).toBe('#/layouts?mode=yaml');
+    });
+
+    it('should apply state from hash on init/refresh', async () => {
+      window.location.hash = '#/images/img_456?mode=yaml';
+      
+      vi.mocked(api.ping).mockResolvedValue(true);
+      vi.mocked(api.getCollection).mockResolvedValue([]);
+      vi.mocked(api.getImages).mockResolvedValue([{ id: 'img_456', name: 'Test' }] as any);
+      
+      await controller.refresh();
+      
+      expect(controller.activeSection).toBe('images');
+      expect(controller.selectedImageId).toBe('img_456');
+      expect(controller.viewMode).toBe('yaml');
+    });
+
+    it('should apply state from hash on hashchange', () => {
+      const layout = { id: 'l1', name: 'L1', items: [] } as any;
+      controller.layouts = [layout];
+      
+      window.location.hash = '#/layouts/l1/item/i1?mode=yaml';
+      // Trigger the listener manually if needed, or rely on window event
+      // Since we mocked the listener in hostConnected, we can just call _applyHash for unit test
+      (controller as any)._applyHash();
+      
+      expect(controller.activeSection).toBe('layouts');
+      expect(controller.activeLayout?.id).toBe('l1');
+      expect(controller.selectedItemId).toBe('i1');
+      expect(controller.viewMode).toBe('yaml');
+    });
+
+    it('should handle missing or invalid segments in hash', () => {
+      window.location.hash = '#/invalid-section/foo';
+      (controller as any)._applyHash();
+      
+      // Should stay on layouts (default)
+      expect(controller.activeSection).toBe('layouts');
+    });
   });
 });

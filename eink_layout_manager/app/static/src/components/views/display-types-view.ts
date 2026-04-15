@@ -36,8 +36,6 @@ export class DisplayTypesView extends LitElement {
       font-weight: 600;
       color: #333;
       font-size: 1.1rem;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
     }
     .toolbar-actions {
       display: flex;
@@ -312,6 +310,7 @@ export class DisplayTypesView extends LitElement {
 
   @property({ type: Object }) displayType?: DisplayType;
   @property({ type: Array }) displayTypes: DisplayType[] = [];
+  @property({ type: String }) selectedId: string | null = null;
   @property({ type: Boolean }) isNew = true;
   @property({ type: String }) viewMode: 'graphical' | 'yaml' = 'graphical';
 
@@ -350,13 +349,7 @@ export class DisplayTypesView extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    if (!this.displayType && this.displayTypes.length > 0) {
-      this.displayType = JSON.parse(JSON.stringify(this.displayTypes[0]));
-      this.isNew = false;
-    } else if (!this.displayType) {
-      this.displayType = this._getDefaultDisplayType();
-      this.isNew = true;
-    }
+    this._syncSelection();
     this._updateDirtyState();
   }
 
@@ -366,6 +359,28 @@ export class DisplayTypesView extends LitElement {
       this._updateDirtyState();
       this._updateDeleteState();
     }
+    if (changedProperties.has('selectedId')) {
+      this._syncSelection();
+    }
+  }
+
+  private _syncSelection() {
+    const found = this.selectedId ? this.displayTypes.find(dt => dt.id === this.selectedId) : null;
+    
+    if (found) {
+      // Switch to existing only if different or currently in 'new' mode
+      if (this.displayType?.id !== found.id || this.isNew) {
+        this.displayType = JSON.parse(JSON.stringify(found));
+        this.isNew = false;
+      }
+    } else {
+      // No valid selection, enter 'new' mode
+      if (!this.isNew || !this.displayType) {
+        this.displayType = this._getDefaultDisplayType();
+        this.isNew = true;
+      }
+    }
+    this.requestUpdate();
   }
 
   private _updateDeleteState() {
@@ -423,23 +438,20 @@ export class DisplayTypesView extends LitElement {
     }));
   }
 
+  public addNew() {
+    this._handleSelect(null);
+  }
+
   private async _handleSelect(id: string | null) {
     if (this.displayType?.id === id && !this.isNew) return;
     if (id === null && this.isNew) return;
 
     const performSwitch = () => {
-      if (id === null) {
-        this.displayType = this._getDefaultDisplayType();
-        this.isNew = true;
-      } else {
-        const found = this.displayTypes.find(dt => dt.id === id);
-        if (found) {
-          this.displayType = JSON.parse(JSON.stringify(found));
-          this.isNew = false;
-        }
-      }
-      this.requestUpdate();
-      this._updateDirtyState();
+      this.dispatchEvent(new CustomEvent('select-display-type', {
+        detail: { id },
+        bubbles: true,
+        composed: true
+      }));
     };
 
     if (this._isDirty()) {
@@ -472,9 +484,6 @@ export class DisplayTypesView extends LitElement {
     }
   }
 
-  public addNew() {
-    this._handleSelect(null);
-  }
 
   public requestDelete() {
     this._handleDelete();
