@@ -7,8 +7,10 @@ The `addon-eink` repository is designed to be deployed as a Home Assistant Addon
 - **Container Environment:** Standard Home Assistant `alpine` Addon Base utilising the S6-overlay supervisor.
 - **Backend Service:** Python 3 application utilising **aiohttp** for the asynchronous web server.
 - **Database & Persistence:** 
-    - **SQLAlchemy** with **aiosqlite** for relational metadata storage (SQLite database).
-    - Local filesystem for binary assets: `/data/image` for primary source images and `/data/thumbnail` for generated thumbnails.
+    - **SQLAlchemy** with **aiosqlite** for relational metadata storage (SQLite database). This includes metadata for images, display types, layouts, and scenes.
+    - **Local Filesystem** for binary assets:
+        - **Production (HA):** `/data/image` and `/data/thumbnail`.
+        - **Development:** Locally stores data in `.data` (when using `run_app.sh`) or `./dev_data` (when using `run_dev.sh`).
 - **Frontend UI:** **Lit Web Components** (to match Home Assistant Frontend styling and ecosystem).
 - **Testing:** **pytest** with **pytest-aiohttp** and **pytest-asyncio** for backend verification.
 - **Addon Integration:** Uses Home Assistant **Ingress** to securely surface the UI within the Home Assistant sidebar.
