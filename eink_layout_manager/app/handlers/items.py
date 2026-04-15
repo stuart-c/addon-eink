@@ -1,16 +1,14 @@
 import json
-import os
 from aiohttp import web
 from jsonschema import validate, ValidationError
+from sqlalchemy import select, delete
 
-from ..utils.storage import get_storage_path
+from .. import database, models
 from ..utils.validation import (
     validate_id,
     load_schema,
     response_schema,
 )
-from sqlalchemy import select
-from .. import database, models
 
 
 def get_resource_schema(request, data):
@@ -18,32 +16,60 @@ def get_resource_schema(request, data):
     return request.match_info["resource_type"]
 
 
+def get_model_class(resource_type):
+    """Map resource type to SQLAlchemy model class."""
+    mapping = {
+        "display_type": models.DisplayType,
+        "layout": models.Layout,
+    }
+    if resource_type not in mapping:
+        raise ValueError(f"Invalid resource type: {resource_type}")
+    return mapping[resource_type]
+
+
+def model_to_dict(item):
+    """Convert SQLAlchemy model instance to dictionary for JSON response."""
+    # This assumes models have fields matching the schema
+    data = {}
+    for column in item.__table__.columns:
+        value = getattr(item, column.name)
+        # Handle cases where value might be a list/dict (JSON column)
+        data[column.name] = value
+    
+    # Remove internal fields if necessary, but here they match the schema
+    # except maybe created_at/updated_at which are usually fine to include
+    # or can be filtered out if strictly following the schema.
+    # The schemas for display_type and layout don't include created_at/updated_at.
+    
+    allowed_fields = {
+        "display_type": [
+            "id", "name", "width_mm", "height_mm", "panel_width_mm",
+            "panel_height_mm", "width_px", "height_px", "colour_type",
+            "frame", "mat"
+        ],
+        "layout": [
+            "id", "name", "canvas_width_mm", "canvas_height_mm", "items"
+        ]
+    }
+    
+    resource_type = "display_type" if isinstance(item, models.DisplayType) else "layout"
+    
+    return {k: v for k, v in data.items() if k in allowed_fields[resource_type]}
+
+
 @response_schema("item_list_response")
 async def get_collection(request):
     """Fetch all resources for a specific collection type."""
     resource_type = request.match_info["resource_type"]
     try:
-        storage_path = get_storage_path(resource_type)
+        model_class = get_model_class(resource_type)
     except ValueError as e:
         return web.json_response({"error": str(e)}, status=400)
 
-    items = []
-    if os.path.exists(storage_path):
-        for filename in os.listdir(storage_path):
-            if filename.endswith(".json"):
-                # Security: Construct and verify canonical path for each file
-                file_path = os.path.join(storage_path, filename)
-                file_real = os.path.realpath(file_path)
-
-                if not file_real.startswith(storage_path):
-                    continue
-
-                with open(file_real, "r") as f:
-                    try:
-                        items.append(json.load(f))
-                    except json.JSONDecodeError:
-                        continue
-    return web.json_response(items)
+    async with database.get_session() as session:
+        result = await session.execute(select(model_class))
+        items = result.scalars().all()
+        return web.json_response([model_to_dict(item) for item in items])
 
 
 @response_schema(get_resource_schema)
@@ -52,23 +78,19 @@ async def get_item(request):
     resource_type = request.match_info["resource_type"]
     item_id = request.match_info["id"]
     try:
-        storage_path = get_storage_path(resource_type)
+        model_class = get_model_class(resource_type)
         item_id = validate_id(item_id)
     except ValueError as e:
         return web.json_response({"error": str(e)}, status=400)
 
-    file_path = os.path.join(storage_path, f"{item_id}.json")
-    file_real = os.path.realpath(file_path)
-
-    # Security: Canonical path validation
-    if not file_real.startswith(storage_path):
-        return web.json_response({"error": "Access Denied"}, status=403)
-
-    if not os.path.exists(file_real):
-        return web.json_response({"error": "Not Found"}, status=404)
-
-    with open(file_real, "r") as f:
-        return web.json_response(json.load(f))
+    async with database.get_session() as session:
+        result = await session.execute(
+            select(model_class).where(model_class.id == item_id)
+        )
+        item = result.scalars().first()
+        if not item:
+            return web.json_response({"error": "Not Found"}, status=404)
+        return web.json_response(model_to_dict(item))
 
 
 @response_schema(get_resource_schema)
@@ -95,31 +117,27 @@ async def create_item(request):
         )
 
     item_id = data.get("id")
-    if not item_id:
-        return web.json_response({"error": "Missing 'id' field"}, status=400)
-
     try:
-        storage_path = get_storage_path(resource_type)
+        model_class = get_model_class(resource_type)
         item_id = validate_id(item_id)
     except ValueError as e:
         return web.json_response({"error": str(e)}, status=400)
 
-    file_path = os.path.join(storage_path, f"{item_id}.json")
-    file_real = os.path.realpath(file_path)
-
-    # Security: Canonical path validation
-    if not file_real.startswith(storage_path):
-        return web.json_response({"error": "Access Denied"}, status=403)
-
-    if os.path.exists(file_real):
-        return web.json_response(
-            {"error": "Resource already exists"}, status=409
+    async with database.get_session() as session:
+        # Check for existence
+        result = await session.execute(
+            select(model_class).where(model_class.id == item_id)
         )
+        if result.scalars().first():
+            return web.json_response(
+                {"error": "Resource already exists"}, status=409
+            )
 
-    with open(file_real, "w") as f:
-        json.dump(data, f, indent=2)
-
-    return web.json_response(data, status=201)
+        item = model_class(**data)
+        session.add(item)
+        response_data = model_to_dict(item)
+        await session.commit()
+        return web.json_response(response_data, status=201)
 
 
 @response_schema(get_resource_schema)
@@ -139,7 +157,6 @@ async def update_item(request):
             {"error": "ID in body does not match ID in URL"}, status=400
         )
 
-    # Ensure ID is present in body for consistency
     data["id"] = item_id
 
     # Validation
@@ -157,25 +174,26 @@ async def update_item(request):
         )
 
     try:
-        storage_path = get_storage_path(resource_type)
+        model_class = get_model_class(resource_type)
         item_id = validate_id(item_id)
     except ValueError as e:
         return web.json_response({"error": str(e)}, status=400)
 
-    file_path = os.path.join(storage_path, f"{item_id}.json")
-    file_real = os.path.realpath(file_path)
+    async with database.get_session() as session:
+        result = await session.execute(
+            select(model_class).where(model_class.id == item_id)
+        )
+        item = result.scalars().first()
+        if not item:
+            return web.json_response({"error": "Not Found"}, status=404)
 
-    # Security: Canonical path validation
-    if not file_real.startswith(storage_path):
-        return web.json_response({"error": "Access Denied"}, status=403)
-
-    if not os.path.exists(file_real):
-        return web.json_response({"error": "Not Found"}, status=404)
-
-    with open(file_real, "w") as f:
-        json.dump(data, f, indent=2)
-
-    return web.json_response(data, status=200)
+        # Update fields
+        for key, value in data.items():
+            setattr(item, key, value)
+        
+        response_data = model_to_dict(item)
+        await session.commit()
+        return web.json_response(response_data, status=200)
 
 
 @response_schema("status_response")
@@ -184,75 +202,48 @@ async def delete_item(request):
     resource_type = request.match_info["resource_type"]
     item_id = request.match_info["id"]
     try:
-        storage_path = get_storage_path(resource_type)
+        model_class = get_model_class(resource_type)
         item_id = validate_id(item_id)
     except ValueError as e:
         return web.json_response({"error": str(e)}, status=400)
 
-    file_path = os.path.join(storage_path, f"{item_id}.json")
-    file_real = os.path.realpath(file_path)
+    async with database.get_session() as session:
+        # Referential Integrity: Don't delete display_type if used in any layout
+        if resource_type == "display_type":
+            # Check all layouts
+            result = await session.execute(select(models.Layout))
+            layouts = result.scalars().all()
+            for layout in layouts:
+                for item in layout.items:
+                    if item.get("display_type_id") == item_id:
+                        msg = f"Display type in use: {layout.name}"
+                        return web.json_response(
+                            {"error": "Conflict", "message": msg},
+                            status=400,
+                        )
 
-    # Security: Canonical path validation
-    if not file_real.startswith(storage_path):
-        return web.json_response({"error": "Access Denied"}, status=403)
-
-    if not os.path.exists(file_real):
-        return web.json_response({"error": "Not Found"}, status=404)
-
-    # Referential Integrity: Don't delete display_type if used in any layout
-    if resource_type == "display_type":
-        try:
-            layout_path = get_storage_path("layout")
-        except ValueError as e:
-            return web.json_response({"error": str(e)}, status=400)
-        if os.path.exists(layout_path):
-            for filename in os.listdir(layout_path):
-                if filename.endswith(".json"):
-                    # Security: Canonical path check for each layout item
-                    file_path_layout = os.path.join(layout_path, filename)
-                    file_real_layout = os.path.realpath(file_path_layout)
-                    if not file_real_layout.startswith(layout_path):
-                        continue
-
-                    with open(file_real_layout, "r") as f:
-                        try:
-                            layout_data = json.load(f)
-                            # Check every item in this layout
-                            for item in layout_data.get("items", []):
-                                if item.get("display_type_id") == item_id:
-                                    msg = (
-                                        f"Display type in use: "
-                                        f"{layout_data.get('name', filename)}"
-                                    )
-                                    return web.json_response(
-                                        {
-                                            "error": "Conflict",
-                                            "message": msg,
-                                        },
-                                        status=400,
-                                    )
-                        except (json.JSONDecodeError, KeyError):
-                            continue
-
-    # Referential Integrity: Don't delete layout if used in any scene
-    if resource_type == "layout":
-        try:
-            async with database.get_session() as session:
-                stmt = select(models.Scene).where(
-                    models.Scene.layout_id == item_id
-                )
-                result = await session.execute(stmt)
-                scene = result.scalars().first()
-                if scene:
-                    msg = f"Layout in use: {scene.name}"
-                    return web.json_response(
-                        {"error": "Conflict", "message": msg},
-                        status=400,
-                    )
-        except Exception as e:
-            return web.json_response(
-                {"error": "Database error", "details": str(e)}, status=500
+        # Referential Integrity: Don't delete layout if used in any scene
+        if resource_type == "layout":
+            stmt = select(models.Scene).where(
+                models.Scene.layout_id == item_id
             )
+            result = await session.execute(stmt)
+            scene = result.scalars().first()
+            if scene:
+                msg = f"Layout in use: {scene.name}"
+                return web.json_response(
+                    {"error": "Conflict", "message": msg},
+                    status=400,
+                )
 
-    os.remove(file_real)
-    return web.json_response({"status": "deleted"})
+        # Perform deletion
+        result = await session.execute(
+            select(model_class).where(model_class.id == item_id)
+        )
+        item = result.scalars().first()
+        if not item:
+            return web.json_response({"error": "Not Found"}, status=404)
+
+        await session.delete(item)
+        await session.commit()
+        return web.json_response({"status": "deleted"})

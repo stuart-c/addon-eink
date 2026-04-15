@@ -44,3 +44,37 @@ class Scene(Base):
     updated_at = Column(
         DateTime, server_default=func.now(), onupdate=func.now()
     )
+
+
+class DisplayType(Base):
+    __tablename__ = "display_types"
+
+    id = Column(String, primary_key=True)
+    name = Column(String, nullable=False)
+    width_mm = Column(Integer, nullable=False)
+    height_mm = Column(Integer, nullable=False)
+    panel_width_mm = Column(Integer, nullable=False)
+    panel_height_mm = Column(Integer, nullable=False)
+    width_px = Column(Integer, nullable=False)
+    height_px = Column(Integer, nullable=False)
+    colour_type = Column(String, nullable=False)
+    frame = Column(JSON, nullable=False)
+    mat = Column(JSON, nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(
+        DateTime, server_default=func.now(), onupdate=func.now()
+    )
+
+
+class Layout(Base):
+    __tablename__ = "layouts"
+
+    id = Column(String, primary_key=True)
+    name = Column(String, nullable=False)
+    canvas_width_mm = Column(Integer, nullable=False)
+    canvas_height_mm = Column(Integer, nullable=False)
+    items = Column(JSON, nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(
+        DateTime, server_default=func.now(), onupdate=func.now()
+    )
