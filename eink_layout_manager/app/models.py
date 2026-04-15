@@ -38,6 +38,8 @@ class Scene(Base):
     id = Column(String, primary_key=True)
     name = Column(String, nullable=False)
     layout_id = Column(String, nullable=False)
+    status = Column(String, nullable=False, default="draft")
+    items = Column(JSON, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(
         DateTime, server_default=func.now(), onupdate=func.now()

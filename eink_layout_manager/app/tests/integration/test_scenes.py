@@ -21,20 +21,26 @@ async def test_create_and_get_scene(aiohttp_client, app):
         "layout": "main-living-room",
     }
 
+    expected_data = {
+        **scene_data,
+        "status": "draft",
+        "items": {},
+    }
+
     # Create
     resp = await client.post("/api/scene", json=scene_data)
     assert resp.status == 201
-    assert await resp.json() == scene_data
+    assert await resp.json() == expected_data
 
     # Read specific
     resp = await client.get("/api/scene/morning-routine")
     assert resp.status == 200
-    assert await resp.json() == scene_data
+    assert await resp.json() == expected_data
 
     # Read Collection
     resp = await client.get("/api/scene")
     assert resp.status == 200
-    assert await resp.json() == [scene_data]
+    assert await resp.json() == [expected_data]
 
 
 @pytest.mark.asyncio
@@ -47,6 +53,40 @@ async def test_create_scene_invalid_schema(aiohttp_client, app):
     assert resp.status == 400
     result = await resp.json()
     assert "Validation failed" in result["error"]
+
+
+@pytest.mark.asyncio
+async def test_create_scene_with_items(aiohttp_client, app):
+    """Test creating a scene with complex items."""
+    client = await aiohttp_client(app)
+
+    scene_data = {
+        "id": "complex-scene",
+        "name": "Complex Scene",
+        "layout": "living-room",
+        "items": {
+            "comp-1": {
+                "type": "image",
+                "displays": ["display-1", "display-2"],
+                "images": [
+                    {
+                        "image_id": "img-123",
+                        "scaling_factor": 1.5,
+                        "offset": {"x": 10.5, "y": 20.0},
+                    }
+                ],
+            }
+        },
+    }
+
+    resp = await client.post("/api/scene", json=scene_data)
+    assert resp.status == 201
+
+    result = await resp.json()
+    assert result["id"] == "complex-scene"
+    assert result["items"]["comp-1"]["type"] == "image"
+    assert result["items"]["comp-1"]["images"][0]["scaling_factor"] == 1.5
+    assert result["status"] == "draft"
 
 
 @pytest.mark.asyncio

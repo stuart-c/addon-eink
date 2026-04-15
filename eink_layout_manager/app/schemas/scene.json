@@ -16,6 +16,57 @@
     "layout": {
       "type": "string",
       "description": "ID of the layout used by this scene"
+    },
+    "status": {
+      "type": "string",
+      "description": "Current status of the scene",
+      "enum": ["draft", "ready"],
+      "readOnly": true,
+      "default": "draft"
+    },
+    "items": {
+      "type": "object",
+      "description": "Map of component IDs to their configuration",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["image", "tile"]
+          },
+          "displays": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "image_id": {
+                  "type": "string"
+                },
+                "scaling_factor": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "offset": {
+                  "type": "object",
+                  "properties": {
+                    "x": { "type": "number" },
+                    "y": { "type": "number" }
+                  },
+                  "required": ["x", "y"]
+                }
+              },
+              "required": ["image_id", "scaling_factor", "offset"]
+            }
+          }
+        },
+        "required": ["type", "displays", "images"]
+      }
     }
   },
   "required": [
