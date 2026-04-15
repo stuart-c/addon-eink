@@ -189,7 +189,7 @@ jobs:
             --network host \
             -v $(pwd)/../../:/work \
             -w /work/eink_layout_manager/e2e \
-            mcr.microsoft.com/playwright:v1.50.1-noble \
+            mcr.microsoft.com/playwright:v1.59.1-noble \
             npx playwright test
         working-directory: eink_layout_manager/e2e
 
