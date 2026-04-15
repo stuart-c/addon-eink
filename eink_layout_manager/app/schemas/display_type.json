@@ -6,7 +6,8 @@
   "properties": {
     "id": {
       "type": "string",
-      "description": "Unique identifier for this display type"
+      "description": "Unique identifier for this display type",
+      "readOnly": true
     },
     "name": {
       "type": "string",

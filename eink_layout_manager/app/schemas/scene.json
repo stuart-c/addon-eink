@@ -6,7 +6,8 @@
   "properties": {
     "id": {
       "type": "string",
-      "description": "Unique identifier for this scene"
+      "description": "Unique identifier for this scene",
+      "readOnly": true
     },
     "name": {
       "type": "string",

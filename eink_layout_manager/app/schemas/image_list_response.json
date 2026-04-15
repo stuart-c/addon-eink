@@ -8,17 +8,18 @@
       "items": {
         "type": "object",
         "properties": {
-          "id": { "type": "string" },
-          "name": { "type": "string" },
-          "artist": { "type": ["string", "null"] },
-          "collection": { "type": ["string", "null"] },
-          "description": { "type": ["string", "null"] },
-          "file_type": { "type": "string" },
+          "id": { "type": "string", "readOnly": true },
+          "name": { "type": "string", "readOnly": true },
+          "artist": { "type": ["string", "null"], "readOnly": true },
+          "collection": { "type": ["string", "null"], "readOnly": true },
+          "description": { "type": ["string", "null"], "readOnly": true },
+          "file_type": { "type": "string", "readOnly": true },
           "dimensions": {
             "type": "object",
+            "readOnly": true,
             "properties": {
-              "width": { "type": "integer" },
-              "height": { "type": "integer" }
+              "width": { "type": "integer", "readOnly": true },
+              "height": { "type": "integer", "readOnly": true }
             },
             "required": ["width", "height"]
           }
@@ -28,11 +29,12 @@
     },
     "pagination": {
       "type": "object",
+      "readOnly": true,
       "properties": {
-        "page": { "type": "integer", "minimum": 1 },
-        "limit": { "type": "integer", "minimum": 1 },
-        "total_items": { "type": "integer", "minimum": 0 },
-        "total_pages": { "type": "integer", "minimum": 0 }
+        "page": { "type": "integer", "minimum": 1, "readOnly": true },
+        "limit": { "type": "integer", "minimum": 1, "readOnly": true },
+        "total_items": { "type": "integer", "minimum": 0, "readOnly": true },
+        "total_pages": { "type": "integer", "minimum": 0, "readOnly": true }
       },
       "required": ["page", "limit", "total_items", "total_pages"]
     }

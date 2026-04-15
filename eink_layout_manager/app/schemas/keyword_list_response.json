@@ -5,8 +5,8 @@
   "items": {
     "type": "object",
     "properties": {
-      "keyword": { "type": "string" },
-      "count": { "type": "integer", "minimum": 1 }
+      "keyword": { "type": "string", "readOnly": true },
+      "count": { "type": "integer", "minimum": 1, "readOnly": true }
     },
     "required": ["keyword", "count"]
   }
