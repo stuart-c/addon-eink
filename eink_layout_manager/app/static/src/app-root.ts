@@ -260,6 +260,7 @@ export class AppRoot extends LitElement {
         .displayTypes="${this.state.displayTypes}"
         .selectedId="${this.state.selectedDisplayTypeId}"
         .viewMode="${this.state.viewMode}"
+        .isSaving="${this.state.isSaving}"
         @select-display-type="${(e: CustomEvent) => this.state.selectDisplayType(e.detail.id)}"
         @save="${(e: CustomEvent) => this.state.saveDisplayType(e.detail.displayType)}"
         @delete-display-type="${this._onDeleteDisplayType}"
@@ -296,6 +297,7 @@ export class AppRoot extends LitElement {
         .scenes="${this.state.scenes}"
         .activeScene="${this.state.activeScene}"
         .viewMode="${this.state.viewMode}"
+        .isSaving="${this.state.isSaving}"
         @select-scene="${(e: CustomEvent<{ scene: Scene }>) => {
           this.state.switchScene(e.detail.scene);
           this._updateHeaderState();

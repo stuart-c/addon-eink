@@ -67,6 +67,7 @@ export class SideBar extends LitElement {
   @property({ type: Array }) displayTypes: DisplayType[] = [];
   @property({ type: Object }) activeLayout: Layout | null = null;
   @property({ type: String }) selectedItemId: string | null = null;
+  @property({ type: Boolean }) disabled = false;
 
   private _dispatch(name: string, detail?: any) {
     this.dispatchEvent(new CustomEvent(name, { detail, bubbles: true, composed: true }));
@@ -74,15 +75,15 @@ export class SideBar extends LitElement {
 
   render() {
     return html`
-      <div class="sidebar-section" style="flex: 2;">
+      <div class="sidebar-section" style="flex: 2; ${this.disabled ? 'opacity: 0.5; pointer-events: none;' : ''}">
         <h3>Layout Items</h3>
         ${(this.activeLayout?.items || []).map((item, index) => {
           const dt = this.displayTypes.find(t => t.id === item.display_type_id);
           return html`
             <div 
               class="list-item ${this.selectedItemId === item.id ? 'selected' : ''}" 
-              @click="${() => this._dispatch('select-item', { id: item.id })}"
-              @dblclick="${() => this._dispatch('edit-item', { id: item.id })}"
+              @click="${() => !this.disabled && this._dispatch('select-item', { id: item.id })}"
+              @dblclick="${() => !this.disabled && this._dispatch('edit-item', { id: item.id })}"
             >
               <div class="item-details">
                 <div class="item-info">

@@ -108,6 +108,7 @@ export class ScenesView extends LitElement {
   @property({ type: Array }) scenes: Scene[] = [];
   @property({ type: Object }) activeScene: Scene | null = null;
   @property({ type: String }) viewMode: 'graphical' | 'yaml' = 'graphical';
+  @property({ type: Boolean }) isSaving = false;
 
   @query('scene-dialog') private _sceneDialog!: SceneDialog;
 
@@ -156,13 +157,14 @@ export class ScenesView extends LitElement {
     const activeScene = this.state?.activeScene || this.activeScene;
 
     return html`
-      <section-layout>
+      <section-layout .disabled="${this.isSaving}">
         <div slot="left-bar" class="scenes-sidebar">
           <div class="sidebar-items">
             ${scenes.map(scene => html`
               <div 
                 class="sidebar-item ${activeScene?.id === scene.id ? 'selected' : ''}" 
-                @click="${() => this._handleSelect(scene)}"
+                @click="${() => !this.isSaving && this._handleSelect(scene)}"
+                style="${this.isSaving ? 'opacity: 0.5; cursor: not-allowed;' : ''}"
               >
                 <span class="material-icons sidebar-item-icon">landscape</span>
                 <span class="sidebar-item-name">${scene.name}</span>
@@ -178,7 +180,7 @@ export class ScenesView extends LitElement {
 
         <div slot="right-top-bar" class="toolbar">
           ${activeScene ? html`
-            <button id="btn-scene-settings" class="settings-button" @click="${() => this._sceneDialog.show(activeScene)}" title="Scene Settings">
+            <button id="btn-scene-settings" class="settings-button" @click="${() => this._sceneDialog.show(activeScene)}" title="Scene Settings" ?disabled="${this.isSaving}">
               <span class="material-icons">settings</span>
             </button>
             <div class="toolbar-title">
@@ -194,6 +196,7 @@ export class ScenesView extends LitElement {
             slot="right-main"
             .data="${activeScene}"
             .schemaName="Scene"
+            .disabled="${this.isSaving}"
             @data-update="${(e: CustomEvent) => this.state.updateScene(activeScene.id, e.detail)}"
           ></yaml-editor>
         ` : html`
@@ -201,12 +204,13 @@ export class ScenesView extends LitElement {
             slot="right-main"
             title="Smart Scenes"
             icon="landscape"
-            message="${activeScene ? `You have selected "${activeScene.name}". Scene editing is coming soon.` : 'Compose complex scenes by combining layouts, images and live data.'}"
+            message="${activeScene ? `You have selected \"${activeScene.name}\". Scene editing is coming soon.` : 'Compose complex scenes by combining layouts, images and live data.'}"
           ></empty-view>
         `}
       </section-layout>
       <scene-dialog 
         .layouts="${this.state?.layouts || []}"
+        .disabled="${this.isSaving}"
         @create="${(e: CustomEvent) => this.state.createScene(e.detail.name, e.detail.layout)}"
         @save="${(e: CustomEvent) => this.state.updateScene(e.detail.id, { name: e.detail.name, layout: e.detail.layout })}"
       ></scene-dialog>

@@ -312,7 +312,8 @@ export class DisplayTypesView extends LitElement {
   @property({ type: Array }) displayTypes: DisplayType[] = [];
   @property({ type: String }) selectedId: string | null = null;
   @property({ type: Boolean }) isNew = true;
-  @property({ type: String }) viewMode: 'graphical' | 'yaml' = 'graphical';
+  @property({ type: Boolean }) isSaving = false;
+  @property({ type: Boolean }) viewMode: 'graphical' | 'yaml' = 'graphical';
 
   @state() private _isDirtyState = false;
 
@@ -508,14 +509,22 @@ export class DisplayTypesView extends LitElement {
 
   private _handleSubmit(e: Event) {
     e.preventDefault();
-    if (!this.displayType) return;
-    
     // ID is now generated on the server
-
-    this.dispatchEvent(new CustomEvent('save', { detail: { displayType: this.displayType } }));
-    this.isNew = false;
-    this.requestUpdate();
-    this._updateDirtyState();
+    try {
+      this.isSaving = true;
+      const event = new CustomEvent('save', {
+        detail: { displayType: this.displayType },
+        bubbles: true,
+        composed: true,
+      });
+      this.dispatchEvent(event);
+      // isSaving will be reset via parent's property update
+      this.isNew = false;
+      this.requestUpdate();
+      this._updateDirtyState();
+    } catch (e) {
+      this.isSaving = false;
+    }
   }
 
   private _renderColourPicker(label: string, value: string, onUpdate: (colour: string) => void) {
@@ -568,16 +577,16 @@ export class DisplayTypesView extends LitElement {
       : 1;
 
     return html`
-      <section-layout>
+      <section-layout .disabled="${this.isSaving}">
         <!-- Sidebar: Display Types List -->
-        <div slot="left-bar" class="list-sidebar">
+        <div slot="left-bar" class="list-sidebar" style="${this.isSaving ? 'opacity: 0.5; pointer-events: none;' : ''}">
           <div class="sidebar-items">
             ${this.displayTypes.map(dt => {
               const dtScale = 60 / Math.max(dt.width_mm, dt.height_mm);
               return html`
                 <div 
                   class="sidebar-item ${this.displayType?.id === dt.id && !this.isNew ? 'selected' : ''}" 
-                  @click="${() => this._handleSelect(dt.id)}"
+                  @click="${() => !this.isSaving && this._handleSelect(dt.id)}"
                 >
                   <div class="sidebar-thumbnail">
                     <hardware-preview
@@ -611,73 +620,75 @@ export class DisplayTypesView extends LitElement {
         <div slot="right-main" class="editor-layout">
           ${this.viewMode === 'graphical' ? html`
             <form id="display-type-form" @submit="${this._handleSubmit}" @input="${() => { this.requestUpdate(); this._updateDirtyState(); }}">
-              <div class="form-group">
-                <label>Identifier/Name</label>
-                <input 
-                  type="text" 
-                  required 
-                  .value="${live(this.displayType?.name || '')}"
-                  @input="${(e: any) => this.displayType!.name = e.target.value}"
-                  placeholder="e.g. Living Room Display"
-                >
-              </div>
+              <fieldset ?disabled="${this.isSaving}">
+                <div class="form-group">
+                  <label>Identifier/Name</label>
+                  <input 
+                    type="text" 
+                    required 
+                    .value="${live(this.displayType?.name || '')}"
+                    @input="${(e: any) => this.displayType!.name = e.target.value}"
+                    placeholder="e.g. Living Room Display"
+                  >
+                </div>
 
-              <!-- Device Dimensions Section -->
-              <div class="section-header">Device Dimensions</div>
-              <div class="row">
-                <div class="form-group">
-                  <label>Frame Outer Width (mm)</label>
-                  <input type="number" required .value="${live(this.displayType?.width_mm || 0)}" @input="${(e: any) => this.displayType!.width_mm = parseInt(e.target.value)}">
+                <!-- Device Dimensions Section -->
+                <div class="section-header">Device Dimensions</div>
+                <div class="row">
+                  <div class="form-group">
+                    <label>Frame Outer Width (mm)</label>
+                    <input type="number" required .value="${live(this.displayType?.width_mm || 0)}" @input="${(e: any) => this.displayType!.width_mm = parseInt(e.target.value)}">
+                  </div>
+                  <div class="form-group">
+                    <label>Frame Outer Height (mm)</label>
+                    <input type="number" required .value="${live(this.displayType?.height_mm || 0)}" @input="${(e: any) => this.displayType!.height_mm = parseInt(e.target.value)}">
+                  </div>
+                  <div class="form-group">
+                    <label>Frame Border Width (mm)</label>
+                    <input type="number" required .value="${live(this.displayType?.frame?.border_width_mm || 0)}" @input="${(e: any) => this.displayType!.frame.border_width_mm = parseInt(e.target.value)}">
+                  </div>
                 </div>
-                <div class="form-group">
-                  <label>Frame Outer Height (mm)</label>
-                  <input type="number" required .value="${live(this.displayType?.height_mm || 0)}" @input="${(e: any) => this.displayType!.height_mm = parseInt(e.target.value)}">
-                </div>
-                <div class="form-group">
-                  <label>Frame Border Width (mm)</label>
-                  <input type="number" required .value="${live(this.displayType?.frame?.border_width_mm || 0)}" @input="${(e: any) => this.displayType!.frame.border_width_mm = parseInt(e.target.value)}">
-                </div>
-              </div>
 
-              <div class="row">
-                <div class="form-group">
-                  <label>Display Panel Width (mm)</label>
-                  <input type="number" required .value="${live(this.displayType?.panel_width_mm || 0)}" @input="${(e: any) => this.displayType!.panel_width_mm = parseInt(e.target.value)}">
+                <div class="row">
+                  <div class="form-group">
+                    <label>Display Panel Width (mm)</label>
+                    <input type="number" required .value="${live(this.displayType?.panel_width_mm || 0)}" @input="${(e: any) => this.displayType!.panel_width_mm = parseInt(e.target.value)}">
+                  </div>
+                  <div class="form-group">
+                    <label>Display Panel Height (mm)</label>
+                    <input type="number" required .value="${live(this.displayType?.panel_height_mm || 0)}" @input="${(e: any) => this.displayType!.panel_height_mm = parseInt(e.target.value)}">
+                  </div>
+                  <div class="form-group">
+                    <label>Colour Type</label>
+                    <select .value="${live(this.displayType?.colour_type || 'MONO')}" @change="${(e: any) => { this.displayType!.colour_type = e.target.value; this.requestUpdate(); this._updateDirtyState(); }}">
+                      <option value="MONO">MONO (B/W)</option>
+                      <option value="BWR">BWR (Red)</option>
+                      <option value="BWY">BWY (Yellow)</option>
+                      <option value="BWRY">BWRY (Red/Yellow)</option>
+                      <option value="BWGBRY">BWGBRY (Spectra 6)</option>
+                      <option value="GRAYSCALE_4">Greyscale (4-bit)</option>
+                    </select>
+                  </div>
                 </div>
-                <div class="form-group">
-                  <label>Display Panel Height (mm)</label>
-                  <input type="number" required .value="${live(this.displayType?.panel_height_mm || 0)}" @input="${(e: any) => this.displayType!.panel_height_mm = parseInt(e.target.value)}">
-                </div>
-                <div class="form-group">
-                  <label>Colour Type</label>
-                  <select .value="${live(this.displayType?.colour_type || 'MONO')}" @change="${(e: any) => { this.displayType!.colour_type = e.target.value; this.requestUpdate(); this._updateDirtyState(); }}">
-                    <option value="MONO">MONO (B/W)</option>
-                    <option value="BWR">BWR (Red)</option>
-                    <option value="BWY">BWY (Yellow)</option>
-                    <option value="BWRY">BWRY (Red/Yellow)</option>
-                    <option value="BWGBRY">BWGBRY (Spectra 6)</option>
-                    <option value="GRAYSCALE_4">Greyscale (4-bit)</option>
-                  </select>
-                </div>
-              </div>
 
-              <div class="row">
-                <div class="form-group">
-                  <label>Resolution Width (px)</label>
-                  <input type="number" required .value="${live(this.displayType?.width_px || 0)}" @input="${(e: any) => this.displayType!.width_px = parseInt(e.target.value)}">
+                <div class="row">
+                  <div class="form-group">
+                    <label>Resolution Width (px)</label>
+                    <input type="number" required .value="${live(this.displayType?.width_px || 0)}" @input="${(e: any) => this.displayType!.width_px = parseInt(e.target.value)}">
+                  </div>
+                  <div class="form-group">
+                    <label>Resolution Height (px)</label>
+                    <input type="number" required .value="${live(this.displayType?.height_px || 0)}" @input="${(e: any) => this.displayType!.height_px = parseInt(e.target.value)}">
+                  </div>
+                  <div class="form-group"></div> <!-- Placeholder for 3rd column alignment -->
                 </div>
-                <div class="form-group">
-                  <label>Resolution Height (px)</label>
-                  <input type="number" required .value="${live(this.displayType?.height_px || 0)}" @input="${(e: any) => this.displayType!.height_px = parseInt(e.target.value)}">
-                </div>
-                <div class="form-group"></div> <!-- Placeholder for 3rd column alignment -->
-              </div>
 
-              <div class="section-header">Aesthetics</div>
-              <div class="row">
-                ${this._renderColourPicker('Frame Colour', this.displayType.frame.colour, (c) => { this.displayType!.frame.colour = c; this.requestUpdate(); })}
-                ${this._renderColourPicker('Mat Colour', this.displayType.mat.colour, (c) => { this.displayType!.mat.colour = c; this.requestUpdate(); })}
-              </div>
+                <div class="section-header">Aesthetics</div>
+                <div class="row">
+                  ${this._renderColourPicker('Frame Colour', this.displayType.frame.colour, (c) => { this.displayType!.frame.colour = c; this.requestUpdate(); })}
+                  ${this._renderColourPicker('Mat Colour', this.displayType.mat.colour, (c) => { this.displayType!.mat.colour = c; this.requestUpdate(); })}
+                </div>
+              </fieldset>
 
               <div style="display: none;">
                 <button id="real-submit" type="submit"></button>
@@ -687,6 +698,7 @@ export class DisplayTypesView extends LitElement {
             <yaml-editor
               .data="${this.displayType}"
               .schemaName="DisplayType"
+              .disabled="${this.isSaving}"
               @data-update="${(e: CustomEvent) => {
                 this.displayType = e.detail;
                 this.requestUpdate();
