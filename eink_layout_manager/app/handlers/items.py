@@ -1,4 +1,5 @@
 import json
+import uuid
 from aiohttp import web
 from jsonschema import validate, ValidationError
 from sqlalchemy import select
@@ -152,9 +153,14 @@ async def create_item(request):
     if resource_type == "display_type":
         data = ensure_landscape(data)
 
-    item_id = data.get("id")
+    # Generate a new UUID for the resource, ignoring any ID provided by the client
+    item_id = str(uuid.uuid4())
+    data["id"] = item_id
+
     try:
         model_class = get_model_class(resource_type)
+        # item_id is already validated as a UUID string,
+        # but we call validate_id for consistency
         item_id = validate_id(item_id)
     except ValueError as e:
         return web.json_response({"error": str(e)}, status=400)

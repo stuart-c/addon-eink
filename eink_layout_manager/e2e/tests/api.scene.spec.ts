@@ -33,38 +33,40 @@ test('GET /api/scene — returns 200 with an array', async ({ request }) => {
 // ---------------------------------------------------------------------------
 
 test('POST /api/scene — creates a resource and returns 201', async ({ request }) => {
-  const payload: Scene = { ...DEFAULT_SCENE, id: uid('create') };
+  const payload: Omit<Scene, 'id'> = { name: DEFAULT_SCENE.name, layout: DEFAULT_SCENE.layout };
 
   const response = await request.post('/api/scene', { data: payload });
   expect(response.status()).toBe(201);
 
   const body: Scene = await response.json();
-  expect(body).toMatchObject(payload);
+  expect(body.name).toBe(payload.name);
+  expect(body.id).toBeDefined();
+  expect(typeof body.id).toBe('string');
 });
 
 test('POST /api/scene — creation response matches GET response', async ({ request }) => {
-  const id = uid('parity');
-  const payload: Scene = { ...DEFAULT_SCENE, id };
+  const payload: Omit<Scene, 'id'> = { name: 'Parity Test', layout: DEFAULT_SCENE.layout };
 
   const createResponse = await request.post('/api/scene', { data: payload });
   expect(createResponse.status()).toBe(201);
   const created: Scene = await createResponse.json();
 
-  const getResponse = await request.get(`/api/scene/${id}`);
+  const getResponse = await request.get(`/api/scene/${created.id}`);
   expect(getResponse.status()).toBe(200);
   const fetched: Scene = await getResponse.json();
 
   expect(created).toEqual(fetched);
 });
 
-test('POST /api/scene — returns 409 for duplicate ID', async ({ request }) => {
-  const id = uid('dup');
-  await createScene(request, { id });
-
+test('POST /api/scene — ignores client-provided ID and generates UUID', async ({ request }) => {
+  const clientId = 'my-custom-id';
   const response = await request.post('/api/scene', {
-    data: { ...DEFAULT_SCENE, id },
+    data: { ...DEFAULT_SCENE, id: clientId },
   });
-  expect(response.status()).toBe(409);
+  expect(response.status()).toBe(201);
+  const body: Scene = await response.json();
+  expect(body.id).not.toBe(clientId);
+  expect(body.id).toMatch(/^[0-9a-f-]{36}$/); // UUID format
 });
 
 test('POST /api/scene — returns 400 for missing required name field', async ({ request }) => {
@@ -76,12 +78,13 @@ test('POST /api/scene — returns 400 for missing required name field', async ({
   expect(body.error).toBe('Validation failed');
 });
 
-test('POST /api/scene — returns 400 for missing required id field', async ({ request }) => {
+test('POST /api/scene — succeeds without id field in body', async ({ request }) => {
   const response = await request.post('/api/scene', {
-    data: { name: 'No ID Scene' },
+    data: { name: 'No ID Scene', layout: 'test-layout' },
   });
-  // Missing ID field should return 400 (no id field in body)
-  expect(response.status()).toBe(400);
+  expect(response.status()).toBe(201);
+  const body = await response.json();
+  expect(body.id).toBeDefined();
 });
 
 // ---------------------------------------------------------------------------
@@ -89,8 +92,8 @@ test('POST /api/scene — returns 400 for missing required id field', async ({ r
 // ---------------------------------------------------------------------------
 
 test('GET /api/scene/:id — returns 200 with correct payload', async ({ request }) => {
-  const id = uid('get');
-  const created = await createScene(request, { id });
+  const created = await createScene(request, { name: 'Get Test Scene' });
+  const id = created.id;
 
   const response = await request.get(`/api/scene/${id}`);
   expect(response.status()).toBe(200);
@@ -108,11 +111,11 @@ test('GET /api/scene/:id — returns 404 for non-existent ID', async ({ request 
 // ---------------------------------------------------------------------------
 
 test('PUT /api/scene/:id — updates and returns 200', async ({ request }) => {
-  const id = uid('update');
-  await createScene(request, { id });
+  const created = await createScene(request, { name: 'Update Test Scene' });
+  const id = created.id;
 
   const updated = {
-    id, // Now allowed if it matches
+    id,
     name: 'Updated Scene Name',
     layout: 'test-layout',
   };
@@ -125,8 +128,8 @@ test('PUT /api/scene/:id — updates and returns 200', async ({ request }) => {
 });
 
 test('PUT /api/scene/:id — returns 400 when body ID mismatches URL ID', async ({ request }) => {
-  const id = uid('mismatch');
-  await createScene(request, { id });
+  const created = await createScene(request, { name: 'Mismatch Test' });
+  const id = created.id;
 
   const response = await request.put(`/api/scene/${id}`, {
     data: { id: 'wrong-id', name: 'Wrong', layout: 'test-layout' },
@@ -146,7 +149,7 @@ test('PUT /api/scene/:id — returns 404 for non-existent ID', async ({ request 
 
 test('POST /api/scene — returns 400 for missing required layout field', async ({ request }) => {
   const response = await request.post('/api/scene', {
-    data: { id: uid('no-layout'), name: 'No Layout Scene' },
+    data: { name: 'No Layout Scene' },
   });
   expect(response.status()).toBe(400);
   const body = await response.json();
@@ -158,8 +161,8 @@ test('POST /api/scene — returns 400 for missing required layout field', async 
 // ---------------------------------------------------------------------------
 
 test('DELETE /api/scene/:id — deletes resource and returns {status: "deleted"}', async ({ request }) => {
-  const id = uid('delete');
-  await createScene(request, { id });
+  const created = await createScene(request, { name: 'Delete Test' });
+  const id = created.id;
 
   const response = await request.delete(`/api/scene/${id}`);
   expect(response.status()).toBe(200);

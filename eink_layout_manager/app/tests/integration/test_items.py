@@ -34,17 +34,20 @@ async def test_create_and_get_item(aiohttp_client, app):
     # Create
     resp = await client.post("/api/display_type", json=display_data)
     assert resp.status == 201
-    assert await resp.json() == display_data
+    created_data = await resp.json()
+    item_id = created_data["id"]
+    assert item_id != display_data["id"]
+    assert created_data["name"] == display_data["name"]
 
     # Read
-    resp = await client.get("/api/display_type/epd_2in13")
+    resp = await client.get(f"/api/display_type/{item_id}")
     assert resp.status == 200
-    assert await resp.json() == display_data
+    assert await resp.json() == created_data
 
     # Read Collection
     resp = await client.get("/api/display_type")
     assert resp.status == 200
-    assert await resp.json() == [display_data]
+    assert await resp.json() == [created_data]
 
 
 @pytest.mark.asyncio
@@ -82,12 +85,16 @@ async def test_create_display_type_portrait_swap(aiohttp_client, app):
 
     resp = await client.post("/api/display_type", json=portrait_data)
     assert resp.status == 201
-    assert await resp.json() == expected_data
+    created_data = await resp.json()
+    item_id = created_data["id"]
+    assert item_id != portrait_data["id"]
+    assert created_data["width_mm"] == 100
+    assert created_data["height_mm"] == 50
 
     # Verify storage
-    resp = await client.get("/api/display_type/portrait_epd")
+    resp = await client.get(f"/api/display_type/{item_id}")
     assert resp.status == 200
-    assert await resp.json() == expected_data
+    assert await resp.json() == created_data
 
 
 @pytest.mark.asyncio
@@ -109,7 +116,8 @@ async def test_create_item_duplicate(aiohttp_client, app):
     }
     await client.post("/api/display_type", json=data)
     resp = await client.post("/api/display_type", json=data)
-    assert resp.status == 409
+    # 409 is no longer returned because client-provided IDs are ignored
+    assert resp.status == 201
 
 
 @pytest.mark.asyncio
@@ -141,12 +149,15 @@ async def test_update_item(aiohttp_client, app):
         "frame": {"border_width_mm": 5, "colour": "#000000"},
         "mat": {"colour": "#FFFFFF"},
     }
-    await client.post("/api/display_type", json=data)
+    resp = await client.post("/api/display_type", json=data)
+    item_id = (await resp.json())["id"]
 
     update_payload = data.copy()
-    del update_payload["id"]
+    update_payload["id"] = item_id
     update_payload["name"] = "Updated"
-    resp = await client.put("/api/display_type/update_me", json=update_payload)
+    resp = await client.put(
+        f"/api/display_type/{item_id}", json=update_payload
+    )
     assert resp.status == 200
     assert (await resp.json())["name"] == "Updated"
 
@@ -156,10 +167,9 @@ async def test_update_item_id_mismatch(aiohttp_client, app):
     """Test update with ID mismatch between URL and body."""
     client = await aiohttp_client(app)
     # Create the item first so we don't get a 404
-    await client.post(
+    resp = await client.post(
         "/api/display_type",
         json={
-            "id": "correct_id",
             "name": "Name",
             "width_mm": 100,
             "height_mm": 100,
@@ -172,6 +182,7 @@ async def test_update_item_id_mismatch(aiohttp_client, app):
             "mat": {"colour": "#FFFFFF"},
         },
     )
+    correct_id = (await resp.json())["id"]
     data = {
         "id": "wrong_id",
         "name": "Name",
@@ -185,7 +196,7 @@ async def test_update_item_id_mismatch(aiohttp_client, app):
         "frame": {"border_width_mm": 5, "colour": "#000000"},
         "mat": {"colour": "#FFFFFF"},
     }
-    resp = await client.put("/api/display_type/correct_id", json=data)
+    resp = await client.put(f"/api/display_type/{correct_id}", json=data)
     assert resp.status == 400
     result = await resp.json()
     assert "ID in body does not match ID in URL" in result["error"]
@@ -208,14 +219,15 @@ async def test_delete_item(aiohttp_client, app):
         "frame": {"border_width_mm": 5, "colour": "#000000"},
         "mat": {"colour": "#FFFFFF"},
     }
-    await client.post("/api/display_type", json=data)
+    resp = await client.post("/api/display_type", json=data)
+    item_id = (await resp.json())["id"]
 
-    resp = await client.delete("/api/display_type/del_me")
+    resp = await client.delete(f"/api/display_type/{item_id}")
     assert resp.status == 200
     assert (await resp.json())["status"] == "deleted"
 
     # Verify gone
-    resp = await client.get("/api/display_type/del_me")
+    resp = await client.get(f"/api/display_type/{item_id}")
     assert resp.status == 404
 
 
@@ -272,16 +284,16 @@ async def test_delete_display_type_protection(aiohttp_client, app):
     }
     resp = await client.post("/api/display_type", json=dt_data)
     assert resp.status == 201
+    dt_id = (await resp.json())["id"]
 
     # 2. Create a layout referencing it
     layout_data = {
-        "id": "using_layout",
         "name": "Using Layout",
         "canvas_width_mm": 100,
         "canvas_height_mm": 100,
         "items": [
             {
-                "display_type_id": "protected_dt",
+                "display_type_id": dt_id,
                 "x_mm": 0,
                 "y_mm": 0,
                 "orientation": "landscape",
@@ -290,24 +302,25 @@ async def test_delete_display_type_protection(aiohttp_client, app):
     }
     resp = await client.post("/api/layout", json=layout_data)
     assert resp.status == 201
+    layout_id = (await resp.json())["id"]
 
     # Verify display type exists before delete attempt
-    resp = await client.get("/api/display_type/protected_dt")
+    resp = await client.get(f"/api/display_type/{dt_id}")
     assert resp.status == 200, "Display type should exist before delete"
 
     # 3. Attempt to delete display type (should fail)
-    resp = await client.delete("/api/display_type/protected_dt")
+    resp = await client.delete(f"/api/display_type/{dt_id}")
     assert resp.status == 400
     result = await resp.json()
     assert "Conflict" in result["error"]
     assert "Using Layout" in result["message"]
 
     # 4. Delete the layout
-    resp = await client.delete("/api/layout/using_layout")
+    resp = await client.delete(f"/api/layout/{layout_id}")
     assert resp.status == 200
 
     # 5. Attempt to delete display type again (should succeed)
-    resp = await client.delete("/api/display_type/protected_dt")
+    resp = await client.delete(f"/api/display_type/{dt_id}")
     assert resp.status == 200
     assert (await resp.json())["status"] == "deleted"
 
@@ -327,28 +340,29 @@ async def test_delete_layout_protection(aiohttp_client, app):
     }
     resp = await client.post("/api/layout", json=layout_data)
     assert resp.status == 201
+    layout_id = (await resp.json())["id"]
 
     # 2. Create a scene referencing it
     scene_data = {
-        "id": "using_scene",
         "name": "Using Scene",
-        "layout": "protected_layout",
+        "layout": layout_id,
     }
     resp = await client.post("/api/scene", json=scene_data)
     assert resp.status == 201
+    scene_id = (await resp.json())["id"]
 
     # 3. Attempt to delete layout (should fail)
-    resp = await client.delete("/api/layout/protected_layout")
+    resp = await client.delete(f"/api/layout/{layout_id}")
     assert resp.status == 400
     result = await resp.json()
     assert "Conflict" in result["error"]
     assert "Using Scene" in result["message"]
 
     # 4. Delete the scene
-    resp = await client.delete("/api/scene/using_scene")
+    resp = await client.delete(f"/api/scene/{scene_id}")
     assert resp.status == 200
 
     # 5. Attempt to delete layout again (should succeed)
-    resp = await client.delete("/api/layout/protected_layout")
+    resp = await client.delete(f"/api/layout/{layout_id}")
     assert resp.status == 200
     assert (await resp.json())["status"] == "deleted"

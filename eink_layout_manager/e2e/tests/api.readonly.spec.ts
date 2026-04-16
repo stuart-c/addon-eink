@@ -4,11 +4,9 @@ const uid = (suffix: string) => `e2e-ro-${suffix}-${Date.now()}`;
 
 test.describe('Read-Only Field Enforcement', () => {
   test('PUT /api/display_type/:id — rejects change to ID', async ({ request }) => {
-    const id = uid('ro-id');
-    // Create first
+    // Create first — server generates the ID
     const createResp = await request.post('/api/display_type', {
       data: {
-        id,
         name: 'Initial Name',
         width_mm: 100,
         height_mm: 100,
@@ -22,21 +20,14 @@ test.describe('Read-Only Field Enforcement', () => {
       },
     });
     expect(createResp.status()).toBe(201);
+    const created = await createResp.json();
+    const id = created.id;
 
-    // Attempt to change ID
+    // Attempt to change ID in the body during PUT
     const response = await request.put(`/api/display_type/${id}`, {
       data: {
+        ...created,
         id: 'new-id', // DIFFERENT
-        name: 'Initial Name',
-        width_mm: 100,
-        height_mm: 100,
-        panel_width_mm: 50,
-        panel_height_mm: 50,
-        width_px: 100,
-        height_px: 100,
-        colour_type: 'MONO',
-        frame: { border_width_mm: 5, colour: '#000000' },
-        mat: { colour: '#FFFFFF' },
       },
     });
 
