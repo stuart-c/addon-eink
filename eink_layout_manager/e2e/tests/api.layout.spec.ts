@@ -35,24 +35,34 @@ test('GET /api/layout — returns 200 with an array', async ({ request }) => {
 // ---------------------------------------------------------------------------
 
 test('POST /api/layout — creates a resource with no items and returns 201', async ({ request }) => {
-  const payload: Layout = { ...DEFAULT_LAYOUT, id: uid('empty') };
+  const payload: Omit<Layout, 'id'> = { 
+    name: 'Empty Layout',
+    canvas_width_mm: 100,
+    canvas_height_mm: 100,
+    items: []
+  };
 
   const response = await request.post('/api/layout', { data: payload });
   expect(response.status()).toBe(201);
 
   const body: Layout = await response.json();
-  expect(body).toMatchObject(payload);
+  expect(body.name).toBe(payload.name);
+  expect(body.id).toBeDefined();
 });
 
 test('POST /api/layout — creation response matches GET response', async ({ request }) => {
-  const id = uid('parity');
-  const payload: Layout = { ...DEFAULT_LAYOUT, id };
+  const payload: Omit<Layout, 'id'> = { 
+    name: 'Parity Layout',
+    canvas_width_mm: 100,
+    canvas_height_mm: 100,
+    items: []
+  };
 
   const createResponse = await request.post('/api/layout', { data: payload });
   expect(createResponse.status()).toBe(201);
   const created: Layout = await createResponse.json();
 
-  const getResponse = await request.get(`/api/layout/${id}`);
+  const getResponse = await request.get(`/api/layout/${created.id}`);
   expect(getResponse.status()).toBe(200);
   const fetched: Layout = await getResponse.json();
 
@@ -60,13 +70,11 @@ test('POST /api/layout — creation response matches GET response', async ({ req
 });
 
 test('POST /api/layout — creates a layout with display type items', async ({ request }) => {
-  const dtId = uid('dt');
-  await createDisplayType(request, { id: dtId });
+  const dt = await createDisplayType(request, { name: 'Item Test DT' });
+  const dtId = dt.id;
 
-  const id = uid('with-items');
-  const payload: Layout = {
+  const payload: Omit<Layout, 'id'> = {
     ...DEFAULT_LAYOUT,
-    id,
     items: [{ display_type_id: dtId, x_mm: 10, y_mm: 20, orientation: 'portrait' }],
   };
 
@@ -78,14 +86,15 @@ test('POST /api/layout — creates a layout with display type items', async ({ r
   expect(body.items[0].display_type_id).toBe(dtId);
 });
 
-test('POST /api/layout — returns 409 for duplicate ID', async ({ request }) => {
-  const id = uid('dup');
-  await createLayout(request, { id });
-
+test('POST /api/layout — ignores client-provided ID and generates UUID', async ({ request }) => {
+  const clientId = 'my-custom-layout-id';
   const response = await request.post('/api/layout', {
-    data: { ...DEFAULT_LAYOUT, id },
+    data: { ...DEFAULT_LAYOUT, id: clientId },
   });
-  expect(response.status()).toBe(409);
+  expect(response.status()).toBe(201);
+  const body: Layout = await response.json();
+  expect(body.id).not.toBe(clientId);
+  expect(body.id).toMatch(/^[0-9a-f-]{36}$/); // UUID format
 });
 
 test('POST /api/layout — returns 400 for invalid schema', async ({ request }) => {
@@ -114,10 +123,9 @@ test('POST /api/layout — returns 400 for invalid item orientation', async ({ r
 // ---------------------------------------------------------------------------
 
 test('GET /api/layout/:id — returns 200 with correct payload', async ({ request }) => {
-  const id = uid('get');
-  const created = await createLayout(request, { id });
+  const created = await createLayout(request, { name: 'Get Test' });
 
-  const response = await request.get(`/api/layout/${id}`);
+  const response = await request.get(`/api/layout/${created.id}`);
   expect(response.status()).toBe(200);
   const body: Layout = await response.json();
   expect(body).toEqual(created);
@@ -133,15 +141,11 @@ test('GET /api/layout/:id — returns 404 for non-existent ID', async ({ request
 // ---------------------------------------------------------------------------
 
 test('PUT /api/layout/:id — updates and returns 200', async ({ request }) => {
-  const dtId = uid('dt');
-  await createDisplayType(request, { id: dtId });
-
-  const id = uid('update');
-  await createLayout(request, { id });
+  const created = await createLayout(request, { name: 'Update Test' });
+  const id = created.id;
 
   const updated = {
-    ...DEFAULT_LAYOUT,
-    id, // Now allowed if it matches
+    ...created,
     name: 'Updated Layout Name',
     canvas_width_mm: 400,
   };
@@ -154,8 +158,8 @@ test('PUT /api/layout/:id — updates and returns 200', async ({ request }) => {
 });
 
 test('PUT /api/layout/:id — returns 400 when body ID mismatches URL ID', async ({ request }) => {
-  const id = uid('mismatch');
-  await createLayout(request, { id });
+  const created = await createLayout(request, { name: 'Mismatch Test' });
+  const id = created.id;
 
   const response = await request.put(`/api/layout/${id}`, {
     data: { ...DEFAULT_LAYOUT, id: 'wrong-id' },
@@ -178,8 +182,8 @@ test('PUT /api/layout/:id — returns 404 for non-existent ID', async ({ request
 // ---------------------------------------------------------------------------
 
 test('DELETE /api/layout/:id — deletes resource and returns {status: "deleted"}', async ({ request }) => {
-  const id = uid('delete');
-  await createLayout(request, { id });
+  const created = await createLayout(request, { name: 'Delete Test' });
+  const id = created.id;
 
   const response = await request.delete(`/api/layout/${id}`);
   expect(response.status()).toBe(200);
@@ -201,14 +205,14 @@ test('DELETE /api/layout/:id — returns 404 for non-existent ID', async ({ requ
 // ---------------------------------------------------------------------------
 
 test('layout — full CRUD lifecycle', async ({ request }) => {
-  const id = uid('lifecycle');
-
   // Create
   const createResponse = await request.post('/api/layout', {
-    data: { ...DEFAULT_LAYOUT, id, name: 'Lifecycle Layout' },
+    data: { ...DEFAULT_LAYOUT, name: 'Lifecycle Layout' },
   });
   expect(createResponse.status()).toBe(201);
-  expect((await createResponse.json()).name).toBe('Lifecycle Layout');
+  const created = await createResponse.json();
+  const id = created.id;
+  expect(created.name).toBe('Lifecycle Layout');
 
   // Read
   const getResponse = await request.get(`/api/layout/${id}`);
@@ -216,9 +220,8 @@ test('layout — full CRUD lifecycle', async ({ request }) => {
   expect((await getResponse.json()).id).toBe(id);
 
   // Update
-  const { id: _unused_id, ...lifecycleUpdatePayload } = { ...DEFAULT_LAYOUT, name: 'Lifecycle Layout Updated' };
   const putResponse = await request.put(`/api/layout/${id}`, {
-    data: lifecycleUpdatePayload,
+    data: { ...created, name: 'Lifecycle Layout Updated' },
   });
   expect(putResponse.status()).toBe(200);
   expect((await putResponse.json()).name).toBe('Lifecycle Layout Updated');

@@ -35,37 +35,39 @@ test('GET /api/display_type — returns 200 with an array', async ({ request }) 
 // ---------------------------------------------------------------------------
 
 test('POST /api/display_type — creates a resource and returns 201', async ({ request }) => {
-  const payload: DisplayType = { ...DEFAULT_DISPLAY_TYPE, id: uid('create') };
+  const payload: Omit<DisplayType, 'id'> = { ...DEFAULT_DISPLAY_TYPE };
 
   const response = await request.post('/api/display_type', { data: payload });
   expect(response.status()).toBe(201);
 
   const body: DisplayType = await response.json();
-  expect(body).toMatchObject(payload);
+  expect(body.name).toBe(payload.name);
+  expect(body.id).toBeDefined();
 });
 
 test('POST /api/display_type — creation response matches GET response', async ({ request }) => {
-  const payload: DisplayType = { ...DEFAULT_DISPLAY_TYPE, id: uid('parity') };
+  const payload: Omit<DisplayType, 'id'> = { ...DEFAULT_DISPLAY_TYPE, name: 'Parity DT' };
 
   const createResponse = await request.post('/api/display_type', { data: payload });
   expect(createResponse.status()).toBe(201);
   const created: DisplayType = await createResponse.json();
 
-  const getResponse = await request.get(`/api/display_type/${payload.id}`);
+  const getResponse = await request.get(`/api/display_type/${created.id}`);
   expect(getResponse.status()).toBe(200);
   const fetched: DisplayType = await getResponse.json();
 
   expect(created).toEqual(fetched);
 });
 
-test('POST /api/display_type — returns 409 for duplicate ID', async ({ request }) => {
-  const id = uid('dup');
-  await createDisplayType(request, { id });
-
+test('POST /api/display_type — ignores client-provided ID and generates UUID', async ({ request }) => {
+  const clientId = 'my-custom-dt-id';
   const response = await request.post('/api/display_type', {
-    data: { ...DEFAULT_DISPLAY_TYPE, id },
+    data: { ...DEFAULT_DISPLAY_TYPE, id: clientId },
   });
-  expect(response.status()).toBe(409);
+  expect(response.status()).toBe(201);
+  const body: DisplayType = await response.json();
+  expect(body.id).not.toBe(clientId);
+  expect(body.id).toMatch(/^[0-9a-f-]{36}$/); // UUID format
 });
 
 test('POST /api/display_type — returns 400 for invalid schema', async ({ request }) => {
@@ -90,10 +92,9 @@ test('POST /api/display_type — returns 400 for invalid colour_type enum', asyn
 // ---------------------------------------------------------------------------
 
 test('GET /api/display_type/:id — returns 200 with correct payload', async ({ request }) => {
-  const id = uid('get');
-  const created = await createDisplayType(request, { id });
+  const created = await createDisplayType(request, { name: 'Get Test DT' });
 
-  const response = await request.get(`/api/display_type/${id}`);
+  const response = await request.get(`/api/display_type/${created.id}`);
   expect(response.status()).toBe(200);
   const body: DisplayType = await response.json();
   expect(body).toEqual(created);
@@ -109,12 +110,11 @@ test('GET /api/display_type/:id — returns 404 for non-existent ID', async ({ r
 // ---------------------------------------------------------------------------
 
 test('PUT /api/display_type/:id — updates and returns 200', async ({ request }) => {
-  const id = uid('update');
-  await createDisplayType(request, { id });
+  const created = await createDisplayType(request, { name: 'Update Test DT' });
+  const id = created.id;
 
   const updated = {
-    ...DEFAULT_DISPLAY_TYPE,
-    id, // Now allowed if it matches the existing id
+    ...created,
     name: 'Updated Display Type Name',
     width_px: 300,
   };
@@ -127,8 +127,8 @@ test('PUT /api/display_type/:id — updates and returns 200', async ({ request }
 });
 
 test('PUT /api/display_type/:id — returns 400 when body ID mismatches URL ID', async ({ request }) => {
-  const id = uid('mismatch');
-  await createDisplayType(request, { id });
+  const created = await createDisplayType(request, { name: 'Mismatch Test' });
+  const id = created.id;
 
   const response = await request.put(`/api/display_type/${id}`, {
     data: { ...DEFAULT_DISPLAY_TYPE, id: 'wrong-id' },
@@ -152,8 +152,8 @@ test('PUT /api/display_type/:id — returns 404 for non-existent ID', async ({ r
 // ---------------------------------------------------------------------------
 
 test('DELETE /api/display_type/:id — deletes resource and returns {status: "deleted"}', async ({ request }) => {
-  const id = uid('delete');
-  await createDisplayType(request, { id });
+  const created = await createDisplayType(request, { name: 'Delete Test' });
+  const id = created.id;
 
   const response = await request.delete(`/api/display_type/${id}`);
   expect(response.status()).toBe(200);
@@ -175,14 +175,14 @@ test('DELETE /api/display_type/:id — returns 404 for non-existent ID', async (
 // ---------------------------------------------------------------------------
 
 test('DELETE /api/display_type/:id — returns 400 when display type is in use by a layout', async ({ request }) => {
-  const dtId = uid('ref-dt');
-  const layoutId = uid('ref-layout');
-
-  await createDisplayType(request, { id: dtId });
-  await createLayout(request, {
-    id: layoutId,
+  const dt = await createDisplayType(request, { name: 'Ref DT' });
+  const dtId = dt.id;
+  
+  const layout = await createLayout(request, {
+    name: 'Ref Layout',
     items: [{ display_type_id: dtId, x_mm: 0, y_mm: 0, orientation: 'landscape' }],
   });
+  const layoutId = layout.id;
 
   const deleteResponse = await request.delete(`/api/display_type/${dtId}`);
   expect(deleteResponse.status()).toBe(400);

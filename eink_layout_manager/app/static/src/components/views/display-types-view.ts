@@ -510,10 +510,7 @@ export class DisplayTypesView extends LitElement {
     e.preventDefault();
     if (!this.displayType) return;
     
-    // Auto-generate ID if missing
-    if (this.isNew && !this.displayType.id) {
-       this.displayType.id = this.displayType.name.toLowerCase().replace(/\s+/g, '_');
-    }
+    // ID is now generated on the server
 
     this.dispatchEvent(new CustomEvent('save', { detail: { displayType: this.displayType } }));
     this.isNew = false;

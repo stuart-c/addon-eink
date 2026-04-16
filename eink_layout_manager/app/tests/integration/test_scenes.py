@@ -21,26 +21,24 @@ async def test_create_and_get_scene(aiohttp_client, app):
         "layout": "main-living-room",
     }
 
-    expected_data = {
-        **scene_data,
-        "status": "draft",
-        "items": [],
-    }
-
     # Create
     resp = await client.post("/api/scene", json=scene_data)
     assert resp.status == 201
-    assert await resp.json() == expected_data
+    created_data = await resp.json()
+    scene_id = created_data["id"]
+    assert scene_id != scene_data["id"]
+    assert created_data["name"] == scene_data["name"]
+    assert created_data["status"] == "draft"
 
     # Read specific
-    resp = await client.get("/api/scene/morning-routine")
+    resp = await client.get(f"/api/scene/{scene_id}")
     assert resp.status == 200
-    assert await resp.json() == expected_data
+    assert await resp.json() == created_data
 
     # Read Collection
     resp = await client.get("/api/scene")
     assert resp.status == 200
-    assert await resp.json() == [expected_data]
+    assert await resp.json() == [created_data]
 
 
 @pytest.mark.asyncio
@@ -84,7 +82,8 @@ async def test_create_scene_with_items(aiohttp_client, app):
     assert resp.status == 201
 
     result = await resp.json()
-    assert result["id"] == "complex-scene"
+    assert result["id"] != "complex-scene"
+    assert result["name"] == "Complex Scene"
     assert result["items"][0]["id"] == "comp-1"
     assert result["items"][0]["type"] == "image"
     assert result["items"][0]["images"][0]["scaling_factor"] == 1.5
@@ -100,12 +99,13 @@ async def test_delete_scene(aiohttp_client, app):
         "name": "Delete Me",
         "layout": "temp-layout",
     }
-    await client.post("/api/scene", json=scene_data)
+    resp = await client.post("/api/scene", json=scene_data)
+    scene_id = (await resp.json())["id"]
 
-    resp = await client.delete("/api/scene/del_me")
+    resp = await client.delete(f"/api/scene/{scene_id}")
     assert resp.status == 200
     assert (await resp.json())["status"] == "deleted"
 
     # Verify gone
-    resp = await client.get("/api/scene/del_me")
+    resp = await client.get(f"/api/scene/{scene_id}")
     assert resp.status == 404

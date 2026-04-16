@@ -2,6 +2,7 @@ from sqlalchemy import select
 from aiohttp import web
 from jsonschema import validate, ValidationError
 import json
+import uuid
 
 from .. import database, models
 from ..utils.converters import scene_model_to_dict
@@ -74,7 +75,10 @@ async def handle_scene_create(request):
             {"error": "Validation failed", "message": e.message}, status=400
         )
 
-    scene_id = data.get("id")
+    # Generate a new UUID for the scene, ignoring any ID provided by the client
+    scene_id = str(uuid.uuid4())
+    data["id"] = scene_id
+
     try:
         scene_id = validate_id(scene_id)
     except ValueError as e:

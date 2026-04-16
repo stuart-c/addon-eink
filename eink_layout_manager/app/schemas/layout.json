@@ -44,5 +44,5 @@
       }
     }
   },
-  "required": ["id", "name", "canvas_width_mm", "canvas_height_mm", "items"]
+  "required": ["name", "canvas_width_mm", "canvas_height_mm", "items"]
 }
