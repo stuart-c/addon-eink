@@ -194,7 +194,7 @@ jobs:
             -v $(pwd):/work \
             -w /work \
             -e CI=true \
-            mcr.microsoft.com/playwright:v1.50.1-noble \
+            mcr.microsoft.com/playwright:v1.59.1-noble \
             /bin/bash -c "cd eink_layout_manager/e2e && npm install && npx playwright test --shard=${{ matrix.shard }}/2"
 
       - name: Upload Playwright report
