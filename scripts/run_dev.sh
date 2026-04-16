@@ -4,7 +4,7 @@
 IMAGE="ghcr.io/stuart-c/eink-layout-manager:dev"
 CONTAINER_NAME="eink-layout-manager-dev"
 PORT=8099
-DATA_DIR="$(pwd)/dev_data"
+DATA_DIR="$(pwd)/.data"
 
 # Ensure we are in the project root (simple check for eink_layout_manager dir)
 if [ ! -d "eink_layout_manager" ]; then

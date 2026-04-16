@@ -25,7 +25,7 @@ Run the script from the **project root directory**:
 2.  **Cleanup**: Automatically stops and removes any previously running `eink-layout-manager-dev` container.
 3.  **Starts Container**:
     - **Port**: Maps host port `8099` to container port `8099`.
-    - **Persistence**: Maps `./dev_data` in the project root to `/data` in the container. Any database records or images created will be saved here.
+    - **Persistence**: Maps `./.data` in the project root to `/data` in the container. Any database records or images created will be saved here.
 4.  **Browser**: Automatically attempts to open `http://localhost:8099` in your default browser.
 5.  **Logs**: Starts following the container logs in your terminal. **Press `Ctrl+C` to stop the logs and shut down the container.**
 
