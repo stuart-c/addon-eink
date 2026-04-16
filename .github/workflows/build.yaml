@@ -241,14 +241,14 @@ jobs:
       - name: Merge reports
         run: |
           npm install @playwright/test
-          npx playwright merge-reports --reporter html --output-dir playwright-report-merged ./blob-reports
+          npx playwright merge-reports --reporter html ./blob-reports
         working-directory: eink_layout_manager/e2e
 
       - name: Upload merged report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: playwright-report-merged
-          path: eink_layout_manager/e2e/playwright-report-merged/
+          path: eink_layout_manager/e2e/playwright-report/
           retention-days: 30
 
   publish:
