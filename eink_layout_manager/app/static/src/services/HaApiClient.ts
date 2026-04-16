@@ -137,9 +137,14 @@ export class HaApiClient {
   }
 
   async createItem<T>(resourceType: ResourceType, data: Partial<T>): Promise<T> {
+    const payload = { ...data };
+    if ('id' in payload) {
+      delete (payload as any).id;
+    }
+
     return this._fetch<T>(`api/${resourceType}`, {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
   }
 

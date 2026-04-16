@@ -44,7 +44,7 @@ describe('HaStateController', () => {
     vi.mocked(api.getImages).mockResolvedValue([]);
     
     // Mock the createItem call during createDefaultLayout
-    vi.mocked(api.createItem).mockResolvedValue({ id: 'default' } as any);
+    vi.mocked(api.createItem).mockResolvedValue({ id: 'default', items: [] } as any);
 
     await controller.refresh();
 

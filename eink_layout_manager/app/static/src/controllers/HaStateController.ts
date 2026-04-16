@@ -89,18 +89,17 @@ export class HaStateController implements ReactiveController {
   }
 
   private async createDefaultLayout() {
-    const defaultLayout: Layout = {
-      id: 'default',
+    const defaultLayout: Omit<Layout, 'id'> = {
       name: 'Main Layout',
       canvas_width_mm: 500,
       canvas_height_mm: 500,
       grid_snap_mm: 5,
       items: []
     };
-    this.activeLayout = defaultLayout;
-    this.layouts = [defaultLayout];
-    this._originalLayout = JSON.stringify(defaultLayout);
-    await api.createItem('layout', defaultLayout);
+    const result = await api.createItem<Layout>('layout', defaultLayout);
+    this.activeLayout = result;
+    this.layouts = [result];
+    this._originalLayout = JSON.stringify(result);
   }
 
   async saveActiveLayout() {
@@ -206,8 +205,7 @@ export class HaStateController implements ReactiveController {
     this.isSaving = true;
     this.host.requestUpdate();
     try {
-      const id = name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-      const newScene: Scene = { id, name, layout };
+      const newScene: Omit<Scene, 'id'> = { name, layout };
       const result = await api.createItem<Scene>('scene', newScene);
       this.activeScene = result;
       this._updateHash();
