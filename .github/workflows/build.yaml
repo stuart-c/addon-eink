@@ -207,9 +207,9 @@ jobs:
 
       - name: Debug find blob
         run: |
-          echo "Current directory: $(pwd)"
-          find . -maxdepth 4 -name "*blob*"
-          ls -R eink_layout_manager/e2e/blob-report || echo "Directory not found at explicit path"
+          echo "Listing all directories and files that might be blob reports:"
+          find . -maxdepth 5 -name "*blob*"
+          ls -R eink_layout_manager/e2e/blob-report || echo "blob-report not found"
 
       - name: Upload blob report for merging
         if: always()
@@ -241,14 +241,14 @@ jobs:
       - name: Download blob reports
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          path: eink_layout_manager/e2e/blob-reports
+          path: eink_layout_manager/e2e/all-blob-reports
           pattern: blob-report-*
           merge-multiple: true
 
       - name: Merge reports
         run: |
           npm install @playwright/test
-          npx playwright merge-reports --reporter html ./blob-reports
+          npx playwright merge-reports --reporter html ./all-blob-reports
         working-directory: eink_layout_manager/e2e
 
       - name: Upload merged report
