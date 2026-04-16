@@ -205,12 +205,7 @@ jobs:
           path: eink_layout_manager/e2e/playwright-report/
           retention-days: 30
 
-      - name: Listing all directories and files (debug)
-        if: always()
-        run: |
-          echo "Listing all directories and files that might be blob reports:"
-          find . -maxdepth 5 -name "*blob*"
-          ls -laR eink_layout_manager/e2e/blob-report || echo "blob-report not found"
+
 
       - name: Upload blob report for merging
         if: always()
