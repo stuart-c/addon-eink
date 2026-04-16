@@ -36,6 +36,8 @@ describe('DisplayTypesView', () => {
   beforeEach(async () => {
     element = document.createElement('display-types-view') as DisplayTypesView;
     element.displayTypes = mockDisplayTypes as any;
+    // Explicitly set to the first one to avoid auto-pick logic interference for tests that don't want it
+    element.selectedId = 'dt1';
     document.body.appendChild(element);
     await element.updateComplete;
   });
@@ -49,17 +51,36 @@ describe('DisplayTypesView', () => {
     expect(element.isNew).toBe(false);
   });
 
-  it('should switch to another display type when clicked in sidebar', async () => {
+  it('should dispatch select-display-type when another display type is clicked in sidebar', async () => {
+    const selectSpy = vi.fn();
+    element.addEventListener('select-display-type', selectSpy);
+
     const items = element.shadowRoot?.querySelectorAll('.sidebar-item');
     // Index 1 is the 2nd display type (Index 0 is the 1st)
     (items?.[1] as HTMLElement).click();
     
+    expect(selectSpy).toHaveBeenCalledWith(expect.objectContaining({
+      detail: { id: 'dt2' }
+    }));
+
+    // Now simulate the parent updating the property
+    element.selectedId = 'dt2';
     await element.updateComplete;
     expect(element.displayType?.id).toBe('dt2');
   });
 
-  it('should go into "Add New" mode when addNew is called', async () => {
+  it('should dispatch select-display-type with null when addNew is called', async () => {
+    const selectSpy = vi.fn();
+    element.addEventListener('select-display-type', selectSpy);
+
     element.addNew();
+    
+    expect(selectSpy).toHaveBeenCalledWith(expect.objectContaining({
+      detail: { id: null }
+    }));
+
+    // Simulate parent updating property
+    element.selectedId = null;
     await element.updateComplete;
     
     expect(element.isNew).toBe(true);

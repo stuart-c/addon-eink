@@ -112,7 +112,7 @@ export class YamlEditor extends LitElement {
   @query('textarea') private _textarea!: HTMLTextAreaElement;
   @query('pre') private _highlightLayer!: HTMLPreElement;
 
-  protected updated(changedProperties: PropertyValues) {
+  protected willUpdate(changedProperties: PropertyValues) {
     if (changedProperties.has('data') && this.data) {
       // Strip internal properties like 'invalid' before showing in YAML
       const cleanData = this._getCleanData(this.data);
@@ -123,6 +123,10 @@ export class YamlEditor extends LitElement {
         this._yamlText = currentYaml;
       }
     }
+  }
+
+  protected updated(changedProperties: PropertyValues) {
+    super.updated(changedProperties);
   }
 
   private _getCleanData(data: any): any {
