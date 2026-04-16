@@ -57,6 +57,25 @@ This script runs the end-to-end integration tests using Playwright. **Running th
 
 Like `run_tests.sh`, this script will automatically provision the virtual environment and ensure Playwright browsers are installed if they are missing.
 
+## `verify_all.sh`
+
+This is a comprehensive wrapper script that executes the full development pipeline in an isolated environment. It is recommended to run this script before pushing any significant changes.
+
+### Usage
+
+```bash
+./scripts/verify_all.sh
+```
+
+### What it does:
+
+1.  **Isolation**: Generates a random free port and a unique temporary data directory (`.data_verify_XXXXXX`) to ensure the verification process does not interfere with your local development data or other running services.
+2.  **Frontend Build**: Runs `./scripts/build_frontend.sh`.
+3.  **Unit Tests**: Runs `./scripts/run_tests.sh` (Python lints, unit tests, and Frontend unit tests).
+4.  **Backend Startup**: Starts the backend application in the background using the generated port and temporary directory.
+5.  **E2E Tests**: Runs `./scripts/run_e2e.sh` against the freshly started background application.
+6.  **Cleanup**: Automatically terminates the background backend process and removes the temporary data directory upon completion or if the script is interrupted.
+
 ## `make_venv.sh`
 
 A helper script used by the testing tools to create a Python virtual environment and initialise `nodeenv` with the correct Node.js version.
