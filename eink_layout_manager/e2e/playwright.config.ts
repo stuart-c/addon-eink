@@ -20,7 +20,7 @@ export default defineConfig({
   webServer: {
     command: `cd ../.. && export DATA_DIR=${DATA_DIR} && export INGRESS_PORT=${INGRESS_PORT} && cd eink_layout_manager && PYTHONPATH=. app/.venv/bin/python3 -m app.main`,
     url: `http://localhost:${INGRESS_PORT}/api/ping`,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: true,
     stdout: 'pipe',
     stderr: 'pipe',
   },
