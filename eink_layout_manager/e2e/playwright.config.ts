@@ -1,5 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const INGRESS_PORT = process.env.INGRESS_PORT || '8099';
+const DATA_DIR = process.env.DATA_DIR || '$(pwd)/test_data_e2e';
+
+
 export default defineConfig({
   testDir: './tests',
   fullyParallel: false,
@@ -8,12 +12,12 @@ export default defineConfig({
   workers: 1,
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'html',
   use: {
-    baseURL: process.env.BASE_URL || 'http://127.0.0.1:8099',
+    baseURL: process.env.BASE_URL || `http://127.0.0.1:${INGRESS_PORT}`,
     trace: 'retain-on-failure',
   },
   webServer: {
-    command: 'cd ../.. && export DATA_DIR=$(pwd)/test_data_e2e && export INGRESS_PORT=8099 && cd eink_layout_manager && PYTHONPATH=. app/.venv/bin/python3 -m app.main',
-    url: 'http://localhost:8099/api/ping',
+    command: `cd ../.. && export DATA_DIR=${DATA_DIR} && export INGRESS_PORT=${INGRESS_PORT} && cd eink_layout_manager && PYTHONPATH=. app/.venv/bin/python3 -m app.main`,
+    url: `http://localhost:${INGRESS_PORT}/api/ping`,
     reuseExistingServer: !process.env.CI,
     stdout: 'pipe',
     stderr: 'pipe',

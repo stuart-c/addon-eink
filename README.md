@@ -30,6 +30,7 @@ Local testing is mandatory for all contributions. We provide several scripts in 
 
 - **`./scripts/run_tests.sh`**: Runs Python lints, unit tests, and frontend tests.
 - **`./scripts/run_e2e.sh`**: Runs end-to-end integration tests using Playwright.
+- **`./scripts/verify_all.sh`**: Runs the full verification pipeline (build, unit tests, and E2E tests) in an isolated environment.
 - **`./scripts/run_app.sh`**: Runs the backend application locally in a virtual environment.
 - **`./scripts/run_dev.sh`**: Pulls the latest development Docker image and runs the full addon environment.
 
