@@ -128,6 +128,7 @@ export class HaStateController implements ReactiveController {
     this.host.requestUpdate();
     try {
       let saved: DisplayType;
+      const exists = !!dt.id && this.displayTypes.some(existing => existing.id === dt.id);
       if (exists) {
         saved = await api.updateItem('display_type', dt.id, dt);
       } else {
@@ -135,8 +136,9 @@ export class HaStateController implements ReactiveController {
       }
       this.selectedDisplayTypeId = saved.id;
       this._updateHash();
-      this.showMessage(`Display type "${dt.name}" saved!`, 'success');
       await this.refresh();
+      this.isSaving = false;
+      this.showMessage(`Display type "${saved.name}" saved!`, 'success');
     } catch (e: any) {
       this.showMessage(`Failed to save display type: ${e.message}`, 'error');
     } finally {
@@ -209,8 +211,9 @@ export class HaStateController implements ReactiveController {
       const result = await api.createItem<Scene>('scene', newScene);
       this.activeScene = result;
       this._updateHash();
-      this.showMessage(`Scene "${name}" created!`, 'success');
       await this.refresh();
+      this.isSaving = false;
+      this.showMessage(`Scene "${name}" created!`, 'success');
       return result;
     } catch (e: any) {
       this.showMessage(`Failed to create scene: ${e.message}`, 'error');

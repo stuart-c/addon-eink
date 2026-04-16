@@ -354,12 +354,12 @@ export class DisplayTypesView extends LitElement {
   }
 
   protected willUpdate(changedProperties: Map<string | number | symbol, unknown>) {
+    if (changedProperties.has('selectedId') || changedProperties.has('displayTypes')) {
+      this._syncSelection();
+    }
     if (changedProperties.has('displayType') || changedProperties.has('displayTypes') || changedProperties.has('isNew')) {
       this._updateDirtyState();
       this._updateDeleteState();
-    }
-    if (changedProperties.has('selectedId') || changedProperties.has('displayTypes')) {
-      this._syncSelection();
     }
   }
 
