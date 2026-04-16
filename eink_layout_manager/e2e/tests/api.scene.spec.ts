@@ -111,7 +111,11 @@ test('PUT /api/scene/:id — updates and returns 200', async ({ request }) => {
   const id = uid('update');
   await createScene(request, { id });
 
-  const updated: Scene = { id, name: 'Updated Scene Name', layout: 'test-layout' };
+  const updated = {
+    id, // Now allowed if it matches
+    name: 'Updated Scene Name',
+    layout: 'test-layout',
+  };
 
   const response = await request.put(`/api/scene/${id}`, { data: updated });
   expect(response.status()).toBe(200);
@@ -125,14 +129,17 @@ test('PUT /api/scene/:id — returns 400 when body ID mismatches URL ID', async 
   await createScene(request, { id });
 
   const response = await request.put(`/api/scene/${id}`, {
-    data: { id: 'wrong-id', name: 'Mismatch', layout: 'test-layout' },
+    data: { id: 'wrong-id', name: 'Wrong', layout: 'test-layout' },
   });
   expect(response.status()).toBe(400);
+  const body = await response.json();
+  expect(body.error).toMatch(/ID in body does not match ID in URL/);
 });
 
 test('PUT /api/scene/:id — returns 404 for non-existent ID', async ({ request }) => {
+  const payload = { id: 'ghost-id', name: 'Ghost', layout: 'test-layout' };
   const response = await request.put('/api/scene/ghost-id', {
-    data: { id: 'ghost-id', name: 'Ghost', layout: 'test-layout' },
+    data: payload,
   });
   expect(response.status()).toBe(404);
 });

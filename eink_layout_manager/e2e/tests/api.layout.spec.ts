@@ -133,12 +133,15 @@ test('GET /api/layout/:id — returns 404 for non-existent ID', async ({ request
 // ---------------------------------------------------------------------------
 
 test('PUT /api/layout/:id — updates and returns 200', async ({ request }) => {
+  const dtId = uid('dt');
+  await createDisplayType(request, { id: dtId });
+
   const id = uid('update');
   await createLayout(request, { id });
 
-  const updated: Layout = {
+  const updated = {
     ...DEFAULT_LAYOUT,
-    id,
+    id, // Now allowed if it matches
     name: 'Updated Layout Name',
     canvas_width_mm: 400,
   };
@@ -158,11 +161,14 @@ test('PUT /api/layout/:id — returns 400 when body ID mismatches URL ID', async
     data: { ...DEFAULT_LAYOUT, id: 'wrong-id' },
   });
   expect(response.status()).toBe(400);
+  const body = await response.json();
+  expect(body.error).toMatch(/ID in body does not match ID in URL/);
 });
 
 test('PUT /api/layout/:id — returns 404 for non-existent ID', async ({ request }) => {
+  const payload = { ...DEFAULT_LAYOUT, id: 'ghost-id' };
   const response = await request.put('/api/layout/ghost-id', {
-    data: { ...DEFAULT_LAYOUT, id: 'ghost-id' },
+    data: payload,
   });
   expect(response.status()).toBe(404);
 });
@@ -210,8 +216,9 @@ test('layout — full CRUD lifecycle', async ({ request }) => {
   expect((await getResponse.json()).id).toBe(id);
 
   // Update
+  const { id: _unused_id, ...lifecycleUpdatePayload } = { ...DEFAULT_LAYOUT, name: 'Lifecycle Layout Updated' };
   const putResponse = await request.put(`/api/layout/${id}`, {
-    data: { ...DEFAULT_LAYOUT, id, name: 'Lifecycle Layout Updated' },
+    data: lifecycleUpdatePayload,
   });
   expect(putResponse.status()).toBe(200);
   expect((await putResponse.json()).name).toBe('Lifecycle Layout Updated');

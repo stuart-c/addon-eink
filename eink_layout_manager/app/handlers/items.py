@@ -8,6 +8,7 @@ from ..utils.validation import (
     validate_id,
     load_schema,
     response_schema,
+    validate_read_only,
 )
 
 
@@ -186,31 +187,7 @@ async def update_item(request):
     except json.JSONDecodeError:
         return web.json_response({"error": "Invalid JSON"}, status=400)
 
-    # Ensure ID in URL matches ID in body (if provided)
-    if "id" in data and data["id"] != item_id:
-        return web.json_response(
-            {"error": "ID in body does not match ID in URL"}, status=400
-        )
-
-    data["id"] = item_id
-
-    # Validation
-    try:
-        schema_name = resource_type
-        schema = load_schema(schema_name)
-        validate(instance=data, schema=schema)
-    except FileNotFoundError:
-        return web.json_response(
-            {"error": f"Schema for {resource_type} not found"}, status=500
-        )
-    except ValidationError as e:
-        return web.json_response(
-            {"error": "Validation failed", "message": e.message}, status=400
-        )
-
-    if resource_type == "display_type":
-        data = ensure_landscape(data)
-
+    # Fetch existing item FIRST
     try:
         model_class = get_model_class(resource_type)
         item_id = validate_id(item_id)
@@ -224,6 +201,43 @@ async def update_item(request):
         item = result.scalars().first()
         if not item:
             return web.json_response({"error": "Not Found"}, status=404)
+
+        existing_data = model_to_dict(item)
+
+        # Ensure ID in URL matches ID in body (if provided)
+        if "id" in data and data["id"] != item_id:
+            return web.json_response(
+                {"error": "ID in body does not match ID in URL"}, status=400
+            )
+
+        # Validate read-only fields against EXISTING data
+        try:
+            validate_read_only(
+                data, resource_type, existing_data=existing_data
+            )
+        except ValidationError as e:
+            return web.json_response({"error": str(e)}, status=400)
+
+        # Merge ID into data for base schema validation
+        data["id"] = item_id
+
+        # Validation against full schema
+        try:
+            schema_name = resource_type
+            schema = load_schema(schema_name)
+            validate(instance=data, schema=schema)
+        except FileNotFoundError:
+            return web.json_response(
+                {"error": f"Schema for {resource_type} not found"}, status=500
+            )
+        except ValidationError as e:
+            return web.json_response(
+                {"error": "Validation failed", "message": e.message},
+                status=400,
+            )
+
+        if resource_type == "display_type":
+            data = ensure_landscape(data)
 
         # Update fields
         for key, value in data.items():

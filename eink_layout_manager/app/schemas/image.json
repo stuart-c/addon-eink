@@ -72,6 +72,12 @@
     "source": {
       "type": ["string", "null"],
       "description": "Original source URL or repository"
+    },
+    "status": {
+      "type": "string",
+      "description": "Processing status of the image",
+      "enum": ["UPLOADED", "PROCESSING", "READY", "ERROR"],
+      "readOnly": true
     }
   },
   "required": [

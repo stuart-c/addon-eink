@@ -144,9 +144,11 @@ export class HaApiClient {
   }
 
   async updateItem<T>(resourceType: ResourceType, id: string, data: Partial<T>): Promise<T> {
+    const payload = { ...data };
+
     return this._fetch<T>(`api/${resourceType}/${id}`, {
       method: 'PUT',
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
   }
 
