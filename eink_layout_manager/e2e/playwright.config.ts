@@ -6,11 +6,13 @@ const DATA_DIR = process.env.DATA_DIR || '$(pwd)/test_data_e2e';
 
 export default defineConfig({
   testDir: './tests',
-  fullyParallel: false,
+  fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: 1,
-  reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'html',
+  workers: process.env.CI ? undefined : 1,
+  reporter: process.env.CI
+    ? [['github'], ['blob'], ['html', { open: 'never' }]]
+    : 'html',
   use: {
     baseURL: process.env.BASE_URL || `http://127.0.0.1:${INGRESS_PORT}`,
     trace: 'retain-on-failure',
