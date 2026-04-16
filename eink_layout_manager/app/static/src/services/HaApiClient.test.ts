@@ -83,13 +83,13 @@ describe('HaApiClient', () => {
        expect(mockFetch).toHaveBeenCalledWith('api/layout/123', expect.any(Object));
      });
 
-    it('createItem should use POST and stringify body', async () => {
+    it('createItem should use POST, stringify body, and strip id field', async () => {
        mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({ id: 'new' }),
         headers: new Headers()
       });
-      await client.createItem('layout', { name: 'New' });
+      await client.createItem('layout', { id: 'ignored', name: 'New' });
       expect(mockFetch).toHaveBeenCalledWith('api/layout', expect.objectContaining({
         method: 'POST',
         body: JSON.stringify({ name: 'New' })

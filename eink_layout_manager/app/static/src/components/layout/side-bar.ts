@@ -76,7 +76,7 @@ export class SideBar extends LitElement {
     return html`
       <div class="sidebar-section" style="flex: 2;">
         <h3>Layout Items</h3>
-        ${this.activeLayout?.items.map((item, index) => {
+        ${(this.activeLayout?.items || []).map((item, index) => {
           const dt = this.displayTypes.find(t => t.id === item.display_type_id);
           return html`
             <div 
