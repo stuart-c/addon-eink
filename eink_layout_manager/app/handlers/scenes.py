@@ -9,6 +9,7 @@ from ..utils.validation import (
     validate_id,
     load_schema,
     response_schema,
+    validate_read_only,
 )
 
 
@@ -111,34 +112,14 @@ async def handle_scene_create(request):
 async def handle_scene_update(request):
     """Update an existing scene in the database."""
     scene_id = request.match_info["id"]
+
     try:
         scene_id = validate_id(scene_id)
         data = await request.json()
-    except ValueError as e:
-        return web.json_response({"error": str(e)}, status=400)
-    except json.JSONDecodeError:
-        return web.json_response({"error": "Invalid JSON"}, status=400)
-
-    # Ensure ID in URL matches ID in body (if provided)
-    if "id" in data and data["id"] != scene_id:
+    except (ValueError, json.JSONDecodeError) as e:
         return web.json_response(
-            {"error": "ID in body does not match ID in URL"}, status=400
-        )
-
-    # Ensure ID is present in data for validation
-    data["id"] = scene_id
-
-    # Validation
-    try:
-        schema = load_schema("scene")
-        validate(instance=data, schema=schema)
-    except FileNotFoundError:
-        return web.json_response(
-            {"error": "Schema for scene not found"}, status=500
-        )
-    except ValidationError as e:
-        return web.json_response(
-            {"error": "Validation failed", "message": e.message}, status=400
+            {"error": str(e) if isinstance(e, ValueError) else "Invalid JSON"},
+            status=400,
         )
 
     try:
@@ -150,6 +131,39 @@ async def handle_scene_update(request):
             if not scene:
                 return web.json_response({"error": "Not Found"}, status=404)
 
+            existing_data = scene_model_to_dict(scene)
+
+            # Ensure ID in URL matches ID in body (if provided)
+            if "id" in data and data["id"] != scene_id:
+                return web.json_response(
+                    {"error": "ID in body does not match ID in URL"},
+                    status=400,
+                )
+
+            # Validate read-only fields against EXISTING data
+            try:
+                validate_read_only(data, "scene", existing_data=existing_data)
+            except ValidationError as e:
+                return web.json_response({"error": str(e)}, status=400)
+
+            # Ensure ID is present in data for validation
+            data["id"] = scene_id
+
+            # Validation against scene schema
+            try:
+                schema = load_schema("scene")
+                validate(instance=data, schema=schema)
+            except FileNotFoundError:
+                return web.json_response(
+                    {"error": "Schema for scene not found"}, status=500
+                )
+            except ValidationError as e:
+                return web.json_response(
+                    {"error": "Validation failed", "message": e.message},
+                    status=400,
+                )
+
+            # Update fields
             scene.name = data["name"]
             scene.layout_id = data["layout"]
             if "items" in data:

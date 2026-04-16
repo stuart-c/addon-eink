@@ -578,15 +578,11 @@ async def test_image_update_with_null_metadata(aiohttp_client, app):
 
     # 2. Update with null values for optional fields
     update_data = {
-        "id": image_id,
         "name": "Updated Name",
-        "file_type": "PNG",
-        "dimensions": {"width": width, "height": height},
         "artist": None,
         "collection": None,
         "description": None,
         "keywords": None,
-        "colour_depth": None,
         "original_archive_file": None,
         "license": None,
         "source": None,
@@ -602,7 +598,6 @@ async def test_image_update_with_null_metadata(aiohttp_client, app):
     assert updated_result["collection"] is None
     assert updated_result["description"] is None
     assert updated_result["keywords"] == []  # Keywords converts None to []
-    assert updated_result["colour_depth"] is None
 
 
 @pytest.mark.asyncio
@@ -630,10 +625,7 @@ async def test_image_upload_and_update_jpeg(aiohttp_client, app):
 
     # 2. Update metadata (triggering schema validation)
     update_data = {
-        "id": image_id,
         "name": "Updated JPEG",
-        "file_type": "JPEG",
-        "dimensions": {"width": width, "height": height},
     }
     resp = await client.put(f"/api/image/{image_id}", json=update_data)
     assert resp.status == 200

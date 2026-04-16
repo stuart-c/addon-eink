@@ -6,6 +6,89 @@ import re
 from aiohttp import web
 from jsonschema import validate, ValidationError
 
+
+def get_readonly_fields(schema):
+    """
+    Recursively find all fields marked as readOnly in a JSON schema.
+    Returns a set of field paths (e.g., {"id", "dimensions.width"}).
+    """
+    readonly_fields = set()
+
+    def _find_readonly(subschema, path=""):
+        if not isinstance(subschema, dict):
+            return
+
+        if subschema.get("readOnly"):
+            readonly_fields.add(path)
+
+        properties = subschema.get("properties", {})
+        for prop, details in properties.items():
+            new_path = f"{path}.{prop}" if path else prop
+            _find_readonly(details, new_path)
+
+    _find_readonly(schema)
+    return readonly_fields
+
+
+def validate_read_only(data, schema_name, existing_data=None):
+    """
+    Check if any fields in data are marked as readOnly in the named schema.
+    If existing_data is provided, only raise ValidationError if the value provided
+    differs from the existing value.
+    """
+    schema = load_schema(schema_name)
+    readonly_paths = get_readonly_fields(schema)
+
+    found_readonly_changes = []
+
+    def _get_value_at_path(obj, path):
+        parts = path.split(".")
+        curr = obj
+        for part in parts:
+            if isinstance(curr, dict) and part in curr:
+                curr = curr[part]
+            else:
+                return None
+        return curr
+
+    def _check_data(subdata, path=""):
+        if not isinstance(subdata, dict):
+            return
+
+        for key, value in subdata.items():
+            current_path = f"{path}.{key}" if path else key
+            if current_path in readonly_paths:
+                if existing_data is not None:
+                    # Compare with existing value
+                    existing_val = _get_value_at_path(
+                        existing_data, current_path
+                    )
+                    # Use standard equality; works for strings, ints, and even
+                    # dicts/lists
+                    if value != existing_val:
+                        found_readonly_changes.append(current_path)
+                else:
+                    # No existing data (e.g. POST), presence of field is enough
+                    # to reject
+                    found_readonly_changes.append(current_path)
+
+            if isinstance(value, dict):
+                _check_data(value, current_path)
+
+    _check_data(data)
+
+    if found_readonly_changes:
+        fields_str = ", ".join(sorted(found_readonly_changes))
+        if existing_data is not None:
+            msg = (
+                "Attempted to update read-only fields with changed values: "
+                f"{fields_str}"
+            )
+        else:
+            msg = f"Attempted to include read-only fields in request: {fields_str}"
+        raise ValidationError(msg)
+
+
 # Base directory for data persistence
 # Moving one level up from utils/ to app/ then to schemas/
 SCHEMAS_DIR = os.path.realpath(

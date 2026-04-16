@@ -143,8 +143,10 @@ async def test_update_item(aiohttp_client, app):
     }
     await client.post("/api/display_type", json=data)
 
-    data["name"] = "Updated"
-    resp = await client.put("/api/display_type/update_me", json=data)
+    update_payload = data.copy()
+    del update_payload["id"]
+    update_payload["name"] = "Updated"
+    resp = await client.put("/api/display_type/update_me", json=update_payload)
     assert resp.status == 200
     assert (await resp.json())["name"] == "Updated"
 
@@ -153,9 +155,40 @@ async def test_update_item(aiohttp_client, app):
 async def test_update_item_id_mismatch(aiohttp_client, app):
     """Test update with ID mismatch between URL and body."""
     client = await aiohttp_client(app)
-    data = {"id": "wrong_id", "name": "Name"}
+    # Create the item first so we don't get a 404
+    await client.post(
+        "/api/display_type",
+        json={
+            "id": "correct_id",
+            "name": "Name",
+            "width_mm": 100,
+            "height_mm": 100,
+            "panel_width_mm": 50,
+            "panel_height_mm": 50,
+            "width_px": 100,
+            "height_px": 100,
+            "colour_type": "MONO",
+            "frame": {"border_width_mm": 5, "colour": "#000000"},
+            "mat": {"colour": "#FFFFFF"},
+        },
+    )
+    data = {
+        "id": "wrong_id",
+        "name": "Name",
+        "width_mm": 100,
+        "height_mm": 100,
+        "panel_width_mm": 50,
+        "panel_height_mm": 50,
+        "width_px": 100,
+        "height_px": 100,
+        "colour_type": "MONO",
+        "frame": {"border_width_mm": 5, "colour": "#000000"},
+        "mat": {"colour": "#FFFFFF"},
+    }
     resp = await client.put("/api/display_type/correct_id", json=data)
     assert resp.status == 400
+    result = await resp.json()
+    assert "ID in body does not match ID in URL" in result["error"]
 
 
 @pytest.mark.asyncio
@@ -207,7 +240,11 @@ async def test_not_found(aiohttp_client, app):
         "frame": {"border_width_mm": 5, "colour": "#000000"},
         "mat": {"colour": "#FFFFFF"},
     }
-    resp = await client.put("/api/display_type/non_existent", json=valid_data)
+    update_payload = valid_data.copy()
+    del update_payload["id"]
+    resp = await client.put(
+        "/api/display_type/non_existent", json=update_payload
+    )
     assert resp.status == 404
 
     resp = await client.delete("/api/display_type/non_existent")

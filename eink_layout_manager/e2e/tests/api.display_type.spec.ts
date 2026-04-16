@@ -112,9 +112,9 @@ test('PUT /api/display_type/:id — updates and returns 200', async ({ request }
   const id = uid('update');
   await createDisplayType(request, { id });
 
-  const updated: DisplayType = {
+  const updated = {
     ...DEFAULT_DISPLAY_TYPE,
-    id,
+    id, // Now allowed if it matches the existing id
     name: 'Updated Display Type Name',
     width_px: 300,
   };
@@ -134,11 +134,15 @@ test('PUT /api/display_type/:id — returns 400 when body ID mismatches URL ID',
     data: { ...DEFAULT_DISPLAY_TYPE, id: 'wrong-id' },
   });
   expect(response.status()).toBe(400);
+  const body = await response.json();
+  // The mismatch error triggers before or alongside the read-only check
+  expect(body.error).toMatch(/ID in body does not match ID in URL/);
 });
 
 test('PUT /api/display_type/:id — returns 404 for non-existent ID', async ({ request }) => {
+  const payload = { ...DEFAULT_DISPLAY_TYPE, id: 'ghost-id' };
   const response = await request.put('/api/display_type/ghost-id', {
-    data: { ...DEFAULT_DISPLAY_TYPE, id: 'ghost-id' },
+    data: payload,
   });
   expect(response.status()).toBe(404);
 });

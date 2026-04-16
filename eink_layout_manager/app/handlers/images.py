@@ -18,6 +18,7 @@ from ..utils.validation import (
     validate_id,
     load_schema,
     response_schema,
+    validate_read_only,
 )
 from ..utils.query import parse_image_sort_params, build_image_filters
 from jsonschema import validate, ValidationError
@@ -318,15 +319,10 @@ async def handle_image_update(request):
     try:
         image_id = validate_id(image_id)
         data = await request.json()
-    except ValueError as e:
-        return web.json_response({"error": str(e)}, status=400)
-    except json.JSONDecodeError:
-        return web.json_response({"error": "Invalid JSON"}, status=400)
-
-    # Ensure ID in URL matches ID in body (if provided)
-    if "id" in data and data["id"] != image_id:
+    except (ValueError, json.JSONDecodeError) as e:
         return web.json_response(
-            {"error": "ID in body does not match ID in URL"}, status=400
+            {"error": str(e) if isinstance(e, ValueError) else "Invalid JSON"},
+            status=400,
         )
 
     try:
@@ -337,6 +333,21 @@ async def handle_image_update(request):
 
             if not image:
                 return web.json_response({"error": "Not Found"}, status=404)
+
+            existing_data = image_model_to_dict(image)
+
+            # Ensure ID in URL matches ID in body (if provided)
+            if "id" in data and data["id"] != image_id:
+                return web.json_response(
+                    {"error": "ID in body does not match ID in URL"},
+                    status=400,
+                )
+
+            # Validate read-only fields against EXISTING data
+            try:
+                validate_read_only(data, "image", existing_data=existing_data)
+            except ValidationError as e:
+                return web.json_response({"error": str(e)}, status=400)
 
             # Pre-populate required fields for validation if missing
             # This allows partial updates from the frontend while
@@ -353,11 +364,7 @@ async def handle_image_update(request):
                     "height": image.height,
                 }
 
-            # Remove status from data if it exists to ensure backend control
-            if "status" in data:
-                del data["status"]
-
-            # Validation against image schema (now without status)
+            # Validation against image schema
             try:
                 schema = load_schema("image")
                 validate(instance=data, schema=schema)
