@@ -45,9 +45,7 @@ test.describe('Display Types Management', () => {
   });
 
   test('should edit an existing display type', async ({ page }) => {
-    // First, ensure there's a display type to edit (the previous test created one, or we use a default if any)
-    // For isolation, let's create one first if none exist, but usually they are persisted if we don't clear DB.
-    // However, it's better to create one in this test for reliability.
+    // First, ensure there's a display type to edit
     await page.locator('button[title="Add New Item"]').click();
     await page.getByPlaceholder('e.g. Living Room Display').fill('Edit Me');
     await page.locator('div.form-group:has-text("Frame Outer Width (mm)") input').fill('100');
@@ -58,6 +56,9 @@ test.describe('Display Types Management', () => {
     await page.locator('div.form-group:has-text("Resolution Width (px)") input').fill('100');
     await page.locator('div.form-group:has-text("Resolution Height (px)") input').fill('100');
     await page.locator('button[title="Save Changes"]').click();
+    
+    // Wait for the first toast to disappear to avoid flakiness in the next step
+    await expect(page.locator('app-header')).not.toContainText('saved', { timeout: 10000 });
     
     // Select it in sidebar (should already be selected, but let's be sure)
     await page.locator('.sidebar-item').getByText('Edit Me').click();
@@ -86,6 +87,9 @@ test.describe('Display Types Management', () => {
     await page.locator('div.form-group:has-text("Resolution Height (px)") input').fill('100');
     await page.locator('button[title="Save Changes"]').click();
 
+    // Wait for toast to disappear
+    await expect(page.locator('app-header')).not.toContainText('saved', { timeout: 10000 });
+
     // Create a second one
     await page.locator('button[title="Add New Item"]').click();
     await page.getByPlaceholder('e.g. Living Room Display').fill('Second');
@@ -97,6 +101,9 @@ test.describe('Display Types Management', () => {
     await page.locator('div.form-group:has-text("Resolution Width (px)") input').fill('100');
     await page.locator('div.form-group:has-text("Resolution Height (px)") input').fill('100');
     await page.locator('button[title="Save Changes"]').click();
+
+    // Wait for toast to disappear
+    await expect(page.locator('app-header')).not.toContainText('saved', { timeout: 10000 });
 
     // Modify the second one
     await page.getByPlaceholder('e.g. Living Room Display').fill('Modified Second');
@@ -126,6 +133,9 @@ test.describe('Display Types Management', () => {
     await page.locator('div.form-group:has-text("Resolution Width (px)") input').fill('50');
     await page.locator('div.form-group:has-text("Resolution Height (px)") input').fill('50');
     await page.locator('button[title="Save Changes"]').click();
+    
+    // Wait for the first toast to disappear to avoid flakiness in the next step
+    await expect(page.locator('app-header')).not.toContainText('saved', { timeout: 10000 });
     
     // Select it
     await page.locator('.sidebar-item').getByText('Delete Me').click();
