@@ -45,13 +45,14 @@ export class EmptyView extends LitElement {
   @property({ type: String }) title = '';
   @property({ type: String }) icon = 'info';
   @property({ type: String }) message = 'This section is not yet implemented.';
+  @property({ type: Boolean }) showBadge = false;
 
   render() {
     return html`
       <span class="material-icons icon">${this.icon}</span>
       <h2>${this.title}</h2>
       <p>${this.message}</p>
-      <div class="badge">Coming Soon</div>
+      ${this.showBadge ? html`<div class="badge">Coming Soon</div>` : ''}
     `;
   }
 }
