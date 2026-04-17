@@ -492,18 +492,6 @@ export class DisplayTypesView extends LitElement {
   private _handleDelete() {
     if (!this.displayType || this.isNew) return;
     this.dispatchEvent(new CustomEvent('delete-display-type', { detail: this.displayType }));
-    
-    // Switch to first item or new after delete
-    const remaining = this.displayTypes.filter(dt => dt.id !== this.displayType?.id);
-    if (remaining.length > 0) {
-      this.displayType = JSON.parse(JSON.stringify(remaining[0]));
-      this.isNew = false;
-    } else {
-      this.displayType = this._getDefaultDisplayType();
-      this.isNew = true;
-    }
-    this.requestUpdate();
-    this._updateDirtyState();
   }
 
   private _handleSubmit(e: Event) {

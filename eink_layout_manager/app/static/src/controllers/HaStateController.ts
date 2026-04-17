@@ -22,6 +22,7 @@ export class HaStateController implements ReactiveController {
   public selectedItemId: string | null = null;
   public selectedImageId: string | null = null;
   public selectedDisplayTypeId: string | null = null;
+  private _isAddingNew = false;
   public activeSection: AppSection = 'layouts';
   public message: string = '';
   private _originalLayout: string | null = null;
@@ -64,6 +65,7 @@ export class HaStateController implements ReactiveController {
         await this.createDefaultLayout();
       }
       this.host.requestUpdate();
+      this._ensureSelection();
       this._applyHash();
     } catch (e: any) {
       console.error('Fetch failed', e);
@@ -154,11 +156,18 @@ export class HaStateController implements ReactiveController {
     }
 
     try {
+      const oldIndex = this.displayTypes.findIndex(existing => existing.id === dt.id);
       await api.deleteItem('display_type', dt.id);
       await this.refresh();
       this.showMessage(`Display type "${dt.name}" deleted.`, 'success');
+      
       if (this.selectedDisplayTypeId === dt.id) {
-        this.selectedDisplayTypeId = null;
+        if (this.displayTypes.length > 0) {
+          const newIndex = Math.min(oldIndex, this.displayTypes.length - 1);
+          this.selectedDisplayTypeId = this.displayTypes[newIndex].id;
+        } else {
+          this.selectedDisplayTypeId = null;
+        }
       }
       this._updateHash();
       return true;
@@ -170,13 +179,21 @@ export class HaStateController implements ReactiveController {
 
   async deleteLayout(layout: Layout): Promise<boolean> {
     try {
+      const oldIndex = this.layouts.findIndex(l => l.id === layout.id);
       await api.deleteItem('layout', layout.id);
-      if (this.activeLayout?.id === layout.id) {
-        this.activeLayout = null;
-        this._originalLayout = null;
-      }
       await this.refresh();
       this.showMessage(`Layout "${layout.name}" deleted.`, 'success');
+
+      if (this.activeLayout?.id === layout.id) {
+        if (this.layouts.length > 0) {
+          const newIndex = Math.min(oldIndex, this.layouts.length - 1);
+          this.activeLayout = this.layouts[newIndex];
+          this._originalLayout = JSON.stringify(this.activeLayout);
+        } else {
+          this.activeLayout = null;
+          this._originalLayout = null;
+        }
+      }
       this._updateHash();
       return true;
     } catch (e: any) {
@@ -243,12 +260,19 @@ export class HaStateController implements ReactiveController {
 
   async deleteScene(scene: Scene): Promise<boolean> {
     try {
+      const oldIndex = this.scenes.findIndex(s => s.id === scene.id);
       await api.deleteItem('scene', scene.id);
-      if (this.activeScene?.id === scene.id) {
-        this.activeScene = null;
-      }
       await this.refresh();
       this.showMessage(`Scene "${scene.name}" deleted.`, 'success');
+
+      if (this.activeScene?.id === scene.id) {
+        if (this.scenes.length > 0) {
+          const newIndex = Math.min(oldIndex, this.scenes.length - 1);
+          this.activeScene = this.scenes[newIndex];
+        } else {
+          this.activeScene = null;
+        }
+      }
       this._updateHash();
       return true;
     } catch (e: any) {
@@ -326,6 +350,7 @@ export class HaStateController implements ReactiveController {
   }
 
   public selectDisplayType(id: string | null) {
+    this._isAddingNew = (id === null);
     this.selectedDisplayTypeId = id;
     this.host.requestUpdate();
     this._updateHash();
@@ -377,7 +402,10 @@ export class HaStateController implements ReactiveController {
 
     const section = segments[0] as AppSection;
     if (['display-types', 'layouts', 'images', 'scenes'].includes(section)) {
-      if (this.activeSection !== section) this.activeSection = section;
+      if (this.activeSection !== section) {
+      this.activeSection = section;
+      this._isAddingNew = false; // Reset when switching sections
+    }
     }
 
     if (this.activeSection === 'layouts') {
@@ -402,9 +430,32 @@ export class HaStateController implements ReactiveController {
       if (this.selectedImageId !== imageId) this.selectedImageId = imageId;
     } else if (this.activeSection === 'display-types') {
       const displayTypeId = segments[1] || null;
-      if (this.selectedDisplayTypeId !== displayTypeId) this.selectedDisplayTypeId = displayTypeId;
+      if (this.selectedDisplayTypeId !== displayTypeId) {
+        this.selectedDisplayTypeId = displayTypeId;
+        if (displayTypeId !== null) this._isAddingNew = false;
+      }
     }
 
+    this._ensureSelection();
     this.host.requestUpdate();
+  }
+
+  /**
+   * Selection safety: ensures an item is selected for the current section
+   * if items are available and none is currently active.
+   */
+  private _ensureSelection() {
+    if (!this.activeLayout && this.layouts.length > 0) {
+      this.activeLayout = this.layouts[0];
+      this._originalLayout = JSON.stringify(this.activeLayout);
+    }
+    if (!this.selectedDisplayTypeId && this.displayTypes.length > 0) {
+      if (!this._isAddingNew) {
+        this.selectedDisplayTypeId = this.displayTypes[0].id;
+      }
+    }
+    if (!this.activeScene && this.scenes.length > 0) {
+      this.activeScene = this.scenes[0];
+    }
   }
 }
