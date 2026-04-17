@@ -231,7 +231,7 @@ export class LayoutsView extends LitElement {
             .gridSnap="${this.activeLayout?.grid_snap_mm || 5}"
             .items="${this.activeLayout?.items || []}"
             .displayTypes="${this.displayTypes}"
-            .selectedId="${this.selectedItemId}"
+            .selectedIds="${this.selectedItemId ? [this.selectedItemId] : []}"
             @item-moved="${(e: CustomEvent) => this._updateItem(e.detail.id, { x_mm: e.detail.x, y_mm: e.detail.y })}"
             @select-item="${(e: CustomEvent) => this._selectItem(e.detail.id)}"
             @edit-item="${(e: CustomEvent) => this._onEditItem(e)}"

@@ -81,7 +81,7 @@ export class LayoutEditor extends LitElement {
   @property({ type: Number }) gridSnap = 5;
   @property({ type: Array }) items: LayoutItem[] = [];
   @property({ type: Array }) displayTypes: DisplayType[] = [];
-  @property({ type: String }) selectedId: string | null = null;
+  @property({ type: Array }) selectedIds: string[] = [];
   @property({ type: Boolean, reflect: true }) readOnly = false;
   
   @state() private _scale = 1;
@@ -298,7 +298,20 @@ export class LayoutEditor extends LitElement {
   }
 
   private _handleBoxSelect(id: string) {
-    this.dispatchEvent(new CustomEvent('select-item', { detail: { id } }));
+    if (this.readOnly) {
+      // Toggle selection in read-only mode
+      const newSelectedIds = this.selectedIds.includes(id)
+        ? this.selectedIds.filter(i => i !== id)
+        : [...this.selectedIds, id];
+      
+      this.dispatchEvent(new CustomEvent('selection-change', { 
+        detail: { ids: newSelectedIds },
+        bubbles: true,
+        composed: true
+      }));
+    } else {
+      this.dispatchEvent(new CustomEvent('select-item', { detail: { id } }));
+    }
   }
 
   private _handleBoxEdit(id: string) {
@@ -364,7 +377,7 @@ export class LayoutEditor extends LitElement {
                     .panel_height_mm="${dt.panel_height_mm}"
                     .frame_colour="${dt.frame?.colour}"
                     .mat_colour="${dt.mat?.colour}"
-                    ?selected="${this.selectedId === item.id}"
+                    ?selected="${this.selectedIds.includes(item.id)}"
                     ?invalid="${item.invalid}"
                     .readOnly="${this.readOnly}"
                     @mousedown="${() => this._handleBoxSelect(item.id)}"
