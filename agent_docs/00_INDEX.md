@@ -2,9 +2,10 @@
 
 This directory contains resources for AI agents to continue the development of the `addon-eink` repository. As new modules are introduced, please update the documentation within this directory to reflect the design decisions and instructions for parallel agent tasking.
 
-- `01_ARCHITECTURE.md` - High-level overview of the application and its integration with Home Assistant.
-- `02_OPEN_QUESTIONS.md` - Living document of design questions requiring clarification from the user.
-- `03_DEVELOPMENT.md` - Detailed development process and decision log.
+- [`01_ARCHITECTURE.md`](01_ARCHITECTURE.md) - High-level overview of the application and its integration with Home Assistant.
+- [`02_OPEN_QUESTIONS.md`](02_OPEN_QUESTIONS.md) - Living document of design questions requiring clarification from the user.
+- [`03_DEVELOPMENT.md`](03_DEVELOPMENT.md) - Detailed development process and decision log.
+- [`04_E2E_TESTS.md`](04_E2E_TESTS.md) - Comprehensive guide to end-to-end testing with Playwright.
 
 ## Agent Workflow Guidelines
 

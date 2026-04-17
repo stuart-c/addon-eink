@@ -33,9 +33,10 @@ All agents and contributors must follow the mandatory workflow defined in the [A
 > **Enabling auto-merge is mandatory.** If the `gh pr create` command is followed by `gh pr merge --auto`, it ensures contributions are integrated as soon as they satisfy CI and approval requirements.
 
 ### Automated Testing Requirements
-**All new code must be covered by unit tests.** 
-- Ensure that any new logic, API endpoints, or schema changes have corresponding test cases in the `tests/` directory.
-- **Mandatory Verification**: You **MUST** verify that your tests and lints pass locally using the root `venv` before submitting a PR or requesting a review, as per the parameters in the [Workflow Guide](../agents.md).
+**All new code must be covered by appropriate tests.** 
+- **Unit Tests**: Ensure that any new logic, API endpoints, or schema changes have corresponding test cases in the `tests/` directory.
+- **End-to-End (E2E) Tests**: Complex workflows and UI integrations must be verified using the Playwright suite. For detailed information on the E2E testing strategy, structure, and guidelines, see **[04_E2E_TESTS.md](04_E2E_TESTS.md)**.
+- **Mandatory Verification**: You **MUST** verify that your tests and lints pass locally using the root `venv` before submitting a PR or requesting a review.
   - **Unit Tests & Lints**: Run `./scripts/run_tests.sh`
   - **End-to-End Tests**: Run `./scripts/run_e2e.sh`
 
