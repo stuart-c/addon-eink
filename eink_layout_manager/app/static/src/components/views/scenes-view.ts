@@ -402,7 +402,7 @@ export class ScenesView extends LitElement {
               </div>
               
               <div class="content-list">
-                ${activeScene.items?.map((item, index) => html`
+                ${activeScene.items?.map((item: any, index: number) => html`
                   <div class="placeholder-item">
                     <div class="placeholder-item-icon">
                       <span class="material-icons">
@@ -412,7 +412,7 @@ export class ScenesView extends LitElement {
                     <div class="placeholder-item-info">
                       <div class="placeholder-item-name">Scene Item #${index + 1}</div>
                       <div class="placeholder-item-details">
-                        Displays: ${item.displays.map(id => {
+                        Displays: ${item.displays.map((id: string) => {
                           const layoutItem = activeLayout.items.find((li: any) => li.id === id);
                           const dt = this.state.displayTypes.find((t: any) => t.id === layoutItem?.display_type_id);
                           return dt?.name || id;
