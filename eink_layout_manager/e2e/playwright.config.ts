@@ -6,10 +6,10 @@ const DATA_DIR = process.env.DATA_DIR || '$(pwd)/test_data_e2e';
 
 export default defineConfig({
   testDir: './tests',
-  fullyParallel: false,
+  fullyParallel: !!process.env.CI,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: 1,
+  workers: process.env.CI ? 2 : 1,
   reporter: process.env.CI
     ? [['github'], ['blob', { outputDir: 'blob-report' }], ['html', { open: 'never' }]]
     : 'html',
