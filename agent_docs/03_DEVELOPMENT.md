@@ -1,6 +1,6 @@
 # Development Guidelines
 
-This document outlines the standard development process and recent design decisions for the `addon-eink` repository. Following these guidelines ensures consistency across multiple agents and contributors. 
+This document outlines the standard development process and recent design decisions for the `addon-eink` repository. Following these guidelines ensures consistency across multiple agents and contributors. All GitHub-related tasks (PRs, issues, etc.) should be performed using the `gh` CLI as defined in the [Agent Workflow Guide](../agents.md).
 
 > [!IMPORTANT]
 > This repository strictly uses **British English** for all documentation, UI labels, and internal code (where it does not conflict with external standards). Agents must use `colour`, `initialise`, `centre`, and `greyscale`.
