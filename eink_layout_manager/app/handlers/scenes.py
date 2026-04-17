@@ -174,7 +174,6 @@ async def handle_scene_update(request):
 
             # Update fields
             scene.name = data["name"]
-            scene.layout_id = data["layout"]
             if "items" in data:
                 scene.items = data["items"]
             await session.commit()

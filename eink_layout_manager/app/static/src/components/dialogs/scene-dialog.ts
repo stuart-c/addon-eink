@@ -101,12 +101,20 @@ export class SceneDialog extends LitElement {
           <select 
             .value="${this._layout}"
             @change="${(e: Event) => this._layout = (e.target as HTMLSelectElement).value}"
+            ?disabled="${this.scene !== null}"
+            title="${this.scene ? 'Layout cannot be changed after creation' : ''}"
           >
             ${this.layouts.length === 0 ? html`<option value="" disabled>No layouts available</option>` : ''}
             ${this.layouts.map(l => html`
               <option value="${l.id}" ?selected="${this._layout === l.id}">${l.name}</option>
             `)}
           </select>
+          ${this.scene ? html`
+            <div style="font-size: 11px; color: #888; margin-top: 4px;">
+              <span class="material-icons" style="font-size: 12px; vertical-align: middle;">info</span>
+              Layout is fixed after a scene is created.
+            </div>
+          ` : ''}
         </div>
 
         <div slot="footer" class="footer-actions">

@@ -208,7 +208,7 @@ export class ScenesView extends LitElement {
       <scene-dialog 
         .layouts="${this.state?.layouts || []}"
         @create="${(e: CustomEvent) => this.state.createScene(e.detail.name, e.detail.layout)}"
-        @save="${(e: CustomEvent) => this.state.updateScene(e.detail.id, { name: e.detail.name, layout: e.detail.layout })}"
+        @save="${(e: CustomEvent) => this.state.updateScene(e.detail.id, { name: e.detail.name })}"
       ></scene-dialog>
     `;
   }

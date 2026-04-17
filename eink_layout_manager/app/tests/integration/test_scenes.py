@@ -107,5 +107,46 @@ async def test_delete_scene(aiohttp_client, app):
     assert (await resp.json())["status"] == "deleted"
 
     # Verify gone
+
+@pytest.mark.asyncio
+async def test_update_scene(aiohttp_client, app):
+    """Test updating a scene's name and attempting to update its layout."""
+    client = await aiohttp_client(app)
+
+    # 1. Create a scene
+    scene_data = {
+        "name": "Original Name",
+        "layout": "layout-1",
+    }
+    resp = await client.post("/api/scene", json=scene_data)
+    assert resp.status == 201
+    created_data = await resp.json()
+    scene_id = created_data["id"]
+
+    # 2. Update name (should succeed)
+    update_data = {
+        "name": "Updated Name",
+        "layout": "layout-1",  # Same layout should be fine
+    }
+    resp = await client.put(f"/api/scene/{scene_id}", json=update_data)
+    assert resp.status == 200
+    updated_data = await resp.json()
+    assert updated_data["name"] == "Updated Name"
+    assert updated_data["layout"] == "layout-1"
+
+    # 3. Attempt to update layout (should fail)
+    invalid_update = {
+        "name": "Updated Name Again",
+        "layout": "layout-2",  # Different layout should fail
+    }
+    resp = await client.put(f"/api/scene/{scene_id}", json=invalid_update)
+    assert resp.status == 400
+    result = await resp.json()
+    assert "Attempted to update read-only fields" in result["error"]
+    assert "layout" in result["error"]
+
+    # 4. Verify name was NOT updated in the failed attempt (optional but good)
     resp = await client.get(f"/api/scene/{scene_id}")
-    assert resp.status == 404
+    final_data = await resp.json()
+    assert final_data["name"] == "Updated Name"
+    assert final_data["layout"] == "layout-1"
