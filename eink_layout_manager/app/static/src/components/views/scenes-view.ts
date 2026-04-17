@@ -103,6 +103,143 @@ export class ScenesView extends LitElement {
       .settings-button .material-icons {
         font-size: 20px;
       }
+      
+      /* Scene Workspace Layout */
+      .workspace {
+        display: flex;
+        height: 100%;
+        width: 100%;
+        background: #f0f2f5;
+        overflow: hidden;
+      }
+      .preview-pane {
+        flex: 1;
+        min-width: 0;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .content-pane {
+        width: 320px;
+        background: white;
+        border-left: 1px solid var(--border-colour);
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        box-shadow: -2px 0 10px rgba(0,0,0,0.02);
+        z-index: 2;
+      }
+      .pane-header {
+        padding: 1.25rem 1rem;
+        border-bottom: 1px solid var(--border-colour);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+      }
+      .pane-title {
+        font-weight: 800;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-muted);
+      }
+      .pane-toolbar {
+        display: flex;
+        gap: 0.4rem;
+      }
+      .tool-button {
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fff;
+        border: 1px solid #efefef;
+        cursor: pointer;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        color: #555;
+      }
+      .tool-button:hover {
+        background: var(--bg-light);
+        border-color: var(--primary-colour);
+        color: var(--primary-colour);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(3, 169, 244, 0.15);
+      }
+      .tool-button .material-icons {
+        font-size: 18px;
+      }
+      .content-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1.25rem 1rem;
+      }
+      .placeholder-item {
+        padding: 1rem;
+        border: 1px solid #f0f0f0;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        background: white;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-left: 4px solid #f0f0f0;
+        cursor: default;
+      }
+      .placeholder-item:hover {
+        border-color: #e0e0e0;
+        border-left-color: var(--primary-colour);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.04);
+        transform: translateX(4px);
+      }
+      .placeholder-item-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        background: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #aaa;
+      }
+      .placeholder-item-info {
+        flex: 1;
+      }
+      .placeholder-item-name {
+        font-weight: 700;
+        font-size: 13px;
+        color: var(--text-colour);
+        margin-bottom: 3px;
+      }
+      .placeholder-item-details {
+        font-size: 11px;
+        color: #999;
+        font-weight: 500;
+      }
+      .empty-content-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 200px;
+        color: #bbb;
+        text-align: center;
+        gap: 1rem;
+      }
+      .empty-content-state .material-icons {
+        font-size: 48px;
+        opacity: 0.3;
+      }
+      .empty-content-state span {
+        font-size: 13px;
+        font-weight: 500;
+      }
     `
   ];
 
@@ -199,14 +336,68 @@ export class ScenesView extends LitElement {
             @data-update="${(e: CustomEvent) => this.state.updateScene(activeScene.id, e.detail)}"
           ></yaml-editor>
         ` : (activeScene && activeLayout ? html`
-          <div slot="right-main" style="height: 100%; display: flex; flex-direction: column;">
-            <layout-editor
-              .width_mm="${activeLayout.canvas_width_mm}"
-              .height_mm="${activeLayout.canvas_height_mm}"
-              .items="${activeLayout.items}"
-              .displayTypes="${this.state.displayTypes}"
-              .readOnly="${true}"
-            ></layout-editor>
+          <div slot="right-main" class="workspace">
+            <div class="preview-pane">
+              <layout-editor
+                .width_mm="${activeLayout.canvas_width_mm}"
+                .height_mm="${activeLayout.canvas_height_mm}"
+                .items="${activeLayout.items}"
+                .displayTypes="${this.state.displayTypes}"
+                .readOnly="${true}"
+              ></layout-editor>
+            </div>
+            
+            <div class="content-pane">
+              <div class="pane-header">
+                <div class="pane-title">Scene Content</div>
+                <div class="pane-toolbar">
+                  <button class="tool-button" title="New Single Display">
+                    <span class="material-icons">add_photo_alternate</span>
+                  </button>
+                  <button class="tool-button" title="New Multi-Display (Tiled)">
+                    <span class="material-icons">grid_view</span>
+                  </button>
+                  <button class="tool-button" title="Edit Item">
+                    <span class="material-icons">edit</span>
+                  </button>
+                  <button class="tool-button" title="Delete Item">
+                    <span class="material-icons">delete</span>
+                  </button>
+                </div>
+              </div>
+              
+              <div class="content-list">
+                <div class="placeholder-item">
+                  <div class="placeholder-item-icon">
+                    <span class="material-icons">image</span>
+                  </div>
+                  <div class="placeholder-item-info">
+                    <div class="placeholder-item-name">Cinema Poster</div>
+                    <div class="placeholder-item-details">Display #1 • Image Asset</div>
+                  </div>
+                </div>
+                
+                <div class="placeholder-item">
+                  <div class="placeholder-item-icon">
+                    <span class="material-icons">grid_on</span>
+                  </div>
+                  <div class="placeholder-item-info">
+                    <div class="placeholder-item-name">Weather Widget</div>
+                    <div class="placeholder-item-details">Displays #2, #3 • Tiled Canvas</div>
+                  </div>
+                </div>
+                
+                <div class="placeholder-item">
+                  <div class="placeholder-item-icon">
+                    <span class="material-icons">info</span>
+                  </div>
+                  <div class="placeholder-item-info">
+                    <div class="placeholder-item-name">Status Banner</div>
+                    <div class="placeholder-item-details">Display #4 • Live Feed</div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         ` : html`
           <empty-view 
