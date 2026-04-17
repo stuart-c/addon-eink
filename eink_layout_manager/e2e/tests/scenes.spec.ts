@@ -22,8 +22,8 @@ test.describe('Smart Scenes Management', () => {
       canvas_width_mm: 300,
       canvas_height_mm: 200,
       items: [
-        { display_type_id: dt.id, x_mm: 10, y_mm: 10, orientation: 'landscape' },
-        { display_type_id: dt.id, x_mm: 120, y_mm: 10, orientation: 'landscape' }
+        { id: 'display-1', display_type_id: dt.id, x_mm: 10, y_mm: 10, orientation: 'landscape' },
+        { id: 'display-2', display_type_id: dt.id, x_mm: 120, y_mm: 10, orientation: 'landscape' }
       ]
     });
     sharedLayoutName = layout.name;
