@@ -402,35 +402,32 @@ export class ScenesView extends LitElement {
               </div>
               
               <div class="content-list">
-                <div class="placeholder-item">
-                  <div class="placeholder-item-icon">
-                    <span class="material-icons">image</span>
+                ${activeScene.items?.map((item, index) => html`
+                  <div class="placeholder-item">
+                    <div class="placeholder-item-icon">
+                      <span class="material-icons">
+                        ${item.type === 'image' ? 'image' : 'grid_on'}
+                      </span>
+                    </div>
+                    <div class="placeholder-item-info">
+                      <div class="placeholder-item-name">Scene Item #${index + 1}</div>
+                      <div class="placeholder-item-details">
+                        Displays: ${item.displays.map(id => {
+                          const layoutItem = activeLayout.items.find((li: any) => li.id === id);
+                          const dt = this.state.displayTypes.find((t: any) => t.id === layoutItem?.display_type_id);
+                          return dt?.name || id;
+                        }).join(', ')} • ${item.type.charAt(0).toUpperCase() + item.type.slice(1)}
+                      </div>
+                    </div>
                   </div>
-                  <div class="placeholder-item-info">
-                    <div class="placeholder-item-name">Cinema Poster</div>
-                    <div class="placeholder-item-details">Display #1 • Image Asset</div>
-                  </div>
-                </div>
+                `)}
                 
-                <div class="placeholder-item">
-                  <div class="placeholder-item-icon">
-                    <span class="material-icons">grid_on</span>
+                ${(!activeScene.items || activeScene.items.length === 0) ? html`
+                  <div class="empty-content-state">
+                    <span class="material-icons">post_add</span>
+                    <span>No scene items. Select displays in the layout and click "+" to add them.</span>
                   </div>
-                  <div class="placeholder-item-info">
-                    <div class="placeholder-item-name">Weather Widget</div>
-                    <div class="placeholder-item-details">Displays #2, #3 • Tiled Canvas</div>
-                  </div>
-                </div>
-                
-                <div class="placeholder-item">
-                  <div class="placeholder-item-icon">
-                    <span class="material-icons">info</span>
-                  </div>
-                  <div class="placeholder-item-info">
-                    <div class="placeholder-item-name">Status Banner</div>
-                    <div class="placeholder-item-details">Display #4 • Live Feed</div>
-                  </div>
-                </div>
+                ` : ''}
               </div>
             </div>
           </div>
