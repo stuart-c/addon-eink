@@ -64,6 +64,11 @@ export class HaStateController implements ReactiveController {
       } else {
         await this.createDefaultLayout();
       }
+
+      if (this.scenes.length > 0 && this.activeScene) {
+        const fresh = this.scenes.find(s => s.id === this.activeScene?.id);
+        if (fresh) this.activeScene = fresh;
+      }
       this.host.requestUpdate();
       this._ensureSelection();
       this._applyHash();
@@ -243,7 +248,9 @@ export class HaStateController implements ReactiveController {
     this.isSaving = true;
     this.host.requestUpdate();
     try {
-      await api.updateItem('scene', id, updates);
+      const existing = this.scenes.find(s => s.id === id);
+      const merged = { ...existing, ...updates };
+      await api.updateItem('scene', id, merged);
       await this.refresh();
       if (this.activeScene?.id === id) {
         this.activeScene = this.scenes.find(s => s.id === id) || this.activeScene;
