@@ -1,5 +1,5 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, property, query } from 'lit/decorators.js';
+import { customElement, property, query, state } from 'lit/decorators.js';
 import { PropertyValues } from 'lit';
 import { Scene } from '../../services/HaApiClient';
 import { commonStyles } from '../../styles/common-styles';
@@ -164,12 +164,18 @@ export class ScenesView extends LitElement {
         transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         color: #555;
       }
-      .tool-button:hover {
+      .tool-button:hover:not(:disabled) {
         background: var(--bg-light);
         border-color: var(--primary-colour);
         color: var(--primary-colour);
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(3, 169, 244, 0.15);
+      }
+      .tool-button:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+        background: #f5f5f5;
+        border-color: #eee;
       }
       .tool-button .material-icons {
         font-size: 18px;
@@ -246,6 +252,7 @@ export class ScenesView extends LitElement {
   @property({ type: Array }) scenes: Scene[] = [];
   @property({ type: Object }) activeScene: Scene | null = null;
   @property({ type: String }) viewMode: 'graphical' | 'yaml' = 'graphical';
+  @state() private _selectedDisplayIds: string[] = [];
 
   @query('scene-dialog') private _sceneDialog!: SceneDialog;
 
@@ -282,11 +289,32 @@ export class ScenesView extends LitElement {
   get canDelete() { return !!this.activeScene; }
 
   private _handleSelect(scene: Scene) {
+    this._selectedDisplayIds = [];
     this.dispatchEvent(new CustomEvent('select-scene', {
       detail: { scene },
       bubbles: true,
       composed: true
     }));
+  }
+
+  private async _handleCreateSingleDisplayItems() {
+    const activeScene = this.state?.activeScene || this.activeScene;
+    if (!activeScene || this._selectedDisplayIds.length === 0) return;
+
+    const newItems = this._selectedDisplayIds.map(displayId => ({
+      id: crypto.randomUUID(),
+      type: 'image' as const,
+      displays: [displayId],
+      images: []
+    }));
+
+    const existingItems = activeScene.items || [];
+    await this.state.updateScene(activeScene.id, {
+      items: [...existingItems, ...newItems]
+    });
+
+    this._selectedDisplayIds = [];
+    this.state.showMessage(`Added ${newItems.length} display item(s)`, 'success');
   }
 
   render() {
@@ -344,6 +372,8 @@ export class ScenesView extends LitElement {
                 .items="${activeLayout.items}"
                 .displayTypes="${this.state.displayTypes}"
                 .readOnly="${true}"
+                .selectedIds="${this._selectedDisplayIds}"
+                @selection-change="${(e: CustomEvent) => this._selectedDisplayIds = e.detail.ids}"
               ></layout-editor>
             </div>
             
@@ -351,7 +381,12 @@ export class ScenesView extends LitElement {
               <div class="pane-header">
                 <div class="pane-title">Scene Content</div>
                 <div class="pane-toolbar">
-                  <button class="tool-button" title="New Single Display">
+                  <button 
+                    class="tool-button" 
+                    title="New Single Display" 
+                    ?disabled="${this._selectedDisplayIds.length === 0}"
+                    @click="${this._handleCreateSingleDisplayItems}"
+                  >
                     <span class="material-icons">add_photo_alternate</span>
                   </button>
                   <button class="tool-button" title="New Multi-Display (Tiled)">
