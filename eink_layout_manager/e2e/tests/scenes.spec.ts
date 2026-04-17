@@ -83,7 +83,7 @@ test.describe('Smart Scenes Management', () => {
     await expect(page.locator('.sidebar-item.selected')).toContainText(name2);
   });
 
-  test('should show scene name in empty-view when selected', async ({ page }) => {
+  test('should show layout preview when selected', async ({ page }) => {
     const sceneName = getUniqueName('Selection Info');
 
     // Create a scene
@@ -94,10 +94,9 @@ test.describe('Smart Scenes Management', () => {
     // Select it
     await page.locator('.sidebar-item').getByText(sceneName).click();
     
-    // Verify empty-view message contains the scene name
-    const emptyView = page.locator('empty-view');
-    await expect(emptyView).toContainText(`You have selected "${sceneName}"`);
-    await expect(emptyView).toContainText('Scene editing is coming soon');
+    // Verify layout-editor is visible instead of empty-view
+    await expect(page.locator('layout-editor')).toBeVisible();
+    await expect(page.locator('empty-view')).not.toBeVisible();
   });
 
   test('should rename an existing scene', async ({ page }) => {
@@ -249,8 +248,8 @@ test.describe('Smart Scenes Management', () => {
     await page.locator('scene-dialog button.primary').click();
     await expect(page.locator('.sidebar-item').getByText(sceneName)).toBeVisible();
     
-    // Verify empty-view is visible (Graphical mode default)
-    await expect(page.locator('empty-view')).toBeVisible();
+    // Verify layout-editor is visible (Graphical mode default)
+    await expect(page.locator('layout-editor')).toBeVisible();
     
     // Toggle to YAML Mode
     await page.locator('button[title="Switch to YAML Mode"]').click();
@@ -261,8 +260,8 @@ test.describe('Smart Scenes Management', () => {
     // Toggle back to Graphical Mode
     await page.locator('button[title="Switch to Graphical Mode"]').click();
     
-    // Verify empty-view is visible again
-    await expect(page.locator('empty-view')).toBeVisible();
+    // Verify layout-editor is visible again
+    await expect(page.locator('layout-editor')).toBeVisible();
   });
 });
 
