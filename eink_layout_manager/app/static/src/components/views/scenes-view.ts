@@ -404,7 +404,7 @@ export class ScenesView extends LitElement {
                   <button 
                     class="tool-button" 
                     title="New Single Display" 
-                    ?disabled="${this._selectedDisplayIds.length === 0}"
+                    ?disabled="${this._selectedDisplayIds.length < 1}"
                     @click="${this._handleCreateSingleDisplayItems}"
                   >
                     <span class="material-icons">add_photo_alternate</span>
@@ -412,7 +412,7 @@ export class ScenesView extends LitElement {
                   <button 
                     class="tool-button" 
                     title="New Multi-Display (Tiled)"
-                    ?disabled="${this._selectedDisplayIds.length <= 1}"
+                    ?disabled="${this._selectedDisplayIds.length < 2}"
                     @click="${this._handleCreateMultiDisplayItem}"
                   >
                     <span class="material-icons">grid_view</span>

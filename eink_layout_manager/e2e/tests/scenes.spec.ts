@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { createLayout } from './helpers/api';
+import { createLayout, createDisplayType } from './helpers/api';
 
 test.describe('Smart Scenes Management', () => {
   let sceneCount = 0;
@@ -8,11 +8,23 @@ test.describe('Smart Scenes Management', () => {
   let sharedLayoutId: string;
 
   test.beforeAll(async ({ request }) => {
-    // Ensure we have a layout available for scene creation
-    // Use a unique ID to avoid 409 conflicts with existing data
+    // Create a display type first
+    const dt = await createDisplayType(request, {
+      name: 'E2E Test Display',
+      width_mm: 100,
+      height_mm: 100
+    });
+
+    // Create a layout with two displays for tiling tests
     const layout = await createLayout(request, { 
       id: `shared-layout-${Date.now()}`,
-      name: 'Shared Test Layout' 
+      name: 'Shared Test Layout',
+      canvas_width_mm: 300,
+      canvas_height_mm: 200,
+      items: [
+        { display_type_id: dt.id, x_mm: 10, y_mm: 10, orientation: 'landscape' },
+        { display_type_id: dt.id, x_mm: 120, y_mm: 10, orientation: 'landscape' }
+      ]
     });
     sharedLayoutName = layout.name;
     sharedLayoutId = layout.id;
@@ -262,6 +274,98 @@ test.describe('Smart Scenes Management', () => {
     
     // Verify layout-editor is visible again
     await expect(page.locator('layout-editor')).toBeVisible();
+  });
+
+  test('should manage scene item creation buttons based on selection', async ({ page }) => {
+    const sceneName = getUniqueName('Button State Test');
+
+    // Create a scene with our shared multi-display layout
+    await page.locator('button[title="Add New Item"]').click();
+    await page.locator('scene-dialog input').fill(sceneName);
+    await page.locator('scene-dialog select').selectOption({ label: sharedLayoutName });
+    await page.locator('scene-dialog button.primary').click();
+    
+    const sidebarItem = page.locator('.sidebar-item').getByText(sceneName);
+    await sidebarItem.click();
+    
+    // Wait for workspace to be visible to ensure scene is loaded
+    await expect(page.locator('.workspace')).toBeVisible();
+    
+    const singleBtn = page.locator('button[title="New Single Display"]');
+    const multiBtn = page.locator('button[title="New Multi-Display (Tiled)"]');
+    
+    // Initial state: both disabled
+    await expect(singleBtn).toBeDisabled();
+    await expect(multiBtn).toBeDisabled();
+    
+    // Select first display
+    // Note: layout-box is inside shadow DOM, but Playwright finds it
+    await page.locator('layout-box').first().click();
+    await expect(singleBtn).toBeEnabled();
+    await expect(multiBtn).toBeDisabled();
+    
+    // Select second display
+    await page.locator('layout-box').nth(1).click();
+    await expect(singleBtn).toBeEnabled();
+    await expect(multiBtn).toBeEnabled();
+    
+    // Deselect all
+    await page.locator('layout-box').first().click();
+    await page.locator('layout-box').nth(1).click();
+    await expect(singleBtn).toBeDisabled();
+    await expect(multiBtn).toBeDisabled();
+  });
+
+  test('should add single display items', async ({ page }) => {
+    const sceneName = getUniqueName('Single Item Test');
+
+    // Create and select a scene
+    await page.locator('button[title="Add New Item"]').click();
+    await page.locator('scene-dialog input').fill(sceneName);
+    await page.locator('scene-dialog select').selectOption({ label: sharedLayoutName });
+    await page.locator('scene-dialog button.primary').click();
+    await page.locator('.sidebar-item').getByText(sceneName).click();
+    
+    // Select both displays
+    await page.locator('layout-box').first().click();
+    await page.locator('layout-box').nth(1).click();
+    
+    // Add single items
+    await page.locator('button[title="New Single Display"]').click();
+    
+    // Verify 2 items added to the list
+    const items = page.locator('.placeholder-item');
+    await expect(items).toHaveCount(2);
+    
+    // Verify selection is cleared
+    await expect(page.locator('button[title="New Single Display"]')).toBeDisabled();
+    await expect(page.locator('layout-box[selected]')).toHaveCount(0);
+  });
+
+  test('should add a multi-display tiled item', async ({ page }) => {
+    const sceneName = getUniqueName('Multi Item Test');
+
+    // Create and select a scene
+    await page.locator('button[title="Add New Item"]').click();
+    await page.locator('scene-dialog input').fill(sceneName);
+    await page.locator('scene-dialog select').selectOption({ label: sharedLayoutName });
+    await page.locator('scene-dialog button.primary').click();
+    await page.locator('.sidebar-item').getByText(sceneName).click();
+    
+    // Select both displays
+    await page.locator('layout-box').first().click();
+    await page.locator('layout-box').nth(1).click();
+    
+    // Add multi-display item
+    await page.locator('button[title="New Multi-Display (Tiled)"]').click();
+    
+    // Verify 1 item added to the list
+    const items = page.locator('.placeholder-item');
+    await expect(items).toHaveCount(1);
+    await expect(items).toContainText('Tiled');
+    
+    // Verify selection is cleared
+    await expect(page.locator('button[title="New Multi-Display (Tiled)"]')).toBeDisabled();
   });
 });
 

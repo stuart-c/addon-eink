@@ -17,11 +17,6 @@ source "$VENV_PATH/bin/activate"
 echo "--- Installing Python Dependencies ---"
 pip install -q -r "$TOP_DIR/eink_layout_manager/app/requirements.txt"
 
-echo "--- Provisioning Playwright ---"
-# Ensure playwright and its browsers are ready
-pip install -q playwright pytest-playwright requests
-playwright install chromium
-
 # Run Node.js E2E tests if they exist
 if [ -d "$TOP_DIR/eink_layout_manager/e2e" ]; then
     echo "--- Running Node.js E2E Tests ---"
