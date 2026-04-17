@@ -15,7 +15,8 @@
     },
     "layout": {
       "type": "string",
-      "description": "ID of the layout used by this scene"
+      "description": "ID of the layout used by this scene",
+      "readOnly": true
     },
     "status": {
       "type": "string",
