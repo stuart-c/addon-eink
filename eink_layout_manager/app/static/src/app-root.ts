@@ -260,6 +260,7 @@ export class AppRoot extends LitElement {
         .displayTypes="${this.state.displayTypes}"
         .selectedId="${this.state.selectedDisplayTypeId}"
         .viewMode="${this.state.viewMode}"
+        .isAdding="${this.state.isAddingNew}"
         @select-display-type="${(e: CustomEvent) => this.state.selectDisplayType(e.detail.id)}"
         @save="${(e: CustomEvent) => this.state.saveDisplayType(e.detail.displayType)}"
         @delete-display-type="${this._onDeleteDisplayType}"

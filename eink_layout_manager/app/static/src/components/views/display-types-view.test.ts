@@ -51,6 +51,20 @@ describe('DisplayTypesView', () => {
     expect(element.isNew).toBe(false);
   });
 
+  it('should be blank when nothing is selected and not adding', async () => {
+    element.selectedId = null;
+    element.isAdding = false;
+    await element.updateComplete;
+    
+    expect(element.displayType).toBeUndefined();
+    
+    const toolbarTitle = element.shadowRoot?.querySelector('.toolbar-title');
+    expect(toolbarTitle?.textContent?.trim()).toBe('Display Types');
+
+    const emptyView = element.shadowRoot?.querySelector('empty-view');
+    expect(emptyView).toBeTruthy();
+  });
+
   it('should dispatch select-display-type when another display type is clicked in sidebar', async () => {
     const selectSpy = vi.fn();
     element.addEventListener('select-display-type', selectSpy);
@@ -81,6 +95,7 @@ describe('DisplayTypesView', () => {
 
     // Simulate parent updating property
     element.selectedId = null;
+    element.isAdding = true; // NEW: Parent now passes this down
     await element.updateComplete;
     
     expect(element.isNew).toBe(true);

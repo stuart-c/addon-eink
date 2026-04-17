@@ -3,6 +3,7 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { live } from 'lit/directives/live.js';
 import type { DisplayType } from '../../services/HaApiClient';
 import { commonStyles } from '../../styles/common-styles';
+import '../shared/empty-view';
 import '../shared/hardware-preview';
 import '../shared/section-layout';
 import '../layout/yaml-editor';
@@ -313,6 +314,7 @@ export class DisplayTypesView extends LitElement {
   @property({ type: String }) selectedId: string | null = null;
   @property({ type: Boolean }) isNew = true;
   @property({ type: String }) viewMode: 'graphical' | 'yaml' = 'graphical';
+  @property({ type: Boolean }) isAdding = false;
 
   @state() private _isDirtyState = false;
 
@@ -354,7 +356,7 @@ export class DisplayTypesView extends LitElement {
   }
 
   protected willUpdate(changedProperties: Map<string | number | symbol, unknown>) {
-    if (changedProperties.has('selectedId') || changedProperties.has('displayTypes')) {
+    if (changedProperties.has('selectedId') || changedProperties.has('displayTypes') || changedProperties.has('isAdding')) {
       this._syncSelection();
     }
     if (changedProperties.has('displayType') || changedProperties.has('displayTypes') || changedProperties.has('isNew')) {
@@ -376,8 +378,13 @@ export class DisplayTypesView extends LitElement {
         this.isNew = false;
       }
     } else {
-      if (!this.isNew || !this.displayType) {
-        this.displayType = this._getDefaultDisplayType();
+      if (this.isAdding) {
+        if (!this.isNew || !this.displayType) {
+          this.displayType = this._getDefaultDisplayType();
+          this.isNew = true;
+        }
+      } else {
+        this.displayType = undefined;
         this.isNew = true;
       }
     }
@@ -537,13 +544,11 @@ export class DisplayTypesView extends LitElement {
   }
 
   render() {
-    if (!this.displayType) return html``;
-
-    const frameW = this.displayType.width_mm || 0;
-    const frameH = this.displayType.height_mm || 0;
-    const border = this.displayType.frame?.border_width_mm || 0;
-    const panelW = this.displayType.panel_width_mm || 0;
-    const panelH = this.displayType.panel_height_mm || 0;
+    const frameW = this.displayType?.width_mm || 0;
+    const frameH = this.displayType?.height_mm || 0;
+    const border = this.displayType?.frame?.border_width_mm || 0;
+    const panelW = this.displayType?.panel_width_mm || 0;
+    const panelH = this.displayType?.panel_height_mm || 0;
 
     const matW = frameW - (2 * border);
     const matH = frameH - (2 * border);
@@ -589,127 +594,135 @@ export class DisplayTypesView extends LitElement {
         <!-- Toolbar -->
         <div slot="right-top-bar" class="toolbar-content">
           <div class="toolbar-title">
-            ${this.isNew ? 'Create New Display Type' : `Editing: ${this.displayType.name}`}
+            ${this.displayType ? (this.isNew ? 'Create New Display Type' : `Editing: ${this.displayType.name}`) : 'Display Types'}
           </div>
           <div class="toolbar-actions">
           </div>
         </div>
 
         <!-- Main Content -->
-        <div slot="right-main" class="editor-layout">
-          ${this.viewMode === 'graphical' ? html`
-            <form id="display-type-form" @submit="${this._handleSubmit}" @input="${() => { this.requestUpdate(); this._updateDirtyState(); }}">
-              <div class="form-group">
-                <label>Identifier/Name</label>
-                <input 
-                  type="text" 
-                  required 
-                  .value="${live(this.displayType?.name || '')}"
-                  @input="${(e: any) => this.displayType!.name = e.target.value}"
-                  placeholder="e.g. Living Room Display"
-                >
-              </div>
-
-              <!-- Device Dimensions Section -->
-              <div class="section-header">Device Dimensions</div>
-              <div class="row">
-                <div class="form-group">
-                  <label>Frame Outer Width (mm)</label>
-                  <input type="number" required .value="${live(this.displayType?.width_mm || 0)}" @input="${(e: any) => this.displayType!.width_mm = parseInt(e.target.value)}">
-                </div>
-                <div class="form-group">
-                  <label>Frame Outer Height (mm)</label>
-                  <input type="number" required .value="${live(this.displayType?.height_mm || 0)}" @input="${(e: any) => this.displayType!.height_mm = parseInt(e.target.value)}">
-                </div>
-                <div class="form-group">
-                  <label>Frame Border Width (mm)</label>
-                  <input type="number" required .value="${live(this.displayType?.frame?.border_width_mm || 0)}" @input="${(e: any) => this.displayType!.frame.border_width_mm = parseInt(e.target.value)}">
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="form-group">
-                  <label>Display Panel Width (mm)</label>
-                  <input type="number" required .value="${live(this.displayType?.panel_width_mm || 0)}" @input="${(e: any) => this.displayType!.panel_width_mm = parseInt(e.target.value)}">
-                </div>
-                <div class="form-group">
-                  <label>Display Panel Height (mm)</label>
-                  <input type="number" required .value="${live(this.displayType?.panel_height_mm || 0)}" @input="${(e: any) => this.displayType!.panel_height_mm = parseInt(e.target.value)}">
-                </div>
-                <div class="form-group">
-                  <label>Colour Type</label>
-                  <select .value="${live(this.displayType?.colour_type || 'MONO')}" @change="${(e: any) => { this.displayType!.colour_type = e.target.value; this.requestUpdate(); this._updateDirtyState(); }}">
-                    <option value="MONO">MONO (B/W)</option>
-                    <option value="BWR">BWR (Red)</option>
-                    <option value="BWY">BWY (Yellow)</option>
-                    <option value="BWRY">BWRY (Red/Yellow)</option>
-                    <option value="BWGBRY">BWGBRY (Spectra 6)</option>
-                    <option value="GRAYSCALE_4">Greyscale (4-bit)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="form-group">
-                  <label>Resolution Width (px)</label>
-                  <input type="number" required .value="${live(this.displayType?.width_px || 0)}" @input="${(e: any) => this.displayType!.width_px = parseInt(e.target.value)}">
-                </div>
-                <div class="form-group">
-                  <label>Resolution Height (px)</label>
-                  <input type="number" required .value="${live(this.displayType?.height_px || 0)}" @input="${(e: any) => this.displayType!.height_px = parseInt(e.target.value)}">
-                </div>
-                <div class="form-group"></div> <!-- Placeholder for 3rd column alignment -->
-              </div>
-
-              <div class="section-header">Aesthetics</div>
-              <div class="row">
-                ${this._renderColourPicker('Frame Colour', this.displayType.frame.colour, (c) => { this.displayType!.frame.colour = c; this.requestUpdate(); })}
-                ${this._renderColourPicker('Mat Colour', this.displayType.mat.colour, (c) => { this.displayType!.mat.colour = c; this.requestUpdate(); })}
-              </div>
-
-              <div style="display: none;">
-                <button id="real-submit" type="submit"></button>
-              </div>
-            </form>
+        <div slot="right-main" class="${!this.displayType ? '' : 'editor-layout'}">
+          ${!this.displayType ? html`
+            <empty-view
+              title="Display Types"
+              icon="settings_input_component"
+              message="Manage your hardware display types here. Add your first display type to get started."
+            ></empty-view>
           ` : html`
-            <yaml-editor
-              .data="${this.displayType}"
-              .schemaName="DisplayType"
-              @data-update="${(e: CustomEvent) => {
-                this.displayType = e.detail;
-                this.requestUpdate();
-                this._updateDirtyState();
-              }}"
-            ></yaml-editor>
-          `}
+            ${this.viewMode === 'graphical' ? html`
+              <form id="display-type-form" @submit="${this._handleSubmit}" @input="${() => { this.requestUpdate(); this._updateDirtyState(); }}">
+                <div class="form-group">
+                  <label>Identifier/Name</label>
+                  <input 
+                    type="text" 
+                    required 
+                    .value="${live(this.displayType?.name || '')}"
+                    @input="${(e: any) => this.displayType!.name = e.target.value}"
+                    placeholder="e.g. Living Room Display"
+                  >
+                </div>
 
-          <div class="preview-column">
-            <div class="preview-label">Visual Layout</div>
-            <div class="preview-canvas">
-              <hardware-preview
-                .width_mm="${this.displayType.width_mm}"
-                .height_mm="${this.displayType.height_mm}"
-                .border_width_mm="${this.displayType.frame.border_width_mm}"
-                .panel_width_mm="${this.displayType.panel_width_mm}"
-                .panel_height_mm="${this.displayType.panel_height_mm}"
-                .frame_colour="${this.displayType.frame.colour}"
-                .mat_colour="${this.displayType.mat.colour}"
-                .scale="${scale}"
-              ></hardware-preview>
-            </div>
+                <!-- Device Dimensions Section -->
+                <div class="section-header">Device Dimensions</div>
+                <div class="row">
+                  <div class="form-group">
+                    <label>Frame Outer Width (mm)</label>
+                    <input type="number" required .value="${live(this.displayType?.width_mm || 0)}" @input="${(e: any) => this.displayType!.width_mm = parseInt(e.target.value)}">
+                  </div>
+                  <div class="form-group">
+                    <label>Frame Outer Height (mm)</label>
+                    <input type="number" required .value="${live(this.displayType?.height_mm || 0)}" @input="${(e: any) => this.displayType!.height_mm = parseInt(e.target.value)}">
+                  </div>
+                  <div class="form-group">
+                    <label>Frame Border Width (mm)</label>
+                    <input type="number" required .value="${live(this.displayType?.frame?.border_width_mm || 0)}" @input="${(e: any) => this.displayType!.frame.border_width_mm = parseInt(e.target.value)}">
+                  </div>
+                </div>
 
-            <div class="summary-panel">
-              <div class="summary-content">
-                <div class="preview-label" style="margin-bottom: 12px;">Dimension Summary</div>
-                <table class="summary-table">
-                  <tr><th>Overall Frame</th><td><span class="val">${this._formatDim(frameW)} x ${this._formatDim(frameH)}</span><span class="unit">mm</span></td></tr>
-                  <tr><th>Mat (Aperture)</th><td><span class="val">${this._formatDim(matW)} x ${this._formatDim(matH)}</span><span class="unit">mm</span></td></tr>
-                  <tr><th>Display Panel</th><td><span class="val">${this._formatDim(panelW)} x ${this._formatDim(panelH)}</span><span class="unit">mm</span></td></tr>
-                  <tr><th>Cutout Position</th><td><span class="val">${this._formatDim(cutoutX)} x ${this._formatDim(cutoutY)}</span><span class="unit">mm</span></td></tr>
-                </table>
+                <div class="row">
+                  <div class="form-group">
+                    <label>Display Panel Width (mm)</label>
+                    <input type="number" required .value="${live(this.displayType?.panel_width_mm || 0)}" @input="${(e: any) => this.displayType!.panel_width_mm = parseInt(e.target.value)}">
+                  </div>
+                  <div class="form-group">
+                    <label>Display Panel Height (mm)</label>
+                    <input type="number" required .value="${live(this.displayType?.panel_height_mm || 0)}" @input="${(e: any) => this.displayType!.panel_height_mm = parseInt(e.target.value)}">
+                  </div>
+                  <div class="form-group">
+                    <label>Colour Type</label>
+                    <select .value="${live(this.displayType?.colour_type || 'MONO')}" @change="${(e: any) => { this.displayType!.colour_type = e.target.value; this.requestUpdate(); this._updateDirtyState(); }}">
+                      <option value="MONO">MONO (B/W)</option>
+                      <option value="BWR">BWR (Red)</option>
+                      <option value="BWY">BWY (Yellow)</option>
+                      <option value="BWRY">BWRY (Red/Yellow)</option>
+                      <option value="BWGBRY">BWGBRY (Spectra 6)</option>
+                      <option value="GRAYSCALE_4">Greyscale (4-bit)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="form-group">
+                    <label>Resolution Width (px)</label>
+                    <input type="number" required .value="${live(this.displayType?.width_px || 0)}" @input="${(e: any) => this.displayType!.width_px = parseInt(e.target.value)}">
+                  </div>
+                  <div class="form-group">
+                    <label>Resolution Height (px)</label>
+                    <input type="number" required .value="${live(this.displayType?.height_px || 0)}" @input="${(e: any) => this.displayType!.height_px = parseInt(e.target.value)}">
+                  </div>
+                  <div class="form-group"></div> <!-- Placeholder for 3rd column alignment -->
+                </div>
+
+                <div class="section-header">Aesthetics</div>
+                <div class="row">
+                  ${this._renderColourPicker('Frame Colour', this.displayType.frame.colour, (c) => { this.displayType!.frame.colour = c; this.requestUpdate(); })}
+                  ${this._renderColourPicker('Mat Colour', this.displayType.mat.colour, (c) => { this.displayType!.mat.colour = c; this.requestUpdate(); })}
+                </div>
+
+                <div style="display: none;">
+                  <button id="real-submit" type="submit"></button>
+                </div>
+              </form>
+            ` : html`
+              <yaml-editor
+                .data="${this.displayType}"
+                .schemaName="DisplayType"
+                @data-update="${(e: CustomEvent) => {
+                  this.displayType = e.detail;
+                  this.requestUpdate();
+                  this._updateDirtyState();
+                }}"
+              ></yaml-editor>
+            `}
+
+            <div class="preview-column">
+              <div class="preview-label">Visual Layout</div>
+              <div class="preview-canvas">
+                <hardware-preview
+                  .width_mm="${this.displayType.width_mm}"
+                  .height_mm="${this.displayType.height_mm}"
+                  .border_width_mm="${this.displayType.frame.border_width_mm}"
+                  .panel_width_mm="${this.displayType.panel_width_mm}"
+                  .panel_height_mm="${this.displayType.panel_height_mm}"
+                  .frame_colour="${this.displayType.frame.colour}"
+                  .mat_colour="${this.displayType.mat.colour}"
+                  .scale="${scale}"
+                ></hardware-preview>
+              </div>
+
+              <div class="summary-panel">
+                <div class="summary-content">
+                  <div class="preview-label" style="margin-bottom: 12px;">Dimension Summary</div>
+                  <table class="summary-table">
+                    <tr><th>Overall Frame</th><td><span class="val">${this._formatDim(frameW)} x ${this._formatDim(frameH)}</span><span class="unit">mm</span></td></tr>
+                    <tr><th>Mat (Aperture)</th><td><span class="val">${this._formatDim(matW)} x ${this._formatDim(matH)}</span><span class="unit">mm</span></td></tr>
+                    <tr><th>Display Panel</th><td><span class="val">${this._formatDim(panelW)} x ${this._formatDim(panelH)}</span><span class="unit">mm</span></td></tr>
+                    <tr><th>Cutout Position</th><td><span class="val">${this._formatDim(cutoutX)} x ${this._formatDim(cutoutY)}</span><span class="unit">mm</span></td></tr>
+                  </table>
+                </div>
               </div>
             </div>
-          </div>
+          `}
         </div>
       </section-layout>
     `;

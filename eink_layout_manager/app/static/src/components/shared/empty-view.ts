@@ -29,17 +29,6 @@ export class EmptyView extends LitElement {
       max-width: 400px;
       line-height: 1.5;
     }
-    .badge {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      background: #eee;
-      padding: 4px 12px;
-      border-radius: 20px;
-      margin-top: 1.5rem;
-      font-weight: 700;
-      color: #888;
-    }
   `;
 
   @property({ type: String }) title = '';
@@ -51,7 +40,6 @@ export class EmptyView extends LitElement {
       <span class="material-icons icon">${this.icon}</span>
       <h2>${this.title}</h2>
       <p>${this.message}</p>
-      <div class="badge">Coming Soon</div>
     `;
   }
 }

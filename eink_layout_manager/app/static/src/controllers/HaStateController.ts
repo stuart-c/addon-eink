@@ -22,7 +22,7 @@ export class HaStateController implements ReactiveController {
   public selectedItemId: string | null = null;
   public selectedImageId: string | null = null;
   public selectedDisplayTypeId: string | null = null;
-  private _isAddingNew = false;
+  public isAddingNew = false;
   public activeSection: AppSection = 'layouts';
   public message: string = '';
   private _originalLayout: string | null = null;
@@ -349,7 +349,7 @@ export class HaStateController implements ReactiveController {
   }
 
   public selectDisplayType(id: string | null) {
-    this._isAddingNew = (id === null);
+    this.isAddingNew = (id === null);
     this.selectedDisplayTypeId = id;
     this.host.requestUpdate();
     this._updateHash();
@@ -403,7 +403,7 @@ export class HaStateController implements ReactiveController {
     if (['display-types', 'layouts', 'images', 'scenes'].includes(section)) {
       if (this.activeSection !== section) {
       this.activeSection = section;
-      this._isAddingNew = false; // Reset when switching sections
+      this.isAddingNew = false; // Reset when switching sections
     }
     }
 
@@ -431,7 +431,7 @@ export class HaStateController implements ReactiveController {
       const displayTypeId = segments[1] || null;
       if (this.selectedDisplayTypeId !== displayTypeId) {
         this.selectedDisplayTypeId = displayTypeId;
-        if (displayTypeId !== null) this._isAddingNew = false;
+        if (displayTypeId !== null) this.isAddingNew = false;
       }
     }
 
@@ -449,7 +449,7 @@ export class HaStateController implements ReactiveController {
       this._originalLayout = JSON.stringify(this.activeLayout);
     }
     if (!this.selectedDisplayTypeId && this.displayTypes.length > 0) {
-      if (!this._isAddingNew) {
+      if (!this.isAddingNew) {
         this.selectedDisplayTypeId = this.displayTypes[0].id;
       }
     }
