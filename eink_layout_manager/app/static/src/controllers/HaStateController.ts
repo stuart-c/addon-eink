@@ -317,18 +317,17 @@ export class HaStateController implements ReactiveController {
 
   updateActiveLayout(updates: Partial<Layout>) {
     if (!this.activeLayout) return;
-    Object.assign(this.activeLayout, updates);
+    this.activeLayout = { ...this.activeLayout, ...updates };
     this.host.requestUpdate();
   }
 
   updateItem(itemId: string, updates: Partial<LayoutItem>) {
     if (!this.activeLayout) return;
-    const item = this.activeLayout.items.find(i => i.id === itemId);
-    if (item) {
-      Object.assign(item, updates);
-      this.activeLayout.items = [...this.activeLayout.items];
-      this.host.requestUpdate();
-    }
+    const items = this.activeLayout.items.map(item => 
+      item.id === itemId ? { ...item, ...updates } : item
+    );
+    this.activeLayout = { ...this.activeLayout, items };
+    this.host.requestUpdate();
   }
 
   setSection(section: AppSection) {
