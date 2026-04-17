@@ -53,7 +53,8 @@ Tests and lints **MUST** be run locally before being pushed to GitHub. This is m
 - **Builds:** Ensure all GitHub Action builds for the PR are passing before requesting review.
 - **Auto-Merge:** You **MUST** enable auto-merge when creating a pull request. This is a mandatory step to keep the development cycle efficient.
   ```bash
-  gh pr create --fill --auto
+  gh pr create --fill
+  gh pr merge --auto --merge
   ```
 - **Auto-Merge Verification:** If for any reason auto-merge is not enabled during creation, it must be enabled immediately after:
   ```bash
