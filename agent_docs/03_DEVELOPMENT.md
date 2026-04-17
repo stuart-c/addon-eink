@@ -1,6 +1,6 @@
 # Development Guidelines
 
-This document outlines the standard development process and recent design decisions for the `addon-eink` repository. Following these guidelines ensures consistency across multiple agents and contributors. 
+This document outlines the standard development process and recent design decisions for the `addon-eink` repository. Following these guidelines ensures consistency across multiple agents and contributors. All GitHub-related tasks (PRs, issues, etc.) should be performed using the `gh` CLI as defined in the [Agent Workflow Guide](../agents.md).
 
 > [!IMPORTANT]
 > This repository strictly uses **British English** for all documentation, UI labels, and internal code (where it does not conflict with external standards). Agents must use `colour`, `initialise`, `centre`, and `greyscale`.
@@ -30,7 +30,7 @@ The frontend UI is located in `eink_layout_manager/app/static`.
 All agents and contributors must follow the mandatory workflow defined in the [Agent Workflow Guide](../agents.md). This includes using the `.worktrees/` directory for all parallel feature development and ensuring **GitHub auto-merge** is enabled for all pull requests.
 
 > [!IMPORTANT]
-> **Enabling auto-merge is mandatory.** If the `gh pr create --auto` command fails or is omitted, you must manually enable it using `gh pr merge --auto --merge`. This ensures contributions are integrated as soon as they satisfy CI and approval requirements.
+> **Enabling auto-merge is mandatory.** If the `gh pr create` command is followed by `gh pr merge --auto`, it ensures contributions are integrated as soon as they satisfy CI and approval requirements.
 
 ### Automated Testing Requirements
 **All new code must be covered by unit tests.** 

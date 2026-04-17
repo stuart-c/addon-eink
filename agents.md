@@ -1,6 +1,6 @@
 # Agent Workflow Guide
 
-This document defines the mandatory workflow for all AI agents working on the `addon-eink` repository. Following these rules ensures consistency, prevents conflicts, and maintains high code quality.
+This document defines the mandatory workflow for all AI agents working on the `addon-eink` repository. Following these rules ensures consistency, prevents conflicts, and maintains high code quality. All GitHub interactions **MUST** be performed using the GitHub CLI (`gh`) rather than the web browser where possible.
 
 ## 0. Language Standard
 All documentation, UI labels, and internal code (where standards allow) **MUST** use **British English**.
@@ -53,7 +53,8 @@ Tests and lints **MUST** be run locally before being pushed to GitHub. This is m
 - **Builds:** Ensure all GitHub Action builds for the PR are passing before requesting review.
 - **Auto-Merge:** You **MUST** enable auto-merge when creating a pull request. This is a mandatory step to keep the development cycle efficient.
   ```bash
-  gh pr create --fill --auto
+  gh pr create --fill
+  gh pr merge --auto --merge
   ```
 - **Auto-Merge Verification:** If for any reason auto-merge is not enabled during creation, it must be enabled immediately after:
   ```bash
@@ -65,3 +66,14 @@ When a PR is merged, the local environment must be tidied:
 1. Remove the worktree: `git worktree remove .worktrees/<branch-name>`
 2. Delete the local branch: `git branch -d <branch-name>`
 3. Update the local `main` branch: `git checkout main && git pull origin main`
+
+## 7. GitHub CLI Authentication
+
+To facilitate automated interactions, agents should use a Personal Access Token (PAT) stored in a `.gh_token` file in the repository root.
+
+- **Setup:** Create a file named `.gh_token` and paste your GitHub PAT into it.
+- **Authentication:** Before running `gh` commands, ensure you are authenticated. You can use the token directly:
+  ```bash
+  gh auth login --with-token < .gh_token
+  ```
+- **Security:** The `.gh_token` file is included in `.gitignore` to prevent accidental commits. Never share or commit this file.

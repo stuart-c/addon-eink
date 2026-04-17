@@ -235,3 +235,4 @@ eink_layout_manager/app/static_dist/
 eink_layout_manager/app/static/.npm-cache
 .npm-cache/
 node-env/
+.gh_token

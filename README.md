@@ -14,6 +14,11 @@ Alternatively, add it manually:
 3. Add `https://github.com/stuart-c/addon-eink` and click **Add**.
 4. The add-on will now be available for configuration and installation.
 
+For developers, you can clone the repository and manage issues/PRs using the GitHub CLI (`gh`):
+```bash
+gh repo clone stuart-c/addon-eink
+```
+
 ## Development
 
 The recommended way to develop for this repository is using **VS Code Dev Containers**. This ensures a consistent environment with all dependencies and tools pre-configured.
