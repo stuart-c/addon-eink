@@ -5,6 +5,7 @@ import { Scene } from '../../services/HaApiClient';
 import { commonStyles } from '../../styles/common-styles';
 import '../shared/section-layout';
 import '../shared/empty-view';
+import '../layout/layout-editor';
 import '../layout/yaml-editor';
 import '../dialogs/scene-dialog';
 import { SceneDialog } from '../dialogs/scene-dialog';
@@ -154,6 +155,7 @@ export class ScenesView extends LitElement {
   render() {
     const scenes = (this.state?.scenes || this.scenes || []) as Scene[];
     const activeScene = this.state?.activeScene || this.activeScene;
+    const activeLayout = activeScene ? this.state?.layouts.find((l: any) => l.id === activeScene.layout) : null;
 
     return html`
       <section-layout>
@@ -196,14 +198,24 @@ export class ScenesView extends LitElement {
             .schemaName="Scene"
             @data-update="${(e: CustomEvent) => this.state.updateScene(activeScene.id, e.detail)}"
           ></yaml-editor>
+        ` : (activeScene && activeLayout ? html`
+          <div slot="right-main" style="height: 100%; display: flex; flex-direction: column;">
+            <layout-editor
+              .width_mm="${activeLayout.canvas_width_mm}"
+              .height_mm="${activeLayout.canvas_height_mm}"
+              .items="${activeLayout.items}"
+              .displayTypes="${this.state.displayTypes}"
+              .readOnly="${true}"
+            ></layout-editor>
+          </div>
         ` : html`
           <empty-view 
             slot="right-main"
             title="Smart Scenes"
             icon="landscape"
-            message="${activeScene ? `You have selected "${activeScene.name}". Scene editing is coming soon.` : 'Compose complex scenes by combining layouts, images and live data.'}"
+            message="${activeScene ? (activeLayout ? '' : `Layout for "${activeScene.name}" not found.`) : 'Compose complex scenes by combining layouts, images and live data.'}"
           ></empty-view>
-        `}
+        `)}
       </section-layout>
       <scene-dialog 
         .layouts="${this.state?.layouts || []}"

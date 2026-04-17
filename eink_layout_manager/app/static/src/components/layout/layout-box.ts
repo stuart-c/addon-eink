@@ -19,6 +19,9 @@ export class LayoutBox extends LitElement {
         transition: transform 0.2s ease;
         overflow: visible;
       }
+      :host([readOnly]) {
+        cursor: default;
+      }
       .container {
         position: relative;
         display: flex;
@@ -52,7 +55,7 @@ export class LayoutBox extends LitElement {
         transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         transform: scale(calc(0.8 / var(--editor-scale, 1)));
       }
-      :host(:hover) .actions { opacity: 1; visibility: visible; transform: scale(calc(1 / var(--editor-scale, 1))); }
+      :host(:hover:not([readOnly])) .actions { opacity: 1; visibility: visible; transform: scale(calc(1 / var(--editor-scale, 1))); }
       
       .action-icon {
         cursor: pointer; color: #555; width: 24px; height: 24px;
@@ -86,6 +89,7 @@ export class LayoutBox extends LitElement {
   @property({ type: String }) name = '';
   @property({ type: Boolean, reflect: true }) selected = false;
   @property({ type: Boolean, reflect: true }) invalid = false;
+  @property({ type: Boolean, reflect: true }) readOnly = false;
   
   // Hardware details
   @property({ type: Number }) border_width_mm = 0;
