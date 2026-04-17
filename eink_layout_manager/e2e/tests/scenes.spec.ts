@@ -298,27 +298,32 @@ test.describe('Smart Scenes Management', () => {
     await expect(singleBtn).toBeDisabled();
     await expect(multiBtn).toBeDisabled();
     
-    // Select first display
+    // Debug: check boxes
     const boxes = page.locator('layout-box');
-    await boxes.first().dispatchEvent('mousedown');
-    await expect(boxes.first()).toHaveAttribute('selected', '');
+    await expect(boxes).toHaveCount(2);
+    const ids = await boxes.evaluateAll(els => els.map(el => el.getAttribute('data-id')));
+    console.log('BOX IDS:', ids);
+    
+    // Select first display
+    await page.locator('layout-box[data-id="display-1"]').dispatchEvent('mousedown');
+    await expect(page.locator('layout-box[data-id="display-1"]')).toHaveAttribute('selected', '');
     await page.waitForTimeout(100);
     await expect(singleBtn).toBeEnabled();
     await expect(multiBtn).toBeDisabled();
     
     // Select second display
-    await boxes.nth(1).dispatchEvent('mousedown');
-    await expect(boxes.nth(1)).toHaveAttribute('selected', '');
+    await page.locator('layout-box[data-id="display-2"]').dispatchEvent('mousedown');
+    await expect(page.locator('layout-box[data-id="display-2"]')).toHaveAttribute('selected', '');
     await page.waitForTimeout(100);
     await expect(singleBtn).toBeEnabled();
     await expect(multiBtn).toBeEnabled();
     
     // Deselect all
-    await boxes.first().dispatchEvent('mousedown');
-    await expect(boxes.first()).not.toHaveAttribute('selected', '');
+    await page.locator('layout-box[data-id="display-1"]').dispatchEvent('mousedown');
+    await expect(page.locator('layout-box[data-id="display-1"]')).not.toHaveAttribute('selected', '');
     await page.waitForTimeout(100);
-    await boxes.nth(1).dispatchEvent('mousedown');
-    await expect(boxes.nth(1)).not.toHaveAttribute('selected', '');
+    await page.locator('layout-box[data-id="display-2"]').dispatchEvent('mousedown');
+    await expect(page.locator('layout-box[data-id="display-2"]')).not.toHaveAttribute('selected', '');
     await page.waitForTimeout(100);
     await expect(singleBtn).toBeDisabled();
     await expect(multiBtn).toBeDisabled();
@@ -335,12 +340,11 @@ test.describe('Smart Scenes Management', () => {
     await page.locator('.sidebar-item').getByText(sceneName).click();
     
     // Select both displays
-    const boxes = page.locator('layout-box');
-    await boxes.first().dispatchEvent('mousedown');
-    await expect(boxes.first()).toHaveAttribute('selected', '');
+    await page.locator('layout-box[data-id="display-1"]').dispatchEvent('mousedown');
+    await expect(page.locator('layout-box[data-id="display-1"]')).toHaveAttribute('selected', '');
     await page.waitForTimeout(100);
-    await boxes.nth(1).dispatchEvent('mousedown');
-    await expect(boxes.nth(1)).toHaveAttribute('selected', '');
+    await page.locator('layout-box[data-id="display-2"]').dispatchEvent('mousedown');
+    await expect(page.locator('layout-box[data-id="display-2"]')).toHaveAttribute('selected', '');
     await page.waitForTimeout(100);
     
     // Add single items
@@ -366,12 +370,11 @@ test.describe('Smart Scenes Management', () => {
     await page.locator('.sidebar-item').getByText(sceneName).click();
     
     // Select both displays
-    const boxes = page.locator('layout-box');
-    await boxes.first().dispatchEvent('mousedown');
-    await expect(boxes.first()).toHaveAttribute('selected', '');
+    await page.locator('layout-box[data-id="display-1"]').dispatchEvent('mousedown');
+    await expect(page.locator('layout-box[data-id="display-1"]')).toHaveAttribute('selected', '');
     await page.waitForTimeout(100);
-    await boxes.nth(1).dispatchEvent('mousedown');
-    await expect(boxes.nth(1)).toHaveAttribute('selected', '');
+    await page.locator('layout-box[data-id="display-2"]').dispatchEvent('mousedown');
+    await expect(page.locator('layout-box[data-id="display-2"]')).toHaveAttribute('selected', '');
     await page.waitForTimeout(100);
     
     // Add multi-display item
