@@ -299,19 +299,23 @@ test.describe('Smart Scenes Management', () => {
     await expect(multiBtn).toBeDisabled();
     
     // Select first display
-    // Note: layout-box is inside shadow DOM, but Playwright finds it
-    await page.locator('layout-box').first().click();
+    const boxes = page.locator('layout-box');
+    await boxes.first().dispatchEvent('mousedown');
+    await expect(boxes.first()).toHaveAttribute('selected', '');
     await expect(singleBtn).toBeEnabled();
     await expect(multiBtn).toBeDisabled();
     
     // Select second display
-    await page.locator('layout-box').nth(1).click();
+    await boxes.nth(1).dispatchEvent('mousedown');
+    await expect(boxes.nth(1)).toHaveAttribute('selected', '');
     await expect(singleBtn).toBeEnabled();
     await expect(multiBtn).toBeEnabled();
     
     // Deselect all
-    await page.locator('layout-box').first().click();
-    await page.locator('layout-box').nth(1).click();
+    await boxes.first().dispatchEvent('mousedown');
+    await expect(boxes.first()).not.toHaveAttribute('selected', '');
+    await boxes.nth(1).dispatchEvent('mousedown');
+    await expect(boxes.nth(1)).not.toHaveAttribute('selected', '');
     await expect(singleBtn).toBeDisabled();
     await expect(multiBtn).toBeDisabled();
   });
@@ -327,8 +331,11 @@ test.describe('Smart Scenes Management', () => {
     await page.locator('.sidebar-item').getByText(sceneName).click();
     
     // Select both displays
-    await page.locator('layout-box').first().click();
-    await page.locator('layout-box').nth(1).click();
+    const boxes = page.locator('layout-box');
+    await boxes.first().dispatchEvent('mousedown');
+    await expect(boxes.first()).toHaveAttribute('selected', '');
+    await boxes.nth(1).dispatchEvent('mousedown');
+    await expect(boxes.nth(1)).toHaveAttribute('selected', '');
     
     // Add single items
     await page.locator('button[title="New Single Display"]').click();
@@ -353,8 +360,11 @@ test.describe('Smart Scenes Management', () => {
     await page.locator('.sidebar-item').getByText(sceneName).click();
     
     // Select both displays
-    await page.locator('layout-box').first().click();
-    await page.locator('layout-box').nth(1).click();
+    const boxes = page.locator('layout-box');
+    await boxes.first().dispatchEvent('mousedown');
+    await expect(boxes.first()).toHaveAttribute('selected', '');
+    await boxes.nth(1).dispatchEvent('mousedown');
+    await expect(boxes.nth(1)).toHaveAttribute('selected', '');
     
     // Add multi-display item
     await page.locator('button[title="New Multi-Display (Tiled)"]').click();
