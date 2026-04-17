@@ -138,7 +138,7 @@ export class YamlEditor extends LitElement {
         return;
       }
       Object.keys(obj).forEach(key => {
-        if (key.startsWith('_') || key === 'invalid') {
+        if (key.startsWith('_') || key === 'invalid' || key === 'grid_snap_mm') {
           delete obj[key];
         } else {
           stripRecursive(obj[key]);

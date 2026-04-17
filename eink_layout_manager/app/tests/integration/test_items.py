@@ -366,3 +366,34 @@ async def test_delete_layout_protection(aiohttp_client, app):
     resp = await client.delete(f"/api/layout/{layout_id}")
     assert resp.status == 200
     assert (await resp.json())["status"] == "deleted"
+
+
+@pytest.mark.asyncio
+async def test_create_layout_with_extra_fields(aiohttp_client, app):
+    """Test that creating a layout with extra fields doesn't crash."""
+    client = await aiohttp_client(app)
+
+    layout_data = {
+        "name": "Extra Fields Layout",
+        "canvas_width_mm": 500,
+        "canvas_height_mm": 500,
+        "items": [],
+        "grid_snap_mm": 10,  # Frontend-only field
+        "unknown_extra_field": "some_value",
+    }
+
+    resp = await client.post("/api/layout", json=layout_data)
+    assert resp.status == 201
+    created_data = await resp.json()
+
+    assert created_data["name"] == layout_data["name"]
+    # Verify extra fields are not in the response (optional but good)
+    assert "grid_snap_mm" not in created_data
+    assert "unknown_extra_field" not in created_data
+
+    # Verify ID
+    item_id = created_data["id"]
+    resp = await client.get(f"/api/layout/{item_id}")
+    assert resp.status == 200
+    fetched_data = await resp.json()
+    assert "grid_snap_mm" not in fetched_data
