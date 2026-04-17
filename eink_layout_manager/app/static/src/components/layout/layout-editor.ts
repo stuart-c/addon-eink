@@ -71,6 +71,9 @@ export class LayoutEditor extends LitElement {
       opacity: 0.5;
     }
     .canvas:hover::after { opacity: 1; }
+    :host([readOnly]) .canvas::after {
+      display: none;
+    }
   `;
 
   @property({ type: Number }) width_mm = 500;
@@ -79,6 +82,7 @@ export class LayoutEditor extends LitElement {
   @property({ type: Array }) items: LayoutItem[] = [];
   @property({ type: Array }) displayTypes: DisplayType[] = [];
   @property({ type: String }) selectedId: string | null = null;
+  @property({ type: Boolean, reflect: true }) readOnly = false;
   
   @state() private _scale = 1;
 
@@ -150,6 +154,8 @@ export class LayoutEditor extends LitElement {
     // Clear existing interactions to avoid duplicates on re-init
     interact(canvas).unset();
     interact('layout-box', { context: this.shadowRoot as any }).unset();
+
+    if (this.readOnly) return;
 
     // Layout boxes dragging
     interact('layout-box', { context: this.shadowRoot as any })
@@ -360,6 +366,7 @@ export class LayoutEditor extends LitElement {
                     .mat_colour="${dt.mat?.colour}"
                     ?selected="${this.selectedId === item.id}"
                     ?invalid="${item.invalid}"
+                    .readOnly="${this.readOnly}"
                     @mousedown="${() => this._handleBoxSelect(item.id)}"
                     @item-edit="${() => this._handleBoxEdit(item.id)}"
                     @item-rotate="${() => this._handleBoxRotate(item.id)}"
