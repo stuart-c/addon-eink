@@ -46,7 +46,7 @@ Tests and lints **MUST** be run locally before being pushed to GitHub. This is m
   git fetch origin
   git rebase origin/main
   ```
-- **Local Verification:** You **MUST** ensure all tests and lints pass locally (as per Section 4) before requesting a review. For frontend changes where local Node.js is incompatible, the GitHub Action build status is the primary source of truth.
+- **Local Verification:** You **MUST** ensure all tests and lints pass locally (as per Section 4) before requesting a review. The virtual environment managed by `make_venv.sh` provides the correct environment for both Python and Node.js tasks.
 - **PR Quality:** Before requesting a review, you **MUST** update the PR title and description to provide a clear explanation of:
     - **Purpose:** Why are these changes being made?
     - **Implementation:** How were the changes implemented? Highlight any significant architectural decisions, complex logic, or new patterns.
