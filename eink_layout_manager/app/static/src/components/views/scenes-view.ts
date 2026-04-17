@@ -317,6 +317,26 @@ export class ScenesView extends LitElement {
     this.state.showMessage(`Added ${newItems.length} display item(s)`, 'success');
   }
 
+  private async _handleCreateMultiDisplayItem() {
+    const activeScene = this.state?.activeScene || this.activeScene;
+    if (!activeScene || this._selectedDisplayIds.length <= 1) return;
+
+    const newItem = {
+      id: crypto.randomUUID(),
+      type: 'tile' as const,
+      displays: [...this._selectedDisplayIds],
+      images: []
+    };
+
+    const existingItems = activeScene.items || [];
+    await this.state.updateScene(activeScene.id, {
+      items: [...existingItems, newItem]
+    });
+
+    this._selectedDisplayIds = [];
+    this.state.showMessage('Added multi-display tile item', 'success');
+  }
+
   render() {
     const scenes = (this.state?.scenes || this.scenes || []) as Scene[];
     const activeScene = this.state?.activeScene || this.activeScene;
@@ -389,7 +409,12 @@ export class ScenesView extends LitElement {
                   >
                     <span class="material-icons">add_photo_alternate</span>
                   </button>
-                  <button class="tool-button" title="New Multi-Display (Tiled)">
+                  <button 
+                    class="tool-button" 
+                    title="New Multi-Display (Tiled)"
+                    ?disabled="${this._selectedDisplayIds.length <= 1}"
+                    @click="${this._handleCreateMultiDisplayItem}"
+                  >
                     <span class="material-icons">grid_view</span>
                   </button>
                   <button class="tool-button" title="Edit Item">
