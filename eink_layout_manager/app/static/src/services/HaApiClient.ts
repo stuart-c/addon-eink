@@ -141,6 +141,10 @@ export class HaApiClient {
     if ('id' in payload) {
       delete (payload as any).id;
     }
+    // grid_snap_mm is a frontend-only concept and should not be persisted
+    if ('grid_snap_mm' in payload) {
+      delete (payload as any).grid_snap_mm;
+    }
 
     return this._fetch<T>(`api/${resourceType}`, {
       method: 'POST',
@@ -150,6 +154,10 @@ export class HaApiClient {
 
   async updateItem<T>(resourceType: ResourceType, id: string, data: Partial<T>): Promise<T> {
     const payload = { ...data };
+    // grid_snap_mm is a frontend-only concept and should not be persisted
+    if ('grid_snap_mm' in payload) {
+      delete (payload as any).grid_snap_mm;
+    }
 
     return this._fetch<T>(`api/${resourceType}/${id}`, {
       method: 'PUT',

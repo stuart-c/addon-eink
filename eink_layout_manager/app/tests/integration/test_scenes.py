@@ -108,6 +108,7 @@ async def test_delete_scene(aiohttp_client, app):
 
     # Verify gone
 
+
 @pytest.mark.asyncio
 async def test_update_scene(aiohttp_client, app):
     """Test updating a scene's name and attempting to update its layout."""

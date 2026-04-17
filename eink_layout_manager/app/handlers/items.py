@@ -175,7 +175,13 @@ async def create_item(request):
                 {"error": "Resource already exists"}, status=409
             )
 
-        item = model_class(**data)
+        # Defensive: Filter data to only include valid model columns
+        # This prevents crashes like TypeError: 'grid_snap_mm' is an invalid
+        # keyword argument
+        valid_columns = {c.name for c in model_class.__table__.columns}
+        model_data = {k: v for k, v in data.items() if k in valid_columns}
+
+        item = model_class(**model_data)
         session.add(item)
         response_data = model_to_dict(item)
         await session.commit()
@@ -245,9 +251,11 @@ async def update_item(request):
         if resource_type == "display_type":
             data = ensure_landscape(data)
 
-        # Update fields
+        # Update fields - only for valid model columns
+        valid_columns = {c.name for c in model_class.__table__.columns}
         for key, value in data.items():
-            setattr(item, key, value)
+            if key in valid_columns:
+                setattr(item, key, value)
 
         response_data = model_to_dict(item)
         await session.commit()
