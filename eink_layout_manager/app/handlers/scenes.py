@@ -12,14 +12,19 @@ from ..utils.validation import (
     response_schema,
     validate_read_only,
 )
+from ..utils.query import build_scene_filters
 
 
 @response_schema("item_list_response")
 async def handle_scene_list(request):
-    """Retrieve all scenes from the database."""
+    """Retrieve all scenes from the database, optionally filtered."""
     try:
+        filters = build_scene_filters(request.query)
         async with database.get_session() as session:
-            stmt = select(models.Scene).order_by(models.Scene.name)
+            stmt = select(models.Scene)
+            if filters:
+                stmt = stmt.where(*filters)
+            stmt = stmt.order_by(models.Scene.name)
             result = await session.execute(stmt)
             scenes = result.scalars().all()
             return web.json_response([scene_model_to_dict(s) for s in scenes])

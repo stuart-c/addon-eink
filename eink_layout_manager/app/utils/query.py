@@ -134,3 +134,28 @@ def build_image_filters(query_params):
             filters.append(or_(*kw_filters))
 
     return filters
+
+
+def build_scene_filters(query_params):
+    """
+    Build a list of SQLAlchemy filter expressions for scenes.
+
+    Args:
+        query_params (dict): Dictionary of query parameters from the request.
+
+    Returns:
+        list: SQLAlchemy filter expressions.
+    """
+    filters = []
+
+    # Layout filter (exact match)
+    layout = query_params.get("layout")
+    if layout:
+        filters.append(models.Scene.layout_id == layout)
+
+    # Title filter (case-insensitive substring match)
+    title = query_params.get("title")
+    if title:
+        filters.append(models.Scene.name.ilike(f"%{title}%"))
+
+    return filters
