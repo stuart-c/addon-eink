@@ -23,11 +23,11 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   webServer: process.env.CI ? undefined : {
-    command: `cd ../.. && export DATA_DIR=${DATA_DIR} && export INGRESS_PORT=${INGRESS_PORT} && cd eink_layout_manager && PYTHONPATH=. backend/.venv/bin/python3 -m backend.main`,
+    command: `export DATA_DIR=${path.resolve(DATA_DIR)} && export INGRESS_PORT=${INGRESS_PORT} && export PYTHONPATH=${path.resolve(__dirname, '..')} && export PYTHONUNBUFFERED=1 && ${path.resolve(__dirname, '../backend/.venv/bin/python3')} -m backend.main`,
     url: `http://localhost:${INGRESS_PORT}/api/ping`,
     reuseExistingServer: true,
-    stdout: 'pipe',
-    stderr: 'pipe',
+    stdout: 'inherit',
+    stderr: 'inherit',
   },
   projects: [
     {

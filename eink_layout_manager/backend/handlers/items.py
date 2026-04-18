@@ -199,7 +199,6 @@ async def update_item(request):
     except json.JSONDecodeError:
         return web.json_response({"error": "Invalid JSON"}, status=400)
 
-    # Fetch existing item FIRST
     try:
         model_class = get_model_class(resource_type)
         item_id = validate_id(item_id)

@@ -26,6 +26,21 @@ except ImportError:
 def get_db_url():
     """Construct the database URL from environment or defaults."""
     data_dir = os.environ.get("DATA_DIR", "/data")
+    
+    # Check if we can write to DATA_DIR, if not fallback to local .data
+    # This is critical for E2E environments where /data might be read-only
+    try:
+        if not os.path.exists(data_dir):
+            os.makedirs(data_dir, exist_ok=True)
+        # Test write access
+        test_file = os.path.join(data_dir, ".write_test")
+        with open(test_file, "w") as f:
+            f.write("ok")
+        os.remove(test_file)
+    except (OSError, PermissionError):
+        data_dir = os.path.join(os.getcwd(), ".data")
+        os.makedirs(data_dir, exist_ok=True)
+
     db_path = os.path.join(data_dir, "eink_layout_manager.db")
     return f"sqlite+aiosqlite:///{db_path}"
 
@@ -129,6 +144,10 @@ async def init_db():
     """Initialise the database engine and create tables."""
     global _engine, _session_factory
 
+    # Ensure data directory exists
+    data_dir = os.environ.get("DATA_DIR", "/data")
+    os.makedirs(data_dir, exist_ok=True)
+    
     url = get_db_url()
     _engine = create_async_engine(url, echo=False)
     _session_factory = async_sessionmaker(
@@ -139,6 +158,8 @@ async def init_db():
     async with _engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         await ensure_schema_up_to_date(conn)
+        # Enable WAL mode for better concurrency and to avoid 'readonly database' issues in some environments
+        await conn.execute(text("PRAGMA journal_mode=WAL"))
 
     # Perform migration
     await migrate_json_to_db()

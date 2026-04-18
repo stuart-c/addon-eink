@@ -23,6 +23,7 @@ export class HaStateController implements ReactiveController {
   public selectedImageId: string | null = null;
   public selectedDisplayTypeId: string | null = null;
   public isAddingNew = false;
+  public isAddingNewLayout = false;
   public activeSection: AppSection = 'layouts';
   public message: string = '';
   private _originalLayout: string | null = null;
@@ -108,13 +109,17 @@ export class HaStateController implements ReactiveController {
     this.layouts = [result];
     this._originalLayout = JSON.stringify(result);
   }
-
   async saveActiveLayout() {
     if (!this.activeLayout) return;
     
     this.isSaving = true;
     this.host.requestUpdate();
     
+    // Explicitly handle new layout drafting to prevent ID pollution
+    if (this.isAddingNewLayout && this.activeLayout.id) {
+      delete (this.activeLayout as any).id;
+    }
+
     try {
       if (this.activeLayout.id) {
         await api.updateItem('layout', this.activeLayout.id, this.activeLayout);
@@ -122,12 +127,14 @@ export class HaStateController implements ReactiveController {
         const created = await api.createItem('layout', this.activeLayout);
         this.activeLayout = created;
       }
+      this.isAddingNewLayout = false;
       this._originalLayout = JSON.stringify(this.activeLayout);
       this.showMessage('Layout saved!', 'success');
       await this.refresh();
       this._updateHash();
     } catch (e: any) {
-      this.showMessage(`Failed to save: ${e.message}`, 'error');
+      const msg = e.details ? `${e.message}: ${e.details}` : e.message;
+      this.showMessage(`Failed to save: ${msg}`, 'error');
     } finally {
       this.isSaving = false;
       this.host.requestUpdate();
@@ -327,9 +334,32 @@ export class HaStateController implements ReactiveController {
     this.host.requestUpdate();
   }
 
-  updateActiveLayout(updates: Partial<Layout>) {
-    if (!this.activeLayout) return;
-    this.activeLayout = { ...this.activeLayout, ...updates };
+  updateActiveLayout(updates: Partial<Layout>, replace: boolean = false) {
+    if (replace) {
+      this.isAddingNewLayout = !updates.id;
+    }
+
+    if (!this.activeLayout || replace) {
+      // If replacing, we still want to ensure a valid Layout object
+      const base: Layout = this.activeLayout ? { ...this.activeLayout } : {
+        name: 'New Layout',
+        canvas_width_mm: 500,
+        canvas_height_mm: 500,
+        items: []
+      } as any;
+      
+      this.activeLayout = { ...base, ...updates };
+      // If it's a new draft, ensure ID is NOT copied from base if replace was intended for a NEW entity
+      if (replace && !updates.id) {
+        delete (this.activeLayout as any).id;
+      }
+    } else {
+      // Guard: If we are in 'Adding New' mode, do NOT merge if the update would re-introduce an ID
+      if (this.isAddingNewLayout && !this.activeLayout.id && (updates as any).id) {
+         return; // Reject ID pollution
+      }
+      this.activeLayout = { ...this.activeLayout, ...updates };
+    }
     this.host.requestUpdate();
   }
 

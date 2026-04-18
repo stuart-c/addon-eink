@@ -122,6 +122,9 @@ export class LayoutsView extends LitElement {
       grid_snap_mm: 5,
       items: []
     };
+    
+    // Immediately select the new draft to avoid merging into the old active layout
+    this._updateActiveLayout(newLayout, true);
     await this._layoutSettingsDialog.show(newLayout as Layout);
   }
 
@@ -153,9 +156,9 @@ export class LayoutsView extends LitElement {
     }
   }
 
-  private _updateActiveLayout(updates: Partial<Layout>) {
+  private _updateActiveLayout(updates: Partial<Layout>, replace: boolean = false) {
     this.dispatchEvent(new CustomEvent('update-active-layout', {
-      detail: updates,
+      detail: { updates, replace },
       bubbles: true,
       composed: true
     }));
@@ -251,7 +254,12 @@ export class LayoutsView extends LitElement {
       </section-layout>
 
       <layout-settings-dialog @save="${(e: CustomEvent) => {
-        this._updateActiveLayout(e.detail.settings);
+        const isNew = !e.detail.settings.id;
+        this.dispatchEvent(new CustomEvent('update-active-layout', { 
+          detail: { updates: e.detail.settings, replace: isNew }, 
+          bubbles: true, 
+          composed: true
+        }));
         this.dispatchEvent(new CustomEvent('show-message', { detail: { text: 'Settings applied', type: 'success' }, bubbles: true, composed: true }));
       }}"></layout-settings-dialog>
     `;

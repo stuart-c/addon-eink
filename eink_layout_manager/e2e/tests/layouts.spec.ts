@@ -35,7 +35,7 @@ test.describe('Layouts Management', () => {
     await dialog.locator('input[type="number"]').nth(0).fill('600'); // Width
     await dialog.locator('input[type="number"]').nth(1).fill('400'); // Height
     
-    // Select grid snap using the slider component if it exists, otherwise just skip (default is 5)
+    // Select grid snap using the slider component if it exists, otherwise use fallback
     const gridSlider = dialog.locator('grid-snap-slider');
     if (await gridSlider.isVisible()) {
       await gridSlider.locator('.label-item').filter({ hasText: '10mm' }).click();

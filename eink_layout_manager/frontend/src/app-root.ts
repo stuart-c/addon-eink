@@ -233,7 +233,7 @@ export class AppRoot extends LitElement {
         .viewMode="${this.state.viewMode}"
         .isSaving="${this.state.isSaving}"
         @switch-layout="${(e: CustomEvent) => this.state.switchLayout(e.detail)}"
-        @update-active-layout="${(e: CustomEvent) => this.state.updateActiveLayout(e.detail)}"
+        @update-active-layout="${(e: CustomEvent) => this.state.updateActiveLayout(e.detail.updates, e.detail.replace)}"
         @update-item="${(e: CustomEvent) => this.state.updateItem(e.detail.id, e.detail.updates)}"
         @select-item="${(e: CustomEvent) => this.state.selectItem(e.detail.id)}"
         @edit-item="${(e: CustomEvent) => this._itemDialog.show(this.state.activeLayout?.items.find(i => i.id === e.detail.id)!, this.state.displayTypes)}"
