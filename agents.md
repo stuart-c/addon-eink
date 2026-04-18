@@ -37,8 +37,17 @@ It is vitally important that git worktrees are used to allow multiple agents to 
 
 ## 4. Pre-Push Verification
 Tests and lints **MUST** be run locally before being pushed to GitHub. This is mandatory whenever Python or frontend code is modified.
+
+### Test Isolation and System Load
+To prevent port conflicts and data corruption when multiple agents are working in parallel:
+- **Use Isolation:** It is strongly recommended to use `./scripts/verify_all.sh` as it handles port and data directory isolation automatically.
+- **Check System Load:** Before starting E2E tests, check the machine load average (e.g., `uptime`). Avoid starting heavy test suites if the system is already under significant stress.
+- **Cleanup:** Ensure no orphaned backend processes are left running on default ports.
+
+### Mandatory Verification Scripts
 - **Create** run scripts/make_venv.sh
 - **Run** run script/run_tests.sh
+- **Full Isolation Check:** Run `./scripts/verify_all.sh`
 
 ## 5. Pull Request Management
 - **Mergeability:** PRs **MUST** be rebased from the latest `main` branch before any review is requested.

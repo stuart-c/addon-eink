@@ -43,6 +43,48 @@ This script handles:
 ### Troubleshooting
 - **Logs:** Test results and traces are stored in `eink_layout_manager/e2e/test-results`.
 - **Environment:** If tests fail due to missing dependencies, ensure you have run `./scripts/make_venv.sh` first.
+- **Port Conflicts:** If you see "Address already in use", ensure no orphan backend processes are running (see [Cleanup](#cleanup-orphaned-processes)).
+
+## Parallel Test Isolation
+
+When working in parallel (e.g., across multiple git worktrees), you must avoid resource contention.
+
+### 1. Preferred Method: `verify_all.sh`
+The `./scripts/verify_all.sh` script is the recommended way to run E2E tests in isolation. It automatically:
+- Assigns a random available port.
+- Creates a unique temporary data directory (`.data_verify_XXXXXX`).
+- Cleans up all resources upon completion.
+
+### 2. Manual Isolation with `run_e2e.sh`
+If you need to run `run_e2e.sh` directly in an isolated way, you must override the default port and data directory:
+
+```bash
+# Example: Run on port 8100 with a custom data dir
+export INGRESS_PORT=8100
+export DATA_DIR=$(pwd)/my_test_data
+./scripts/run_e2e.sh
+```
+
+## Load Management
+
+E2E tests consume significant CPU and Memory. Before starting a new parallel test suite:
+1.  **Check Load Average:** Run `uptime` or `top`.
+2.  **Evaluate:** If the load average is significantly higher than your CPU core count, wait for existing tests to finish before starting more.
+3.  **Monitor:** High load can lead to flaky tests due to timeouts.
+
+## Cleanup Orphaned Processes
+
+If a test run is aborted, the backend Python process might remain active.
+
+### Find processes occupying a port:
+```bash
+lsof -i :8099
+```
+
+### Kill the process:
+```bash
+fuser -k 8099/tcp
+```
 
 ## Guidelines for New Tests
 
