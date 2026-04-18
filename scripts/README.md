@@ -53,6 +53,11 @@ This script runs the end-to-end integration tests using Playwright. **Running th
 ./scripts/run_e2e.sh
 ```
 
+> [!WARNING]
+> **Parallel Run Warning:** Running this script directly defaults to port `8099` and the `./eink_layout_manager/e2e/test_data_e2e` directory. Running multiple instances without overrides will cause test failures and data corruption.
+>
+> **System Load:** E2E tests are resource-intensive. Check your system load average (e.g., using `uptime` or `top`) before starting parallel runs to ensure your machine can handle the extra processes.
+
 ### Auto-provisioning
 
 Like `run_tests.sh`, this script will automatically provision the virtual environment and ensure Playwright browsers are installed if they are missing.
@@ -117,5 +122,24 @@ If the Python virtual environment is not found, it will automatically run `./scr
 ### Persistence
 
 This script runs the application with the `DATA_DIR` environment variable set to `./.data` in the project root. This is where the SQLite database and image assets will be stored during local execution.
+
+## Troubleshooting and Cleanup
+
+If an E2E test or the application is interrupted, it may leave a background Python process running on its allocated port.
+
+### Identifying Orphans
+
+You can check if a process is still occupying a port:
+```bash
+lsof -i :8099
+```
+
+### Manual Cleanup
+
+To kill an orphaned backend process running on port 8099:
+```bash
+fuser -k 8099/tcp
+```
+Or use `ps` to find the `app.main` process and kill it manually.
 
 

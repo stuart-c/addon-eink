@@ -29,6 +29,13 @@ The recommended way to develop for this repository is using **VS Code Dev Contai
 For detailed development processes, architectural overview, and mandatory agent workflows, see:
 - [Agent Workflow Guide](agents.md)
 - [Agent Documentation Index](agent_docs/00_INDEX.md)
+### Test Isolation
+
+> [!WARNING]
+> Running multiple instances of the application or its test suites concurrently on the same machine can cause port conflicts and data corruption. By default, the application and E2E tests target port `8099` and a shared `.data` directory.
+> 
+> To ensure isolation and prevent system overload, it is recommended to use `./scripts/verify_all.sh` or consult the [E2E Testing Guide](agent_docs/04_E2E_TESTS.md#parallel-test-isolation) for instructions on using custom ports and data directories.
+
 ### Running and Testing
 
 Local testing is mandatory for all contributions. We provide several scripts in the `scripts/` directory to facilitate development and verification:
