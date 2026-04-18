@@ -19,10 +19,28 @@ updates:
           - "*"
 
   - package-ecosystem: "pip"
-    directory: "/eink_layout_manager/app"
+    directory: "/eink_layout_manager/backend"
     schedule:
       interval: "daily"
     groups:
       python-dependencies:
+        patterns:
+          - "*"
+
+  - package-ecosystem: "npm"
+    directory: "/eink_layout_manager/frontend"
+    schedule:
+      interval: "daily"
+    groups:
+      frontend-dependencies:
+        patterns:
+          - "*"
+
+  - package-ecosystem: "npm"
+    directory: "/eink_layout_manager/e2e"
+    schedule:
+      interval: "daily"
+    groups:
+      e2e-dependencies:
         patterns:
           - "*"

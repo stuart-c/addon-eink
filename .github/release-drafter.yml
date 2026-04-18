@@ -87,10 +87,10 @@ autolabeler:
       - '/^docs\//i'
   - label: 'python'
     files:
-      - 'eink_layout_manager/app/**/*.py'
+      - 'eink_layout_manager/backend/**/*.py'
   - label: 'frontend'
     files:
-      - 'eink_layout_manager/app/static/**/*'
+      - 'eink_layout_manager/frontend/**/*'
   - label: 'github_actions'
     files:
       - '.github/workflows/**/*'
