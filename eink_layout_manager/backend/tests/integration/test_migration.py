@@ -1,7 +1,7 @@
 import os
 import json
 import pytest
-from app import database, models
+from backend import database, models
 
 from sqlalchemy import select
 

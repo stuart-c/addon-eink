@@ -2,8 +2,8 @@ ARG BUILD_FROM="ghcr.io/home-assistant/base-python:3.13-alpine3.23"
 
 # Stage 0: Node.js Frontend Build
 FROM node:24-alpine AS node-builder
-WORKDIR /app/static
-COPY app/static .
+WORKDIR /frontend
+COPY frontend .
 RUN npm install && npm run build
 
 # Stage 1: Build stage
@@ -16,8 +16,8 @@ RUN \
         libjpeg-turbo-dev \
         zlib-dev
 
-# Build wheels for app dependencies to isolate build artifacts
-COPY app/requirements.txt /tmp/
+# Build wheels for backend dependencies to isolate build artifacts
+COPY backend/requirements.txt /tmp/
 RUN \
     pip3 wheel --no-cache-dir --wheel-dir /tmp/wheels -r /tmp/requirements.txt
 
@@ -25,21 +25,21 @@ RUN \
 FROM builder AS tester
 
 # Install test and linting dependencies
-COPY app/requirements_test.txt /tmp/
+COPY backend/requirements_test.txt /tmp/
 RUN \
     pip3 install --no-cache-dir -r /tmp/requirements_test.txt
 
-COPY app /app
+COPY backend /backend
 
 # Run all quality checks; the build will fail if any fail
 RUN \
-    PYTHONPATH=/ pytest /app/tests/
+    PYTHONPATH=/ pytest /backend/tests/
 
 # Stage 3: Runner stage (Final)
 FROM $BUILD_FROM AS runner
 # Ensure the build fails if the tester stage fails
-COPY --from=tester /app /app_verified
-RUN rm -rf /app_verified
+COPY --from=tester /backend /backend_verified
+RUN rm -rf /backend_verified
 
 # Install runtime libraries only (no headers or build tools)
 RUN \
@@ -57,23 +57,23 @@ RUN \
 COPY rootfs /
 
 # Copy application
-COPY app /app
+COPY backend /backend
 
 # Copy built frontend assets from node-builder
-COPY --from=node-builder /app/static_dist /app/static_dist
+COPY --from=node-builder /frontend/dist /backend/static_dist
 
 # Cleanup development/test files to keep image small
-RUN rm -rf /app/tests /app/requirements_test.txt
+RUN rm -rf /backend/tests /backend/requirements_test.txt
 
-WORKDIR /app
+WORKDIR /backend
 
 # Create non-root user
 RUN addgroup -g 1000 addon && \
     adduser -u 1000 -G addon -S -D addon
 
-# Give execution permissions to s6 run scripts and set ownership for /app
+# Give execution permissions to s6 run scripts and set ownership for /backend
 RUN chmod a+x /etc/services.d/app/run && \
-    chown -R addon:addon /app
+    chown -R addon:addon /backend
 
 # Labels
 LABEL \

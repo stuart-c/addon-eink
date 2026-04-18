@@ -5,7 +5,7 @@ export default defineConfig({
   // Use relative paths for assets to support HA Ingress subpaths
   base: './',
   build: {
-    outDir: '../static_dist', // Build into a directory clear of source
+    outDir: './dist', // Build into a directory clear of source
     emptyOutDir: true,
   },
   server: {

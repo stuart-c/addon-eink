@@ -1,6 +1,6 @@
 import os
 import pytest
-from app import database
+from backend import database
 from sqlalchemy import text
 
 

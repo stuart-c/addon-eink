@@ -18,7 +18,7 @@ jobs:
     
     defaults:
       run:
-        working-directory: eink_layout_manager/app/static
+        working-directory: eink_layout_manager/frontend
 
     steps:
       - name: Checkout
@@ -29,7 +29,7 @@ jobs:
         with:
           node-version: '24'
           cache: 'npm'
-          cache-dependency-path: eink_layout_manager/app/static/package-lock.json
+          cache-dependency-path: eink_layout_manager/frontend/package-lock.json
 
       - name: Install dependencies
         run: npm install

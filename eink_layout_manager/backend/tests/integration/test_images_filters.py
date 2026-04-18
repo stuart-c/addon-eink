@@ -1,6 +1,6 @@
 import pytest
 import uuid
-from app import database, models
+from backend import database, models
 
 
 @pytest.mark.asyncio

@@ -1,8 +1,8 @@
 import pytest
 import json
 from unittest.mock import MagicMock, patch, AsyncMock
-from app.handlers.items import delete_item
-from app import models
+from backend.handlers.items import delete_item
+from backend import models
 
 
 @pytest.mark.asyncio
@@ -34,8 +34,8 @@ async def test_delete_item_display_type_in_use():
     mock_get_session.return_value.__aenter__.return_value = mock_session
 
     with (
-        patch("app.database.get_session", mock_get_session),
-        patch("app.handlers.items.validate_id", side_effect=lambda x: x),
+        patch("backend.database.get_session", mock_get_session),
+        patch("backend.handlers.items.validate_id", side_effect=lambda x: x),
     ):
 
         response = await delete_item(mock_request)
@@ -81,8 +81,8 @@ async def test_delete_item_display_type_not_in_use():
     mock_get_session.return_value.__aenter__.return_value = mock_session
 
     with (
-        patch("app.database.get_session", mock_get_session),
-        patch("app.handlers.items.validate_id", side_effect=lambda x: x),
+        patch("backend.database.get_session", mock_get_session),
+        patch("backend.handlers.items.validate_id", side_effect=lambda x: x),
     ):
 
         response = await delete_item(mock_request)
@@ -114,8 +114,8 @@ async def test_delete_item_not_found():
     mock_get_session.return_value.__aenter__.return_value = mock_session
 
     with (
-        patch("app.database.get_session", mock_get_session),
-        patch("app.handlers.items.validate_id", side_effect=lambda x: x),
+        patch("backend.database.get_session", mock_get_session),
+        patch("backend.handlers.items.validate_id", side_effect=lambda x: x),
     ):
 
         response = await delete_item(mock_request)

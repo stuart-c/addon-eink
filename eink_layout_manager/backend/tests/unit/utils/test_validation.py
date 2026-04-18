@@ -1,5 +1,5 @@
 import pytest
-from app.utils.validation import validate_id, load_schema
+from backend.utils.validation import validate_id, load_schema
 
 
 def test_validate_id_success():

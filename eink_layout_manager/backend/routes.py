@@ -39,7 +39,14 @@ def setup_routes(app):
     app.router.add_get("/api/ping", common.ping)
 
     # Static Lit frontend files
-    static_dist = os.path.join(os.path.dirname(__file__), "static_dist")
+    # Try new structure first (eink_layout_manager/frontend/dist)
+    # Then fallback to Docker/Legacy structure (eink_layout_manager/backend/static_dist)
+    static_dist = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)), "frontend", "dist"
+    )
+    if not os.path.exists(static_dist):
+        static_dist = os.path.join(os.path.dirname(__file__), "static_dist")
+
     if os.path.exists(static_dist):
         # Serve index.html at the root
         async def index(request):

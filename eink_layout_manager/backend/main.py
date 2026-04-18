@@ -1,11 +1,11 @@
 import os
 from aiohttp import web
 
-from app import database
-from app.middlewares import request_logger_middleware
-from app.routes import setup_routes
-from app.utils.storage import get_storage_path
-from app.background.cleanup import (
+from backend import database
+from backend.middlewares import request_logger_middleware
+from backend.routes import setup_routes
+from backend.utils.storage import get_storage_path
+from backend.background.cleanup import (
     schedule_image_cleanup,
     stop_image_cleanup,
 )

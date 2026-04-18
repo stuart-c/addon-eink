@@ -1,5 +1,5 @@
 import os
-from app.utils.storage import get_storage_path
+from backend.utils.storage import get_storage_path
 
 
 async def delete_image_files_and_record(image, session):
