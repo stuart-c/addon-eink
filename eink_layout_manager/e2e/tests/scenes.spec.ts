@@ -377,7 +377,7 @@ test.describe('Smart Scenes Management', () => {
     // Verify 1 item added to the list
     const items = page.locator('.placeholder-item');
     await expect(items).toHaveCount(1);
-    await expect(items).toContainText('Tiled');
+    await expect(items).toContainText('Tile');
     
     // Verify selection is cleared
     await expect(page.locator('button[title="New Multi-Display (Tiled)"]')).toBeDisabled();
