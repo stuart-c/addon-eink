@@ -137,6 +137,7 @@ async def init_db():
 
     # Create tables if they don't exist
     async with _engine.begin() as conn:
+        await conn.execute(text("PRAGMA journal_mode=WAL"))
         await conn.run_sync(Base.metadata.create_all)
         await ensure_schema_up_to_date(conn)
 
