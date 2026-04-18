@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const INGRESS_PORT = process.env.INGRESS_PORT || '8099';
+const INGRESS_PORT = process.env.INGRESS_PORT || '8098';
 const DATA_DIR = process.env.DATA_DIR || '$(pwd)/test_data_e2e';
 
 
@@ -20,7 +20,7 @@ export default defineConfig({
   webServer: {
     command: `cd ../.. && export DATA_DIR=${DATA_DIR} && export INGRESS_PORT=${INGRESS_PORT} && cd eink_layout_manager && PYTHONPATH=. app/.venv/bin/python3 -m app.main`,
     url: `http://localhost:${INGRESS_PORT}/api/ping`,
-    reuseExistingServer: true,
+    reuseExistingServer: false,
     stdout: 'pipe',
     stderr: 'pipe',
   },

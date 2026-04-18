@@ -174,6 +174,33 @@ test('DELETE /api/scene/:id — deletes resource and returns {status: "deleted"}
   expect(getResponse.status()).toBe(404);
 });
 
+// ---------------------------------------------------------------------------
+// Multi-create
+// ---------------------------------------------------------------------------
+
+test('POST /api/scene — can create multiple resources and they all appear in the list', async ({ request }) => {
+  const names = [uid('multi-1'), uid('multi-2'), uid('multi-3')];
+  const createdIds: string[] = [];
+
+  for (const name of names) {
+    const created = await createScene(request, { name });
+    createdIds.push(created.id);
+  }
+
+  const response = await request.get('/api/scene');
+  expect(response.status()).toBe(200);
+  const body: Scene[] = await response.json();
+
+  for (const name of names) {
+    expect(body.some(s => s.name === name)).toBe(true);
+  }
+
+  // Clean up
+  for (const id of createdIds) {
+    await request.delete(`/api/scene/${id}`);
+  }
+});
+
 test('DELETE /api/scene/:id — returns 404 for non-existent ID', async ({ request }) => {
   const response = await request.delete('/api/scene/no-such-thing');
   expect(response.status()).toBe(404);
