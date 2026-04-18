@@ -26,7 +26,7 @@ except ImportError:
 def get_db_url():
     """Construct the database URL from environment or defaults."""
     data_dir = os.environ.get("DATA_DIR", "/data")
-    
+
     # Check if we can write to DATA_DIR, if not fallback to local .data
     # This is critical for E2E environments where /data might be read-only
     try:
@@ -37,7 +37,7 @@ def get_db_url():
         with open(test_file, "w") as f:
             f.write("ok")
         os.remove(test_file)
-    except (OSError, PermissionError):
+    except OSError:
         data_dir = os.path.join(os.getcwd(), ".data")
         os.makedirs(data_dir, exist_ok=True)
 
@@ -147,7 +147,7 @@ async def init_db():
     # Ensure data directory exists
     data_dir = os.environ.get("DATA_DIR", "/data")
     os.makedirs(data_dir, exist_ok=True)
-    
+
     url = get_db_url()
     _engine = create_async_engine(url, echo=False)
     _session_factory = async_sessionmaker(
@@ -158,7 +158,8 @@ async def init_db():
     async with _engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         await ensure_schema_up_to_date(conn)
-        # Enable WAL mode for better concurrency and to avoid 'readonly database' issues in some environments
+        # Enable WAL mode for better concurrency and to avoid
+        # 'readonly database' issues in some environments
         await conn.execute(text("PRAGMA journal_mode=WAL"))
 
     # Perform migration

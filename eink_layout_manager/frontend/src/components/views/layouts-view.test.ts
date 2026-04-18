@@ -84,7 +84,7 @@ describe('LayoutsView', () => {
     await element.discard();
     
     expect(spy).toHaveBeenCalled();
-    expect(spy.mock.calls[0][0].detail).toEqual(expect.objectContaining({ name: originalName }));
+    expect(spy.mock.calls[0][0].detail.updates).toEqual(expect.objectContaining({ name: originalName }));
   });
 
   it('should dispatch delete-layout when requestDelete is called', async () => {
@@ -108,7 +108,8 @@ describe('LayoutsView', () => {
     }));
     
     expect(spy).toHaveBeenCalled();
-    const updates = spy.mock.calls[0][0].detail;
+    const detail = spy.mock.calls[0][0].detail;
+    const updates = detail.updates;
     expect(updates.items.length).toBe(1);
     expect(updates.items[0].display_type_id).toBe('dt1');
   });

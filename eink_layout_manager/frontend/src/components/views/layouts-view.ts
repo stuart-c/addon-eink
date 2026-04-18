@@ -105,11 +105,7 @@ export class LayoutsView extends LitElement {
   public async discard() {
     if (this._originalLayout) {
       const layout = JSON.parse(this._originalLayout);
-      this.dispatchEvent(new CustomEvent('update-active-layout', {
-        detail: layout,
-        bubbles: true,
-        composed: true
-      }));
+      this._updateActiveLayout(layout, true);
       this.selectedItemId = null;
     }
   }
