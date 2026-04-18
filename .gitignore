@@ -226,6 +226,7 @@ yarn-error.log*
 dev_data/
 .data/
 .data_verify_*/
+.data_e2e_debug*/
 test_data*/
 server.pid
 *.png

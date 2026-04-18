@@ -9,6 +9,8 @@ import '../layout/layout-editor';
 import '../layout/yaml-editor';
 import '../dialogs/scene-dialog';
 import { SceneDialog } from '../dialogs/scene-dialog';
+import '../dialogs/scene-item-settings-dialog';
+import { SceneItemSettingsDialog } from '../dialogs/scene-item-settings-dialog';
 
 /**
  * A view component for managing Smart Scenes.
@@ -204,6 +206,12 @@ export class ScenesView extends LitElement {
         box-shadow: 0 8px 16px rgba(0,0,0,0.04);
         transform: translateX(4px);
       }
+      .placeholder-item.selected {
+        background: #e1f5fe;
+        border-color: var(--primary-colour);
+        border-left-color: var(--primary-colour);
+        box-shadow: 0 4px 12px rgba(3, 169, 244, 0.1);
+      }
       .placeholder-item-icon {
         width: 44px;
         height: 44px;
@@ -253,8 +261,9 @@ export class ScenesView extends LitElement {
   @property({ type: Object }) activeScene: Scene | null = null;
   @property({ type: String }) viewMode: 'graphical' | 'yaml' = 'graphical';
   @state() private _selectedDisplayIds: string[] = [];
-
+  @state() private _selectedItemId: string | null = null;
   @query('scene-dialog') private _sceneDialog!: SceneDialog;
+  @query('scene-item-settings-dialog') private _itemSettingsDialog!: SceneItemSettingsDialog;
 
   protected updated(changedProperties: PropertyValues) {
     super.updated(changedProperties);
@@ -269,6 +278,7 @@ export class ScenesView extends LitElement {
         bubbles: true,
         composed: true
       }));
+      this._selectedItemId = null;
     }
   }
 
@@ -290,11 +300,31 @@ export class ScenesView extends LitElement {
 
   private _handleSelect(scene: Scene) {
     this._selectedDisplayIds = [];
+    this._selectedItemId = null;
     this.dispatchEvent(new CustomEvent('select-scene', {
       detail: { scene },
       bubbles: true,
       composed: true
     }));
+  }
+
+  private _handleItemClick(id: string) {
+    this._selectedItemId = id;
+  }
+
+  private _handleItemDoubleClick(item: any) {
+    this._selectedItemId = item.id;
+    this._itemSettingsDialog.show(item);
+  }
+
+  private _handleEditItem() {
+    const activeScene = this.state?.activeScene || this.activeScene;
+    if (!activeScene || !this._selectedItemId) return;
+    
+    const item = activeScene.items?.find((i: any) => i.id === this._selectedItemId);
+    if (item) {
+      this._itemSettingsDialog.show(item);
+    }
   }
 
   private async _handleCreateSingleDisplayItems() {
@@ -417,10 +447,19 @@ export class ScenesView extends LitElement {
                   >
                     <span class="material-icons">grid_view</span>
                   </button>
-                  <button class="tool-button" title="Edit Item">
+                  <button 
+                    class="tool-button" 
+                    title="Edit Item"
+                    ?disabled="${!this._selectedItemId}"
+                    @click="${this._handleEditItem}"
+                  >
                     <span class="material-icons">edit</span>
                   </button>
-                  <button class="tool-button" title="Delete Item">
+                  <button 
+                    class="tool-button" 
+                    title="Delete Item"
+                    ?disabled="${!this._selectedItemId}"
+                  >
                     <span class="material-icons">delete</span>
                   </button>
                 </div>
@@ -428,7 +467,11 @@ export class ScenesView extends LitElement {
               
               <div class="content-list">
                 ${activeScene.items?.map((item: any, index: number) => html`
-                  <div class="placeholder-item">
+                  <div 
+                    class="placeholder-item ${this._selectedItemId === item.id ? 'selected' : ''}"
+                    @click="${() => this._handleItemClick(item.id)}"
+                    @dblclick="${() => this._handleItemDoubleClick(item)}"
+                  >
                     <div class="placeholder-item-icon">
                       <span class="material-icons">
                         ${item.type === 'image' ? 'image' : 'grid_on'}
@@ -470,6 +513,7 @@ export class ScenesView extends LitElement {
         @create="${(e: CustomEvent) => this.state.createScene(e.detail.name, e.detail.layout)}"
         @save="${(e: CustomEvent) => this.state.updateScene(e.detail.id, { name: e.detail.name, layout: e.detail.layout })}"
       ></scene-dialog>
+      <scene-item-settings-dialog></scene-item-settings-dialog>
     `;
   }
 }
