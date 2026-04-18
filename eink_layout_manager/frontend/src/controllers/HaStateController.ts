@@ -116,7 +116,12 @@ export class HaStateController implements ReactiveController {
     this.host.requestUpdate();
     
     try {
-      await api.updateItem('layout', this.activeLayout.id, this.activeLayout);
+      if (this.activeLayout.id) {
+        await api.updateItem('layout', this.activeLayout.id, this.activeLayout);
+      } else {
+        const created = await api.createItem('layout', this.activeLayout);
+        this.activeLayout = created;
+      }
       this._originalLayout = JSON.stringify(this.activeLayout);
       this.showMessage('Layout saved!', 'success');
       await this.refresh();
