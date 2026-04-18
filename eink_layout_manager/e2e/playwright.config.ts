@@ -12,10 +12,10 @@ const DATA_DIR = process.env.DATA_DIR || path.resolve(__dirname, 'test_data_e2e'
 export default defineConfig({
   timeout: 60000,
   testDir: './tests',
-  fullyParallel: !!process.env.CI,
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 2 : 1,
+  workers: 1,
   reporter: process.env.CI
     ? [['github'], ['blob', { outputDir: 'blob-report' }], ['html', { open: 'never' }]]
     : 'html',
