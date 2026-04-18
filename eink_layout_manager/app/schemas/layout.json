@@ -24,6 +24,9 @@
       "items": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "string"
+          },
           "display_type_id": {
             "type": "string"
           },

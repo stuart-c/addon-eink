@@ -24,7 +24,17 @@ fi
 echo "--- Installing Playwright (Python) ---"
 pip install -q playwright pytest-playwright requests
 
-echo "--- Installing Playwright Browsers ---"
+echo "--- Installing Playwright Browsers (Python) ---"
 playwright install chromium
+
+if [ -d "$TOP_DIR/eink_layout_manager/e2e" ]; then
+    echo "--- Provisioning Node.js Playwright ---"
+    cd "$TOP_DIR/eink_layout_manager/e2e"
+    # Use local cache directory to avoid permission issues
+    export NPM_CONFIG_CACHE="$TOP_DIR/eink_layout_manager/e2e/.npm-cache"
+    npm install --no-audit
+    npx playwright install chromium
+    cd "$TOP_DIR"
+fi
 
 echo "Done. You can now run ./scripts/run_tests.sh or ./scripts/run_e2e.sh"

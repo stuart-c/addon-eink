@@ -36,6 +36,7 @@ export interface DisplayType {
 }
 
 export interface LayoutItem {
+  id: string;
   display_type_id: string;
   x_mm: number;
   y_mm: number;

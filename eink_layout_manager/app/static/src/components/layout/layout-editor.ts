@@ -1,5 +1,6 @@
 import { LitElement, html, css, PropertyValues } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
+import { repeat } from 'lit/directives/repeat.js';
 import interact from 'interactjs';
 import './layout-box';
 import { DisplayType, LayoutItem } from '../../services/HaApiClient';
@@ -359,7 +360,7 @@ export class LayoutEditor extends LitElement {
               @mouseleave="${this._handleMouseLeave}"
             >
               <div class="grid-overlay"></div>
-              ${this.items.map((item, index) => {
+              ${repeat(this.items, (item) => item.id || Math.random().toString(), (item, index) => {
                 const dt = this.displayTypes.find(t => t.id === item.display_type_id);
                 if (!dt) return '';
                 return html`
