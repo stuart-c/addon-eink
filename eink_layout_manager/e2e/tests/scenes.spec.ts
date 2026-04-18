@@ -298,12 +298,6 @@ test.describe('Smart Scenes Management', () => {
     await expect(singleBtn).toBeDisabled();
     await expect(multiBtn).toBeDisabled();
     
-    // Debug: check boxes
-    const boxes = page.locator('layout-box');
-    await expect(boxes).toHaveCount(2);
-    const ids = await boxes.evaluateAll(els => els.map(el => el.getAttribute('data-id')));
-    console.log('BOX IDS:', ids);
-    
     // Select first display
     await page.locator('layout-box[data-id="display-1"]').dispatchEvent('mousedown');
     await expect(page.locator('layout-box[data-id="display-1"]')).toHaveAttribute('selected', '');
