@@ -34,4 +34,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-check
           level: warning
-          workdir: eink_layout_manager/app
+          workdir: eink_layout_manager/backend
