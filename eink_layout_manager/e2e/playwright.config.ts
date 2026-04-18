@@ -1,7 +1,12 @@
 import { defineConfig, devices } from '@playwright/test';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const INGRESS_PORT = process.env.INGRESS_PORT || '8098';
-const DATA_DIR = process.env.DATA_DIR || '$(pwd)/test_data_e2e';
+const DATA_DIR = process.env.DATA_DIR || path.resolve(__dirname, 'test_data_e2e');
 
 
 export default defineConfig({

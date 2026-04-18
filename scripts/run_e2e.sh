@@ -21,6 +21,8 @@ pip install -q -r "$TOP_DIR/eink_layout_manager/app/requirements.txt"
 if [ -d "$TOP_DIR/eink_layout_manager/e2e" ]; then
     echo "--- Running Node.js E2E Tests ---"
     cd "$TOP_DIR/eink_layout_manager/e2e"
+    # Wipe test data to ensure a clean state
+    rm -rf test_data_e2e
     # Use local cache directory to avoid permission issues in sandboxed environments
     export NPM_CONFIG_CACHE="$PWD/.npm-cache"
     npm install --no-audit

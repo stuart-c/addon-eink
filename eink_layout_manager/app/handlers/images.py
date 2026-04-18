@@ -43,8 +43,6 @@ async def handle_image_create(request):
 
     image_id = uuid.uuid4().hex
     try:
-        raw_content = await field.read()
-        content = bytes(raw_content)
         file_hash = hashlib.sha256(content).hexdigest()
 
         # Check for duplicate image by hash
@@ -102,7 +100,7 @@ async def handle_image_create(request):
                 width=width,
                 height=height,
                 file_path=filename_on_disk,
-                status="UPLOADED",
+                status="READY",
                 file_hash=file_hash,
                 thumbnail_path=filename_on_disk,
             )

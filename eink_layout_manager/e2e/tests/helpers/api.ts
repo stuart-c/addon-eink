@@ -179,12 +179,16 @@ export async function createScene(
 export async function createImage(
   request: APIRequestContext,
   filename: string = 'test-image.png',
+  buffer?: Buffer,
 ): Promise<ImageRecord> {
   // A tiny 1x1 black PNG
-  const pngData = Buffer.from(
-    'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFElEQVQImWNgYGBgYGBgYGBgYGBgYAhgAAAABJRU5ErkJggg==',
+  const basePng = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==',
     'base64',
   );
+  // Append a unique string to ensure the hash is different for each call by default
+  const defaultPngData = Buffer.concat([basePng, Buffer.from(Date.now().toString() + Math.random().toString())]);
+  const pngData = buffer || defaultPngData;
 
   const response = await request.post('/api/image', {
     multipart: {

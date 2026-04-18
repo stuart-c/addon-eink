@@ -16,7 +16,8 @@ import {
 // Unique ID helpers
 // ---------------------------------------------------------------------------
 
-const uid = (suffix: string) => `e2e-image-${suffix}-${Date.now()}`;
+let uidCounter = 0;
+const uid = (suffix: string) => `e2e-image-${suffix}-${Date.now()}-${uidCounter++}`;
 
 // ---------------------------------------------------------------------------
 // GET collection
@@ -41,7 +42,7 @@ test('POST /api/image — creates a resource and returns 201', async ({ request 
   expect(created.name).toBe(filename);
   expect(created.id).toBeDefined();
   expect(created.file_type).toBe('PNG');
-  expect(created.dimensions).toEqual({ width: 2, height: 2 });
+  expect(created.dimensions).toEqual({ width: 1, height: 1 });
 });
 
 test('POST /api/image — can create multiple resources and they all appear in the list', async ({ request }) => {
@@ -49,7 +50,15 @@ test('POST /api/image — can create multiple resources and they all appear in t
   const createdIds: string[] = [];
 
   for (const name of names) {
-    const created = await createImage(request, name);
+    // Append name to buffer to ensure unique hash
+    const uniqueBuffer = Buffer.concat([
+      Buffer.from(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==',
+        'base64',
+      ),
+      Buffer.from(name),
+    ]);
+    const created = await createImage(request, name, uniqueBuffer);
     createdIds.push(created.id);
   }
 
@@ -68,20 +77,21 @@ test('POST /api/image — can create multiple resources and they all appear in t
 });
 
 test('POST /api/image — returns 409 for duplicate image hash', async ({ request }) => {
+  const commonBuffer = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==',
+    'base64',
+  );
   const filename = `${uid('dup')}.png`;
   // Create first
-  await createImage(request, filename);
+  await createImage(request, filename, commonBuffer);
   
-  // Try to create same content again (createImage helper uses same 1x1 png content)
+  // Try to create same content again
   const response = await request.post('/api/image', {
     multipart: {
       file: {
         name: 'duplicate.png',
         mimeType: 'image/png',
-        buffer: Buffer.from(
-          'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFElEQVQImWNgYGBgYGBgYGBgYGBgYAhgAAAABJRU5ErkJggg==',
-          'base64',
-        ),
+        buffer: commonBuffer,
       },
     },
   });
