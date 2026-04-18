@@ -9,4 +9,4 @@ chown -R addon:addon /data
 
 # Run the python backend as the addon user
 export PYTHONPATH=/
-exec s6-setuidgid addon python3 -m app.main
+exec s6-setuidgid addon python3 -m backend.main

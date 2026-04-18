@@ -3,7 +3,7 @@ set -e
 
 # Get the absolute path to the repository root
 TOP_DIR=$( git rev-parse --show-toplevel )
-VENV_PATH="$TOP_DIR/eink_layout_manager/app/.venv"
+VENV_PATH="$TOP_DIR/eink_layout_manager/backend/.venv"
 
 # Check if venv exists, if not build it
 if [ ! -d "$VENV_PATH" ]; then
@@ -15,15 +15,15 @@ fi
 source "$VENV_PATH/bin/activate"
 
 echo "--- Installing Python Dependencies ---"
-cd "$TOP_DIR/eink_layout_manager/app"
+cd "$TOP_DIR/eink_layout_manager/backend"
 pip install -q -r requirements.txt
 
 echo "--- Running Application ---"
-# Set PYTHONPATH so 'import app' works from the root of the app directory
+# Set PYTHONPATH so 'import backend' works from the root of the backend directory
 export PYTHONPATH="$TOP_DIR/eink_layout_manager"
 # Set defaults if not provided
 export DATA_DIR="${DATA_DIR:-$TOP_DIR/.data}"
 export INGRESS_PORT="${INGRESS_PORT:-8099}"
 
 mkdir -p "$DATA_DIR"
-python3 -m app.main
+python3 -m backend.main

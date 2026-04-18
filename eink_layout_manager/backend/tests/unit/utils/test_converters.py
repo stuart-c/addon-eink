@@ -1,4 +1,4 @@
-from app.utils.converters import image_model_to_dict
+from backend.utils.converters import image_model_to_dict
 from unittest.mock import MagicMock
 
 

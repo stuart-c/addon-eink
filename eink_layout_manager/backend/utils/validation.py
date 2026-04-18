@@ -90,7 +90,7 @@ def validate_read_only(data, schema_name, existing_data=None):
 
 
 # Base directory for data persistence
-# Moving one level up from utils/ to app/ then to schemas/
+# Moving one level up from utils/ to backend/ then to schemas/
 SCHEMAS_DIR = os.path.realpath(
     os.path.join(os.path.dirname(__file__), "..", "schemas")
 )

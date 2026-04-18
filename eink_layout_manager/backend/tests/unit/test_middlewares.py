@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from app.middlewares import request_logger_middleware
+from backend.middlewares import request_logger_middleware
 
 
 @pytest.mark.asyncio

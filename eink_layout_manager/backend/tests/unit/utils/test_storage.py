@@ -1,6 +1,6 @@
 import os
 import pytest
-from app.utils.storage import get_storage_path
+from backend.utils.storage import get_storage_path
 
 
 def test_get_storage_path_valid(tmp_path):

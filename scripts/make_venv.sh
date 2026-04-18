@@ -2,7 +2,7 @@
 set -e
 
 TOP_DIR=$( git rev-parse --show-toplevel )
-VENV_PATH="$TOP_DIR/eink_layout_manager/app/.venv"
+VENV_PATH="$TOP_DIR/eink_layout_manager/backend/.venv"
 
 echo "--- Creating Python Virtual Environment ---"
 if [ ! -d "$VENV_PATH" ]; then

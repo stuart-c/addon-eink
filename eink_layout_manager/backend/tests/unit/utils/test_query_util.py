@@ -1,7 +1,7 @@
 import pytest
 from sqlalchemy import func
-from app.utils.query import parse_image_sort_params, build_image_filters
-from app import models
+from backend.utils.query import parse_image_sort_params, build_image_filters
+from backend import models
 
 
 def test_parse_image_sort_params_default():

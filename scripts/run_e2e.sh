@@ -3,7 +3,7 @@ set -e
 
 # Get the absolute path to the repository root
 TOP_DIR=$( git rev-parse --show-toplevel )
-VENV_PATH="$TOP_DIR/eink_layout_manager/app/.venv"
+VENV_PATH="$TOP_DIR/eink_layout_manager/backend/.venv"
 
 # check if venv exists
 if [ ! -d "$VENV_PATH" ]; then
@@ -15,7 +15,7 @@ fi
 source "$VENV_PATH/bin/activate"
 
 echo "--- Installing Python Dependencies ---"
-pip install -q -r "$TOP_DIR/eink_layout_manager/app/requirements.txt"
+pip install -q -r "$TOP_DIR/eink_layout_manager/backend/requirements.txt"
 
 # Run Node.js E2E tests if they exist
 if [ -d "$TOP_DIR/eink_layout_manager/e2e" ]; then

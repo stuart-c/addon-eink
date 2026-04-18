@@ -1,6 +1,6 @@
 import os
 import pytest
-from app.main import init_app
+from backend.main import init_app
 
 
 @pytest.fixture

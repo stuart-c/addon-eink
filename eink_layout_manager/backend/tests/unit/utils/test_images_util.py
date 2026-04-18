@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from app.utils.images import delete_image_files_and_record
-from app import models
+from backend.utils.images import delete_image_files_and_record
+from backend import models
 
 
 @pytest.mark.asyncio
@@ -14,7 +14,7 @@ async def test_delete_image_files_and_record_success():
     mock_image.thumbnail_path = "thumb.png"
 
     with (
-        patch("app.utils.images.get_storage_path") as mock_get_path,
+        patch("backend.utils.images.get_storage_path") as mock_get_path,
         patch("os.path.exists", return_value=True),
         patch("os.remove") as mock_remove,
     ):
@@ -43,7 +43,7 @@ async def test_delete_image_files_and_record_no_thumbnail():
     mock_image.thumbnail_path = None
 
     with (
-        patch("app.utils.images.get_storage_path") as mock_get_path,
+        patch("backend.utils.images.get_storage_path") as mock_get_path,
         patch("os.path.exists", return_value=True),
         patch("os.remove") as mock_remove,
     ):
@@ -65,7 +65,7 @@ async def test_delete_image_files_and_record_file_missing():
     mock_image.thumbnail_path = "thumb.png"
 
     with (
-        patch("app.utils.images.get_storage_path"),
+        patch("backend.utils.images.get_storage_path"),
         patch("os.path.exists", return_value=False),
         patch("os.remove") as mock_remove,
     ):
@@ -88,7 +88,7 @@ async def test_delete_image_files_and_record_error_path():
     mock_image.thumbnail_path = "thumb.png"
 
     with (
-        patch("app.utils.images.get_storage_path"),
+        patch("backend.utils.images.get_storage_path"),
         patch("os.path.exists", return_value=True),
         patch("os.remove", side_effect=OSError("Permission denied")),
         patch("builtins.print") as mock_print,
