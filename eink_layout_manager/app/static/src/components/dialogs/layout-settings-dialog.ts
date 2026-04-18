@@ -3,6 +3,7 @@ import { customElement, property } from 'lit/decorators.js';
 import { live } from 'lit/directives/live.js';
 import { Layout } from '../../services/HaApiClient';
 import '../shared/base-dialog';
+import '../shared/grid-snap-slider';
 import { commonStyles } from '../../styles/common-styles';
 import { BaseDialog } from '../shared/base-dialog';
 
@@ -68,17 +69,13 @@ export class LayoutSettingsDialog extends LitElement {
           </div>
 
           <div class="form-group">
-            <label>Grid Snap (mm)</label>
-            <input 
-              type="number" 
-              required 
-              step="1" 
-              min="1" 
-              max="50" 
-              .value="${live(this.settings?.grid_snap_mm?.toString() || '')}" 
-              @input="${(e: any) => this.settings ? this.settings.grid_snap_mm = parseInt(e.target.value) : null}"
-            >
+            <label>Snap to Grid</label>
+            <grid-snap-slider 
+              .value="${this.settings?.grid_snap_mm || 5}"
+              @change="${(e: any) => this.settings ? this.settings.grid_snap_mm = e.detail.value : null}"
+            ></grid-snap-slider>
           </div>
+
         </form>
 
         <div slot="footer">
