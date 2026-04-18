@@ -3,7 +3,7 @@ import io
 import os
 import uuid
 from collections import Counter
-from PIL import Image as PILImage
+from PIL import Image as PILImage, UnidentifiedImageError
 from sqlalchemy import select, func
 from aiohttp import web
 
@@ -67,7 +67,7 @@ async def handle_image_create(request):
             img.load()  # Force load
             width, height = img.size
             file_type = img.format or "PNG"
-            
+
             # Save original file
             ext = file_type.lower()
             storage_path = get_storage_path("image")
@@ -79,14 +79,19 @@ async def handle_image_create(request):
             # Generate thumbnail
             thumb_storage_path = get_storage_path("thumbnail")
             thumb_path = os.path.join(thumb_storage_path, filename_on_disk)
-            
+
             # Create a copy for the thumbnail and save it
             thumb_img = img.copy()
             thumb_img.thumbnail((200, 200))
             thumb_img.save(thumb_path, format=file_type)
 
+    except UnidentifiedImageError as e:
+        return web.json_response(
+            {"error": "Invalid image file", "details": str(e)}, status=400
+        )
     except Exception:
         import traceback
+
         print("Error saving image:", flush=True)
         traceback.print_exc()
         return web.json_response({"error": "Failed to save"}, status=500)
