@@ -143,9 +143,9 @@ export class HaStateController implements ReactiveController {
       }
       this.selectedDisplayTypeId = saved.id;
       this._updateHash();
-      await this.refresh();
       this.isSaving = false;
       this.showMessage(`Display type "${saved.name}" saved!`, 'success');
+      await this.refresh();
     } catch (e: any) {
       this.showMessage(`Failed to save display type: ${e.message}`, 'error');
     } finally {
@@ -164,8 +164,8 @@ export class HaStateController implements ReactiveController {
     try {
       const oldIndex = this.displayTypes.findIndex(existing => existing.id === dt.id);
       await api.deleteItem('display_type', dt.id);
-      await this.refresh();
       this.showMessage(`Display type "${dt.name}" deleted.`, 'success');
+      await this.refresh();
       
       if (this.selectedDisplayTypeId === dt.id) {
         if (this.displayTypes.length > 0) {
@@ -187,8 +187,8 @@ export class HaStateController implements ReactiveController {
     try {
       const oldIndex = this.layouts.findIndex(l => l.id === layout.id);
       await api.deleteItem('layout', layout.id);
-      await this.refresh();
       this.showMessage(`Layout "${layout.name}" deleted.`, 'success');
+      await this.refresh();
 
       if (this.activeLayout?.id === layout.id) {
         if (this.layouts.length > 0) {
@@ -214,8 +214,8 @@ export class HaStateController implements ReactiveController {
       if (this.selectedImageId === image.id) {
         this.selectedImageId = null;
       }
-      await this.refresh();
       this.showMessage(`Image "${image.name}" deleted.`, 'success');
+      await this.refresh();
       this._updateHash();
       return true;
     } catch (e: any) {
@@ -232,9 +232,9 @@ export class HaStateController implements ReactiveController {
       const result = await api.createItem<Scene>('scene', newScene);
       this.activeScene = result;
       this._updateHash();
-      await this.refresh();
       this.isSaving = false;
       this.showMessage(`Scene "${name}" created!`, 'success');
+      await this.refresh();
       return result;
     } catch (e: any) {
       this.showMessage(`Failed to create scene: ${e.message}`, 'error');
@@ -250,13 +250,15 @@ export class HaStateController implements ReactiveController {
     this.host.requestUpdate();
     try {
       const existing = this.scenes.find(s => s.id === id);
-      const merged = { ...existing, ...updates };
+      const merged = { ...existing, ...updates } as Scene;
       await api.updateItem('scene', id, merged);
-      await this.refresh();
+      
       if (this.activeScene?.id === id) {
-        this.activeScene = this.scenes.find(s => s.id === id) || this.activeScene;
+        this.activeScene = merged;
       }
+      
       this.showMessage('Scene updated!', 'success');
+      await this.refresh();
       this._updateHash();
     } catch (e: any) {
       this.showMessage(`Failed to update scene: ${e.message}`, 'error');
@@ -270,8 +272,8 @@ export class HaStateController implements ReactiveController {
     try {
       const oldIndex = this.scenes.findIndex(s => s.id === scene.id);
       await api.deleteItem('scene', scene.id);
-      await this.refresh();
       this.showMessage(`Scene "${scene.name}" deleted.`, 'success');
+      await this.refresh();
 
       if (this.activeScene?.id === scene.id) {
         if (this.scenes.length > 0) {
