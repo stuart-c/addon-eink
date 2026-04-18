@@ -116,6 +116,7 @@ export class HaApiClient {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: response.statusText }));
+      console.error(`[HaApiClient] Error ${response.status} on ${url}:`, error);
       throw new Error(error.message || `API Error: ${response.status}`);
     }
 

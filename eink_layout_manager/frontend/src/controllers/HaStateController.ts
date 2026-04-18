@@ -70,6 +70,7 @@ export class HaStateController implements ReactiveController {
         if (fresh) this.activeScene = fresh;
       }
       this.host.requestUpdate();
+      console.info('[HaStateController] refresh complete');
       this._ensureSelection();
       this._applyHash();
     } catch (e: any) {
@@ -184,10 +185,13 @@ export class HaStateController implements ReactiveController {
 
   async deleteLayout(layout: Layout): Promise<boolean> {
     try {
+      console.info(`[HaStateController] deleting layout: ${layout.id} (${layout.name})`);
       const oldIndex = this.layouts.findIndex(l => l.id === layout.id);
       await api.deleteItem('layout', layout.id);
-      await this.refresh();
+      console.info(`[HaStateController] layout deleted successfully: ${layout.id}`);
       this.showMessage(`Layout "${layout.name}" deleted.`, 'success');
+      await this.refresh();
+      this.host.requestUpdate();
 
       if (this.activeLayout?.id === layout.id) {
         if (this.layouts.length > 0) {
@@ -289,6 +293,7 @@ export class HaStateController implements ReactiveController {
   }
 
   showMessage(text: string, _type: 'info' | 'success' | 'error' = 'info') {
+    console.info(`[HaStateController] showMessage: ${text} (${_type})`);
     this.message = text;
     this.host.requestUpdate();
     setTimeout(() => {

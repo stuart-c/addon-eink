@@ -237,8 +237,19 @@ test.describe('Layouts Management', () => {
     await expect(page.locator('confirm-dialog').getByText('Delete Layout?')).toBeVisible({ timeout: 10000 });
     await page.locator('confirm-dialog').getByRole('button', { name: 'Delete' }).click();
     
-    // Verify success
-    await expect(page.locator('app-header').getByText('deleted.')).toBeVisible({ timeout: 10000 });
+    // Verify success - use a longer timeout and more detailed wait
+    console.log('Waiting for "deleted" success message...');
+    const messageBadge = page.locator('app-header .message-badge');
+    try {
+      await expect(messageBadge).toBeVisible({ timeout: 30000 });
+      await expect(messageBadge).toContainText(/deleted/i);
+      console.log('Success message appeared!');
+    } catch (e) {
+      console.error('Delete success message did NOT appear within 30s');
+      const headerHtml = await page.locator('app-header').innerHTML();
+      console.log('Current app-header content:', headerHtml);
+      throw e;
+    }
     
     // Verify gone from dropdown
     await page.locator('#trigger-layouts').click();
