@@ -116,9 +116,8 @@ export class HaApiClient {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: response.statusText }));
-      const err = new Error(error.message || `API Error: ${response.status}`) as any;
-      if (error.details) err.details = error.details;
-      throw err;
+      console.error(`[HaApiClient] Error ${response.status} on ${url}:`, error);
+      throw new Error(error.message || `API Error: ${response.status}`);
     }
 
     if (response.status === 204 || response.headers.get('content-length') === '0') {
