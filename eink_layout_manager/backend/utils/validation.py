@@ -221,6 +221,8 @@ def response_schema(schema_name_or_func):
                         f"Response validation failed for {actual_schema}: "
                         f"{str(e)}"
                     )
+                    import sys
+                    print(f"DEBUG: Response validation failed for {actual_schema}: {str(e)}", file=sys.stderr)
                     return web.json_response(
                         {
                             "error": "Internal Server Error",
