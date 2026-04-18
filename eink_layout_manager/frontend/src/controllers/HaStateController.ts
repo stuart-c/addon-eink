@@ -26,6 +26,7 @@ export class HaStateController implements ReactiveController {
   public activeSection: AppSection = 'layouts';
   public message: string = '';
   private _originalLayout: string | null = null;
+  private _messageTimeout: number | null = null;
   public isSaving = false;
   public viewMode: ViewMode = 'graphical';
 
@@ -289,12 +290,17 @@ export class HaStateController implements ReactiveController {
   }
 
   showMessage(text: string, _type: 'info' | 'success' | 'error' = 'info') {
+    if (this._messageTimeout !== null) {
+      clearTimeout(this._messageTimeout);
+    }
+    
     this.message = text;
     this.host.requestUpdate();
-    setTimeout(() => {
+    this._messageTimeout = window.setTimeout(() => {
       this.message = '';
+      this._messageTimeout = null;
       this.host.requestUpdate();
-    }, 3000);
+    }, 5000);
   }
 
   switchLayout(layout: Layout) {

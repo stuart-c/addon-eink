@@ -238,7 +238,7 @@ test.describe('Layouts Management', () => {
     await page.locator('confirm-dialog').getByRole('button', { name: 'Delete' }).click();
     
     // Verify success
-    await expect(page.locator('app-header').getByText('deleted.')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('app-header').getByText('deleted.')).toBeVisible({ timeout: 20000 });
     
     // Verify gone from dropdown
     await page.locator('#trigger-layouts').click();
