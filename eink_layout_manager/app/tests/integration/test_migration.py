@@ -2,7 +2,7 @@ import os
 import json
 import pytest
 from app import database, models
-from app.utils.storage import get_storage_path
+
 from sqlalchemy import select
 
 
@@ -12,8 +12,10 @@ async def test_json_to_db_migration(tmp_path):
     # 1. Setup temporary data directory
     os.environ["DATA_DIR"] = str(tmp_path)
 
-    dt_path = get_storage_path("display_type")
-    layout_path = get_storage_path("layout")
+    dt_path = os.path.join(str(tmp_path), "display_type")
+    layout_path = os.path.join(str(tmp_path), "layout")
+    os.makedirs(dt_path, exist_ok=True)
+    os.makedirs(layout_path, exist_ok=True)
 
     dt_data = {
         "id": "migrated_dt",

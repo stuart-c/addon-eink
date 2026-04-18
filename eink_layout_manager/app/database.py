@@ -37,15 +37,12 @@ _session_factory = None
 
 async def migrate_json_to_db():
     """Migrate display_type and layout JSON files to the database."""
-    from .utils.storage import get_storage_path
 
     logger = logging.getLogger(__name__)
 
     async def _migrate_resource(resource_type, model_class):
-        try:
-            storage_path = get_storage_path(resource_type)
-        except Exception:
-            return
+        data_dir = os.environ.get("DATA_DIR", "/data")
+        storage_path = os.path.join(data_dir, resource_type)
 
         if not os.path.exists(storage_path):
             return
