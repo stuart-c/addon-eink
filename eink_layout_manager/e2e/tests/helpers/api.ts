@@ -173,3 +173,38 @@ export async function createScene(
   return response.json() as Promise<Scene>;
 }
 
+/**
+ * Creates an image via POST /api/image as multipart/form-data.
+ */
+export async function createImage(
+  request: APIRequestContext,
+  filename: string = 'test-image.png',
+  buffer?: Buffer,
+): Promise<ImageRecord> {
+  // A tiny 1x1 black PNG
+  const basePng = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==',
+    'base64',
+  );
+  // Append a unique string to ensure the hash is different for each call by default
+  const defaultPngData = Buffer.concat([basePng, Buffer.from(Date.now().toString() + Math.random().toString())]);
+  const pngData = buffer || defaultPngData;
+
+  const response = await request.post('/api/image', {
+    multipart: {
+      file: {
+        name: filename,
+        mimeType: 'image/png',
+        buffer: pngData,
+      },
+    },
+  });
+
+  if (!response.ok()) {
+    throw new Error(
+      `createImage failed: ${response.status()} ${await response.text()}`,
+    );
+  }
+  return response.json() as Promise<ImageRecord>;
+}
+

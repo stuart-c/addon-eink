@@ -234,3 +234,30 @@ test('layout — full CRUD lifecycle', async ({ request }) => {
   const afterDelete = await request.get(`/api/layout/${id}`);
   expect(afterDelete.status()).toBe(404);
 });
+
+// ---------------------------------------------------------------------------
+// Multi-create
+// ---------------------------------------------------------------------------
+
+test('POST /api/layout — can create multiple resources and they all appear in the list', async ({ request }) => {
+  const names = [uid('multi-1'), uid('multi-2'), uid('multi-3')];
+  const createdIds: string[] = [];
+
+  for (const name of names) {
+    const created = await createLayout(request, { name });
+    createdIds.push(created.id);
+  }
+
+  const response = await request.get('/api/layout');
+  expect(response.status()).toBe(200);
+  const body: Layout[] = await response.json();
+
+  for (const name of names) {
+    expect(body.some(l => l.name === name)).toBe(true);
+  }
+
+  // Clean up
+  for (const id of createdIds) {
+    await request.delete(`/api/layout/${id}`);
+  }
+});

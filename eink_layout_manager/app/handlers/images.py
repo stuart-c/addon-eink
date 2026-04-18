@@ -3,7 +3,7 @@ import io
 import os
 import uuid
 from collections import Counter
-from PIL import Image as PILImage
+from PIL import Image as PILImage, UnidentifiedImageError
 from sqlalchemy import select, func
 from aiohttp import web
 
@@ -62,29 +62,38 @@ async def handle_image_create(request):
                     status=409,
                 )
 
+        # Open image and get metadata
         with PILImage.open(io.BytesIO(content)) as img:
+            img.load()  # Force load
             width, height = img.size
-            file_type = img.format
-    except Exception as e:
-        if isinstance(e, web.HTTPException):
-            raise
-        return web.json_response({"error": "Invalid image"}, status=400)
+            file_type = img.format or "PNG"
 
-    try:
-        ext = file_type.lower() if file_type else "bin"
-        storage_path = get_storage_path("image")
-        filename_on_disk = f"{image_id}.{ext}"
-        file_path = os.path.join(storage_path, filename_on_disk)
-        with open(file_path, "wb") as f:
-            f.write(content)
+            # Save original file
+            ext = file_type.lower()
+            storage_path = get_storage_path("image")
+            filename_on_disk = f"{image_id}.{ext}"
+            file_path = os.path.join(storage_path, filename_on_disk)
+            with open(file_path, "wb") as f:
+                f.write(content)
 
-        # Generate thumbnail
-        thumb_storage_path = get_storage_path("thumbnail")
-        thumb_path = os.path.join(thumb_storage_path, filename_on_disk)
-        with PILImage.open(io.BytesIO(content)) as img:
-            img.thumbnail((200, 200))
-            img.save(thumb_path)
+            # Generate thumbnail
+            thumb_storage_path = get_storage_path("thumbnail")
+            thumb_path = os.path.join(thumb_storage_path, filename_on_disk)
+
+            # Create a copy for the thumbnail and save it
+            thumb_img = img.copy()
+            thumb_img.thumbnail((200, 200))
+            thumb_img.save(thumb_path, format=file_type)
+
+    except UnidentifiedImageError as e:
+        return web.json_response(
+            {"error": "Invalid image file", "details": str(e)}, status=400
+        )
     except Exception:
+        import traceback
+
+        print("Error saving image:", flush=True)
+        traceback.print_exc()
         return web.json_response({"error": "Failed to save"}, status=500)
 
     try:
@@ -96,7 +105,7 @@ async def handle_image_create(request):
                 width=width,
                 height=height,
                 file_path=filename_on_disk,
-                status="UPLOADED",
+                status="READY",
                 file_hash=file_hash,
                 thumbnail_path=filename_on_disk,
             )

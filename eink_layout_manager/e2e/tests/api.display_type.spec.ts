@@ -194,3 +194,30 @@ test('DELETE /api/display_type/:id — returns 400 when display type is in use b
   const retryDelete = await request.delete(`/api/display_type/${dtId}`);
   expect(retryDelete.status()).toBe(200);
 });
+
+// ---------------------------------------------------------------------------
+// Multi-create
+// ---------------------------------------------------------------------------
+
+test('POST /api/display_type — can create multiple resources and they all appear in the list', async ({ request }) => {
+  const names = [uid('multi-1'), uid('multi-2'), uid('multi-3')];
+  const createdIds: string[] = [];
+
+  for (const name of names) {
+    const created = await createDisplayType(request, { name });
+    createdIds.push(created.id);
+  }
+
+  const response = await request.get('/api/display_type');
+  expect(response.status()).toBe(200);
+  const body: DisplayType[] = await response.json();
+
+  for (const name of names) {
+    expect(body.some(dt => dt.name === name)).toBe(true);
+  }
+
+  // Clean up
+  for (const id of createdIds) {
+    await request.delete(`/api/display_type/${id}`);
+  }
+});
