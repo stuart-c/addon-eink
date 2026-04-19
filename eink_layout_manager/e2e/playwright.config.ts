@@ -18,7 +18,7 @@ export default defineConfig({
   workers: 1,
   reporter: process.env.CI
     ? [['github'], ['blob', { outputDir: 'blob-report' }], ['html', { open: 'never' }]]
-    : 'html',
+    : 'line',
   use: {
     baseURL: process.env.BASE_URL || `http://127.0.0.1:${INGRESS_PORT}`,
     trace: 'retain-on-failure',
