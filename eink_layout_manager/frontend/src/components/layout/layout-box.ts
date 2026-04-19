@@ -43,6 +43,16 @@ export class LayoutBox extends LitElement {
         box-shadow: var(--shadow-small);
       }
       :host([selected]) .container { border-color: var(--primary-colour); box-shadow: 0 0 0 2px rgba(3,169,244,0.3); z-index: 10; }
+      :host([highlighted]) .container { 
+        border-color: var(--primary-colour); 
+        box-shadow: 0 0 15px rgba(3, 169, 244, 0.6); 
+        z-index: 20;
+        transform: scale(1.02);
+      }
+      :host([highlighted][used]) .container {
+        filter: none;
+        opacity: 1;
+      }
       :host([invalid]) .container { border-color: var(--danger-colour); background-color: rgba(244, 67, 54, 0.1); }
       
       .label {
@@ -115,6 +125,7 @@ export class LayoutBox extends LitElement {
   @property({ type: Number }) itemIndex = 0;
   @property({ type: String }) name = '';
   @property({ type: Boolean, reflect: true }) selected = false;
+  @property({ type: Boolean, reflect: true }) highlighted = false;
   @property({ type: Boolean, reflect: true }) invalid = false;
   @property({ type: Boolean, reflect: true }) used = false;
   @property({ type: Boolean, reflect: true }) readOnly = false;
