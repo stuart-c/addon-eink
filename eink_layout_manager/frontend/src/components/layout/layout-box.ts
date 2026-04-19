@@ -22,6 +22,17 @@ export class LayoutBox extends LitElement {
       :host([readOnly]) {
         cursor: default;
       }
+      :host([used]) {
+        cursor: not-allowed;
+        opacity: 0.6;
+        pointer-events: none;
+      }
+      :host([used]) .container {
+        filter: grayscale(0.8) contrast(0.8);
+        border-color: #999;
+        background-color: #f9f9f9;
+        box-shadow: none;
+      }
       .container {
         position: relative;
         display: flex;
@@ -77,6 +88,22 @@ export class LayoutBox extends LitElement {
         z-index: 35;
         font-family: 'Outfit', sans-serif;
       }
+
+      .used-icon {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 48px;
+        color: var(--primary-colour);
+        opacity: 0;
+        z-index: 40;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+      }
+      :host([used]) .used-icon {
+        opacity: 0.3;
+      }
     `
   ];
 
@@ -89,6 +116,7 @@ export class LayoutBox extends LitElement {
   @property({ type: String }) name = '';
   @property({ type: Boolean, reflect: true }) selected = false;
   @property({ type: Boolean, reflect: true }) invalid = false;
+  @property({ type: Boolean, reflect: true }) used = false;
   @property({ type: Boolean, reflect: true }) readOnly = false;
   
   // Hardware details
@@ -147,6 +175,10 @@ export class LayoutBox extends LitElement {
             <span class="material-icons" style="font-size: 16px;">delete_outline</span>
           </div>
         </div>
+
+        ${this.used ? html`
+          <span class="material-icons used-icon">check_circle</span>
+        ` : ''}
       </div>
     `;
   }

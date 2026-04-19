@@ -83,6 +83,7 @@ export class LayoutEditor extends LitElement {
   @property({ type: Array }) items: LayoutItem[] = [];
   @property({ type: Array }) displayTypes: DisplayType[] = [];
   @property({ type: Array }) selectedIds: string[] = [];
+  @property({ type: Array }) usedIds: string[] = [];
   @property({ type: Boolean, reflect: true }) readOnly = false;
   
   @state() private _scale = 1;
@@ -299,6 +300,8 @@ export class LayoutEditor extends LitElement {
   }
 
   private _handleBoxSelect(id: string) {
+    if (this.usedIds.includes(id)) return;
+
     if (this.readOnly) {
       // Toggle selection in read-only mode
       const newSelectedIds = this.selectedIds.includes(id)
@@ -380,6 +383,7 @@ export class LayoutEditor extends LitElement {
                     .mat_colour="${dt.mat?.colour}"
                     ?selected="${this.selectedIds.includes(item.id)}"
                     ?invalid="${item.invalid}"
+                    ?used="${this.usedIds.includes(item.id)}"
                     .readOnly="${this.readOnly}"
                     @mousedown="${() => this._handleBoxSelect(item.id)}"
                     @item-edit="${() => this._handleBoxEdit(item.id)}"

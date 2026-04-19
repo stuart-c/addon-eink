@@ -382,5 +382,43 @@ test.describe('Smart Scenes Management', () => {
     // Verify selection is cleared
     await expect(page.locator('button[title="New Multi-Display (Tiled)"]')).toBeDisabled();
   });
+
+  test('should highlight used displays and prevent re-selection', async ({ page }) => {
+    const sceneName = getUniqueName('Used Display Test');
+
+    // 1. Create and select a scene
+    await page.locator('button[title="Add New Item"]').click();
+    await page.locator('scene-dialog input').fill(sceneName);
+    await page.locator('scene-dialog select').selectOption({ label: sharedLayoutName });
+    await page.locator('scene-dialog button.primary').click();
+    await page.locator('.sidebar-item').getByText(sceneName).click();
+    
+    // 2. Select first display and add as single item
+    await page.locator('layout-box[data-id="display-1"]').click();
+    await page.locator('button[title="New Single Display"]').click();
+    
+    // 3. Verify item added
+    await expect(page.locator('.placeholder-item')).toHaveCount(1);
+    
+    // 4. Verify display-1 is now marked as used and not selected
+    const box1 = page.locator('layout-box[data-id="display-1"]');
+    await expect(box1).toHaveAttribute('used', '');
+    await expect(box1).not.toHaveAttribute('selected', '');
+    
+    // 5. Verify display-2 is NOT used
+    const box2 = page.locator('layout-box[data-id="display-2"]');
+    await expect(box2).not.toHaveAttribute('used', '');
+    
+    // 6. Attempt to click display-1 (used) and verify it's NOT selected
+    await box1.click({ force: true }); // Use force because we set pointer-events: none in CSS
+    await expect(box1).not.toHaveAttribute('selected', '');
+    
+    // 7. Click display-2 (unused) and verify it IS selected
+    await box2.click();
+    await expect(box2).toHaveAttribute('selected', '');
+    
+    // 8. Verify buttons state
+    await expect(page.locator('button[title="New Single Display"]')).toBeEnabled();
+  });
 });
 
