@@ -60,7 +60,7 @@ export class HaStateController implements ReactiveController {
           const fresh = this.layouts.find(l => l.id === this.activeLayout?.id);
           if (fresh) this.activeLayout = fresh;
         }
-        this._originalLayout = JSON.stringify(this.activeLayout);
+        this._originalLayout = this.activeLayout.id ? JSON.stringify(this.activeLayout) : null;
       } else {
         await this.createDefaultLayout();
       }
@@ -117,9 +117,17 @@ export class HaStateController implements ReactiveController {
     this.host.requestUpdate();
     
     try {
-      await api.updateItem('layout', this.activeLayout.id, this.activeLayout);
-      this._originalLayout = JSON.stringify(this.activeLayout);
-      this.showMessage('Layout saved!', 'success');
+      let saved: Layout;
+      if (this.activeLayout.id) {
+        saved = await api.updateItem('layout', this.activeLayout.id, this.activeLayout);
+        this.showMessage('Layout saved!', 'success');
+      } else {
+        saved = await api.createItem('layout', this.activeLayout);
+        this.showMessage(`Layout "${saved.name}" created!`, 'success');
+      }
+      
+      this.activeLayout = saved;
+      this._originalLayout = JSON.stringify(saved);
       await this.refresh();
       this._updateHash();
     } catch (e: any) {
@@ -306,6 +314,22 @@ export class HaStateController implements ReactiveController {
     this.activeLayout = layout;
     this._originalLayout = JSON.stringify(layout);
     this.selectedItemId = null;
+    this.isAddingNew = false;
+    this.host.requestUpdate();
+    this._updateHash();
+  }
+
+  public prepareNewLayout() {
+    this.activeLayout = {
+      name: 'New Layout',
+      canvas_width_mm: 500,
+      canvas_height_mm: 500,
+      grid_snap_mm: 5,
+      items: []
+    } as Layout;
+    this._originalLayout = null; // No baseline for new layout
+    this.selectedItemId = null;
+    this.isAddingNew = true;
     this.host.requestUpdate();
     this._updateHash();
   }
