@@ -367,6 +367,39 @@ export class ScenesView extends LitElement {
     this.state.showMessage('Added multi-display tile item', 'success');
   }
 
+  private _handleDeleteItem() {
+    const activeScene = this.state?.activeScene || this.activeScene;
+    if (!activeScene || !this._selectedItemId) return;
+
+    this._requestConfirmation(
+      {
+        title: 'Delete Scene Item?',
+        message: 'Are you sure you want to remove this item from the scene?',
+        confirmText: 'Delete',
+        type: 'danger'
+      },
+      async (confirmed: boolean) => {
+        if (confirmed) {
+          const items = activeScene.items?.filter((i: any) => i.id !== this._selectedItemId) || [];
+          await this.state.updateScene(activeScene.id, { items });
+          this._selectedItemId = null;
+          this.state.showMessage('Scene item removed', 'success');
+        }
+      }
+    );
+  }
+
+  private _requestConfirmation(
+    config: any,
+    callback: (result: boolean) => void
+  ) {
+    this.dispatchEvent(new CustomEvent('request-confirmation', {
+      detail: { config, callback },
+      bubbles: true,
+      composed: true
+    }));
+  }
+
   render() {
     const scenes = (this.state?.scenes || this.scenes || []) as Scene[];
     const activeScene = this.state?.activeScene || this.activeScene;
@@ -459,6 +492,7 @@ export class ScenesView extends LitElement {
                     class="tool-button" 
                     title="Delete Item"
                     ?disabled="${!this._selectedItemId}"
+                    @click="${this._handleDeleteItem}"
                   >
                     <span class="material-icons">delete</span>
                   </button>
