@@ -31,6 +31,25 @@ class Image(Base):
         DateTime, server_default=func.now(), onupdate=func.now()
     )
 
+    __filterable_fields__ = {
+        "title": "name",
+        "artist": "artist",
+        "collection": "collection",
+        "min_width": "width",
+        "max_width": "width",
+        "min_height": "height",
+        "max_height": "height",
+        "description": "description",
+        "keyword": "keywords",
+    }
+    __sortable_fields__ = {
+        "name": "name",
+        "artist": "artist",
+        "collection": "collection",
+        "width": "width",
+        "height": "height",
+    }
+
 
 class Scene(Base):
     __tablename__ = "scenes"
@@ -44,6 +63,14 @@ class Scene(Base):
     updated_at = Column(
         DateTime, server_default=func.now(), onupdate=func.now()
     )
+
+    __filterable_fields__ = {
+        "title": "name",
+        "layout": "layout_id",
+    }
+    __sortable_fields__ = {
+        "name": "name",
+    }
 
 
 class DisplayType(Base):
@@ -65,6 +92,11 @@ class DisplayType(Base):
         DateTime, server_default=func.now(), onupdate=func.now()
     )
 
+    __filterable_fields__ = {}
+    __sortable_fields__ = {
+        "name": "name",
+    }
+
 
 class Layout(Base):
     __tablename__ = "layouts"
@@ -78,3 +110,8 @@ class Layout(Base):
     updated_at = Column(
         DateTime, server_default=func.now(), onupdate=func.now()
     )
+
+    __filterable_fields__ = {}
+    __sortable_fields__ = {
+        "name": "name",
+    }

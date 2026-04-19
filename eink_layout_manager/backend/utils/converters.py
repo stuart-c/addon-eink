@@ -1,3 +1,31 @@
+from sqlalchemy.inspection import inspect
+
+
+def generic_model_to_dict(
+    model_instance, include_fields=None, exclude_fields=None
+):
+    """
+    Generic converter from SQLAlchemy model to dictionary.
+
+    Args:
+        model_instance: The SQLAlchemy model instance to convert.
+        include_fields: Optional set of field names to include.
+        exclude_fields: Optional set of field names to exclude.
+    """
+    if model_instance is None:
+        return None
+
+    data = {}
+    mapper = inspect(model_instance.__class__)
+    for column in mapper.attrs:
+        if include_fields and column.key not in include_fields:
+            continue
+        if exclude_fields and column.key in exclude_fields:
+            continue
+        data[column.key] = getattr(model_instance, column.key)
+    return data
+
+
 def image_model_to_dict(image):
     """Convert an Image model instance to a dictionary according to schema."""
     return {
