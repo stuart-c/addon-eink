@@ -25,9 +25,15 @@ async def test_delete_item_display_type_in_use():
 
     # Setup the mock session as an async context manager
     mock_session = AsyncMock()
-    mock_result = MagicMock()
-    mock_result.scalars.return_value.all.return_value = [mock_layout]
-    mock_session.execute.return_value = mock_result
+    mock_result_items = MagicMock()
+    mock_result_items.scalars.return_value.all.return_value = [mock_layout]
+
+    mock_display_type = models.DisplayType(id="display1", name="Display 1")
+    mock_result_dt = MagicMock()
+    mock_result_dt.scalars.return_value.first.return_value = mock_display_type
+
+    # First call: get the item to delete. Second call: pre_delete check for layouts.
+    mock_session.execute.side_effect = [mock_result_dt, mock_result_items]
 
     # database.get_session() returns the context manager
     mock_get_session = MagicMock()

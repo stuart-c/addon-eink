@@ -1,212 +1,56 @@
-from sqlalchemy import select
-from aiohttp import web
-from jsonschema import validate, ValidationError
-import json
-import uuid
-
-from .. import database, models
+from .base import BaseCRUDHandler
+from .. import models
 from ..utils.converters import scene_model_to_dict
-from ..utils.validation import (
-    validate_id,
-    load_schema,
-    response_schema,
-    validate_read_only,
-)
-from ..utils.query import build_scene_filters
+from ..utils.validation import response_schema, validate_id  # noqa: F401
 
 
+class SceneHandler(BaseCRUDHandler):
+    model_class = models.Scene
+    schema_name = "scene"
+
+    def model_to_dict(self, item):
+        """Use specialized converter for Scene to handle layout_id mapping."""
+        return scene_model_to_dict(item)
+
+    async def pre_create(self, data):
+        """Set default status and map layout to layout_id."""
+        data["status"] = "draft"
+        if "layout" in data:
+            data["layout_id"] = data.pop("layout")
+        return data
+
+    async def pre_update(self, data, existing_item):
+        """Map layout to layout_id for updates if present."""
+        if "layout" in data:
+            data["layout_id"] = data.pop("layout")
+        return data
+
+
+# Instantiate handler
+scene_handler = SceneHandler()
+
+
+# Map routes to handler methods
 @response_schema("item_list_response")
 async def handle_scene_list(request):
-    """Retrieve all scenes from the database, optionally filtered."""
-    try:
-        filters = build_scene_filters(request.query)
-        async with database.get_session() as session:
-            stmt = select(models.Scene)
-            if filters:
-                stmt = stmt.where(*filters)
-            stmt = stmt.order_by(models.Scene.name)
-            result = await session.execute(stmt)
-            scenes = result.scalars().all()
-            return web.json_response([scene_model_to_dict(s) for s in scenes])
-    except Exception as e:
-        return web.json_response(
-            {"error": "Database error", "details": str(e)}, status=500
-        )
+    return await scene_handler.list(request)
 
 
 @response_schema("scene")
 async def handle_scene_get(request):
-    """Retrieve a single scene by ID."""
-    scene_id = request.match_info["id"]
-    try:
-        scene_id = validate_id(scene_id)
-    except ValueError as e:
-        return web.json_response({"error": str(e)}, status=400)
-
-    try:
-        async with database.get_session() as session:
-            stmt = select(models.Scene).where(models.Scene.id == scene_id)
-            result = await session.execute(stmt)
-            scene = result.scalar_one_or_none()
-
-            if not scene:
-                return web.json_response({"error": "Not Found"}, status=404)
-
-            return web.json_response(scene_model_to_dict(scene))
-    except Exception as e:
-        return web.json_response(
-            {"error": "Database error", "details": str(e)}, status=500
-        )
+    return await scene_handler.get(request)
 
 
 @response_schema("scene")
 async def handle_scene_create(request):
-    """Create a new scene in the database."""
-    try:
-        data = await request.json()
-    except json.JSONDecodeError:
-        return web.json_response({"error": "Invalid JSON"}, status=400)
-
-    # Validation
-    try:
-        schema = load_schema("scene")
-        validate(instance=data, schema=schema)
-    except FileNotFoundError:
-        return web.json_response(
-            {"error": "Schema for scene not found"}, status=500
-        )
-    except ValidationError as e:
-        return web.json_response(
-            {"error": "Validation failed", "message": e.message}, status=400
-        )
-
-    # Generate a new UUID for the scene, ignoring any ID provided by the client
-    scene_id = str(uuid.uuid4())
-    data["id"] = scene_id
-
-    try:
-        scene_id = validate_id(scene_id)
-    except ValueError as e:
-        return web.json_response({"error": str(e)}, status=400)
-
-    try:
-        async with database.get_session() as session:
-            # Check for existing
-            stmt = select(models.Scene).where(models.Scene.id == scene_id)
-            result = await session.execute(stmt)
-            if result.scalar_one_or_none():
-                return web.json_response(
-                    {"error": "Resource already exists"}, status=409
-                )
-
-            new_scene = models.Scene(
-                id=scene_id,
-                name=data["name"],
-                layout_id=data["layout"],
-                items=data.get("items"),
-            )
-            session.add(new_scene)
-            await session.commit()
-            await session.refresh(new_scene)
-            return web.json_response(
-                scene_model_to_dict(new_scene), status=201
-            )
-    except Exception as e:
-        return web.json_response(
-            {"error": "Database error", "details": str(e)}, status=500
-        )
+    return await scene_handler.create(request)
 
 
 @response_schema("scene")
 async def handle_scene_update(request):
-    """Update an existing scene in the database."""
-    scene_id = request.match_info["id"]
-
-    try:
-        scene_id = validate_id(scene_id)
-        data = await request.json()
-    except (ValueError, json.JSONDecodeError) as e:
-        return web.json_response(
-            {"error": str(e) if isinstance(e, ValueError) else "Invalid JSON"},
-            status=400,
-        )
-
-    try:
-        async with database.get_session() as session:
-            stmt = select(models.Scene).where(models.Scene.id == scene_id)
-            result = await session.execute(stmt)
-            scene = result.scalar_one_or_none()
-
-            if not scene:
-                return web.json_response({"error": "Not Found"}, status=404)
-
-            existing_data = scene_model_to_dict(scene)
-
-            # Ensure ID in URL matches ID in body (if provided)
-            if "id" in data and data["id"] != scene_id:
-                return web.json_response(
-                    {"error": "ID in body does not match ID in URL"},
-                    status=400,
-                )
-
-            # Validate read-only fields against EXISTING data
-            try:
-                validate_read_only(data, "scene", existing_data=existing_data)
-            except ValidationError as e:
-                return web.json_response({"error": str(e)}, status=400)
-
-            # Ensure ID is present in data for validation
-            data["id"] = scene_id
-
-            # Validation against scene schema
-            try:
-                schema = load_schema("scene")
-                validate(instance=data, schema=schema)
-            except FileNotFoundError:
-                return web.json_response(
-                    {"error": "Schema for scene not found"}, status=500
-                )
-            except ValidationError as e:
-                return web.json_response(
-                    {"error": "Validation failed", "message": e.message},
-                    status=400,
-                )
-
-            # Update fields
-            scene.name = data["name"]
-            if "items" in data:
-                scene.items = data["items"]
-            await session.commit()
-            await session.refresh(scene)
-            return web.json_response(scene_model_to_dict(scene))
-    except Exception as e:
-        return web.json_response(
-            {"error": "Database error", "details": str(e)}, status=500
-        )
+    return await scene_handler.update(request)
 
 
 @response_schema("status_response")
 async def handle_scene_delete(request):
-    """Delete a scene from the database."""
-    scene_id = request.match_info["id"]
-    try:
-        scene_id = validate_id(scene_id)
-    except ValueError as e:
-        return web.json_response({"error": str(e)}, status=400)
-
-    try:
-        async with database.get_session() as session:
-            stmt = select(models.Scene).where(models.Scene.id == scene_id)
-            result = await session.execute(stmt)
-            scene = result.scalar_one_or_none()
-
-            if not scene:
-                return web.json_response({"error": "Not Found"}, status=404)
-
-            await session.delete(scene)
-            await session.commit()
-            return web.json_response({"status": "deleted"})
-    except Exception as e:
-        return web.json_response(
-            {"error": "Database error", "details": str(e)}, status=500
-        )
+    return await scene_handler.delete(request)
