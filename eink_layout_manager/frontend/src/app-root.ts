@@ -105,6 +105,8 @@ export class AppRoot extends LitElement {
       this._imageDialog.show();
     } else if (this.state.activeSection === 'display-types') {
       this.state.selectDisplayType(null);
+    } else if (this.state.activeSection === 'layouts') {
+      this.state.prepareNewLayout();
     } else {
       await this._activeView?.addNew();
     }
@@ -249,6 +251,7 @@ export class AppRoot extends LitElement {
         @can-delete-change="${(e: CustomEvent) => this._canDelete = e.detail.canDelete}"
         @show-message="${(e: CustomEvent) => this.state.showMessage(e.detail.text, e.detail.type)}"
         @set-section="${(e: CustomEvent) => this.state.setSection(e.detail)}"
+        @prepare-new-layout="${() => this.state.prepareNewLayout()}"
         @delete-display-type="${this._onDeleteDisplayType}"
       ></layouts-view>
     `;
