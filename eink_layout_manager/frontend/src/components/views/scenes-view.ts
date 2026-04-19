@@ -371,6 +371,14 @@ export class ScenesView extends LitElement {
     const scenes = (this.state?.scenes || this.scenes || []) as Scene[];
     const activeScene = this.state?.activeScene || this.activeScene;
     const activeLayout = activeScene ? this.state?.layouts.find((l: any) => l.id === activeScene.layout) : null;
+    let usedDisplayIds: string[] = [];
+    if (activeScene && activeScene.items) {
+      activeScene.items.forEach((item: any) => {
+        if (item.displays) {
+          usedDisplayIds = [...usedDisplayIds, ...item.displays];
+        }
+      });
+    }
 
     return html`
       <section-layout>
@@ -423,6 +431,7 @@ export class ScenesView extends LitElement {
                 .displayTypes="${this.state.displayTypes}"
                 .readOnly="${true}"
                 .selectedIds="${this._selectedDisplayIds}"
+                .usedIds="${usedDisplayIds}"
                 @selection-change="${(e: CustomEvent) => this._selectedDisplayIds = e.detail.ids}"
               ></layout-editor>
             </div>
@@ -480,7 +489,7 @@ export class ScenesView extends LitElement {
                     <div class="placeholder-item-info">
                       <div class="placeholder-item-name">Scene Item #${index + 1}</div>
                       <div class="placeholder-item-details">
-                        Displays: ${item.displays.map((id: string) => {
+                        Displays: ${(item.displays || []).map((id: string) => {
                           const layoutItem = activeLayout.items.find((li: any) => li.id === id);
                           const dt = this.state.displayTypes.find((t: any) => t.id === layoutItem?.display_type_id);
                           return dt?.name || id;
