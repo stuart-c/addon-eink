@@ -33,3 +33,6 @@ npx tsc --noEmit
 
 echo "--- Running Frontend Tests (Vitest) ---"
 npm test -- --run
+
+echo "--- Building and Testing Converter Tool ---"
+"$TOP_DIR/scripts/build_converter.sh"
