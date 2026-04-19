@@ -304,6 +304,10 @@ export class AppRoot extends LitElement {
         @delete-scene="${this._onDeleteScene}"
         @can-delete-change="${(e: CustomEvent) => this._canDelete = e.detail.canDelete}"
         @dirty-state-change="${(e: CustomEvent) => this._isDirty = e.detail.isDirty}"
+        @request-confirmation="${async (e: CustomEvent) => {
+          const result = await this._confirmDialog.show(e.detail.config);
+          e.detail.callback(result);
+        }}"
       ></scenes-view>
     `;
   }
