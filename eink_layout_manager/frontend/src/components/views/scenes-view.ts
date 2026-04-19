@@ -262,6 +262,7 @@ export class ScenesView extends LitElement {
   @property({ type: String }) viewMode: 'graphical' | 'yaml' = 'graphical';
   @state() private _selectedDisplayIds: string[] = [];
   @state() private _selectedItemId: string | null = null;
+  @state() private _hoveredItemId: string | null = null;
   @query('scene-dialog') private _sceneDialog!: SceneDialog;
   @query('scene-item-settings-dialog') private _itemSettingsDialog!: SceneItemSettingsDialog;
 
@@ -404,6 +405,7 @@ export class ScenesView extends LitElement {
     const scenes = (this.state?.scenes || this.scenes || []) as Scene[];
     const activeScene = this.state?.activeScene || this.activeScene;
     const activeLayout = activeScene ? this.state?.layouts.find((l: any) => l.id === activeScene.layout) : null;
+    
     let usedDisplayIds: string[] = [];
     if (activeScene && activeScene.items) {
       activeScene.items.forEach((item: any) => {
@@ -412,6 +414,9 @@ export class ScenesView extends LitElement {
         }
       });
     }
+
+    const highlightedItemId = this._hoveredItemId || this._selectedItemId;
+    const highlightedDisplayIds = activeScene?.items?.find((i: any) => i.id === highlightedItemId)?.displays || [];
 
     return html`
       <section-layout>
@@ -464,6 +469,7 @@ export class ScenesView extends LitElement {
                 .displayTypes="${this.state.displayTypes}"
                 .readOnly="${true}"
                 .selectedIds="${this._selectedDisplayIds}"
+                .highlightedIds="${highlightedDisplayIds}"
                 .usedIds="${usedDisplayIds}"
                 @selection-change="${(e: CustomEvent) => this._selectedDisplayIds = e.detail.ids}"
               ></layout-editor>
@@ -514,6 +520,8 @@ export class ScenesView extends LitElement {
                     class="placeholder-item ${this._selectedItemId === item.id ? 'selected' : ''}"
                     @click="${() => this._handleItemClick(item.id)}"
                     @dblclick="${() => this._handleItemDoubleClick(item)}"
+                    @mouseenter="${() => this._hoveredItemId = item.id}"
+                    @mouseleave="${() => this._hoveredItemId = null}"
                   >
                     <div class="placeholder-item-icon">
                       <span class="material-icons">

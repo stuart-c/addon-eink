@@ -83,6 +83,7 @@ export class LayoutEditor extends LitElement {
   @property({ type: Array }) items: LayoutItem[] = [];
   @property({ type: Array }) displayTypes: DisplayType[] = [];
   @property({ type: Array }) selectedIds: string[] = [];
+  @property({ type: Array }) highlightedIds: string[] = [];
   @property({ type: Array }) usedIds: string[] = [];
   @property({ type: Boolean, reflect: true }) readOnly = false;
   
@@ -382,6 +383,7 @@ export class LayoutEditor extends LitElement {
                     .frame_colour="${dt.frame?.colour}"
                     .mat_colour="${dt.mat?.colour}"
                     ?selected="${this.selectedIds.includes(item.id)}"
+                    ?highlighted="${this.highlightedIds.includes(item.id)}"
                     ?invalid="${item.invalid}"
                     ?used="${this.usedIds.includes(item.id)}"
                     .readOnly="${this.readOnly}"
