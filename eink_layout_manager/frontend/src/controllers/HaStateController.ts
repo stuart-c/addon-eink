@@ -321,12 +321,13 @@ export class HaStateController implements ReactiveController {
 
   public prepareNewLayout() {
     this.activeLayout = {
+      id: '',
       name: 'New Layout',
       canvas_width_mm: 500,
       canvas_height_mm: 500,
       grid_snap_mm: 5,
       items: []
-    } as Layout;
+    };
     this._originalLayout = null; // No baseline for new layout
     this.selectedItemId = null;
     this.isAddingNew = true;
