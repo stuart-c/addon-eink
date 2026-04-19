@@ -58,10 +58,37 @@ async def test_create_scene_with_items(aiohttp_client, app):
     """Test creating a scene with complex items."""
     client = await aiohttp_client(app)
 
+    # Pre-requisite: Create the layout
+    layout_data = {
+        "id": "living-room",
+        "name": "Living Room",
+        "canvas_width_mm": 500,
+        "canvas_height_mm": 500,
+        "items": [
+            {
+                "id": "display-1",
+                "display_type_id": "epd_2in13",
+                "x_mm": 0,
+                "y_mm": 0,
+                "orientation": "landscape",
+            },
+            {
+                "id": "display-2",
+                "display_type_id": "epd_2in13",
+                "x_mm": 100,
+                "y_mm": 0,
+                "orientation": "landscape",
+            }
+        ],
+    }
+    resp = await client.post("/api/layout", json=layout_data)
+    assert resp.status == 201
+    layout_id = (await resp.json())["id"]
+
     scene_data = {
         "id": "complex-scene",
         "name": "Complex Scene",
-        "layout": "living-room",
+        "layout": layout_id,
         "items": [
             {
                 "id": "comp-1",

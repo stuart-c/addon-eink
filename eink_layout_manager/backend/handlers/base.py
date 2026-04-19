@@ -134,7 +134,17 @@ class BaseCRUDHandler:
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
 
-        data = await self.pre_create(data)
+        # Pre-create hook for transformations and secondary validation
+        try:
+            data = await self.pre_create(data)
+        except ValidationError as e:
+            return web.json_response(
+                {"error": "Validation failed", "message": e.message},
+                status=400,
+            )
+        except Exception as e:
+            logger.error(f"Error in pre_create: {e}")
+            return web.json_response({"error": str(e)}, status=500)
 
         async with database.get_session() as session:
             # Check for existence
@@ -207,17 +217,19 @@ class BaseCRUDHandler:
             data_to_validate.update(data)
             data_to_validate["id"] = item_id
 
-            # Full validation
+            # Full validation and pre-update hook
             try:
                 schema = load_schema(self.schema_name)
                 validate(instance=data_to_validate, schema=schema)
+                data = await self.pre_update(data, item)
             except ValidationError as e:
                 return web.json_response(
                     {"error": "Validation failed", "message": e.message},
                     status=400,
                 )
-
-            data = await self.pre_update(data, item)
+            except Exception as e:
+                logger.error(f"Error in pre_update/validation: {e}")
+                return web.json_response({"error": str(e)}, status=500)
 
             # Update fields
             valid_columns = {
