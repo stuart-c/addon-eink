@@ -632,3 +632,49 @@ async def test_image_upload_and_update_jpeg(aiohttp_client, app):
     updated_result = await resp.json()
     assert updated_result["file_type"] == "JPEG"
     assert updated_result["name"] == "Updated JPEG"
+
+
+@pytest.mark.asyncio
+async def test_image_conversion_field(aiohttp_client, app):
+    """Test saving and retrieving the conversion field."""
+    client = await aiohttp_client(app)
+
+    # 1. Upload an image
+    img = PILImage.new("RGB", (10, 10), color="blue")
+    img_byte_arr = io.BytesIO()
+    img.save(img_byte_arr, format="PNG")
+    data = aiohttp.FormData()
+    data.add_field(
+        "file",
+        img_byte_arr.getvalue(),
+        filename="conversion_test.png",
+        content_type="image/png",
+    )
+    resp = await client.post("/api/image", data=data)
+    assert resp.status == 201
+    result = await resp.json()
+    image_id = result["id"]
+
+    # 2. Update with conversion settings
+    conversion_settings = {
+        "ditheringType": "errorDiffusion",
+        "errorDiffusionMatrix": "jarvis",
+        "serpentine": True,
+        "sampleColoursFromImage": True,
+        "numberOfSampleColours": 16,
+        "palette": ["#000000", "#FFFFFF", "#FF0000"],
+    }
+    update_data = {"conversion": conversion_settings}
+
+    resp = await client.put(f"/api/image/{image_id}", json=update_data)
+    assert resp.status == 200
+    updated_result = await resp.json()
+
+    # 3. Verify conversion settings are returned
+    assert updated_result["conversion"] == conversion_settings
+
+    # 4. Verify with GET
+    get_resp = await client.get(f"/api/image/{image_id}")
+    assert get_resp.status == 200
+    get_result = await get_resp.json()
+    assert get_result["conversion"] == conversion_settings

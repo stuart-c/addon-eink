@@ -30,6 +30,7 @@ class Image(Base):
     updated_at = Column(
         DateTime, server_default=func.now(), onupdate=func.now()
     )
+    conversion = Column(JSON, nullable=True)
 
     __filterable_fields__ = {
         "title": "name",

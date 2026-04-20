@@ -60,6 +60,59 @@
       "description": "Processing status of the image",
       "enum": ["UPLOADED", "PROCESSING", "READY", "ERROR"],
       "readOnly": true
+    },
+    "conversion": {
+      "type": ["object", "null"],
+      "description": "Optional configuration for image conversion using edpoptimize",
+      "properties": {
+        "ditheringType": {
+          "type": "string",
+          "enum": ["errorDiffusion", "ordered", "random", "quantizationOnly"],
+          "default": "errorDiffusion"
+        },
+        "errorDiffusionMatrix": {
+          "type": "string",
+          "enum": ["floydSteinberg", "falseFloydSteinberg", "jarvis", "stucki", "burkes", "sierra3", "sierra2", "sierra2-4a"],
+          "default": "floydSteinberg"
+        },
+        "serpentine": {
+          "type": "boolean",
+          "default": false
+        },
+        "orderedDitheringType": {
+          "type": "string",
+          "enum": ["bayer"],
+          "default": "bayer"
+        },
+        "orderedDitheringMatrix": {
+          "type": "array",
+          "items": { "type": "integer" },
+          "minItems": 2,
+          "maxItems": 2,
+          "default": [4, 4]
+        },
+        "randomDitheringType": {
+          "type": "string",
+          "enum": ["blackAndWhite", "rgb"],
+          "default": "blackAndWhite"
+        },
+        "palette": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "array", "items": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" } }
+          ],
+          "default": "default"
+        },
+        "sampleColoursFromImage": {
+          "type": "boolean",
+          "default": false
+        },
+        "numberOfSampleColours": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 10
+        }
+      }
     }
   },
   "required": [
