@@ -201,6 +201,7 @@ export class LayoutsView extends BaseResourceView {
   @property({ type: Array }) displayTypes: DisplayType[] = [];
   @property({ type: Object }) activeLayout: Layout | null = null;
   @property({ type: String }) selectedItemId: string | null = null;
+  @property({ type: String }) viewMode: 'graphical' | 'yaml' = 'graphical';
   @property({ type: Boolean }) isSaving = false;
   @property({ type: Boolean }) isAdding = false;
 

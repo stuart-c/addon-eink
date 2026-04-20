@@ -80,15 +80,13 @@ describe('DisplayTypesView', () => {
     }));
   });
 
-  it('should dispatch select-display-type with null when addNew is called', async () => {
-    const selectSpy = vi.fn();
-    element.addEventListener('select-display-type', selectSpy);
+  it('should dispatch prepare-new-display-type when addNew is called', async () => {
+    const prepareSpy = vi.fn();
+    element.addEventListener('prepare-new-display-type', prepareSpy);
 
     element.addNew();
     
-    expect(selectSpy).toHaveBeenCalledWith(expect.objectContaining({
-      detail: { id: null }
-    }));
+    expect(prepareSpy).toHaveBeenCalled();
   });
 
   it('should detect dirty state when fields are modified', async () => {
