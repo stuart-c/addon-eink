@@ -5,13 +5,16 @@
   "type": "object",
   "properties": {
     "id": {
-      "type": "string",
-      "description": "Unique identifier for this scene",
-      "readOnly": true
+      "allOf": [
+        { "$ref": "common.json#/definitions/id" },
+        { "description": "Unique identifier for this scene" }
+      ]
     },
     "name": {
-      "type": "string",
-      "description": "Human readable name for the scene"
+      "allOf": [
+        { "$ref": "common.json#/definitions/name" },
+        { "description": "Human readable name for the scene" }
+      ]
     },
     "layout": {
       "type": "string",

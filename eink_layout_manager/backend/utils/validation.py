@@ -4,18 +4,41 @@ import logging
 import os
 import re
 from aiohttp import web
-from jsonschema import validate, ValidationError
+from jsonschema import validate, ValidationError, RefResolver
 
 
-def get_readonly_fields(schema):
+def get_resolver(schema):
+    """Create a RefResolver for the schemas directory."""
+    return RefResolver(f"file://{SCHEMAS_DIR}/", schema)
+
+
+def get_readonly_fields(schema, resolver=None):
     """
     Recursively find all fields marked as readOnly in a JSON schema.
     Returns a set of field paths (e.g., {"id", "dimensions.width"}).
     """
+    if resolver is None:
+        resolver = get_resolver(schema)
+
     readonly_fields = set()
 
     def _find_readonly(subschema, path=""):
         if not isinstance(subschema, dict):
+            return
+
+        # Handle $ref
+        if "$ref" in subschema:
+            try:
+                _, resolved = resolver.resolve(subschema["$ref"])
+                _find_readonly(resolved, path)
+            except Exception as e:
+                logger.error(f"Failed to resolve ref {subschema['$ref']}: {e}")
+            return
+
+        # Handle allOf (useful for adding descriptions/readOnly to refs)
+        if "allOf" in subschema:
+            for item in subschema["allOf"]:
+                _find_readonly(item, path)
             return
 
         if subschema.get("readOnly"):
@@ -132,6 +155,7 @@ def load_schema(name):
     # Security: Allowlist of schema names that may ever be loaded.
     # Any name not in this set is rejected before touching the filesystem.
     allowed_schemas = {
+        "common",
         "display_type",
         "image",
         "image_list_response",
@@ -160,14 +184,23 @@ def load_schema(name):
         raise
 
 
-def validate_response(data, schema_name):
+def validate_data(data, schema_name):
     """
     Validate data against a named schema.
     Returns the data if valid, otherwise raises ValidationError.
     """
     schema = load_schema(schema_name)
-    validate(instance=data, schema=schema)
+    resolver = get_resolver(schema)
+    validate(instance=data, schema=schema, resolver=resolver)
     return data
+
+
+def validate_response(data, schema_name):
+    """
+    Validate response data against a named schema.
+    Returns the data if valid, otherwise raises ValidationError.
+    """
+    return validate_data(data, schema_name)
 
 
 def response_schema(schema_name_or_func):
