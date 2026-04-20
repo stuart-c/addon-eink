@@ -37,6 +37,7 @@ RUN \
 
 # Stage 3: Runner stage (Final)
 FROM $BUILD_FROM AS runner
+ENV PYTHONUNBUFFERED=1
 # Ensure the build fails if the tester stage fails
 COPY --from=tester /backend /backend_verified
 RUN rm -rf /backend_verified
