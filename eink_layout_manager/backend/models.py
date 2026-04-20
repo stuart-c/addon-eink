@@ -93,7 +93,9 @@ class DisplayType(Base):
         DateTime, server_default=func.now(), onupdate=func.now()
     )
 
-    __filterable_fields__ = {}
+    __filterable_fields__ = {
+        "name": "name",
+    }
     __sortable_fields__ = {
         "name": "name",
     }
@@ -112,7 +114,9 @@ class Layout(Base):
         DateTime, server_default=func.now(), onupdate=func.now()
     )
 
-    __filterable_fields__ = {}
+    __filterable_fields__ = {
+        "name": "name",
+    }
     __sortable_fields__ = {
         "name": "name",
     }

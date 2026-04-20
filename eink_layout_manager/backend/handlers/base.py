@@ -2,13 +2,12 @@ import json
 import uuid
 import logging
 from aiohttp import web
-from jsonschema import validate, ValidationError
+from jsonschema import ValidationError
 from sqlalchemy import select
 
 from .. import database
 from ..utils.validation import (
     validate_id,
-    load_schema,
     validate_read_only,
     validate_data,
 )
