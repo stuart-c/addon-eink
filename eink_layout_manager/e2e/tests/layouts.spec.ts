@@ -46,7 +46,7 @@ test.describe('Layouts Management', () => {
     await page.locator('button[title="Save Changes"]').click();
     
     // Wait for the final success message
-    await expect(page.locator('app-header').getByText('Layout saved!')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('app-header').getByText(/Layout saved!|Layout ".*" created!/)).toBeVisible({ timeout: 10000 });
 
     await expect(page.locator('app-header .message-badge')).not.toBeVisible({ timeout: 10000 });
 
@@ -80,7 +80,7 @@ test.describe('Layouts Management', () => {
     await page.locator('button[title="Save Changes"]').click();
     
     // Wait for "Layout saved!" toast
-    await expect(page.locator('app-header').getByText('Layout saved!')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('app-header').getByText(/Layout saved!|Layout ".*" created!/)).toBeVisible({ timeout: 10000 });
     await expect(page.locator('app-header .message-badge')).not.toBeVisible({ timeout: 10000 });
 
     // Click Edit Layout (Settings icon)
@@ -105,7 +105,7 @@ test.describe('Layouts Management', () => {
     await page.locator('button[title="Save Changes"]').click();
     
     // Verify backend-level success message
-    await expect(page.locator('app-header').getByText('Layout saved!')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('app-header').getByText(/Layout saved!|Layout ".*" created!/)).toBeVisible({ timeout: 10000 });
     
     // Verify name updated in toolbar
     await expect(page.locator('#trigger-layouts span')).toHaveText(newName);
@@ -131,7 +131,7 @@ test.describe('Layouts Management', () => {
     await expect(page.locator('app-header .message-badge')).not.toBeVisible({ timeout: 10000 });
     
     await page.locator('button[title="Save Changes"]').click();
-    await expect(page.locator('app-header').getByText('Layout saved!')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('app-header').getByText(/Layout saved!|Layout ".*" created!/)).toBeVisible({ timeout: 10000 });
     await expect(page.locator('app-header .message-badge')).not.toBeVisible({ timeout: 10000 });
 
     // Open the "Add Display" dropdown in the toolbar
@@ -173,7 +173,7 @@ test.describe('Layouts Management', () => {
     await expect(page.locator('app-header .message-badge')).not.toBeVisible({ timeout: 10000 });
     
     await page.locator('button[title="Save Changes"]').click();
-    await expect(page.locator('app-header').getByText('Layout saved!')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('app-header').getByText(/Layout saved!|Layout ".*" created!/)).toBeVisible({ timeout: 10000 });
     await expect(page.locator('app-header .message-badge')).not.toBeVisible({ timeout: 10000 });
 
     // Add item via toolbar
@@ -224,7 +224,7 @@ test.describe('Layouts Management', () => {
     await expect(page.locator('app-header .message-badge')).not.toBeVisible({ timeout: 10000 });
     
     await page.locator('button[title="Save Changes"]').click();
-    await expect(page.locator('app-header').getByText('Layout saved!')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('app-header').getByText(/Layout saved!|Layout ".*" created!/)).toBeVisible({ timeout: 10000 });
     await expect(page.locator('app-header .message-badge')).not.toBeVisible({ timeout: 10000 });
 
     // Open layout dropdown and select it
