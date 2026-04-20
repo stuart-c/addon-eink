@@ -55,8 +55,11 @@ test.describe('Scene Display Highlighting', () => {
     
     await box1.click();
     await page.locator('button[title="New Single Display"]').click();
+    await expect(page.locator('app-header')).toContainText(/Added.+item/i, { timeout: 10000 });
+    
     await box2.click();
     await page.locator('button[title="New Single Display"]').click();
+    await expect(page.locator('app-header')).toContainText(/Added.+item/i, { timeout: 10000 });
     
     const items = page.locator('.placeholder-item');
     await expect(items).toHaveCount(2);

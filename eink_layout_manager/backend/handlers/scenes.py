@@ -1,4 +1,3 @@
-from aiohttp import web
 from jsonschema import ValidationError
 from .base import BaseCRUDHandler
 from .. import models, database

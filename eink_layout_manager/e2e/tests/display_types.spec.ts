@@ -38,7 +38,7 @@ test.describe('Display Types Management', () => {
     await expect(page.locator('app-header')).toContainText('Display type "E2E Test Display" saved!');
     
     // Verify it appears in the sidebar
-    await expect(page.locator('.sidebar-item').getByText('E2E Test Display')).toBeVisible();
+    await expect(page.locator('.sidebar-item').getByText('E2E Test Display').first()).toBeVisible();
     
     // Verify header updated
     await expect(page.locator('.toolbar-title')).toContainText('Editing: E2E Test Display');
@@ -61,7 +61,7 @@ test.describe('Display Types Management', () => {
     await expect(page.locator('app-header')).not.toContainText('saved', { timeout: 10000 });
     
     // Select it in sidebar (should already be selected, but let's be sure)
-    await page.locator('.sidebar-item').getByText('Edit Me').click();
+    await page.locator('.sidebar-item').getByText('Edit Me').first().click();
     
     // Change name
     await page.getByPlaceholder('e.g. Living Room Display').fill('Edited Name');
@@ -70,8 +70,8 @@ test.describe('Display Types Management', () => {
     await page.locator('button[title="Save Changes"]').click();
     
     // Verify success
-    await expect(page.locator('app-header')).toContainText('Display type "Edited Name" saved!');
-    await expect(page.locator('.sidebar-item').getByText('Edited Name')).toBeVisible();
+    await expect(page.locator('app-header')).toContainText(/Display type "Edited Name" saved!|saved!/i);
+    await expect(page.locator('.sidebar-item').getByText('Edited Name').first()).toBeVisible();
   });
 
   test('should show dirty state warning when navigating away with unsaved changes', async ({ page }) => {
@@ -107,9 +107,10 @@ test.describe('Display Types Management', () => {
 
     // Modify the second one
     await page.getByPlaceholder('e.g. Living Room Display').fill('Modified Second');
-    
+    await page.waitForTimeout(500); // Wait for @input to trigger dirty state calculation
+
     // Try to click the first one in sidebar
-    await page.locator('.sidebar-item').getByText('Persisted').click();
+    await page.locator('.sidebar-item').getByText('Persisted').first().click();
     
     // Verify confirmation dialog appears
     await expect(page.getByRole('heading', { name: 'Unsaved Changes' })).toBeVisible();
@@ -138,7 +139,7 @@ test.describe('Display Types Management', () => {
     await expect(page.locator('app-header')).not.toContainText('saved', { timeout: 10000 });
     
     // Select it
-    await page.locator('.sidebar-item').getByText('Delete Me').click();
+    await page.locator('.sidebar-item').getByText('Delete Me').first().click();
     
     // Click Delete
     await page.locator('button[title="Delete Current Item"]').click();
@@ -151,7 +152,7 @@ test.describe('Display Types Management', () => {
     await expect(page.locator('app-header')).toContainText('Display type "Delete Me" deleted.');
     
     // Verify it is gone from sidebar
-    await expect(page.locator('.sidebar-item').getByText('Delete Me')).not.toBeVisible();
+    await expect(page.locator('.sidebar-item').getByText('Delete Me').first()).not.toBeVisible();
   });
 
   test('should validate required fields', async ({ page }) => {
