@@ -248,7 +248,7 @@ export class DisplayTypesView extends BaseResourceView {
       }
     } else {
       if (this.isAdding) {
-        if (!this.isNew || !this.displayType) {
+        if (!this.isNew || !this.displayType || this.displayType.id !== '') {
           this.displayType = this._getDefaultDisplayType();
           this.isNew = true;
         }
@@ -292,12 +292,12 @@ export class DisplayTypesView extends BaseResourceView {
   }
 
   public addNew() {
-    this._handleSelect(null);
+    this.dispatchEvent(new CustomEvent('prepare-new-display-type', { bubbles: true, composed: true }));
   }
 
   private async _handleSelect(id: string | null) {
-    if (this.displayType?.id === id && !this.isNew) return;
-    if (id === null && this.isNew) return;
+    if (id === null && this.isAdding) return;
+    if (id !== null && id === this.selectedId && !this.isAdding) return;
 
     const performSwitch = () => {
       this.dispatchEvent(new CustomEvent('select-display-type', {
@@ -430,7 +430,7 @@ export class DisplayTypesView extends BaseResourceView {
 
         <div slot="right-top-bar" class="toolbar-content">
           <div class="toolbar-title">
-            ${this.displayType ? (this.isNew ? 'Create New Display Type' : `Editing: ${this.displayType.name}`) : 'Display Types'}
+            ${this.isAdding ? 'Create New Display Type' : (this.displayType && !this.isNew ? `Editing: ${this.displayType.name}` : 'Display Types')}
           </div>
         </div>
 

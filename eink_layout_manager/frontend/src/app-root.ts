@@ -219,6 +219,7 @@ export class AppRoot extends LitElement {
             .selectedItemId="${this.state.selectedItemId}"
             .viewMode="${this.state.viewMode}"
             .isSaving="${this.state.isSaving}"
+            .isAdding="${this.state.isAddingNew}"
             @switch-layout="${(e: CustomEvent) => this.state.switchLayout(e.detail)}"
             @update-active-layout="${(e: CustomEvent) => this.state.updateActiveLayout(e.detail)}"
             @update-item="${(e: CustomEvent) => this.state.updateItem(e.detail.id, e.detail.updates)}"
@@ -247,6 +248,7 @@ export class AppRoot extends LitElement {
             @select-display-type="${(e: CustomEvent) => this.state.selectDisplayType(e.detail.id)}"
             @save="${(e: CustomEvent) => this.state.saveDisplayType(e.detail.displayType)}"
             @delete-display-type="${this._onDeleteDisplayType}"
+            @prepare-new-display-type="${() => this.state.selectDisplayType(null)}"
           ></display-types-view>
         `;
       case 'images':

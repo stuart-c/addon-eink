@@ -31,7 +31,7 @@ describe('ScenesView', () => {
 
   beforeEach(async () => {
     element = document.createElement('scenes-view') as ScenesView;
-    element.state = mockState;
+    element.state = mockState as any;
     document.body.appendChild(element);
     await element.updateComplete;
   });

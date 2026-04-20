@@ -134,14 +134,65 @@ export class LayoutsView extends BaseResourceView {
         gap: 0.25rem;
       }
 
-      .pane-toolbar button {
-        padding: 4px;
-        border-radius: 4px;
-        min-width: 28px;
-        height: 28px;
+      .toolbar-actions {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .dropdown {
+        position: relative;
+        display: inline-block;
+      }
+      
+      .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: white;
+        min-width: 280px;
+        box-shadow: var(--shadow-medium);
+        border: 1px solid var(--border-colour);
+        border-radius: 12px;
+        margin-top: 0.5rem;
+        z-index: 100;
+        overflow: hidden;
+        display: none;
+      }
+      .dropdown-menu.show {
+        display: block;
+        animation: slideIn 0.2s ease;
+      }
+
+      .display-type-item {
+        padding: 0.75rem 1rem;
+        cursor: pointer;
         display: flex;
         align-items: center;
-        justify-content: center;
+        gap: 1rem;
+        transition: background 0.2s;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      .display-type-item:last-child { border-bottom: none; }
+      .display-type-item:hover { background: #f0faff; }
+      
+      .display-type-info {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.2;
+      }
+      .display-type-name {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--text-colour);
+      }
+      .display-type-meta {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+      }
+
+      @keyframes slideIn {
+        from { transform: translateY(-10px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
       }
     `
   ];
@@ -150,11 +201,31 @@ export class LayoutsView extends BaseResourceView {
   @property({ type: Array }) displayTypes: DisplayType[] = [];
   @property({ type: Object }) activeLayout: Layout | null = null;
   @property({ type: String }) selectedItemId: string | null = null;
-  @property({ type: String }) viewMode: 'graphical' | 'yaml' = 'graphical';
   @property({ type: Boolean }) isSaving = false;
+  @property({ type: Boolean }) isAdding = false;
 
   @state() private _originalLayoutJson: string | null = null;
+  @state() private _showDisplayMenu = false;
   @query('layout-settings-dialog') private _layoutSettingsDialog!: LayoutSettingsDialog;
+
+  private _handleGlobalClick = (e: MouseEvent) => {
+    if (!this._showDisplayMenu) return;
+    const path = e.composedPath();
+    const isDropdown = path.some(el => (el as HTMLElement).classList?.contains('dropdown'));
+    if (!isDropdown) {
+      this._showDisplayMenu = false;
+    }
+  };
+
+  connectedCallback() {
+    super.connectedCallback();
+    window.addEventListener('click', this._handleGlobalClick);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    window.removeEventListener('click', this._handleGlobalClick);
+  }
 
   protected updated(changedProperties: Map<string | number | symbol, unknown>) {
     super.updated(changedProperties);
@@ -226,6 +297,26 @@ export class LayoutsView extends BaseResourceView {
     this.dispatchEvent(new CustomEvent('delete-layout', { detail: { layout: this.activeLayout } }));
   }
 
+  private _onAddItemToLayout(dt: DisplayType) {
+    const id = Math.random().toString(36).substr(2, 9);
+    const newItem = {
+      id,
+      display_type_id: dt.id,
+      x_mm: 50,
+      y_mm: 50,
+      orientation: 'landscape' as 'landscape' | 'portrait'
+    };
+    
+    if (this.activeLayout) {
+      const updates = {
+        items: [...(this.activeLayout.items || []), newItem]
+      };
+      this.dispatchEvent(new CustomEvent('update-active-layout', { detail: updates }));
+      this.dispatchEvent(new CustomEvent('select-item', { detail: { id } }));
+    }
+    this._showDisplayMenu = false;
+  }
+
   render() {
     const listItems = this.layouts.map(l => ({
       id: l.id,
@@ -245,10 +336,25 @@ export class LayoutsView extends BaseResourceView {
 
         <div slot="right-top-bar" class="toolbar-content">
           <div class="toolbar-title">
-            ${this.activeLayout ? (this.activeLayout.id ? `Layout: ${this.activeLayout.name}` : 'Create New Layout') : 'Layouts'}
+            ${this.isAdding ? 'Create New Layout' : (this.activeLayout ? `Layout: ${this.activeLayout.name}` : 'Layouts')}
           </div>
           <div class="toolbar-actions">
              ${this.activeLayout ? html`
+              <div class="dropdown">
+                <button id="btn-add-display" class="secondary" title="Add Display Type" @click="${() => this._showDisplayMenu = !this._showDisplayMenu}">
+                  <span class="material-icons">add_box</span>
+                </button>
+                <div id="menu-display-types" class="dropdown-menu ${this._showDisplayMenu ? 'show' : ''}">
+                  ${this.displayTypes.map(dt => html`
+                    <div class="display-type-item" @click="${() => this._onAddItemToLayout(dt)}">
+                      <div class="display-type-info">
+                        <span class="display-type-name">${dt.name}</span>
+                        <span class="display-type-meta">${dt.width_mm}x${dt.height_mm}mm | ${dt.colour_type}</span>
+                      </div>
+                    </div>
+                  `)}
+                </div>
+              </div>
               <button class="secondary" title="Layout Settings" @click="${() => this._layoutSettingsDialog.show(this.activeLayout!)}">
                 <span class="material-icons">settings</span>
               </button>
