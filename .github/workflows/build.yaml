@@ -185,11 +185,12 @@ jobs:
 
       - name: Run E2E tests
         run: |
-          docker run --rm \
+          docker run --rm -t \
             --network host \
             -v $(pwd):/work \
             -w /work \
             -e CI=true \
+            -e FORCE_COLOR=1 \
             mcr.microsoft.com/playwright:v1.59.1-noble \
             /bin/bash -c "cd eink_layout_manager/e2e && npx playwright test"
 
