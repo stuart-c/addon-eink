@@ -116,10 +116,15 @@ export class LayoutsView extends LitElement {
 
   public async addNew() {
     this.dispatchEvent(new CustomEvent('prepare-new-layout', { bubbles: true, composed: true }));
-    await this.updateComplete;
-    if (this.activeLayout) {
-      await this._layoutSettingsDialog.show(this.activeLayout);
-    }
+    const draft: Partial<Layout> = {
+      id: '',
+      name: 'New Layout',
+      canvas_width_mm: 500,
+      canvas_height_mm: 500,
+      grid_snap_mm: 5,
+      items: []
+    };
+    await this._layoutSettingsDialog.show(draft as Layout);
   }
 
   public async requestDelete() {

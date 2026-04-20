@@ -3,6 +3,7 @@ import { createDisplayType } from './helpers/api.js';
 
 test.describe('Layouts Management', () => {
   test.beforeEach(async ({ page }) => {
+    page.on('console', msg => console.log(msg.text()));
     // Navigate to the app
     await page.goto('/');
     

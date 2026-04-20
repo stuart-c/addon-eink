@@ -105,8 +105,6 @@ export class AppRoot extends LitElement {
       this._imageDialog.show();
     } else if (this.state.activeSection === 'display-types') {
       this.state.selectDisplayType(null);
-    } else if (this.state.activeSection === 'layouts') {
-      this.state.prepareNewLayout();
     } else {
       await this._activeView?.addNew();
     }
