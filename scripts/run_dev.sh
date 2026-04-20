@@ -48,6 +48,7 @@ mkdir -p "$DATA_DIR"
 
 docker run -d \
   --name "$CONTAINER_NAME" \
+  -e PYTHONUNBUFFERED=1 \
   -p $PORT:8099 \
   -v "$DATA_DIR:/data" \
   $IMAGE

@@ -1,10 +1,11 @@
+import logging
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 from backend.middlewares import request_logger_middleware
 
 
 @pytest.mark.asyncio
-async def test_request_logger_middleware_success():
+async def test_request_logger_middleware_success(caplog):
     """Test that middleware logs request and calls handler."""
     mock_request = MagicMock()
     mock_request.method = "GET"
@@ -12,18 +13,18 @@ async def test_request_logger_middleware_success():
 
     mock_handler = AsyncMock(return_value="response")
 
-    with patch("builtins.print") as mock_print:
+    with caplog.at_level(logging.INFO):
         response = await request_logger_middleware(mock_request, mock_handler)
 
         assert response == "response"
         mock_handler.assert_called_once_with(mock_request)
 
         # Verify it logged the request
-        mock_print.assert_any_call("REQUEST: GET /api/test")
+        assert "REQUEST: GET /api/test" in caplog.text
 
 
 @pytest.mark.asyncio
-async def test_request_logger_middleware_exception():
+async def test_request_logger_middleware_exception(caplog):
     """Test that middleware logs exception and reraises it."""
     mock_request = MagicMock()
     mock_request.method = "POST"
@@ -32,16 +33,9 @@ async def test_request_logger_middleware_exception():
     error = ValueError("Something went wrong")
     mock_handler = AsyncMock(side_effect=error)
 
-    with (
-        patch("builtins.print") as mock_print,
-        patch("traceback.print_exc") as mock_traceback,
-    ):
-
+    with caplog.at_level(logging.ERROR):
         with pytest.raises(ValueError, match="Something went wrong"):
             await request_logger_middleware(mock_request, mock_handler)
 
         # Verify it logged the exception
-        mock_print.assert_any_call(
-            "EXCEPTION in /api/fail: Something went wrong"
-        )
-        mock_traceback.assert_called_once()
+        assert "EXCEPTION in /api/fail: Something went wrong" in caplog.text

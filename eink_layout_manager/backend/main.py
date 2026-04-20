@@ -1,4 +1,5 @@
 import os
+import logging
 from aiohttp import web
 
 from backend import database
@@ -44,5 +45,12 @@ def init_app():
 if __name__ == "__main__":
     port_env = os.environ.get("INGRESS_PORT")
     port = int(port_env) if port_env and port_env.strip() else 8099
+    # Configure logging
+    log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
+    logging.basicConfig(
+        level=getattr(logging, log_level, logging.INFO),
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    )
+
     app = init_app()
-    web.run_app(app, port=port)
+    web.run_app(app, port=port, access_log=logging.getLogger("aiohttp.access"))
