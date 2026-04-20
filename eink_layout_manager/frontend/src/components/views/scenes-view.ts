@@ -1,10 +1,11 @@
-import { LitElement, html, css } from 'lit';
+import { html, css, PropertyValues } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
-import { PropertyValues } from 'lit';
 import { Scene } from '../../services/HaApiClient';
 import { commonStyles } from '../../styles/common-styles';
+import { BaseResourceView } from './base-resource-view';
 import '../shared/section-layout';
 import '../shared/empty-view';
+import '../shared/sidebar-list';
 import '../layout/layout-editor';
 import '../layout/yaml-editor';
 import '../dialogs/scene-dialog';
@@ -16,8 +17,7 @@ import { SceneItemSettingsDialog } from '../dialogs/scene-item-settings-dialog';
  * A view component for managing Smart Scenes.
  */
 @customElement('scenes-view')
-export class ScenesView extends LitElement {
-  @property({ type: Object }) state!: any;
+export class ScenesView extends BaseResourceView {
   static styles = [
     commonStyles,
     css`
@@ -25,85 +25,6 @@ export class ScenesView extends LitElement {
         display: block;
         height: 100%;
         width: 100%;
-      }
-      .scenes-sidebar {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-      }
-      .sidebar-items {
-        flex: 1;
-        overflow-y: auto;
-        padding: 0.5rem;
-      }
-      .sidebar-item {
-        padding: 12px;
-        border: 1px solid #eee;
-        border-radius: var(--border-radius);
-        margin-bottom: 0.5rem;
-        cursor: pointer;
-        transition: all 0.2s;
-        background: #fff;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-      .sidebar-item:hover {
-        border-color: var(--primary-colour);
-        background: #f0faff;
-      }
-      .sidebar-item.selected {
-        background: #e1f5fe;
-        border-color: var(--primary-colour);
-        box-shadow: 0 2px 8px rgba(3,169,244,0.1);
-      }
-      .sidebar-item-icon {
-        color: #888;
-      }
-      .sidebar-item.selected .sidebar-item-icon {
-        color: var(--primary-colour);
-      }
-      .sidebar-item-name {
-        font-weight: 600;
-        font-size: 14px;
-        color: var(--text-colour);
-      }
-      .toolbar {
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
-        gap: 1rem;
-        width: 100%;
-      }
-      .toolbar-title {
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: #333;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-      }
-      .settings-button {
-        width: 36px;
-        height: 36px;
-        padding: 0;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #f0f2f5;
-        border: 1px solid #ddd;
-        cursor: pointer;
-        transition: all 0.2s;
-        color: #555;
-      }
-      .settings-button:hover {
-        background: #e4e6e9;
-        border-color: #ccc;
-        color: #333;
-      }
-      .settings-button .material-icons {
-        font-size: 20px;
       }
       
       /* Scene Workspace Layout */
@@ -254,6 +175,27 @@ export class ScenesView extends LitElement {
         font-size: 13px;
         font-weight: 500;
       }
+
+      .scene-settings-btn {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border-radius: 50%;
+        background: var(--bg-light);
+        border: 1px solid #ddd;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        color: var(--text-muted);
+      }
+      .scene-settings-btn:hover {
+        background: #fff;
+        color: var(--primary-colour);
+        border-color: var(--primary-colour);
+        box-shadow: var(--shadow-small);
+      }
     `
   ];
 
@@ -269,18 +211,18 @@ export class ScenesView extends LitElement {
   protected updated(changedProperties: PropertyValues) {
     super.updated(changedProperties);
     if (changedProperties.has('activeScene')) {
-      this.dispatchEvent(new CustomEvent('can-delete-change', {
-        detail: { canDelete: !!this.activeScene },
-        bubbles: true,
-        composed: true
-      }));
-      this.dispatchEvent(new CustomEvent('dirty-state-change', {
-        detail: { isDirty: false },
-        bubbles: true,
-        composed: true
-      }));
+      this.notifyCanDelete(!!this.activeScene);
+      this.notifyDirty(false);
       this._selectedItemId = null;
     }
+  }
+
+  public save() {
+    // Scenes are currently auto-saved or saved via dialog
+  }
+
+  public discard() {
+    // No inline discard for scenes currently
   }
 
   public addNew() {
@@ -299,7 +241,10 @@ export class ScenesView extends LitElement {
   get isDirty() { return false; }
   get canDelete() { return !!this.activeScene; }
 
-  private _handleSelect(scene: Scene) {
+  private _handleSelect(sceneId: string) {
+    const scene = this.state.scenes.find((s: any) => s.id === sceneId);
+    if (!scene) return;
+    
     this._selectedDisplayIds = [];
     this._selectedItemId = null;
     this.dispatchEvent(new CustomEvent('select-scene', {
@@ -345,7 +290,7 @@ export class ScenesView extends LitElement {
     });
 
     this._selectedDisplayIds = [];
-    this.state.showMessage(`Added ${newItems.length} display item(s)`, 'success');
+    this.showMessage(`Added ${newItems.length} display item(s)`, 'success');
   }
 
   private async _handleCreateMultiDisplayItem() {
@@ -365,7 +310,7 @@ export class ScenesView extends LitElement {
     });
 
     this._selectedDisplayIds = [];
-    this.state.showMessage('Added multi-display tile item', 'success');
+    this.showMessage('Added multi-display tile item', 'success');
   }
 
   private _handleDeleteItem() {
@@ -384,21 +329,10 @@ export class ScenesView extends LitElement {
           const items = activeScene.items?.filter((i: any) => i.id !== this._selectedItemId) || [];
           await this.state.updateScene(activeScene.id, { items });
           this._selectedItemId = null;
-          this.state.showMessage('Scene item removed', 'success');
+          this.showMessage('Scene item removed', 'success');
         }
       }
     );
-  }
-
-  private _requestConfirmation(
-    config: any,
-    callback: (result: boolean) => void
-  ) {
-    this.dispatchEvent(new CustomEvent('request-confirmation', {
-      detail: { config, callback },
-      bubbles: true,
-      composed: true
-    }));
   }
 
   render() {
@@ -418,38 +352,31 @@ export class ScenesView extends LitElement {
     const highlightedItemId = this._hoveredItemId || this._selectedItemId;
     const highlightedDisplayIds = activeScene?.items?.find((i: any) => i.id === highlightedItemId)?.displays || [];
 
+    const listItems = scenes.map(scene => ({
+      id: scene.id,
+      name: scene.name,
+      icon: 'landscape'
+    }));
+
     return html`
       <section-layout>
-        <div slot="left-bar" class="scenes-sidebar">
-          <div class="sidebar-items">
-            ${scenes.map(scene => html`
-              <div 
-                class="sidebar-item ${activeScene?.id === scene.id ? 'selected' : ''}" 
-                @click="${() => this._handleSelect(scene)}"
-              >
-                <span class="material-icons sidebar-item-icon">landscape</span>
-                <span class="sidebar-item-name">${scene.name}</span>
-              </div>
-            `)}
-            ${scenes.length === 0 ? html`
-              <div style="padding: 1rem; color: #666; font-size: 14px; text-align: center;">
-                No scenes found.
-              </div>
-            ` : ''}
-          </div>
+        <div slot="left-bar">
+          <sidebar-list
+            .items="${listItems}"
+            .selectedId="${activeScene?.id || null}"
+            @select="${(e: CustomEvent) => this._handleSelect(e.detail.item.id)}"
+          ></sidebar-list>
         </div>
 
-        <div slot="right-top-bar" class="toolbar">
-          ${activeScene ? html`
-            <button id="btn-scene-settings" class="settings-button" @click="${() => this._sceneDialog.show(activeScene)}" title="Scene Settings">
-              <span class="material-icons">settings</span>
-            </button>
-            <div class="toolbar-title">
+        <div slot="right-top-bar" class="toolbar-content">
+          <div class="toolbar-title">
+            ${activeScene ? html`
+              <button class="scene-settings-btn" @click="${() => this._sceneDialog.show(activeScene)}" title="Scene Settings">
+                <span class="material-icons" style="font-size: 18px;">settings</span>
+              </button>
               <span>${activeScene.name}</span>
-            </div>
-          ` : html`
-            <div class="toolbar-title">Smart Scenes Toolbar</div>
-          `}
+            ` : 'Smart Scenes'}
+          </div>
         </div>
 
         ${this.viewMode === 'yaml' && activeScene ? html`

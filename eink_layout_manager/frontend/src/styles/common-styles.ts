@@ -138,4 +138,44 @@ export const commonStyles = css`
   .drag-handle:active {
     cursor: grabbing;
   }
+
+  /* Universal Toolbar Styles */
+  .toolbar-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  .toolbar-title {
+    font-weight: 600;
+    color: var(--text-colour);
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .toolbar-actions {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  /* Sidebar Section Titles */
+  .sidebar-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .sidebar-section-title .material-icons {
+    font-size: 14px;
+  }
 `;

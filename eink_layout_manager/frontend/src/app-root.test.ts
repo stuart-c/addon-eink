@@ -45,24 +45,9 @@ describe('AppRoot', () => {
 
     await element.updateComplete;
     
-    // Check if images-view is rendered (it might take an update cycle)
+    // Check if images-view is rendered
     const imagesView = element.shadowRoot?.querySelector('images-view');
     expect(imagesView).toBeTruthy();
-  });
-
-  it('should toggle view mode when toggle-view-mode event is received', async () => {
-    const header = element.shadowRoot?.querySelector('app-header');
-    
-    // Initial mode should be graphical
-    expect((element as any).state.viewMode).toBe('graphical');
-    
-    header?.dispatchEvent(new CustomEvent('toggle-view-mode', {
-      bubbles: true,
-      composed: true
-    }));
-
-    await element.updateComplete;
-    expect((element as any).state.viewMode).toBe('yaml');
   });
 
   it('should show confirm dialog when discarding changes', async () => {
@@ -107,10 +92,10 @@ describe('AppRoot', () => {
       composed: true
     }));
 
-    // Wait for app-root to update and pass property down
+    // Wait for app-root to update
     await element.updateComplete;
     
-    // Check if scenes-view received the new activeScene
-    expect((scenesView as any).activeScene).toEqual(testScene);
+    // In our refactored state, AppRoot simply calls switchScene on the controller
+    expect((element as any).state.activeScene).toEqual(testScene);
   });
 });

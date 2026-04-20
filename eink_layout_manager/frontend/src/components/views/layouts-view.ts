@@ -1,18 +1,20 @@
-import { LitElement, html, css } from 'lit';
+import { html, css } from 'lit';
 import { customElement, property, state, query } from 'lit/decorators.js';
-import { DisplayType, Layout } from '../../services/HaApiClient';
+import type { Layout, DisplayType } from '../../services/HaApiClient';
 import { commonStyles } from '../../styles/common-styles';
-import '../layout/app-toolbar';
+import { BaseResourceView } from './base-resource-view';
+import '../shared/empty-view';
+import '../shared/section-layout';
 import '../layout/layout-editor';
 import '../layout/yaml-editor';
-import '../shared/section-layout';
+import '../dialogs/layout-settings-dialog';
 import { LayoutSettingsDialog } from '../dialogs/layout-settings-dialog';
 
 /**
- * A view component for managing eInk Layouts.
+ * A view component for managing Canvas Layouts.
  */
 @customElement('layouts-view')
-export class LayoutsView extends LitElement {
+export class LayoutsView extends BaseResourceView {
   static styles = [
     commonStyles,
     css`
@@ -21,17 +23,125 @@ export class LayoutsView extends LitElement {
         height: 100%;
         width: 100%;
       }
-      .editor-container {
+      
+      .workspace {
+        display: flex;
+        height: 100%;
+        width: 100%;
+        background: #f0f2f5;
+        overflow: hidden;
+      }
+      
+      .preview-pane {
         flex: 1;
         min-width: 0;
-        position: relative;
+        height: 100%;
         display: flex;
         flex-direction: column;
-        background: white;
-        height: 100%;
+        overflow: hidden;
       }
-      layout-editor, yaml-editor {
+      
+      .content-pane {
+        width: 320px;
+        background: white;
+        border-left: 1px solid var(--border-colour);
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        box-shadow: -2px 0 10px rgba(0,0,0,0.02);
+        z-index: 2;
+      }
+      
+      .pane-header {
+        padding: 1.25rem 1rem;
+        border-bottom: 1px solid var(--border-colour);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+      }
+      
+      .pane-title {
+        font-weight: 800;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-muted);
+      }
+      
+      .content-list {
         flex: 1;
+        overflow-y: auto;
+        padding: 1rem;
+      }
+      
+      .layout-item-card {
+        padding: 12px;
+        border: 1px solid #eee;
+        border-radius: var(--border-radius);
+        margin-bottom: 0.5rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      
+      .layout-item-card:hover {
+        border-color: var(--primary-colour);
+        background: #f0faff;
+      }
+      
+      .layout-item-card.selected {
+        background: #e1f5fe;
+        border-color: var(--primary-colour);
+        box-shadow: 0 2px 8px rgba(3,169,244,0.1);
+      }
+      
+      .item-icon {
+        color: #888;
+      }
+      
+      .layout-item-card.selected .item-icon {
+        color: var(--primary-colour);
+      }
+      
+      .item-info {
+        flex: 1;
+        min-width: 0;
+      }
+      
+      .item-name {
+        font-weight: 600;
+        font-size: 14px;
+        color: var(--text-colour);
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      
+      .item-meta {
+        font-size: 11px;
+        color: var(--text-muted);
+        display: block;
+      }
+
+      .pane-toolbar {
+        display: flex;
+        gap: 0.25rem;
+      }
+
+      .pane-toolbar button {
+        padding: 4px;
+        border-radius: 4px;
+        min-width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
     `
   ];
@@ -43,74 +153,58 @@ export class LayoutsView extends LitElement {
   @property({ type: String }) viewMode: 'graphical' | 'yaml' = 'graphical';
   @property({ type: Boolean }) isSaving = false;
 
-  @state() private _mousePos: { x: number | null, y: number | null } = { x: null, y: null };
-  @state() private _originalLayout: string | null = null;
-
+  @state() private _originalLayoutJson: string | null = null;
   @query('layout-settings-dialog') private _layoutSettingsDialog!: LayoutSettingsDialog;
-
-  protected willUpdate(changedProperties: Map<string | number | symbol, unknown>) {
-    if (changedProperties.has('activeLayout')) {
-      const oldLayout = changedProperties.get('activeLayout') as Layout | null;
-      // Only reset the baseline if we switched to a DIFFERENT layout (different ID)
-      // or if we have no baseline yet.
-      if (!this._originalLayout || !oldLayout || (this.activeLayout && oldLayout.id !== this.activeLayout.id)) {
-        this.resetBaseline();
-      }
-      this._updateState();
-    }
-  }
 
   protected updated(changedProperties: Map<string | number | symbol, unknown>) {
     super.updated(changedProperties);
-  }
-
-  /**
-   * Resets the baseline layout for dirty state tracking.
-   * Call this after a successful save or when a new layout is loaded.
-   */
-  public resetBaseline() {
-    this._originalLayout = JSON.stringify(this.activeLayout);
-  }
-
-  private _updateState() {
-    this.dispatchEvent(new CustomEvent('dirty-state-change', {
-      detail: { isDirty: this.isDirty },
-      bubbles: true,
-      composed: true
-    }));
-    this.dispatchEvent(new CustomEvent('can-delete-change', {
-      detail: { canDelete: !!this.activeLayout },
-      bubbles: true,
-      composed: true
-    }));
+    if (changedProperties.has('activeLayout')) {
+      const oldLayout = changedProperties.get('activeLayout') as Layout | null;
+      // Only reset baseline if ID changed or we have no baseline yet
+      if (!this._originalLayoutJson || !oldLayout || (this.activeLayout && oldLayout.id !== this.activeLayout.id)) {
+        this.resetBaseline();
+      }
+      this.notifyDirty(this.isDirty);
+      this.notifyCanDelete(!!this.activeLayout && !!this.activeLayout.id);
+    }
   }
 
   get isDirty() {
     if (!this.activeLayout) return false;
-    return JSON.stringify(this.activeLayout) !== this._originalLayout;
+    return JSON.stringify(this.activeLayout) !== this._originalLayoutJson;
   }
 
   get canDelete() {
-    return !!this.activeLayout;
+    return !!this.activeLayout && !!this.activeLayout.id;
+  }
+
+  public resetBaseline() {
+    this._originalLayoutJson = this.activeLayout ? JSON.stringify(this.activeLayout) : null;
+    this.notifyDirty(false);
+  }
+
+  private _onSelectionChange(e: CustomEvent) {
+    this.dispatchEvent(new CustomEvent('select-item', { detail: { id: e.detail.ids[0] || null } }));
+  }
+
+  private _onItemUpdate(id: string, updates: any) {
+    this.dispatchEvent(new CustomEvent('update-item', { detail: { id, updates } }));
+    this._checkDirty();
+  }
+
+  private _checkDirty() {
+    this.notifyDirty(this.isDirty);
   }
 
   public async save() {
-    this.dispatchEvent(new CustomEvent('save-layout', {
-      detail: { layout: this.activeLayout },
-      bubbles: true,
-      composed: true
-    }));
+    this.dispatchEvent(new CustomEvent('save-layout'));
   }
 
   public async discard() {
-    if (this._originalLayout) {
-      const layout = JSON.parse(this._originalLayout);
-      this.dispatchEvent(new CustomEvent('update-active-layout', {
-        detail: layout,
-        bubbles: true,
-        composed: true
-      }));
-      this.selectedItemId = null;
+    if (this._originalLayoutJson) {
+      const original = JSON.parse(this._originalLayoutJson);
+      this.dispatchEvent(new CustomEvent('update-active-layout', { detail: original }));
+      this.notifyDirty(false);
     }
   }
 
@@ -129,138 +223,115 @@ export class LayoutsView extends LitElement {
 
   public async requestDelete() {
     if (!this.activeLayout) return;
-    this.dispatchEvent(new CustomEvent('delete-layout', {
-      detail: { layout: this.activeLayout },
-      bubbles: true,
-      composed: true
-    }));
-  }
-
-  private _onAddItemToLayout(e: CustomEvent<DisplayType>) {
-    const id = Math.random().toString(36).substr(2, 9);
-    const newItem = {
-      id,
-      display_type_id: e.detail.id,
-      x_mm: 50,
-      y_mm: 50,
-      orientation: 'landscape' as 'landscape' | 'portrait'
-    };
-    
-    if (this.activeLayout) {
-      const updates = {
-        items: [...(this.activeLayout.items || []), newItem]
-      };
-      this._updateActiveLayout(updates);
-      this._selectItem(id);
-    }
-  }
-
-  private _updateActiveLayout(updates: Partial<Layout>) {
-    this.dispatchEvent(new CustomEvent('update-active-layout', {
-      detail: updates,
-      bubbles: true,
-      composed: true
-    }));
-  }
-
-  private _selectItem(id: string | null) {
-    this.dispatchEvent(new CustomEvent('select-item', {
-      detail: { id },
-      bubbles: true,
-      composed: true
-    }));
-  }
-
-  private _updateItem(id: string, updates: Partial<any>) {
-    this.dispatchEvent(new CustomEvent('update-item', {
-      detail: { id, updates },
-      bubbles: true,
-      composed: true
-    }));
-  }
-
-  private async _onEditItem(e: CustomEvent<{ id: string }>) {
-    this.dispatchEvent(new CustomEvent('edit-item', {
-      detail: e.detail,
-      bubbles: true,
-      composed: true
-    }));
-  }
-
-  private async _onDeleteItem(e: CustomEvent<{ id: string }>) {
-    this.dispatchEvent(new CustomEvent('delete-item', {
-      detail: e.detail,
-      bubbles: true,
-      composed: true
-    }));
+    this.dispatchEvent(new CustomEvent('delete-layout', { detail: { layout: this.activeLayout } }));
   }
 
   render() {
+    const listItems = this.layouts.map(l => ({
+      id: l.id,
+      name: l.name,
+      icon: 'layers'
+    }));
+
     return html`
       <section-layout>
-        <side-bar
-          slot="left-bar"
-          .displayTypes="${this.displayTypes}"
-          .activeLayout="${this.activeLayout}"
-          .selectedItemId="${this.selectedItemId}"
-          @add-display-type="${() => this.dispatchEvent(new CustomEvent('set-section', { detail: 'display-types', bubbles: true, composed: true }))}"
-          @edit-display-type="${() => this.dispatchEvent(new CustomEvent('set-section', { detail: 'display-types', bubbles: true, composed: true }))}"
-          @delete-display-type="${(e: CustomEvent) => this.dispatchEvent(new CustomEvent('delete-display-type', { detail: e.detail, bubbles: true, composed: true }))}"
-          @add-item-to-layout="${this._onAddItemToLayout}"
-          @select-item="${(e: CustomEvent) => this._selectItem(e.detail.id)}"
-          @edit-item="${this._onEditItem}"
-          @rotate-item="${(e: CustomEvent) => this._updateItem(e.detail.id, { orientation: (this.activeLayout?.items.find(i => i.id === e.detail.id)?.orientation === 'landscape' ? 'portrait' : 'landscape') })}"
-          @delete-item="${this._onDeleteItem}"
-        ></side-bar>
+        <div slot="left-bar">
+          <sidebar-list
+            .items="${listItems}"
+            .selectedId="${this.activeLayout?.id || null}"
+            @select="${(e: CustomEvent) => this.dispatchEvent(new CustomEvent('switch-layout', { detail: this.layouts.find(l => l.id === e.detail.item.id) }))}"
+          ></sidebar-list>
+        </div>
 
-        <app-toolbar
-          slot="right-top-bar"
-          .layouts="${this.layouts}"
-          .displayTypes="${this.displayTypes}"
-          .activeLayout="${this.activeLayout}"
-          .mousePos="${this._mousePos}"
-          @switch-layout="${(e: CustomEvent) => this.dispatchEvent(new CustomEvent('switch-layout', { detail: e.detail, bubbles: true, composed: true }))}"
-          @create-layout="${this.addNew}"
-          @edit-layout="${() => this.activeLayout && this._layoutSettingsDialog.show(this.activeLayout)}"
-          @add-item-to-layout="${this._onAddItemToLayout}"
-        ></app-toolbar>
+        <div slot="right-top-bar" class="toolbar-content">
+          <div class="toolbar-title">
+            ${this.activeLayout ? (this.activeLayout.id ? `Layout: ${this.activeLayout.name}` : 'Create New Layout') : 'Layouts'}
+          </div>
+          <div class="toolbar-actions">
+             ${this.activeLayout ? html`
+              <button class="secondary" title="Layout Settings" @click="${() => this._layoutSettingsDialog.show(this.activeLayout!)}">
+                <span class="material-icons">settings</span>
+              </button>
+            ` : ''}
+          </div>
+        </div>
 
-        <div slot="right-main" style="height: 100%; display: flex; flex-direction: column;">
-          <layout-editor
-            ?hidden="${this.viewMode !== 'graphical' || !this.activeLayout}"
-            .width_mm="${this.activeLayout?.canvas_width_mm || 0}"
-            .height_mm="${this.activeLayout?.canvas_height_mm || 0}"
-            .gridSnap="${this.activeLayout?.grid_snap_mm || 5}"
-            .items="${this.activeLayout?.items || []}"
-            .displayTypes="${this.displayTypes}"
-            .selectedIds="${this.selectedItemId ? [this.selectedItemId] : []}"
-            @item-moved="${(e: CustomEvent) => this._updateItem(e.detail.id, { x_mm: e.detail.x, y_mm: e.detail.y })}"
-            @select-item="${(e: CustomEvent) => this._selectItem(e.detail.id)}"
-            @edit-item="${(e: CustomEvent) => this._onEditItem(e)}"
-            @mouse-move="${(e: CustomEvent) => this._mousePos = e.detail}"
-            @rotate-item="${(e: CustomEvent) => this._updateItem(e.detail.id, { orientation: (this.activeLayout?.items.find(i => i.id === e.detail.id)?.orientation === 'landscape' ? 'portrait' : 'landscape') })}"
-            @item-delete="${(e: CustomEvent) => this._onDeleteItem(e)}"
-            @layout-resized="${(e: CustomEvent) => this._updateActiveLayout({ canvas_width_mm: e.detail.width, canvas_height_mm: e.detail.height })}"
-          ></layout-editor>
-
+        ${this.viewMode === 'yaml' && this.activeLayout ? html`
           <yaml-editor
-            ?hidden="${this.viewMode !== 'yaml' || !this.activeLayout}"
+            slot="right-main"
             .data="${this.activeLayout}"
             .schemaName="Layout"
-            @data-update="${(e: CustomEvent) => this._updateActiveLayout(e.detail)}"
+            @data-update="${(e: CustomEvent) => {
+              this.dispatchEvent(new CustomEvent('update-active-layout', { detail: e.detail }));
+              this._checkDirty();
+            }}"
           ></yaml-editor>
-        </div>
+        ` : (this.activeLayout ? html`
+          <div slot="right-main" class="workspace">
+            <div class="preview-pane">
+              <layout-editor
+                .width_mm="${this.activeLayout.canvas_width_mm}"
+                .height_mm="${this.activeLayout.canvas_height_mm}"
+                .items="${this.activeLayout.items}"
+                .displayTypes="${this.displayTypes}"
+                .selectedIds="${this.selectedItemId ? [this.selectedItemId] : []}"
+                @selection-change="${this._onSelectionChange}"
+                @item-update="${(e: CustomEvent) => this._onItemUpdate(e.detail.id, e.detail.updates)}"
+                @edit-item="${(e: CustomEvent) => this.dispatchEvent(new CustomEvent('edit-item', { detail: { id: e.detail.id } }))}"
+                @delete-item="${(e: CustomEvent) => this.dispatchEvent(new CustomEvent('delete-item', { detail: { id: e.detail.id } }))}"
+              ></layout-editor>
+            </div>
+            
+            <div class="content-pane">
+              <div class="pane-header">
+                <div class="pane-title">Layout Items</div>
+                <div class="pane-toolbar">
+                  <button class="secondary" title="Add Display" @click="${() => this.dispatchEvent(new CustomEvent('set-section', { detail: 'display-types', bubbles: true, composed: true }))}">
+                    <span class="material-icons" style="font-size: 18px;">add</span>
+                  </button>
+                </div>
+              </div>
+              
+              <div class="content-list">
+                ${this.activeLayout.items?.map((item, index) => {
+                  const dt = this.displayTypes.find(t => t.id === item.display_type_id);
+                  return html`
+                    <div 
+                      class="layout-item-card ${this.selectedItemId === item.id ? 'selected' : ''}"
+                      @click="${() => this.dispatchEvent(new CustomEvent('select-item', { detail: { id: item.id } }))}"
+                      @dblclick="${() => this.dispatchEvent(new CustomEvent('edit-item', { detail: { id: item.id } }))}"
+                    >
+                      <span class="material-icons item-icon">settings_input_component</span>
+                      <div class="item-info">
+                        <span class="item-name">#${index + 1}: ${dt?.name || 'Unknown'}</span>
+                        <span class="item-meta">Pos: ${item.x_mm}, ${item.y_mm}mm | ${item.orientation}</span>
+                      </div>
+                    </div>
+                  `;
+                })}
+                
+                ${(!this.activeLayout.items || this.activeLayout.items.length === 0) ? html`
+                  <div style="padding: 2rem; color: #888; text-align: center; font-size: 13px;">
+                    No items in this layout. Add displays to begin.
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+        ` : html`
+          <empty-view 
+            slot="right-main"
+            title="Canvas Layouts"
+            icon="layers"
+            message="Design your multi-display canvas here. Combine different eInk screens into a unified digital surface."
+          ></empty-view>
+        `)}
       </section-layout>
 
       <layout-settings-dialog @save="${(e: CustomEvent) => {
-        this._updateActiveLayout(e.detail.settings);
-        if (!this.activeLayout?.id) {
-          // If it's a new layout, we might want to save it immediately or just keep it as a draft.
-          // For now, these settings are "applied" to the draft.
-          this.dispatchEvent(new CustomEvent('show-message', { detail: { text: 'Draft settings applied', type: 'success' }, bubbles: true, composed: true }));
-        } else {
-          this.dispatchEvent(new CustomEvent('show-message', { detail: { text: 'Settings applied', type: 'success' }, bubbles: true, composed: true }));
-        }
+        this.dispatchEvent(new CustomEvent('update-active-layout', { detail: e.detail.settings }));
+        this._checkDirty();
+        this.showMessage(this.activeLayout?.id ? 'Settings applied' : 'Draft settings applied', 'success');
       }}"></layout-settings-dialog>
     `;
   }

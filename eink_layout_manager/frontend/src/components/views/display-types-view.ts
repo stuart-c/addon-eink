@@ -1,18 +1,20 @@
-import { LitElement, html, css } from 'lit';
+import { html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { live } from 'lit/directives/live.js';
 import type { DisplayType } from '../../services/HaApiClient';
 import { commonStyles } from '../../styles/common-styles';
+import { BaseResourceView } from './base-resource-view';
 import '../shared/empty-view';
 import '../shared/hardware-preview';
 import '../shared/section-layout';
+import '../shared/sidebar-list';
 import '../layout/yaml-editor';
 
 /**
  * A view component for managing eInk Display Types.
  */
 @customElement('display-types-view')
-export class DisplayTypesView extends LitElement {
+export class DisplayTypesView extends BaseResourceView {
   static styles = [
     commonStyles,
     css`
@@ -21,27 +23,6 @@ export class DisplayTypesView extends LitElement {
       height: 100%;
       width: 100%;
     }
-    .view-container {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      overflow: hidden;
-    }
-    .toolbar-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 100%;
-    }
-    .toolbar-title {
-      font-weight: 600;
-      color: #333;
-      font-size: 1.1rem;
-    }
-    .toolbar-actions {
-      display: flex;
-      gap: 0.75rem;
-    }
     
     .editor-layout {
       display: grid;
@@ -49,59 +30,6 @@ export class DisplayTypesView extends LitElement {
       height: 100%;
       overflow: hidden;
     }
-
-    .list-sidebar {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-    }
-
-    .sidebar-items {
-      flex: 1;
-      overflow-y: auto;
-    }
-
-    .sidebar-item {
-      padding: 12px;
-      border-bottom: 1px solid #eee;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-      background: #fff;
-    }
-
-    .sidebar-item:hover { background: #f0faff; }
-    .sidebar-item.selected { 
-      background: #e1f5fe; 
-      border-left: 4px solid var(--primary-colour);
-      padding-left: 8px;
-    }
-
-    .sidebar-thumbnail {
-      width: 80px;
-      height: 60px;
-      background: #eee;
-      border-radius: 4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      box-shadow: var(--shadow-small);
-    }
-
-    .sidebar-name {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--text-colour);
-      text-align: center;
-      word-break: break-all;
-    }
-
-    .sidebar-item.add-new:hover { background: #f0faff; }
-    .sidebar-item.add-new.selected { background: #e1f5fe; }
 
     form {
       padding: 2rem;
@@ -155,60 +83,11 @@ export class DisplayTypesView extends LitElement {
       padding: 1.5rem;
     }
 
-    .form-group {
-      margin-bottom: 1.5rem;
-    }
-    label {
-      display: block;
-      font-size: 11px;
-      font-weight: 700;
-      color: #666;
-      margin-bottom: 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    input, select {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      box-sizing: border-box;
-      font-size: 14px;
-      transition: all 0.2s;
-    }
-    input:focus {
-      outline: none;
-      border-color: var(--primary-colour);
-      box-shadow: 0 0 0 3px rgba(3, 169, 244, 0.1);
-    }
     .row {
       display: flex;
       gap: 1.5rem;
     }
     .row > * { flex: 1; }
-    
-    button {
-      padding: 10px 20px;
-      border-radius: 8px;
-      cursor: pointer;
-      border: none;
-      font-weight: 600;
-      font-size: 14px;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    button:hover { filter: brightness(0.95); }
-    button:active { transform: translateY(1px); }
-    button:disabled { 
-      opacity: 0.5; 
-      cursor: not-allowed; 
-      transform: none;
-    }
-    .primary { background: var(--primary-colour); color: white; }
-    .secondary { background: #eee; color: #555; }
-    .danger { background: var(--danger-colour); color: white; }
     
     .section-header {
       margin-top: 2rem;
@@ -349,24 +228,14 @@ export class DisplayTypesView extends LitElement {
     };
   }
 
-  connectedCallback() {
-    super.connectedCallback();
-    this._syncSelection();
-    this._updateDirtyState();
-  }
-
   protected willUpdate(changedProperties: Map<string | number | symbol, unknown>) {
     if (changedProperties.has('selectedId') || changedProperties.has('displayTypes') || changedProperties.has('isAdding')) {
       this._syncSelection();
     }
     if (changedProperties.has('displayType') || changedProperties.has('displayTypes') || changedProperties.has('isNew')) {
       this._updateDirtyState();
-      this._updateDeleteState();
+      this.notifyCanDelete(!this.isNew && !!this.displayType);
     }
-  }
-
-  protected updated(changedProperties: Map<string | number | symbol, unknown>) {
-    super.updated(changedProperties);
   }
 
   private _syncSelection() {
@@ -390,14 +259,6 @@ export class DisplayTypesView extends LitElement {
     }
   }
 
-  private _updateDeleteState() {
-    this.dispatchEvent(new CustomEvent('can-delete-change', {
-      detail: { canDelete: !this.isNew && !!this.displayType },
-      bubbles: true,
-      composed: true
-    }));
-  }
-
   private _isDirty(): boolean {
     if (!this.displayType) return false;
     if (this.isNew) {
@@ -413,11 +274,7 @@ export class DisplayTypesView extends LitElement {
     const dirty = this._isDirty();
     if (this._isDirtyState !== dirty) {
       this._isDirtyState = dirty;
-      this.dispatchEvent(new CustomEvent('dirty-state-change', {
-        detail: { isDirty: dirty },
-        bubbles: true,
-        composed: true
-      }));
+      this.notifyDirty(dirty);
     }
   }
 
@@ -432,17 +289,6 @@ export class DisplayTypesView extends LitElement {
 
   public discard() {
     this._handleSelect(this.isNew ? null : (this.displayType?.id || null));
-  }
-
-  private _requestConfirmation(
-    config: { title: string, message: string, buttons: any[] },
-    callback: (choice: string) => void
-  ) {
-    this.dispatchEvent(new CustomEvent('request-confirmation', {
-      detail: { config, callback },
-      bubbles: true,
-      composed: true
-    }));
   }
 
   public addNew() {
@@ -491,12 +337,7 @@ export class DisplayTypesView extends LitElement {
     }
   }
 
-
   public requestDelete() {
-    this._handleDelete();
-  }
-
-  private _handleDelete() {
     if (!this.displayType || this.isNew) return;
     this.dispatchEvent(new CustomEvent('delete-display-type', { detail: this.displayType }));
   }
@@ -505,8 +346,6 @@ export class DisplayTypesView extends LitElement {
     e.preventDefault();
     if (!this.displayType) return;
     
-    // ID is now generated on the server
-
     this.dispatchEvent(new CustomEvent('save', { detail: { displayType: this.displayType } }));
     this.isNew = false;
     this.requestUpdate();
@@ -560,47 +399,41 @@ export class DisplayTypesView extends LitElement {
       ? maxPreviewDim / Math.max(frameW, frameH) 
       : 1;
 
+    const listItems = this.displayTypes.map(dt => ({
+      id: dt.id,
+      name: dt.name,
+      iconHtml: html`
+        <div style="transform: scale(0.6)">
+            <hardware-preview
+                .width_mm="${dt.width_mm}"
+                .height_mm="${dt.height_mm}"
+                .border_width_mm="${dt.frame.border_width_mm}"
+                .panel_width_mm="${dt.panel_width_mm}"
+                .panel_height_mm="${dt.panel_height_mm}"
+                .frame_colour="${dt.frame.colour}"
+                .mat_colour="${dt.mat.colour}"
+                .scale="${60 / Math.max(dt.width_mm, dt.height_mm)}"
+            ></hardware-preview>
+        </div>
+      `
+    }));
+
     return html`
       <section-layout>
-        <!-- Sidebar: Display Types List -->
-        <div slot="left-bar" class="list-sidebar">
-          <div class="sidebar-items">
-            ${this.displayTypes.map(dt => {
-              const dtScale = 60 / Math.max(dt.width_mm, dt.height_mm);
-              return html`
-                <div 
-                  class="sidebar-item ${this.displayType?.id === dt.id && !this.isNew ? 'selected' : ''}" 
-                  @click="${() => this._handleSelect(dt.id)}"
-                >
-                  <div class="sidebar-thumbnail">
-                    <hardware-preview
-                      .width_mm="${dt.width_mm}"
-                      .height_mm="${dt.height_mm}"
-                      .border_width_mm="${dt.frame.border_width_mm}"
-                      .panel_width_mm="${dt.panel_width_mm}"
-                      .panel_height_mm="${dt.panel_height_mm}"
-                      .frame_colour="${dt.frame.colour}"
-                      .mat_colour="${dt.mat.colour}"
-                      .scale="${dtScale}"
-                    ></hardware-preview>
-                  </div>
-                  <span class="sidebar-name">${dt.name}</span>
-                </div>
-              `;
-            })}
-          </div>
+        <div slot="left-bar">
+          <sidebar-list
+            .items="${listItems}"
+            .selectedId="${this.displayType?.id && !this.isNew ? this.displayType.id : null}"
+            @select="${(e: CustomEvent) => this._handleSelect(e.detail.item.id)}"
+          ></sidebar-list>
         </div>
 
-        <!-- Toolbar -->
         <div slot="right-top-bar" class="toolbar-content">
           <div class="toolbar-title">
             ${this.displayType ? (this.isNew ? 'Create New Display Type' : `Editing: ${this.displayType.name}`) : 'Display Types'}
           </div>
-          <div class="toolbar-actions">
-          </div>
         </div>
 
-        <!-- Main Content -->
         <div slot="right-main" class="${!this.displayType ? '' : 'editor-layout'}">
           ${!this.displayType ? html`
             <empty-view
@@ -622,7 +455,6 @@ export class DisplayTypesView extends LitElement {
                   >
                 </div>
 
-                <!-- Device Dimensions Section -->
                 <div class="section-header">Device Dimensions</div>
                 <div class="row">
                   <div class="form-group">
@@ -670,7 +502,7 @@ export class DisplayTypesView extends LitElement {
                     <label>Resolution Height (px)</label>
                     <input type="number" required .value="${live(this.displayType?.height_px || 0)}" @input="${(e: any) => this.displayType!.height_px = parseInt(e.target.value)}">
                   </div>
-                  <div class="form-group"></div> <!-- Placeholder for 3rd column alignment -->
+                  <div class="form-group"></div>
                 </div>
 
                 <div class="section-header">Aesthetics</div>

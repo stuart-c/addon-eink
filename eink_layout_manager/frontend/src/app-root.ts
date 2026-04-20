@@ -1,26 +1,23 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, state, query } from 'lit/decorators.js';
-import { HaStateController, type AppSection } from './controllers/HaStateController';
+import { HaStateController } from './controllers/HaStateController';
 
 import './components/shell/app-header';
 import './components/layout/side-bar';
 import './components/views/layouts-view';
 import './components/views/display-types-view';
-import { DisplayTypesView } from './components/views/display-types-view';
-import { LayoutsView } from './components/views/layouts-view';
 import './components/views/images-view';
+import './components/views/scenes-view';
 import './components/dialogs/item-settings-dialog';
 import './components/dialogs/image-dialog';
 import './components/dialogs/confirm-dialog';
-import './components/shared/empty-view';
 import './components/shared/section-layout';
 
 import { ItemSettingsDialog } from './components/dialogs/item-settings-dialog';
 import { ImageDialog } from './components/dialogs/image-dialog';
 import { ConfirmDialog } from './components/dialogs/confirm-dialog';
-import './components/views/scenes-view';
-import { ScenesView } from './components/views/scenes-view';
-import { Scene, DisplayType, Layout, Image } from './services/HaApiClient';
+import { DisplayType, Layout, Image, Scene } from './services/HaApiClient';
+import { BaseResourceView } from './components/views/base-resource-view';
 
 @customElement('app-root')
 export class AppRoot extends LitElement {
@@ -50,52 +47,39 @@ export class AppRoot extends LitElement {
   @query('image-dialog') private _imageDialog!: ImageDialog;
   @query('confirm-dialog') private _confirmDialog!: ConfirmDialog;
   
-  @query('display-types-view') private _displayTypesView?: DisplayTypesView;
-  @query('layouts-view') private _layoutsView?: LayoutsView;
-  @query('images-view') private _imagesView?: any;
-  @query('scenes-view') private _scenesView?: ScenesView;
+  @query('.active-view') private _activeViewComponent?: BaseResourceView;
 
-  private get _activeView(): any {
-    return this.state.activeSection === 'layouts' ? this._layoutsView : 
-           this.state.activeSection === 'display-types' ? this._displayTypesView : 
-           this.state.activeSection === 'images' ? this._imagesView :
-           this.state.activeSection === 'scenes' ? this._scenesView :
-           null;
+  private _handleDirtyChange(e: CustomEvent<{ isDirty: boolean }>) {
+    this._isDirty = e.detail.isDirty;
   }
 
-  protected updated(changedProperties: Map<string | number | symbol, unknown>) {
-    super.updated(changedProperties);
-    if (changedProperties.has('activeSection')) {
-      this._updateHeaderState();
-    }
+  private _handleCanDeleteChange(e: CustomEvent<{ canDelete: boolean }>) {
+    this._canDelete = e.detail.canDelete;
   }
 
-  private _updateHeaderState() {
-    const view = this._activeView;
-    if (view) {
-      this._isDirty = view.isDirty;
-      this._canDelete = view.canDelete;
-    } else {
-      this._isDirty = false;
-      this._canDelete = false;
-    }
+  private async _handleRequestConfirmation(e: CustomEvent) {
+    const result = await this._confirmDialog.show(e.detail.config);
+    e.detail.callback(result);
+  }
+
+  private _handleShowMessage(e: CustomEvent<{ text: string, type: 'info' | 'success' | 'error' }>) {
+    this.state.showMessage(e.detail.text, e.detail.type);
   }
 
   private async _handleSave() {
-    await this._activeView?.save();
+    await this._activeViewComponent?.save();
   }
 
   private async _handleDiscard() {
-    const sectionName = this.state.activeSection === 'layouts' ? 'layout' : 'display type';
     const confirmed = await this._confirmDialog.show({
       title: 'Discard Changes?',
-      message: `Are you sure you want to discard all unsaved changes to this ${sectionName}?`,
+      message: `Are you sure you want to discard all unsaved changes?`,
       confirmText: 'Discard',
       type: 'danger'
     });
 
     if (confirmed) {
-      await this._activeView?.discard();
+      await this._activeViewComponent?.discard();
       this.state.showMessage('Changes discarded', 'info');
     }
   }
@@ -103,15 +87,13 @@ export class AppRoot extends LitElement {
   private async _onHeaderAddItem() {
     if (this.state.activeSection === 'images') {
       this._imageDialog.show();
-    } else if (this.state.activeSection === 'display-types') {
-      this.state.selectDisplayType(null);
     } else {
-      await this._activeView?.addNew();
+      await this._activeViewComponent?.addNew();
     }
   }
 
   private async _onHeaderDeleteItem() {
-    await this._activeView?.requestDelete();
+    await this._activeViewComponent?.requestDelete();
   }
 
   private async _onDeleteLayout(e: CustomEvent<{ layout: Layout }>) {
@@ -150,7 +132,6 @@ export class AppRoot extends LitElement {
 
     if (confirmed) {
       await this.state.deleteScene(e.detail.scene);
-      this._updateHeaderState();
     }
   }
 
@@ -164,11 +145,10 @@ export class AppRoot extends LitElement {
 
     if (confirmed) {
       await this.state.deleteImage(e.detail.image);
-      this._updateHeaderState();
     }
   }
 
-  private async _onDeleteItem(e: CustomEvent<{ id: string }>) {
+  private async _onDeleteLayoutItem(e: CustomEvent<{ id: string }>) {
     const item = this.state.activeLayout?.items.find(i => i.id === e.detail.id);
     const dt = this.state.displayTypes.find(t => t.id === item?.display_type_id);
     
@@ -208,133 +188,99 @@ export class AppRoot extends LitElement {
         @set-section="${(e: CustomEvent) => this.state.setSection(e.detail)}"
       ></app-header>
 
-      ${this.state.activeSection === 'layouts' ? this._renderLayoutsSection() : 
-        this.state.activeSection === 'display-types' ? this._renderDisplayTypesSection() :
-        this.state.activeSection === 'images' ? this._renderImagesSection() :
-        this.state.activeSection === 'scenes' ? this._renderScenesSection() :
-        this._renderEmptySection()}
+      <main 
+        @dirty-state-change="${this._handleDirtyChange}"
+        @can-delete-change="${this._handleCanDeleteChange}"
+        @request-confirmation="${this._handleRequestConfirmation}"
+        @show-message="${this._handleShowMessage}"
+      >
+        ${this._renderActiveSection()}
+      </main>
 
       <item-settings-dialog 
         @save="${(e: CustomEvent) => this.state.updateItem(e.detail.id, e.detail.updates)}"
-        @delete="${(e: CustomEvent) => this._onDeleteItem(e)}"
+        @delete="${(e: CustomEvent) => this._onDeleteLayoutItem(e)}"
       ></item-settings-dialog>
       <image-dialog @image-saved="${() => this.state.refreshImages()}"></image-dialog>
       <confirm-dialog></confirm-dialog>
     `;
   }
 
-  private _renderLayoutsSection() {
-    return html`
-      <layouts-view
-        .layouts="${this.state.layouts}"
-        .displayTypes="${this.state.displayTypes}"
-        .activeLayout="${this.state.activeLayout}"
-        .selectedItemId="${this.state.selectedItemId}"
-        .viewMode="${this.state.viewMode}"
-        .isSaving="${this.state.isSaving}"
-        @switch-layout="${(e: CustomEvent) => this.state.switchLayout(e.detail)}"
-        @update-active-layout="${(e: CustomEvent) => this.state.updateActiveLayout(e.detail)}"
-        @update-item="${(e: CustomEvent) => this.state.updateItem(e.detail.id, e.detail.updates)}"
-        @select-item="${(e: CustomEvent) => this.state.selectItem(e.detail.id)}"
-        @edit-item="${(e: CustomEvent) => this._itemDialog.show(this.state.activeLayout?.items.find(i => i.id === e.detail.id)!, this.state.displayTypes)}"
-        @delete-item="${this._onDeleteItem}"
-        @delete-layout="${this._onDeleteLayout}"
-        @save-layout="${async () => {
-          await this.state.saveActiveLayout();
-          if (this._layoutsView) {
-            this._layoutsView.resetBaseline();
-          }
-        }}"
-        @dirty-state-change="${(e: CustomEvent) => this._isDirty = e.detail.isDirty}"
-        @can-delete-change="${(e: CustomEvent) => this._canDelete = e.detail.canDelete}"
-        @show-message="${(e: CustomEvent) => this.state.showMessage(e.detail.text, e.detail.type)}"
-        @set-section="${(e: CustomEvent) => this.state.setSection(e.detail)}"
-        @prepare-new-layout="${() => this.state.prepareNewLayout()}"
-        @delete-display-type="${this._onDeleteDisplayType}"
-      ></layouts-view>
-    `;
-  }
-
-  private _renderDisplayTypesSection() {
-    return html`
-      <display-types-view
-        .displayTypes="${this.state.displayTypes}"
-        .selectedId="${this.state.selectedDisplayTypeId}"
-        .viewMode="${this.state.viewMode}"
-        .isAdding="${this.state.isAddingNew}"
-        @select-display-type="${(e: CustomEvent) => this.state.selectDisplayType(e.detail.id)}"
-        @save="${(e: CustomEvent) => this.state.saveDisplayType(e.detail.displayType)}"
-        @delete-display-type="${this._onDeleteDisplayType}"
-        @dirty-state-change="${(e: CustomEvent) => this._isDirty = e.detail.isDirty}"
-        @can-delete-change="${(e: CustomEvent) => this._canDelete = e.detail.canDelete}"
-        @request-confirmation="${async (e: CustomEvent) => {
-          const result = await this._confirmDialog.show(e.detail.config);
-          e.detail.callback(result);
-        }}"
-      ></display-types-view>
-    `;
-  }
-
-  private _renderImagesSection() {
-    return html`
-      <images-view
-        .images="${this.state.images}"
-        .selectedImageId="${this.state.selectedImageId}"
-        @edit-image="${(e: CustomEvent) => this._imageDialog.show(e.detail.image)}"
-        @image-click="${(e: CustomEvent) => { 
-          this.state.selectImage(e.detail.image.id);
-          this._updateHeaderState();
-        }}"
-        @delete-image="${this._onDeleteImage}"
-        @filter-change="${(e: CustomEvent) => this.state.refreshImages(e.detail)}"
-      ></images-view>
-    `;
-  }
-
-  private _renderScenesSection() {
-    return html`
-      <scenes-view
-        .state="${this.state}"
-        .scenes="${this.state.scenes}"
-        .activeScene="${this.state.activeScene}"
-        .viewMode="${this.state.viewMode}"
-        @select-scene="${(e: CustomEvent<{ scene: Scene }>) => {
-          this.state.switchScene(e.detail.scene);
-          this._updateHeaderState();
-        }}"
-        @delete-scene="${this._onDeleteScene}"
-        @can-delete-change="${(e: CustomEvent) => this._canDelete = e.detail.canDelete}"
-        @dirty-state-change="${(e: CustomEvent) => this._isDirty = e.detail.isDirty}"
-        @request-confirmation="${async (e: CustomEvent) => {
-          const result = await this._confirmDialog.show(e.detail.config);
-          e.detail.callback(result);
-        }}"
-      ></scenes-view>
-    `;
-  }
-
-  private _renderEmptySection() {
-    const sections = {
-      'scenes': { title: 'Smart Scenes', icon: 'landscape', message: 'Compose complex scenes by combining layouts, images and live data.' }
-    };
-    const active = sections[this.state.activeSection as Exclude<AppSection, 'layouts' | 'display-types' | 'images'>];
-    
-    return html`
-      <section-layout>
-        <div slot="left-bar" style="padding: 1rem; color: #666; font-size: 14px;">
-          Sidebar for ${active.title} section coming soon.
-        </div>
-        <div slot="right-top-bar" style="font-weight: 600; color: #333;">
-          ${active.title} Toolbar
-        </div>
-        <empty-view 
-          slot="right-main"
-          .title="${active.title}"
-          .icon="${active.icon}"
-          .message="${active.message}"
-        ></empty-view>
-      </section-layout>
-    `;
+  private _renderActiveSection() {
+    switch (this.state.activeSection) {
+      case 'layouts':
+        return html`
+          <layouts-view
+            class="active-view"
+            .state="${this.state}"
+            .layouts="${this.state.layouts}"
+            .displayTypes="${this.state.displayTypes}"
+            .activeLayout="${this.state.activeLayout}"
+            .selectedItemId="${this.state.selectedItemId}"
+            .viewMode="${this.state.viewMode}"
+            .isSaving="${this.state.isSaving}"
+            @switch-layout="${(e: CustomEvent) => this.state.switchLayout(e.detail)}"
+            @update-active-layout="${(e: CustomEvent) => this.state.updateActiveLayout(e.detail)}"
+            @update-item="${(e: CustomEvent) => this.state.updateItem(e.detail.id, e.detail.updates)}"
+            @select-item="${(e: CustomEvent) => this.state.selectItem(e.detail.id)}"
+            @edit-item="${(e: CustomEvent) => this._itemDialog.show(this.state.activeLayout?.items.find(i => i.id === e.detail.id)!, this.state.displayTypes)}"
+            @delete-item="${this._onDeleteLayoutItem}"
+            @delete-layout="${this._onDeleteLayout}"
+            @save-layout="${async () => {
+              await this.state.saveActiveLayout();
+              (this.shadowRoot?.querySelector('layouts-view') as any)?.resetBaseline();
+            }}"
+            @set-section="${(e: CustomEvent) => this.state.setSection(e.detail)}"
+            @prepare-new-layout="${() => this.state.prepareNewLayout()}"
+            @delete-display-type="${this._onDeleteDisplayType}"
+          ></layouts-view>
+        `;
+      case 'display-types':
+        return html`
+          <display-types-view
+            class="active-view"
+            .state="${this.state}"
+            .displayTypes="${this.state.displayTypes}"
+            .selectedId="${this.state.selectedDisplayTypeId}"
+            .viewMode="${this.state.viewMode}"
+            .isAdding="${this.state.isAddingNew}"
+            @select-display-type="${(e: CustomEvent) => this.state.selectDisplayType(e.detail.id)}"
+            @save="${(e: CustomEvent) => this.state.saveDisplayType(e.detail.displayType)}"
+            @delete-display-type="${this._onDeleteDisplayType}"
+          ></display-types-view>
+        `;
+      case 'images':
+        return html`
+          <images-view
+            class="active-view"
+            .state="${this.state}"
+            .images="${this.state.images}"
+            .selectedImageId="${this.state.selectedImageId}"
+            @edit-image="${(e: CustomEvent) => this._imageDialog.show(e.detail.image)}"
+            @image-click="${(e: CustomEvent) => { 
+                this.state.selectImage(e.detail.image.id);
+            }}"
+            @delete-image="${this._onDeleteImage}"
+            @filter-change="${(e: CustomEvent) => this.state.refreshImages(e.detail)}"
+          ></images-view>
+        `;
+      case 'scenes':
+        return html`
+          <scenes-view
+            class="active-view"
+            .state="${this.state}"
+            .scenes="${this.state.scenes}"
+            .activeScene="${this.state.activeScene}"
+            .viewMode="${this.state.viewMode}"
+            @select-scene="${(e: CustomEvent<{ scene: Scene }>) => {
+              this.state.switchScene(e.detail.scene);
+            }}"
+            @delete-scene="${this._onDeleteScene}"
+          ></scenes-view>
+        `;
+      default:
+        return html`<div>Section not found</div>`;
+    }
   }
 }
 
