@@ -105,3 +105,37 @@ def test_build_image_filters_keywords():
     # Verify that OR logic is present in the filter string
     filter_str = str(filters[1])
     assert "OR" in filter_str or "EXISTS" in filter_str
+
+
+def test_parse_sort_params_generic():
+    """Test parse_sort_params with generic models."""
+    from backend.utils.query import parse_sort_params
+
+    # Test with Scene (default name:asc)
+    result = parse_sort_params(models.Scene, "")
+    assert len(result) == 1
+    assert "ASC" in str(result[0])
+    assert "name" in str(result[0])
+
+    # Test with Layout (custom sort)
+    result = parse_sort_params(models.Layout, "name:desc")
+    assert len(result) == 1
+    assert "DESC" in str(result[0])
+    assert "name" in str(result[0])
+
+
+def test_build_filters_generic():
+    """Test build_filters with generic models."""
+    from backend.utils.query import build_filters
+
+    # Test with Scene (filtering by layout_id)
+    params = {"layout": "layout1"}
+    filters = build_filters(models.Scene, params)
+    assert len(filters) == 1
+    assert "layout_id = :layout_id_1" in str(filters[0])
+
+    # Test with Layout (filtering by name)
+    params = {"name": "Test Layout"}
+    filters = build_filters(models.Layout, params)
+    assert len(filters) == 1
+    assert "name = :name_1" in str(filters[0])
