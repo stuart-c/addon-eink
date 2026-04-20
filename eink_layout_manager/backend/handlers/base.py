@@ -10,6 +10,7 @@ from ..utils.validation import (
     validate_id,
     load_schema,
     validate_read_only,
+    validate_data,
 )
 from ..utils.query import build_filters, parse_sort_params
 from ..utils.converters import generic_model_to_dict
@@ -124,8 +125,7 @@ class BaseCRUDHandler:
 
         # Validation
         try:
-            schema = load_schema(self.schema_name)
-            validate(instance=data, schema=schema)
+            validate_data(data, self.schema_name)
         except ValidationError as e:
             return web.json_response(
                 {"error": "Validation failed", "message": e.message},
@@ -219,8 +219,7 @@ class BaseCRUDHandler:
 
             # Full validation and pre-update hook
             try:
-                schema = load_schema(self.schema_name)
-                validate(instance=data_to_validate, schema=schema)
+                validate_data(data_to_validate, self.schema_name)
                 data = await self.pre_update(data, item)
             except ValidationError as e:
                 return web.json_response(

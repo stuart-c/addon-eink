@@ -4,43 +4,34 @@
   "description": "Hardware template for an eInk display device",
   "type": "object",
   "properties": {
-    "id": {
-      "type": "string",
-      "description": "Unique identifier for this display type",
-      "readOnly": true
-    },
-    "name": {
-      "type": "string",
-      "description": "Human readable name for the hardware"
-    },
+    "id": { "$ref": "common.json#/definitions/id" },
+    "name": { "$ref": "common.json#/definitions/name" },
     "width_mm": {
-      "type": "integer",
-      "minimum": 1,
-      "description": "Frame outer width"
+      "allOf": [
+        { "$ref": "common.json#/definitions/positive_integer" },
+        { "description": "Frame outer width" }
+      ]
     },
     "height_mm": {
-      "type": "integer",
-      "minimum": 1,
-      "description": "Frame outer height"
+      "allOf": [
+        { "$ref": "common.json#/definitions/positive_integer" },
+        { "description": "Frame outer height" }
+      ]
     },
     "panel_width_mm": {
-      "type": "integer",
-      "minimum": 1,
-      "description": "Display panel active area width"
+      "allOf": [
+        { "$ref": "common.json#/definitions/positive_integer" },
+        { "description": "Display panel active area width" }
+      ]
     },
     "panel_height_mm": {
-      "type": "integer",
-      "minimum": 1,
-      "description": "Display panel active area height"
+      "allOf": [
+        { "$ref": "common.json#/definitions/positive_integer" },
+        { "description": "Display panel active area height" }
+      ]
     },
-    "width_px": {
-      "type": "integer",
-      "minimum": 1
-    },
-    "height_px": {
-      "type": "integer",
-      "minimum": 1
-    },
+    "width_px": { "$ref": "common.json#/definitions/positive_integer" },
+    "height_px": { "$ref": "common.json#/definitions/positive_integer" },
     "colour_type": {
       "type": "string",
       "enum": ["MONO", "BWR", "BWY", "BWRY", "BWGBRY", "GRAYSCALE_4"]
@@ -48,24 +39,15 @@
     "frame": {
       "type": "object",
       "properties": {
-        "border_width_mm": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "colour": {
-          "type": "string",
-          "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
-        }
+        "border_width_mm": { "$ref": "common.json#/definitions/non_negative_integer" },
+        "colour": { "$ref": "common.json#/definitions/hex_color" }
       },
       "required": ["border_width_mm", "colour"]
     },
     "mat": {
       "type": "object",
       "properties": {
-        "colour": {
-          "type": "string",
-          "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
-        }
+        "colour": { "$ref": "common.json#/definitions/hex_color" }
       },
       "required": ["colour"]
     }

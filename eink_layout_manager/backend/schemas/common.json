@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Common Definitions",
+  "definitions": {
+    "id": {
+      "type": "string",
+      "readOnly": true
+    },
+    "name": {
+      "type": "string"
+    },
+    "hex_color": {
+      "type": "string",
+      "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
+    },
+    "dimensions_px": {
+      "type": "object",
+      "properties": {
+        "width": { "type": "integer", "minimum": 1 },
+        "height": { "type": "integer", "minimum": 1 }
+      },
+      "required": ["width", "height"]
+    },
+    "orientation": {
+      "type": "string",
+      "enum": ["landscape", "portrait"]
+    },
+    "positive_integer": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "non_negative_integer": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

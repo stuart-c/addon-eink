@@ -4,44 +4,20 @@
   "description": "An arrangement of eInk displays on a grid",
   "type": "object",
   "properties": {
-    "id": {
-      "type": "string",
-      "readOnly": true
-    },
-    "name": {
-      "type": "string"
-    },
-    "canvas_width_mm": {
-      "type": "integer",
-      "minimum": 1
-    },
-    "canvas_height_mm": {
-      "type": "integer",
-      "minimum": 1
-    },
+    "id": { "$ref": "common.json#/definitions/id" },
+    "name": { "$ref": "common.json#/definitions/name" },
+    "canvas_width_mm": { "$ref": "common.json#/definitions/positive_integer" },
+    "canvas_height_mm": { "$ref": "common.json#/definitions/positive_integer" },
     "items": {
       "type": "array",
       "items": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string"
-          },
-          "display_type_id": {
-            "type": "string"
-          },
-          "x_mm": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "y_mm": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "orientation": {
-            "type": "string",
-            "enum": ["landscape", "portrait"]
-          }
+          "id": { "type": "string" },
+          "display_type_id": { "type": "string" },
+          "x_mm": { "$ref": "common.json#/definitions/non_negative_integer" },
+          "y_mm": { "$ref": "common.json#/definitions/non_negative_integer" },
+          "orientation": { "$ref": "common.json#/definitions/orientation" }
         },
         "required": ["display_type_id", "x_mm", "y_mm", "orientation"]
       }
