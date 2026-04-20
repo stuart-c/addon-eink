@@ -249,6 +249,7 @@ export class AppRoot extends LitElement {
         @can-delete-change="${(e: CustomEvent) => this._canDelete = e.detail.canDelete}"
         @show-message="${(e: CustomEvent) => this.state.showMessage(e.detail.text, e.detail.type)}"
         @set-section="${(e: CustomEvent) => this.state.setSection(e.detail)}"
+        @prepare-new-layout="${() => this.state.prepareNewLayout()}"
         @delete-display-type="${this._onDeleteDisplayType}"
       ></layouts-view>
     `;

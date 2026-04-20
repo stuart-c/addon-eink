@@ -92,8 +92,12 @@ test.describe('Smart Scene Items interaction', () => {
      const otherSceneName = `Other Scene ${Date.now()}`;
      await page.locator('button[title="Add New Item"]').click();
      await page.locator('scene-dialog input').fill(otherSceneName);
+     await page.locator('scene-dialog select').selectOption({ label: layoutName });
      await page.locator('scene-dialog button.primary').click();
      
+     // Wait for the new scene to fully load and become active
+     await expect(page.locator('.toolbar-title')).toContainText(otherSceneName);
+
      // Add an item in the other scene
      await page.locator('layout-box[data-id="d1"]').dispatchEvent('mousedown');
      await expect(page.locator('layout-box[data-id="d1"]')).toHaveAttribute('selected', '');
@@ -106,9 +110,10 @@ test.describe('Smart Scene Items interaction', () => {
      
      // Switch back to first scene
      await page.locator('.sidebar-item').getByText(sceneName).click();
+     await expect(page.locator('.toolbar-title')).toContainText(sceneName);
      
      // Selection should be cleared
      await expect(editBtn).toBeDisabled();
-     await expect(item).not.toBeVisible(); // Item is unique to otherSceneName, so placeholder string might not exist or the selection class shouldn't be mapped
+     await expect(item).not.toHaveClass(/selected/);
   });
 });

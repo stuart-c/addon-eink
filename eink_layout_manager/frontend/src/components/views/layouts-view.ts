@@ -115,14 +115,16 @@ export class LayoutsView extends LitElement {
   }
 
   public async addNew() {
-    const newLayout: Partial<Layout> = {
+    this.dispatchEvent(new CustomEvent('prepare-new-layout', { bubbles: true, composed: true }));
+    const draft: Partial<Layout> = {
+      id: '',
       name: 'New Layout',
       canvas_width_mm: 500,
       canvas_height_mm: 500,
       grid_snap_mm: 5,
       items: []
     };
-    await this._layoutSettingsDialog.show(newLayout as Layout);
+    await this._layoutSettingsDialog.show(draft as Layout);
   }
 
   public async requestDelete() {
@@ -252,7 +254,13 @@ export class LayoutsView extends LitElement {
 
       <layout-settings-dialog @save="${(e: CustomEvent) => {
         this._updateActiveLayout(e.detail.settings);
-        this.dispatchEvent(new CustomEvent('show-message', { detail: { text: 'Settings applied', type: 'success' }, bubbles: true, composed: true }));
+        if (!this.activeLayout?.id) {
+          // If it's a new layout, we might want to save it immediately or just keep it as a draft.
+          // For now, these settings are "applied" to the draft.
+          this.dispatchEvent(new CustomEvent('show-message', { detail: { text: 'Draft settings applied', type: 'success' }, bubbles: true, composed: true }));
+        } else {
+          this.dispatchEvent(new CustomEvent('show-message', { detail: { text: 'Settings applied', type: 'success' }, bubbles: true, composed: true }));
+        }
       }}"></layout-settings-dialog>
     `;
   }
