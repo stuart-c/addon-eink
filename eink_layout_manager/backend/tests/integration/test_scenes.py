@@ -78,7 +78,7 @@ async def test_create_scene_with_items(aiohttp_client, app):
                 "x_mm": 100,
                 "y_mm": 0,
                 "orientation": "landscape",
-            }
+            },
         ],
     }
     resp = await client.post("/api/layout", json=layout_data)

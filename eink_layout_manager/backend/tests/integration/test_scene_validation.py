@@ -102,7 +102,7 @@ async def test_create_scene_duplicate_display(aiohttp_client, app):
                         "offset": {"x": 0, "y": 0},
                     }
                 ],
-            }
+            },
         ],
     }
     resp = await client.post("/api/scene", json=scene_data)
@@ -193,7 +193,7 @@ async def test_update_scene_validation(aiohttp_client, app):
                         "offset": {"x": 0, "y": 0},
                     }
                 ],
-            }
+            },
         ],
     }
     resp = await client.put(f"/api/scene/{scene_id}", json=update_data)
