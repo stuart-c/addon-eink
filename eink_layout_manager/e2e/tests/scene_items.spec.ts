@@ -92,6 +92,7 @@ test.describe('Smart Scene Items interaction', () => {
      const otherSceneName = `Other Scene ${Date.now()}`;
      await page.locator('button[title="Add New Item"]').click();
      await page.locator('scene-dialog input').fill(otherSceneName);
+     await page.locator('scene-dialog select').selectOption({ label: layoutName });
      await page.locator('scene-dialog button.primary').click();
      
      // Wait for the new scene to fully load and become active
