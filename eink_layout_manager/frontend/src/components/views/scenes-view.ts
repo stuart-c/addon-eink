@@ -119,7 +119,7 @@ export class ScenesView extends BaseResourceView {
       }
       .placeholder-item {
         padding: 12px;
-        min-height: 106px;
+        min-height: 64px;
         box-sizing: border-box;
         border: 1px solid #eee;
         border-radius: var(--border-radius);
