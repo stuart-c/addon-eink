@@ -111,6 +111,9 @@ class ImageHandler(BaseCRUDHandler):
                     status="READY",
                     file_hash=file_hash,
                     thumbnail_path=filename_on_disk,
+                    brightness=1.0,
+                    contrast=1.0,
+                    saturation=1.0,
                 )
                 session.add(new_image)
                 await session.commit()

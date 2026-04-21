@@ -113,6 +113,27 @@
           "default": 10
         }
       }
+    },
+    "brightness": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 2.0,
+      "default": 1.0,
+      "description": "Image brightness adjustment (0.0 to 2.0)"
+    },
+    "contrast": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 2.0,
+      "default": 1.0,
+      "description": "Image contrast adjustment (0.0 to 2.0)"
+    },
+    "saturation": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 2.0,
+      "default": 1.0,
+      "description": "Image saturation adjustment (0.0 to 2.0)"
     }
   },
   "required": [

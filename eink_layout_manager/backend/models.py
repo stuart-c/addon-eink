@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, JSON, DateTime, func
+from sqlalchemy import Column, String, Integer, Float, JSON, DateTime, func
 
 try:
     from .database import Base
@@ -31,6 +31,9 @@ class Image(Base):
         DateTime, server_default=func.now(), onupdate=func.now()
     )
     conversion = Column(JSON, nullable=True)
+    brightness = Column(Float, nullable=False, default=1.0)
+    contrast = Column(Float, nullable=False, default=1.0)
+    saturation = Column(Float, nullable=False, default=1.0)
 
     __filterable_fields__ = {
         "title": "name",

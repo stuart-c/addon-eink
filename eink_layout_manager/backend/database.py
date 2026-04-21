@@ -101,6 +101,21 @@ async def ensure_schema_up_to_date(conn):
             text("ALTER TABLE images ADD COLUMN conversion JSON")
         )
 
+    if "brightness" not in columns:
+        await conn.execute(
+            text("ALTER TABLE images ADD COLUMN brightness FLOAT DEFAULT 1.0")
+        )
+
+    if "contrast" not in columns:
+        await conn.execute(
+            text("ALTER TABLE images ADD COLUMN contrast FLOAT DEFAULT 1.0")
+        )
+
+    if "saturation" not in columns:
+        await conn.execute(
+            text("ALTER TABLE images ADD COLUMN saturation FLOAT DEFAULT 1.0")
+        )
+
     if "thumbnail_path" not in columns:
         await conn.execute(
             text("ALTER TABLE images ADD COLUMN thumbnail_path VARCHAR")

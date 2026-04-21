@@ -45,6 +45,9 @@ def image_model_to_dict(image):
         "license": image.license,
         "source": image.source,
         "conversion": image.conversion,
+        "brightness": image.brightness,
+        "contrast": image.contrast,
+        "saturation": image.saturation,
     }
 
 

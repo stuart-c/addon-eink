@@ -22,6 +22,10 @@ def test_image_model_to_dict():
     mock_image.status = "UPLOADED"
     mock_image.file_hash = "abc123"
     mock_image.thumbnail_path = "thumb.png"
+    mock_image.conversion = {"ditheringType": "errorDiffusion"}
+    mock_image.brightness = 1.0
+    mock_image.contrast = 1.0
+    mock_image.saturation = 1.0
 
     result = image_model_to_dict(mock_image)
 
@@ -31,6 +35,10 @@ def test_image_model_to_dict():
     assert "thumbnail_path" not in result
     assert "file_path" not in result
     assert "file_hash" not in result
+    assert result["brightness"] == 1.0
+    assert result["contrast"] == 1.0
+    assert result["saturation"] == 1.0
+    assert result["conversion"] == {"ditheringType": "errorDiffusion"}
 
 
 def test_image_model_to_dict_null_keywords():
