@@ -10,6 +10,48 @@ def handler():
     return DisplayTypeHandler()
 
 
+def test_display_type_pixel_size_calculation():
+    """Test that the model properties calculate pixel size correctly."""
+    dt = models.DisplayType(
+        panel_width_mm=100, panel_height_mm=50, width_px=800, height_px=400
+    )
+    assert dt.pixel_width_mm == 100 / 800
+    assert dt.pixel_height_mm == 50 / 400
+
+
+def test_display_type_pixel_size_zero_division():
+    """Test that zero resolution returns 0.0 instead of crashing."""
+    dt = models.DisplayType(
+        panel_width_mm=100, panel_height_mm=50, width_px=0, height_px=0
+    )
+    assert dt.pixel_width_mm == 0.0
+    assert dt.pixel_height_mm == 0.0
+
+
+def test_display_type_model_to_dict_includes_pixel_size(handler):
+    """Test that model_to_dict includes the calculated pixel size fields."""
+    dt = models.DisplayType(
+        id="test-dt",
+        name="Test Display",
+        width_mm=110,
+        height_mm=60,
+        panel_width_mm=100,
+        panel_height_mm=50,
+        width_px=800,
+        height_px=400,
+        colour_type="MONO",
+        frame={"border_width_mm": 5, "colour": "#000000"},
+        mat={"colour": "#FFFFFF"},
+    )
+
+    result = handler.model_to_dict(dt)
+
+    assert "pixel_width_mm" in result
+    assert "pixel_height_mm" in result
+    assert result["pixel_width_mm"] == 0.125
+    assert result["pixel_height_mm"] == 0.125
+
+
 def test_ensure_landscape_no_swap(handler):
     """Test that dimensions are not swapped when already in landscape."""
     data = {
