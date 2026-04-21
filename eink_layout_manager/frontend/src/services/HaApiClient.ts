@@ -84,6 +84,13 @@ export interface KeywordInfo {
   count: number;
 }
 
+export interface HaDevice {
+  id: string;
+  name: string;
+  model?: string;
+  manufacturer?: string;
+}
+
 export interface PaginatedResponse<T> {
   items: T[];
   pagination: {
@@ -214,6 +221,12 @@ export class HaApiClient {
     } catch (e) {
       return false;
     }
+  }
+
+  // --- Home Assistant ---
+
+  async getHaDevices(): Promise<HaDevice[]> {
+    return this._fetch<HaDevice[]>('api/homeassistant/device');
   }
 }
 

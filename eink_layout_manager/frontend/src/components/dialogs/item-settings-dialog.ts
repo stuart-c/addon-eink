@@ -1,7 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { live } from 'lit/directives/live.js';
-import { LayoutItem, DisplayType } from '../../services/HaApiClient';
+import { LayoutItem, DisplayType, HaDevice } from '../../services/HaApiClient';
 import '../shared/base-dialog';
 import { commonStyles } from '../../styles/common-styles';
 import { BaseDialog } from '../shared/base-dialog';
@@ -20,10 +20,12 @@ export class ItemSettingsDialog extends LitElement {
 
   @property({ type: Object }) item: LayoutItem | null = null;
   @property({ type: Array }) displayTypes: DisplayType[] = [];
+  @property({ type: Array }) haDevices: HaDevice[] = [];
 
-  async show(item: LayoutItem, displayTypes: DisplayType[]) {
+  async show(item: LayoutItem, displayTypes: DisplayType[], haDevices: HaDevice[]) {
     this.item = JSON.parse(JSON.stringify(item));
     this.displayTypes = displayTypes;
+    this.haDevices = haDevices;
     await this.updateComplete;
     (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).show();
   }
@@ -100,12 +102,15 @@ export class ItemSettingsDialog extends LitElement {
 
           <div class="form-group">
             <label>Device ID (Optional)</label>
-            <input 
-              type="text" 
+            <select 
               .value="${live(this.item?.device_id || '')}" 
-              @input="${(e: any) => this.item ? this.item.device_id = e.target.value : null}"
-              placeholder="e.g. epd_01"
+              @change="${(e: any) => this.item ? this.item.device_id = e.target.value : null}"
             >
+              <option value="">(None)</option>
+              ${this.haDevices.map(device => html`
+                <option value="${device.id}">${device.name} (${device.id})</option>
+              `)}
+            </select>
           </div>
         </form>
 

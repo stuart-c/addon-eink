@@ -1,5 +1,5 @@
 import { ReactiveController, ReactiveControllerHost } from 'lit';
-import { api, DisplayType, Layout, LayoutItem, Image, Scene } from '../services/HaApiClient';
+import { api, DisplayType, Layout, LayoutItem, Image, Scene, HaDevice } from '../services/HaApiClient';
 
 /**
  * A Lit Reactive Controller to manage the application state:
@@ -17,6 +17,7 @@ export class HaStateController implements ReactiveController {
   public layouts: Layout[] = [];
   public images: Image[] = [];
   public scenes: Scene[] = [];
+  public haDevices: HaDevice[] = [];
   public activeLayout: Layout | null = null;
   public activeScene: Scene | null = null;
   public selectedItemId: string | null = null;
@@ -52,6 +53,7 @@ export class HaStateController implements ReactiveController {
       this.layouts = await api.getCollection<Layout>('layout');
       this.images = await api.getImages();
       this.scenes = await api.getCollection<Scene>('scene');
+      this.haDevices = await api.getHaDevices();
       
       if (this.layouts.length > 0) {
         if (!this.activeLayout) {

@@ -12,6 +12,7 @@ vi.mock('../services/HaApiClient', () => {
       createItem: vi.fn(),
       updateItem: vi.fn(),
       deleteItem: vi.fn(),
+      getHaDevices: vi.fn(),
     },
   };
 });
@@ -42,6 +43,7 @@ describe('HaStateController', () => {
     vi.mocked(api.ping).mockResolvedValue(true);
     vi.mocked(api.getCollection).mockResolvedValue([]);
     vi.mocked(api.getImages).mockResolvedValue([]);
+    vi.mocked(api.getHaDevices).mockResolvedValue([]);
     
     // Mock the createItem call during createDefaultLayout
     vi.mocked(api.createItem).mockResolvedValue({ id: 'default', items: [] } as any);
@@ -132,6 +134,7 @@ describe('HaStateController', () => {
     vi.mocked(api.ping).mockResolvedValue(true);
     vi.mocked(api.getCollection).mockResolvedValue([]);
     vi.mocked(api.getImages).mockResolvedValue([]);
+    vi.mocked(api.getHaDevices).mockResolvedValue([]);
     
     const result = await controller.deleteImage(mockImage);
     
@@ -182,6 +185,7 @@ describe('HaStateController', () => {
       vi.mocked(api.ping).mockResolvedValue(true);
       vi.mocked(api.getCollection).mockResolvedValue([]);
       vi.mocked(api.getImages).mockResolvedValue([{ id: 'img_456', name: 'Test' }] as any);
+      vi.mocked(api.getHaDevices).mockResolvedValue([]);
       
       await controller.refresh();
       
