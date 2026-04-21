@@ -222,6 +222,8 @@ export class ImageDialog extends LitElement {
     this._artist = image?.artist || '';
     this._collection = image?.collection || '';
     this._description = image?.description || '';
+    this._detailsOpen = true;
+    this._propertiesOpen = false;
     await this.updateComplete;
     (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).show();
   }
@@ -229,8 +231,10 @@ export class ImageDialog extends LitElement {
   private _toggleSection(section: 'details' | 'properties') {
     if (section === 'details') {
       this._detailsOpen = !this._detailsOpen;
+      this._propertiesOpen = !this._detailsOpen;
     } else {
       this._propertiesOpen = !this._propertiesOpen;
+      this._detailsOpen = !this._propertiesOpen;
     }
   }
 
