@@ -197,6 +197,59 @@ export class ImageDialog extends LitElement {
         flex-direction: column;
         gap: 1.25rem;
       }
+
+      .control-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .slider-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .slider-row input[type="range"] {
+        flex: 1;
+      }
+
+      .slider-row input[type="number"] {
+        width: 65px;
+      }
+
+      .checkbox-row {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        cursor: pointer;
+        user-select: none;
+        font-size: 14px;
+        color: var(--text-colour);
+        margin-top: 0.25rem;
+      }
+
+      .checkbox-row input {
+        width: auto;
+        margin: 0;
+      }
+
+      select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid var(--border-colour);
+        border-radius: var(--border-radius);
+        box-sizing: border-box;
+        font-size: 14px;
+        font-family: inherit;
+        background: white;
+        transition: border-color 0.2s;
+      }
+
+      select:focus {
+        outline: none;
+        border-color: var(--primary-colour);
+      }
     `
   ];
 
@@ -209,6 +262,15 @@ export class ImageDialog extends LitElement {
   @state() private _artist: string = '';
   @state() private _collection: string = '';
   @state() private _description: string = '';
+  @state() private _brightness: number = 1.0;
+  @state() private _contrast: number = 1.0;
+  @state() private _saturation: number = 1.0;
+  @state() private _ditheringType: string = 'errorDiffusion';
+  @state() private _errorDiffusionMatrix: string = 'floydSteinberg';
+  @state() private _serpentine: boolean = false;
+  @state() private _palette: string = 'default';
+  @state() private _sampleColoursFromImage: boolean = false;
+  @state() private _numberOfSampleColours: number = 10;
   @state() private _detailsOpen = true;
   @state() private _propertiesOpen = false;
 
@@ -222,6 +284,15 @@ export class ImageDialog extends LitElement {
     this._artist = image?.artist || '';
     this._collection = image?.collection || '';
     this._description = image?.description || '';
+    this._brightness = image?.brightness ?? 1.0;
+    this._contrast = image?.contrast ?? 1.0;
+    this._saturation = image?.saturation ?? 1.0;
+    this._ditheringType = image?.conversion?.ditheringType || 'errorDiffusion';
+    this._errorDiffusionMatrix = image?.conversion?.errorDiffusionMatrix || 'floydSteinberg';
+    this._serpentine = image?.conversion?.serpentine ?? false;
+    this._palette = (Array.isArray(image?.conversion?.palette) ? image?.conversion?.palette.join(', ') : image?.conversion?.palette) || 'default';
+    this._sampleColoursFromImage = image?.conversion?.sampleColoursFromImage ?? false;
+    this._numberOfSampleColours = image?.conversion?.numberOfSampleColours ?? 10;
     this._detailsOpen = true;
     this._propertiesOpen = false;
     await this.updateComplete;
@@ -313,7 +384,18 @@ export class ImageDialog extends LitElement {
         artist: this._artist,
         collection: this._collection,
         description: this._description,
-        keywords: this._keywords
+        keywords: this._keywords,
+        brightness: this._brightness,
+        contrast: this._contrast,
+        saturation: this._saturation,
+        conversion: {
+          ditheringType: this._ditheringType as any,
+          errorDiffusionMatrix: this._errorDiffusionMatrix as any,
+          serpentine: this._serpentine,
+          palette: this._palette,
+          sampleColoursFromImage: this._sampleColoursFromImage,
+          numberOfSampleColours: this._numberOfSampleColours
+        }
       };
 
       if (this._editingImage) {
@@ -370,25 +452,24 @@ export class ImageDialog extends LitElement {
                       >
                     </div>
                     
-                    <div class="grid">
-                      <div class="form-group" style="margin-bottom: 0;">
-                        <label>Artist</label>
-                        <input 
-                          type="text" 
-                          placeholder="Who created this?"
-                          .value="${this._artist}"
-                          @input="${(e: InputEvent) => this._artist = (e.target as HTMLInputElement).value}"
-                        >
-                      </div>
-                      <div class="form-group" style="margin-bottom: 0;">
-                        <label>Collection</label>
-                        <input 
-                          type="text" 
-                          placeholder="e.g. Landscapes, Personal"
-                          .value="${this._collection}"
-                          @input="${(e: InputEvent) => this._collection = (e.target as HTMLInputElement).value}"
-                        >
-                      </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <label>Artist</label>
+                      <input 
+                        type="text" 
+                        placeholder="Who created this?"
+                        .value="${this._artist}"
+                        @input="${(e: InputEvent) => this._artist = (e.target as HTMLInputElement).value}"
+                      >
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <label>Collection</label>
+                      <input 
+                        type="text" 
+                        placeholder="e.g. Landscapes, Personal"
+                        .value="${this._collection}"
+                        @input="${(e: InputEvent) => this._collection = (e.target as HTMLInputElement).value}"
+                      >
                     </div>
 
                     <div class="form-group" style="margin-bottom: 0;">
@@ -412,7 +493,6 @@ export class ImageDialog extends LitElement {
               </div>
             </div>
 
-            <!-- Image Properties Section -->
             <div class="accordion-item ${this._propertiesOpen ? 'open' : ''}">
               <div class="accordion-header" @click="${() => this._toggleSection('properties')}">
                 <h3>Image Properties</h3>
@@ -421,7 +501,131 @@ export class ImageDialog extends LitElement {
               <div class="accordion-content-wrapper">
                 <div class="accordion-content">
                   <div class="accordion-content-inner">
-                    <!-- Currently Empty -->
+                    <!-- Brightness -->
+                    <div class="control-group">
+                      <label>Brightness</label>
+                      <div class="slider-row">
+                        <input 
+                          type="range" min="0" max="2" step="0.05"
+                          .value="${this._brightness.toString()}"
+                          @input="${(e: InputEvent) => this._brightness = parseFloat((e.target as HTMLInputElement).value)}"
+                        >
+                        <input 
+                          type="number" min="0" max="2" step="0.05"
+                          .value="${this._brightness.toString()}"
+                          @input="${(e: InputEvent) => this._brightness = parseFloat((e.target as HTMLInputElement).value)}"
+                        >
+                      </div>
+                    </div>
+
+                    <!-- Contrast -->
+                    <div class="control-group">
+                      <label>Contrast</label>
+                      <div class="slider-row">
+                        <input 
+                          type="range" min="0" max="2" step="0.05"
+                          .value="${this._contrast.toString()}"
+                          @input="${(e: InputEvent) => this._contrast = parseFloat((e.target as HTMLInputElement).value)}"
+                        >
+                        <input 
+                          type="number" min="0" max="2" step="0.05"
+                          .value="${this._contrast.toString()}"
+                          @input="${(e: InputEvent) => this._contrast = parseFloat((e.target as HTMLInputElement).value)}"
+                        >
+                      </div>
+                    </div>
+
+                    <!-- Saturation -->
+                    <div class="control-group">
+                      <label>Saturation</label>
+                      <div class="slider-row">
+                        <input 
+                          type="range" min="0" max="2" step="0.05"
+                          .value="${this._saturation.toString()}"
+                          @input="${(e: InputEvent) => this._saturation = parseFloat((e.target as HTMLInputElement).value)}"
+                        >
+                        <input 
+                          type="number" min="0" max="2" step="0.05"
+                          .value="${this._saturation.toString()}"
+                          @input="${(e: InputEvent) => this._saturation = parseFloat((e.target as HTMLInputElement).value)}"
+                        >
+                      </div>
+                    </div>
+
+                    <hr style="border: 0; border-top: 1px solid var(--border-colour); margin: 0.5rem 0;">
+
+                    <!-- Dithering Type -->
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <label>Dithering Type</label>
+                      <select 
+                        .value="${this._ditheringType}"
+                        @change="${(e: Event) => this._ditheringType = (e.target as HTMLSelectElement).value}"
+                      >
+                        <option value="errorDiffusion">Error Diffusion</option>
+                        <option value="ordered">Ordered</option>
+                        <option value="random">Random</option>
+                        <option value="quantizationOnly">Quantization Only</option>
+                      </select>
+                    </div>
+
+                    ${this._ditheringType === 'errorDiffusion' ? html`
+                      <div class="form-group" style="margin-bottom: 0;">
+                        <label>Error Diffusion Matrix</label>
+                        <select 
+                          .value="${this._errorDiffusionMatrix}"
+                          @change="${(e: Event) => this._errorDiffusionMatrix = (e.target as HTMLSelectElement).value}"
+                        >
+                          <option value="floydSteinberg">Floyd-Steinberg</option>
+                          <option value="falseFloydSteinberg">False Floyd-Steinberg</option>
+                          <option value="jarvis">Jarvis</option>
+                          <option value="stucki">Stucki</option>
+                          <option value="burkes">Burkes</option>
+                          <option value="sierra3">Sierra 3</option>
+                          <option value="sierra2">Sierra 2</option>
+                          <option value="sierra2-4a">Sierra 2-4a</option>
+                        </select>
+                      </div>
+                      <label class="checkbox-row">
+                        <input 
+                          type="checkbox"
+                          ?checked="${this._serpentine}"
+                          @change="${(e: Event) => this._serpentine = (e.target as HTMLInputElement).checked}"
+                        >
+                        Serpentine Dithering
+                      </label>
+                    ` : ''}
+
+                    <!-- Palette -->
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <label>Palette</label>
+                      <input 
+                        type="text" 
+                        placeholder="e.g. default, or #000000, #ffffff"
+                        .value="${this._palette}"
+                        @input="${(e: InputEvent) => this._palette = (e.target as HTMLInputElement).value}"
+                      >
+                    </div>
+
+                    <!-- Color Sampling -->
+                    <label class="checkbox-row">
+                      <input 
+                        type="checkbox"
+                        ?checked="${this._sampleColoursFromImage}"
+                        @change="${(e: Event) => this._sampleColoursFromImage = (e.target as HTMLInputElement).checked}"
+                      >
+                      Sample colours from image
+                    </label>
+
+                    ${this._sampleColoursFromImage ? html`
+                      <div class="form-group" style="margin-bottom: 0;">
+                        <label>Number of Colours to Sample</label>
+                        <input 
+                          type="number" min="1" max="256"
+                          .value="${this._numberOfSampleColours.toString()}"
+                          @input="${(e: InputEvent) => this._numberOfSampleColours = parseInt((e.target as HTMLInputElement).value)}"
+                        >
+                      </div>
+                    ` : ''}
                   </div>
                 </div>
               </div>
