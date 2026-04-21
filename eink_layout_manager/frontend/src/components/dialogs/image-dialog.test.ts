@@ -128,4 +128,96 @@ describe('ImageDialog', () => {
 
     expect(api.deleteItem).toHaveBeenCalledWith('image', 'new-img');
   });
+
+  describe('Accordion Logic', () => {
+    it('should have Details open and Properties closed by default', async () => {
+      await element.show();
+      await element.updateComplete;
+
+      const detailsSection = element.shadowRoot?.querySelector('.accordion-item:nth-of-type(1)');
+      const propertiesSection = element.shadowRoot?.querySelector('.accordion-item:nth-of-type(2)');
+
+      expect(detailsSection?.classList.contains('open')).toBe(true);
+      expect(propertiesSection?.classList.contains('open')).toBe(false);
+    });
+
+    it('should close Details and open Properties when Details header is clicked while open', async () => {
+      await element.show();
+      await element.updateComplete;
+
+      const detailsHeader = element.shadowRoot?.querySelector('.accordion-item:nth-of-type(1) .accordion-header') as HTMLElement;
+      detailsHeader.click();
+      await element.updateComplete;
+
+      const detailsSection = element.shadowRoot?.querySelector('.accordion-item:nth-of-type(1)');
+      const propertiesSection = element.shadowRoot?.querySelector('.accordion-item:nth-of-type(2)');
+
+      expect(detailsSection?.classList.contains('open')).toBe(false);
+      expect(propertiesSection?.classList.contains('open')).toBe(true);
+    });
+
+    it('should open Details and close Properties when Details header is clicked while closed', async () => {
+      await element.show();
+      await element.updateComplete;
+
+      // Close Details first
+      const detailsHeader = element.shadowRoot?.querySelector('.accordion-item:nth-of-type(1) .accordion-header') as HTMLElement;
+      detailsHeader.click();
+      await element.updateComplete;
+
+      // Click Details header again to open it
+      detailsHeader.click();
+      await element.updateComplete;
+
+      const detailsSection = element.shadowRoot?.querySelector('.accordion-item:nth-of-type(1)');
+      const propertiesSection = element.shadowRoot?.querySelector('.accordion-item:nth-of-type(2)');
+
+      expect(detailsSection?.classList.contains('open')).toBe(true);
+      expect(propertiesSection?.classList.contains('open')).toBe(false);
+    });
+
+    it('should close Properties and open Details when Properties header is clicked while open', async () => {
+      await element.show();
+      await element.updateComplete;
+
+      // Open Properties first
+      const detailsHeader = element.shadowRoot?.querySelector('.accordion-item:nth-of-type(1) .accordion-header') as HTMLElement;
+      detailsHeader.click();
+      await element.updateComplete;
+
+      // Now Details is closed, Properties is open. Click Properties header.
+      const propertiesHeader = element.shadowRoot?.querySelector('.accordion-item:nth-of-type(2) .accordion-header') as HTMLElement;
+      propertiesHeader.click();
+      await element.updateComplete;
+
+      const detailsSection = element.shadowRoot?.querySelector('.accordion-item:nth-of-type(1)');
+      const propertiesSection = element.shadowRoot?.querySelector('.accordion-item:nth-of-type(2)');
+
+      expect(detailsSection?.classList.contains('open')).toBe(true);
+      expect(propertiesSection?.classList.contains('open')).toBe(false);
+    });
+
+    it('should reset accordion state when show() is called', async () => {
+      await element.show();
+      await element.updateComplete;
+
+      // Toggle to Properties open
+      const detailsHeader = element.shadowRoot?.querySelector('.accordion-item:nth-of-type(1) .accordion-header') as HTMLElement;
+      detailsHeader.click();
+      await element.updateComplete;
+
+      let propertiesSection = element.shadowRoot?.querySelector('.accordion-item:nth-of-type(2)');
+      expect(propertiesSection?.classList.contains('open')).toBe(true);
+
+      // Call show() again
+      await element.show();
+      await element.updateComplete;
+
+      const detailsSection = element.shadowRoot?.querySelector('.accordion-item:nth-of-type(1)');
+      propertiesSection = element.shadowRoot?.querySelector('.accordion-item:nth-of-type(2)');
+
+      expect(detailsSection?.classList.contains('open')).toBe(true);
+      expect(propertiesSection?.classList.contains('open')).toBe(false);
+    });
+  });
 });
