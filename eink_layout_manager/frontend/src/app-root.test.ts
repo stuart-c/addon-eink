@@ -10,6 +10,7 @@ vi.mock('./services/HaApiClient', () => {
       getCollection: vi.fn().mockResolvedValue([]),
       getImages: vi.fn().mockResolvedValue([]),
       getKeywords: vi.fn().mockResolvedValue([]),
+      getHaDevices: vi.fn().mockResolvedValue([]),
       createItem: vi.fn().mockResolvedValue({ id: 'default', items: [] }),
     },
     HaApiClient: vi.fn()

@@ -198,6 +198,7 @@ export class AppRoot extends LitElement {
       </main>
 
       <item-settings-dialog 
+        .haDevices="${this.state.haDevices}"
         @save="${(e: CustomEvent) => this.state.updateItem(e.detail.id, e.detail.updates)}"
         @delete="${(e: CustomEvent) => this._onDeleteLayoutItem(e)}"
       ></item-settings-dialog>
@@ -224,7 +225,7 @@ export class AppRoot extends LitElement {
             @update-active-layout="${(e: CustomEvent) => this.state.updateActiveLayout(e.detail)}"
             @update-item="${(e: CustomEvent) => this.state.updateItem(e.detail.id, e.detail.updates)}"
             @select-item="${(e: CustomEvent) => this.state.selectItem(e.detail.id)}"
-            @edit-item="${(e: CustomEvent) => this._itemDialog.show(this.state.activeLayout?.items.find(i => i.id === e.detail.id)!, this.state.displayTypes)}"
+            @edit-item="${(e: CustomEvent) => this._itemDialog.show(this.state.activeLayout?.items.find(i => i.id === e.detail.id)!, this.state.displayTypes, this.state.haDevices)}"
             @delete-item="${this._onDeleteLayoutItem}"
             @delete-layout="${this._onDeleteLayout}"
             @save-layout="${async () => {
