@@ -5,7 +5,7 @@ import '../shared/keyword-input';
 import { BaseDialog } from '../shared/base-dialog';
 import { commonStyles } from '../../styles/common-styles';
 import { api, Image } from '../../services/HaApiClient';
-import ditherImage from 'epdoptimize/dither/dither';
+import ditherImage from '../../lib/epdoptimize/dither/dither';
 
 /**
  * A dialog component for adding and processing new images.

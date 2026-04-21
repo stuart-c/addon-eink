@@ -1,13 +1,7 @@
 import { defineConfig } from 'vite';
-import path from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  resolve: {
-    alias: {
-      'epdoptimize': path.resolve(__dirname, '../epdoptimize/src')
-    }
-  },
   // Use relative paths for assets to support HA Ingress subpaths
   base: './',
   build: {

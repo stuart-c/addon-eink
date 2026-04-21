@@ -20,7 +20,6 @@
     "emitDecoratorMetadata": true,
     "allowJs": true,
     "paths": {
-      "epdoptimize/*": ["../epdoptimize/src/*"],
       "*": ["./node_modules/*", "./src/*"]
     }
   },
