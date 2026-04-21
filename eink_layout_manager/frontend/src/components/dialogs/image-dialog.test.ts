@@ -26,7 +26,18 @@ describe('ImageDialog', () => {
     dimensions: { width: 800, height: 600 },
     colour_depth: 8,
     file_path: '/path/to/img1.png',
-    file_hash: 'hash1'
+    file_hash: 'hash1',
+    brightness: 1.2,
+    contrast: 0.8,
+    saturation: 1.0,
+    conversion: {
+      ditheringType: 'errorDiffusion',
+      errorDiffusionMatrix: 'floydSteinberg',
+      serpentine: true,
+      palette: 'default',
+      sampleColoursFromImage: false,
+      numberOfSampleColours: 10
+    }
   };
 
   beforeEach(async () => {

@@ -42,6 +42,18 @@ export interface Layout {
   items: LayoutItem[];
 }
 
+export interface ImageConversion {
+  ditheringType?: 'errorDiffusion' | 'ordered' | 'random' | 'quantizationOnly';
+  errorDiffusionMatrix?: 'floydSteinberg' | 'falseFloydSteinberg' | 'jarvis' | 'stucki' | 'burkes' | 'sierra3' | 'sierra2' | 'sierra2-4a';
+  serpentine?: boolean;
+  orderedDitheringType?: 'bayer';
+  orderedDitheringMatrix?: [number, number];
+  randomDitheringType?: 'blackAndWhite' | 'rgb';
+  palette?: string | string[];
+  sampleColoursFromImage?: boolean;
+  numberOfSampleColours?: number;
+}
+
 export interface Image {
   id: string;
   name: string;
@@ -60,6 +72,10 @@ export interface Image {
   license?: string;
   source?: string;
   file_hash: string;
+  brightness?: number;
+  contrast?: number;
+  saturation?: number;
+  conversion?: ImageConversion;
 }
 
 export interface Scene {
