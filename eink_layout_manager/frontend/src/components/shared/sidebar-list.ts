@@ -48,6 +48,7 @@ export class SidebarList extends LitElement {
         align-items: center;
         gap: 12px;
         box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        flex-shrink: 0;
       }
       .sidebar-item:hover {
         border-color: var(--primary-colour);
