@@ -72,7 +72,7 @@ test.describe('Smart Scene Items interaction', () => {
     const dialog = page.locator('scene-item-settings-dialog');
     const nativeDialog = dialog.locator('dialog');
     await expect(nativeDialog).toBeVisible();
-    await expect(dialog).toContainText('placeholder');
+    await expect(dialog).toContainText('Mapping');
     
     // Close with Cancel
     await dialog.locator('button:has-text("Cancel")').click();
@@ -82,8 +82,8 @@ test.describe('Smart Scene Items interaction', () => {
     await item.dblclick();
     await expect(nativeDialog).toBeVisible();
     
-    // Close with Ok
-    await dialog.locator('button:has-text("Ok")').click();
+    // Close with Save Changes
+    await dialog.locator('button:has-text("Save Changes")').click();
     await expect(nativeDialog).not.toBeVisible();
   });
 
