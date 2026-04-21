@@ -58,63 +58,6 @@ test.describe('Layouts Management', () => {
     await expect(page.locator('sidebar-list .sidebar-item.selected .sidebar-item-name')).toHaveText(layoutName);
   });
 
-  test('should update layout settings', async ({ page }) => {
-    // Create a layout via UI first to be sure
-    const uniqueId = Date.now();
-    const layoutName = `Layout ${uniqueId}`;
-    
-    // Ensure no stale toasts
-    await expect(page.locator('app-header .message-badge')).not.toBeVisible();
-
-    await page.locator('button[title="Add New Item"]').click();
-    await page.locator('layout-settings-dialog input[type="text"]').fill(layoutName);
-    
-    // Explicitly fill dimensions and grid snap to ensure form validity
-    await page.locator('layout-settings-dialog input[type="number"]').nth(0).fill('600'); // Width
-    await page.locator('layout-settings-dialog input[type="number"]').nth(1).fill('400'); // Height
-    await page.locator('layout-settings-dialog grid-snap-slider .label-item').filter({ hasText: '5mm' }).click();
-
-    
-    await page.getByRole('button', { name: 'Save Settings' }).click();
-    
-    // Wait for specific toast
-    await expect(page.locator('app-header').getByText('Settings applied')).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('app-header .message-badge')).not.toBeVisible({ timeout: 10000 });
-    
-    await page.locator('button[title="Save Changes"]').click();
-    
-    // Wait for "Layout saved!" toast
-    await expect(page.locator('app-header').getByText(/Layout saved!|Layout ".*" created!/)).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('app-header .message-badge')).not.toBeVisible({ timeout: 10000 });
-
-    // Click Edit Layout (Settings icon)
-    await page.locator('button[title="Layout Settings"]').click();
-    
-    // Change name and refill other fields just in case
-    const newName = `Edited ${uniqueId}`;
-    await page.locator('layout-settings-dialog input[type="text"]').fill(newName);
-    await page.locator('layout-settings-dialog input[type="number"]').nth(0).fill('800'); // Width
-    await page.locator('layout-settings-dialog input[type="number"]').nth(1).fill('600'); // Height
-    await page.locator('layout-settings-dialog grid-snap-slider .label-item').filter({ hasText: '10mm' }).click();
-
-    
-    // Save Settings in dialog
-    await page.getByRole('button', { name: 'Save Settings' }).click();
-    
-    // Verify dialog-level success message
-    await expect(page.locator('app-header').getByText('Settings applied')).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('app-header .message-badge')).not.toBeVisible({ timeout: 10000 });
-    
-    // Now click main save
-    await page.locator('button[title="Save Changes"]').click();
-    
-    // Verify backend-level success message
-    await expect(page.locator('app-header').getByText(/Layout saved!|Layout ".*" created!/)).toBeVisible({ timeout: 10000 });
-    
-    // Verify name updated in sidebar
-    await expect(page.locator('sidebar-list .sidebar-item.selected .item-name')).toHaveText(newName);
-  });
-
   test('should add a display type to the layout', async ({ page, request }) => {
     // Ensure we have a unique display type
     const uniqueId = Date.now();

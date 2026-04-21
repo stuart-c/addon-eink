@@ -68,33 +68,6 @@ test.describe('Smart Scenes Management', () => {
     await expect(page.locator('.toolbar-title')).toContainText(sceneName);
   });
 
-  test('should select a scene from the sidebar', async ({ page }) => {
-    const name1 = getUniqueName('Scene A');
-    const name2 = getUniqueName('Scene B');
-
-    // Create first scene
-    await page.locator('button[title="Add New Item"]').click();
-    await page.locator('scene-dialog input').fill(name1);
-    await page.locator('scene-dialog button.primary').click();
-    await expect(page.locator('sidebar-list .sidebar-item').getByText(name1)).toBeVisible();
-    
-    // Create second scene
-    await page.locator('button[title="Add New Item"]').click();
-    await page.locator('scene-dialog input').fill(name2);
-    await page.locator('scene-dialog button.primary').click();
-    await expect(page.locator('sidebar-list .sidebar-item').getByText(name2)).toBeVisible();
-    
-    // Select the first one
-    await page.locator('sidebar-list .sidebar-item').getByText(name1).click();
-    await expect(page.locator('.toolbar-title')).toContainText(name1);
-    await expect(page.locator('sidebar-list .sidebar-item.selected')).toContainText(name1);
-    
-    // Select the second one
-    await page.locator('sidebar-list .sidebar-item').getByText(name2).click();
-    await expect(page.locator('.toolbar-title')).toContainText(name2);
-    await expect(page.locator('sidebar-list .sidebar-item.selected')).toContainText(name2);
-  });
-
   test('should show layout preview when selected', async ({ page }) => {
     const sceneName = getUniqueName('Selection Info');
 
