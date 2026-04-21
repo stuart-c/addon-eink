@@ -60,7 +60,7 @@ describe('ScenesView', () => {
     item.dispatchEvent(new MouseEvent('dblclick'));
     await element.updateComplete;
     
-    expect(showSpy).toHaveBeenCalledWith(mockScene.items[0]);
+    expect(showSpy).toHaveBeenCalledWith(mockScene.items[0], mockLayout, mockState.displayTypes);
   });
 
   it('opens the settings dialog via the toolbar button', async () => {
@@ -77,7 +77,7 @@ describe('ScenesView', () => {
     expect(editBtn.disabled).toBe(false);
     editBtn.click();
     
-    expect(showSpy).toHaveBeenCalledWith(mockScene.items[0]);
+    expect(showSpy).toHaveBeenCalledWith(mockScene.items[0], mockLayout, mockState.displayTypes);
   });
 
   it('disables edit button when no item is selected', async () => {
