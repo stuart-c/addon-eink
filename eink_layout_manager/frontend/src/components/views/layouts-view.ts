@@ -146,10 +146,6 @@ export class LayoutsView extends BaseResourceView {
         gap: 0.25rem;
       }
 
-      .toolbar-actions {
-        display: flex;
-        gap: 0.5rem;
-      }
 
       .dropdown {
         position: relative;
