@@ -17,7 +17,8 @@
           "display_type_id": { "type": "string" },
           "x_mm": { "$ref": "common.json#/definitions/non_negative_integer" },
           "y_mm": { "$ref": "common.json#/definitions/non_negative_integer" },
-          "orientation": { "$ref": "common.json#/definitions/orientation" }
+          "orientation": { "$ref": "common.json#/definitions/orientation" },
+          "device_id": { "type": "string" }
         },
         "required": ["display_type_id", "x_mm", "y_mm", "orientation"]
       }

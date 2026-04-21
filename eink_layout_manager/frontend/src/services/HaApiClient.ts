@@ -29,6 +29,7 @@ export interface LayoutItem {
   x_mm: number;
   y_mm: number;
   orientation: 'landscape' | 'portrait';
+  device_id?: string;
   invalid?: boolean;
 }
 

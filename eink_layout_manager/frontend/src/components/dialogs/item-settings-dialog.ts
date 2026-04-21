@@ -39,7 +39,8 @@ export class ItemSettingsDialog extends LitElement {
                 x_mm: parseInt(this.item.x_mm as any),
                 y_mm: parseInt(this.item.y_mm as any),
                 display_type_id: this.item.display_type_id,
-                orientation: this.item.orientation
+                orientation: this.item.orientation,
+                device_id: this.item.device_id
             }
         } 
     }));
@@ -95,6 +96,16 @@ export class ItemSettingsDialog extends LitElement {
               <option value="landscape">Landscape</option>
               <option value="portrait">Portrait</option>
             </select>
+          </div>
+
+          <div class="form-group">
+            <label>Device ID (Optional)</label>
+            <input 
+              type="text" 
+              .value="${live(this.item?.device_id || '')}" 
+              @input="${(e: any) => this.item ? this.item.device_id = e.target.value : null}"
+              placeholder="e.g. epd_01"
+            >
           </div>
         </form>
 
