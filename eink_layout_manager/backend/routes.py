@@ -1,6 +1,6 @@
 import os
 from aiohttp import web
-from .handlers import common, items, images, scenes
+from .handlers import common, items, images, scenes, homeassistant
 
 
 def setup_routes(app):
@@ -37,6 +37,11 @@ def setup_routes(app):
 
     # Health check
     app.router.add_get("/api/ping", common.ping)
+
+    # Home Assistant integration
+    app.router.add_get(
+        "/api/homeassistant/device", homeassistant.handle_device_list
+    )
 
     # Static Lit frontend files
     # Try new structure first (eink_layout_manager/frontend/dist)
