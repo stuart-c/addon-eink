@@ -134,6 +134,69 @@ export class ImageDialog extends LitElement {
         align-items: center;
         gap: 0.5rem;
       }
+
+      /* Accordion Styles */
+      .accordion-item {
+        border: 1px solid var(--border-colour);
+        border-radius: var(--border-radius);
+        margin-bottom: 0.75rem;
+        background: white;
+      }
+
+      .accordion-header {
+        display: flex;
+        padding: 0.75rem 1rem;
+        background: var(--bg-light);
+        cursor: pointer;
+        align-items: center;
+        justify-content: space-between;
+        transition: background-color 0.2s;
+      }
+
+      .accordion-header:hover {
+        background: #f0f2f5;
+      }
+
+      .accordion-header h3 {
+        margin: 0;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .accordion-icon {
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        color: var(--text-muted);
+        font-size: 20px;
+      }
+
+      .accordion-item.open .accordion-icon {
+        transform: rotate(180deg);
+      }
+
+      .accordion-content-wrapper {
+        display: grid;
+        grid-template-rows: 0fr;
+        transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .accordion-item.open .accordion-content-wrapper {
+        grid-template-rows: 1fr;
+      }
+
+      .accordion-content {
+        overflow: hidden;
+      }
+
+      .accordion-content-inner {
+        padding: 1.25rem 1rem;
+        border-top: 1px solid var(--border-colour);
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+      }
     `
   ];
 
@@ -146,6 +209,8 @@ export class ImageDialog extends LitElement {
   @state() private _artist: string = '';
   @state() private _collection: string = '';
   @state() private _description: string = '';
+  @state() private _detailsOpen = true;
+  @state() private _propertiesOpen = false;
 
   async show(image?: Image) {
     this._editingImage = image || null;
@@ -159,6 +224,14 @@ export class ImageDialog extends LitElement {
     this._description = image?.description || '';
     await this.updateComplete;
     (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).show();
+  }
+
+  private _toggleSection(section: 'details' | 'properties') {
+    if (section === 'details') {
+      this._detailsOpen = !this._detailsOpen;
+    } else {
+      this._propertiesOpen = !this._propertiesOpen;
+    }
   }
 
   private _handleUploadClick() {
@@ -274,52 +347,80 @@ export class ImageDialog extends LitElement {
               </div>
             ` : ''}
 
-            <div class="form-group">
-              <label>Name</label>
-              <input 
-                type="text" 
-                placeholder="Optional - defaults to filename"
-                .value="${this._imageName}"
-                @input="${(e: InputEvent) => this._imageName = (e.target as HTMLInputElement).value}"
-              >
-            </div>
-            
-            <div class="grid">
-              <div class="form-group">
-                <label>Artist</label>
-                <input 
-                  type="text" 
-                  placeholder="Who created this?"
-                  .value="${this._artist}"
-                  @input="${(e: InputEvent) => this._artist = (e.target as HTMLInputElement).value}"
-                >
+            <!-- Details Section -->
+            <div class="accordion-item ${this._detailsOpen ? 'open' : ''}">
+              <div class="accordion-header" @click="${() => this._toggleSection('details')}">
+                <h3>Details</h3>
+                <span class="material-icons accordion-icon">expand_more</span>
               </div>
-              <div class="form-group">
-                <label>Collection</label>
-                <input 
-                  type="text" 
-                  placeholder="e.g. Landscapes, Personal"
-                  .value="${this._collection}"
-                  @input="${(e: InputEvent) => this._collection = (e.target as HTMLInputElement).value}"
-                >
+              <div class="accordion-content-wrapper">
+                <div class="accordion-content">
+                  <div class="accordion-content-inner">
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <label>Name</label>
+                      <input 
+                        type="text" 
+                        placeholder="Optional - defaults to filename"
+                        .value="${this._imageName}"
+                        @input="${(e: InputEvent) => this._imageName = (e.target as HTMLInputElement).value}"
+                      >
+                    </div>
+                    
+                    <div class="grid">
+                      <div class="form-group" style="margin-bottom: 0;">
+                        <label>Artist</label>
+                        <input 
+                          type="text" 
+                          placeholder="Who created this?"
+                          .value="${this._artist}"
+                          @input="${(e: InputEvent) => this._artist = (e.target as HTMLInputElement).value}"
+                        >
+                      </div>
+                      <div class="form-group" style="margin-bottom: 0;">
+                        <label>Collection</label>
+                        <input 
+                          type="text" 
+                          placeholder="e.g. Landscapes, Personal"
+                          .value="${this._collection}"
+                          @input="${(e: InputEvent) => this._collection = (e.target as HTMLInputElement).value}"
+                        >
+                      </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <label>Keywords</label>
+                      <keyword-input 
+                        .keywords="${this._keywords}"
+                        @keywords-changed="${this._handleKeywordsChanged}"
+                      ></keyword-input>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <label>Description</label>
+                      <textarea 
+                        placeholder="Describe the image..."
+                        .value="${this._description}"
+                        @input="${(e: InputEvent) => this._description = (e.target as HTMLTextAreaElement).value}"
+                      ></textarea>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div class="form-group">
-              <label>Keywords</label>
-              <keyword-input 
-                .keywords="${this._keywords}"
-                @keywords-changed="${this._handleKeywordsChanged}"
-              ></keyword-input>
-            </div>
-
-            <div class="form-group" style="margin-bottom: 0;">
-              <label>Description</label>
-              <textarea 
-                placeholder="Describe the image..."
-                .value="${this._description}"
-                @input="${(e: InputEvent) => this._description = (e.target as HTMLTextAreaElement).value}"
-              ></textarea>
+            <!-- Image Properties Section -->
+            <div class="accordion-item ${this._propertiesOpen ? 'open' : ''}">
+              <div class="accordion-header" @click="${() => this._toggleSection('properties')}">
+                <h3>Image Properties</h3>
+                <span class="material-icons accordion-icon">expand_more</span>
+              </div>
+              <div class="accordion-content-wrapper">
+                <div class="accordion-content">
+                  <div class="accordion-content-inner">
+                    <!-- Currently Empty -->
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
