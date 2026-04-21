@@ -43,10 +43,27 @@ export class DisplayTypesView extends BaseResourceView {
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 2rem 1.5rem;
-      gap: 1.5rem;
+      padding: 0;
       overflow-y: auto;
       position: relative;
+    }
+
+    .preview-header {
+      padding: 0.75rem 1.5rem;
+      border-bottom: 1px solid var(--border-colour);
+      background: rgba(255, 255, 255, 0.5);
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .preview-body {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+      width: 100%;
+      box-sizing: border-box;
     }
 
     .preview-canvas {
@@ -64,13 +81,18 @@ export class DisplayTypesView extends BaseResourceView {
 
     .preview-label {
       font-size: 11px;
-      font-weight: bold;
-      color: #888;
+      font-weight: 800;
+      color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 1px;
-      align-self: flex-start;
-      text-align: left;
       width: 100%;
+    }
+
+    .preview-separator {
+      width: 100%;
+      height: 1px;
+      background: var(--border-colour);
+      margin: 0.5rem 0;
     }
 
     .summary-panel {
@@ -531,29 +553,36 @@ export class DisplayTypesView extends BaseResourceView {
             `}
 
             <div class="preview-column">
-              <div class="preview-label">Visual Layout</div>
-              <div class="preview-canvas">
-                <hardware-preview
-                  .width_mm="${this.displayType.width_mm}"
-                  .height_mm="${this.displayType.height_mm}"
-                  .border_width_mm="${this.displayType.frame.border_width_mm}"
-                  .panel_width_mm="${this.displayType.panel_width_mm}"
-                  .panel_height_mm="${this.displayType.panel_height_mm}"
-                  .frame_colour="${this.displayType.frame.colour}"
-                  .mat_colour="${this.displayType.mat.colour}"
-                  .scale="${scale}"
-                ></hardware-preview>
+              <div class="preview-header">
+                <div class="preview-label">Visual Layout</div>
               </div>
+              
+              <div class="preview-body">
+                <div class="preview-canvas">
+                  <hardware-preview
+                    .width_mm="${this.displayType.width_mm}"
+                    .height_mm="${this.displayType.height_mm}"
+                    .border_width_mm="${this.displayType.frame.border_width_mm}"
+                    .panel_width_mm="${this.displayType.panel_width_mm}"
+                    .panel_height_mm="${this.displayType.panel_height_mm}"
+                    .frame_colour="${this.displayType.frame.colour}"
+                    .mat_colour="${this.displayType.mat.colour}"
+                    .scale="${scale}"
+                  ></hardware-preview>
+                </div>
 
-              <div class="summary-panel">
-                <div class="summary-content">
-                  <div class="preview-label" style="margin-bottom: 12px;">Dimension Summary</div>
-                  <table class="summary-table">
-                    <tr><th>Overall Frame</th><td><span class="val">${this._formatDim(frameW)} x ${this._formatDim(frameH)}</span><span class="unit">mm</span></td></tr>
-                    <tr><th>Mat (Aperture)</th><td><span class="val">${this._formatDim(matW)} x ${this._formatDim(matH)}</span><span class="unit">mm</span></td></tr>
-                    <tr><th>Display Panel</th><td><span class="val">${this._formatDim(panelW)} x ${this._formatDim(panelH)}</span><span class="unit">mm</span></td></tr>
-                    <tr><th>Cutout Position</th><td><span class="val">${this._formatDim(cutoutX)} x ${this._formatDim(cutoutY)}</span><span class="unit">mm</span></td></tr>
-                  </table>
+                <div class="preview-separator"></div>
+
+                <div class="summary-panel">
+                  <div class="summary-content">
+                    <div class="preview-label" style="margin-bottom: 12px;">Dimension Summary</div>
+                    <table class="summary-table">
+                      <tr><th>Overall Frame</th><td><span class="val">${this._formatDim(frameW)} x ${this._formatDim(frameH)}</span><span class="unit">mm</span></td></tr>
+                      <tr><th>Mat (Aperture)</th><td><span class="val">${this._formatDim(matW)} x ${this._formatDim(matH)}</span><span class="unit">mm</span></td></tr>
+                      <tr><th>Display Panel</th><td><span class="val">${this._formatDim(panelW)} x ${this._formatDim(panelH)}</span><span class="unit">mm</span></td></tr>
+                      <tr><th>Cutout Position</th><td><span class="val">${this._formatDim(cutoutX)} x ${this._formatDim(cutoutY)}</span><span class="unit">mm</span></td></tr>
+                    </table>
+                  </div>
                 </div>
               </div>
             </div>
