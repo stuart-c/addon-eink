@@ -291,6 +291,8 @@ export class SceneItemSettingsDialog extends LitElement {
       this._scalingFactor = item.images[0].scaling_factor || 100;
       this._offsetX = item.images[0].offset?.x || 0;
       this._offsetY = item.images[0].offset?.y || 0;
+    } else {
+      this._selectedImageId = 'img-1';
     }
     await this.updateComplete;
     (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).show();
@@ -320,13 +322,13 @@ export class SceneItemSettingsDialog extends LitElement {
               <div class="image-list">
                 ${[1, 2, 3].map(i => html`
                   <div 
-                    class="image-item ${i === 1 ? 'selected' : ''}"
-                    @click="${() => this._selectedImageId = \`img-\${i}\`}"
+                    class="image-item ${this._selectedImageId === `img-${i}` ? 'selected' : ''}"
+                    @click="${() => this._selectedImageId = `img-${i}`}"
                   >
                     <div class="image-thumbnail">
                       <span class="material-icons">image</span>
                     </div>
-                    <div class="image-name">Sample Image \${i}.jpg</div>
+                    <div class="image-name">Sample Image ${i}.jpg</div>
                   </div>
                 `)}
               </div>
@@ -370,8 +372,8 @@ export class SceneItemSettingsDialog extends LitElement {
                     type="range" 
                     min="1" 
                     max="500" 
-                    .value="\${this._scalingFactor}"
-                    @input="\${(e: any) => this._scalingFactor = parseInt(e.target.value)}"
+                    .value="${this._scalingFactor}"
+                    @input="${(e: any) => this._scalingFactor = parseInt(e.target.value)}"
                     style="flex: 1;"
                   >
                 </div>
@@ -379,8 +381,8 @@ export class SceneItemSettingsDialog extends LitElement {
                   <div class="input-with-unit">
                     <input 
                       type="number" 
-                      .value="\${this._scalingFactor}"
-                      @input="\${(e: any) => this._scalingFactor = parseInt(e.target.value)}"
+                      .value="${this._scalingFactor}"
+                      @input="${(e: any) => this._scalingFactor = parseInt(e.target.value)}"
                     >
                     <span class="unit-label">%</span>
                   </div>
@@ -399,8 +401,8 @@ export class SceneItemSettingsDialog extends LitElement {
                   <div class="input-with-unit">
                     <input 
                       type="number" 
-                      .value="\${this._offsetX}"
-                      @input="\${(e: any) => this._offsetX = parseInt(e.target.value)}"
+                      .value="${this._offsetX}"
+                      @input="${(e: any) => this._offsetX = parseInt(e.target.value)}"
                     >
                     <span class="unit-label">px</span>
                   </div>
@@ -410,8 +412,8 @@ export class SceneItemSettingsDialog extends LitElement {
                   <div class="input-with-unit">
                     <input 
                       type="number" 
-                      .value="\${this._offsetY}"
-                      @input="\${(e: any) => this._offsetY = parseInt(e.target.value)}"
+                      .value="${this._offsetY}"
+                      @input="${(e: any) => this._offsetY = parseInt(e.target.value)}"
                     >
                     <span class="unit-label">px</span>
                   </div>
@@ -434,8 +436,8 @@ export class SceneItemSettingsDialog extends LitElement {
         </div>
 
         <div slot="footer" class="footer-actions">
-          <button class="secondary" @click="\${this._handleCancel}">Cancel</button>
-          <button class="primary" @click="\${this._handleOk}">Save Changes</button>
+          <button class="secondary" @click="${this._handleCancel}">Cancel</button>
+          <button class="primary" @click="${this._handleOk}">Save Changes</button>
         </div>
       </base-dialog>
     `;
