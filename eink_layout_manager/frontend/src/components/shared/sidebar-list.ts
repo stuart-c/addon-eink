@@ -35,7 +35,9 @@ export class SidebarList extends LitElement {
         padding: 0.75rem;
       }
       .sidebar-item {
-        padding: 10px 12px;
+        padding: 12px;
+        min-height: 106px;
+        box-sizing: border-box;
         border: 1px solid #eee;
         border-radius: var(--border-radius);
         margin-bottom: 0.5rem;
@@ -44,7 +46,7 @@ export class SidebarList extends LitElement {
         background: #fff;
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 16px;
         box-shadow: 0 1px 2px rgba(0,0,0,0.02);
       }
       .sidebar-item:hover {

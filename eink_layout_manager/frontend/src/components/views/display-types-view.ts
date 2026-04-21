@@ -68,6 +68,9 @@ export class DisplayTypesView extends BaseResourceView {
       color: #888;
       text-transform: uppercase;
       letter-spacing: 1px;
+      align-self: flex-start;
+      text-align: left;
+      width: 100%;
     }
 
     .summary-panel {
@@ -430,7 +433,7 @@ export class DisplayTypesView extends BaseResourceView {
 
         <div slot="right-top-bar" class="toolbar-content">
           <div class="toolbar-title">
-            ${this.isAdding ? 'Create New Display Type' : (this.displayType && !this.isNew ? `Editing: ${this.displayType.name}` : 'Display Types')}
+            ${this.isAdding ? 'Create New Display Type' : (this.displayType && !this.isNew ? this.displayType.name : 'Display Types')}
           </div>
         </div>
 
