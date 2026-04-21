@@ -91,6 +91,16 @@ async def ensure_schema_up_to_date(conn):
     result = await conn.execute(text("PRAGMA table_info(images)"))
     columns = [row[1] for row in result.fetchall()]
 
+    if "description" not in columns:
+        await conn.execute(
+            text("ALTER TABLE images ADD COLUMN description VARCHAR")
+        )
+
+    if "conversion" not in columns:
+        await conn.execute(
+            text("ALTER TABLE images ADD COLUMN conversion JSON")
+        )
+
     if "thumbnail_path" not in columns:
         await conn.execute(
             text("ALTER TABLE images ADD COLUMN thumbnail_path VARCHAR")
@@ -117,11 +127,74 @@ async def ensure_schema_up_to_date(conn):
     columns = [row[1] for row in result.fetchall()]
 
     if "layout_id" not in columns:
-        # Since it's mandatory, we add it with a default or as nullable
-        # for the migration. SQLite doesn't support NOT NULL without a
-        # default for existing rows.
         await conn.execute(
             text("ALTER TABLE scenes ADD COLUMN layout_id VARCHAR DEFAULT ''")
+        )
+
+    if "status" not in columns:
+        await conn.execute(
+            text(
+                "ALTER TABLE scenes ADD COLUMN status VARCHAR DEFAULT 'draft'"
+            )
+        )
+
+    if "items" not in columns:
+        await conn.execute(text("ALTER TABLE scenes ADD COLUMN items JSON"))
+
+    if "created_at" not in columns:
+        await conn.execute(
+            text(
+                "ALTER TABLE scenes ADD COLUMN created_at DATETIME "
+                "DEFAULT CURRENT_TIMESTAMP"
+            )
+        )
+
+    if "updated_at" not in columns:
+        await conn.execute(
+            text(
+                "ALTER TABLE scenes ADD COLUMN updated_at DATETIME "
+                "DEFAULT CURRENT_TIMESTAMP"
+            )
+        )
+
+    # Check 'display_types' table for recently added columns
+    result = await conn.execute(text("PRAGMA table_info(display_types)"))
+    columns = [row[1] for row in result.fetchall()]
+
+    if "created_at" not in columns:
+        await conn.execute(
+            text(
+                "ALTER TABLE display_types ADD COLUMN created_at DATETIME "
+                "DEFAULT CURRENT_TIMESTAMP"
+            )
+        )
+
+    if "updated_at" not in columns:
+        await conn.execute(
+            text(
+                "ALTER TABLE display_types ADD COLUMN updated_at DATETIME "
+                "DEFAULT CURRENT_TIMESTAMP"
+            )
+        )
+
+    # Check 'layouts' table for recently added columns
+    result = await conn.execute(text("PRAGMA table_info(layouts)"))
+    columns = [row[1] for row in result.fetchall()]
+
+    if "created_at" not in columns:
+        await conn.execute(
+            text(
+                "ALTER TABLE layouts ADD COLUMN created_at DATETIME "
+                "DEFAULT CURRENT_TIMESTAMP"
+            )
+        )
+
+    if "updated_at" not in columns:
+        await conn.execute(
+            text(
+                "ALTER TABLE layouts ADD COLUMN updated_at DATETIME "
+                "DEFAULT CURRENT_TIMESTAMP"
+            )
         )
 
 
