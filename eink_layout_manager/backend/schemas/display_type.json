@@ -50,6 +50,16 @@
         "colour": { "$ref": "common.json#/definitions/hex_color" }
       },
       "required": ["colour"]
+    },
+    "pixel_width_mm": {
+      "type": "number",
+      "readOnly": true,
+      "description": "Calculated pixel width in mm"
+    },
+    "pixel_height_mm": {
+      "type": "number",
+      "readOnly": true,
+      "description": "Calculated pixel height in mm"
     }
   },
   "required": ["name", "width_mm", "height_mm", "panel_width_mm", "panel_height_mm", "width_px", "height_px", "colour_type", "frame", "mat"]

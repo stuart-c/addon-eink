@@ -25,6 +25,8 @@ class DisplayTypeHandler(BaseCRUDHandler):
                 "colour_type",
                 "frame",
                 "mat",
+                "pixel_width_mm",
+                "pixel_height_mm",
             },
         )
 

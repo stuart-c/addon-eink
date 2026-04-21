@@ -17,12 +17,21 @@ def generic_model_to_dict(
 
     data = {}
     mapper = inspect(model_instance.__class__)
+
+    # Start with mapped attributes
     for column in mapper.attrs:
         if include_fields and column.key not in include_fields:
             continue
         if exclude_fields and column.key in exclude_fields:
             continue
         data[column.key] = getattr(model_instance, column.key)
+
+    # Handle any remaining fields in include_fields that might be properties
+    if include_fields:
+        for field in include_fields:
+            if field not in data and hasattr(model_instance, field):
+                data[field] = getattr(model_instance, field)
+
     return data
 
 

@@ -96,6 +96,20 @@ class DisplayType(Base):
         DateTime, server_default=func.now(), onupdate=func.now()
     )
 
+    @property
+    def pixel_width_mm(self) -> float:
+        """Calculate the physical width of a single pixel in mm."""
+        if not self.width_px:
+            return 0.0
+        return self.panel_width_mm / self.width_px
+
+    @property
+    def pixel_height_mm(self) -> float:
+        """Calculate the physical height of a single pixel in mm."""
+        if not self.height_px:
+            return 0.0
+        return self.panel_height_mm / self.height_px
+
     __filterable_fields__ = {
         "name": "name",
     }
