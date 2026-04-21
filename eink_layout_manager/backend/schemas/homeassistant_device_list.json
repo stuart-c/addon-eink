@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "HomeAssistantDeviceList",
+  "description": "List of devices fetched from Home Assistant",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "id": { "type": "string" },
+      "name": { "type": "string" },
+      "model": { "type": ["string", "null"] },
+      "manufacturer": { "type": ["string", "null"] }
+    },
+    "required": ["id", "name"]
+  }
+}

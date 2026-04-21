@@ -157,6 +157,7 @@ def load_schema(name):
     allowed_schemas = {
         "common",
         "display_type",
+        "homeassistant_device_list",
         "image",
         "image_list_response",
         "item_list_response",

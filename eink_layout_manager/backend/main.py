@@ -1,5 +1,6 @@
 import os
 import logging
+import aiohttp
 from aiohttp import web
 
 from backend import database
@@ -19,10 +20,13 @@ def init_app():
     async def on_startup(app):
         """Database and storage initialisation on start."""
         await database.init_db()
+        app["client_session"] = aiohttp.ClientSession()
 
     async def on_cleanup(app):
         """Cleanup on app shutdown."""
         await database.close_db()
+        if "client_session" in app:
+            await app["client_session"].close()
 
     app.on_startup.append(on_startup)
     app.on_startup.append(schedule_image_cleanup)
