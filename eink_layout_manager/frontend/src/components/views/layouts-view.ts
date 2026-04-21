@@ -53,11 +53,21 @@ export class LayoutsView extends BaseResourceView {
       }
       
       .pane-header {
-        padding: 1.25rem 1rem;
+        padding: 0.75rem 1rem;
         border-bottom: 1px solid var(--border-colour);
         display: flex;
         align-items: center;
         justify-content: space-between;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+      }
+
+      .pane-footer {
+        padding: 0.75rem 1rem;
+        border-top: 1px solid var(--border-colour);
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
         background: rgba(255, 255, 255, 0.9);
         backdrop-filter: blur(10px);
       }
@@ -78,6 +88,8 @@ export class LayoutsView extends BaseResourceView {
       
       .layout-item-card {
         padding: 12px;
+        min-height: 106px;
+        box-sizing: border-box;
         border: 1px solid #eee;
         border-radius: var(--border-radius);
         margin-bottom: 0.5rem;
@@ -86,7 +98,7 @@ export class LayoutsView extends BaseResourceView {
         background: #fff;
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 16px;
       }
       
       .layout-item-card:hover {
@@ -337,7 +349,7 @@ export class LayoutsView extends BaseResourceView {
 
         <div slot="right-top-bar" class="toolbar-content">
           <div class="toolbar-title">
-            ${this.isAdding ? 'Create New Layout' : (this.activeLayout ? `Layout: ${this.activeLayout.name}` : 'Layouts')}
+            ${this.isAdding ? 'Create New Layout' : (this.activeLayout ? this.activeLayout.name : 'Layouts')}
           </div>
           <div class="toolbar-actions">
               <button class="secondary" title="Layout Settings" @click="${() => this._layoutSettingsDialog.show(this.activeLayout!)}">
@@ -417,6 +429,27 @@ export class LayoutsView extends BaseResourceView {
                     No items in this layout. Add displays to begin.
                   </div>
                 ` : ''}
+              </div>
+
+              <div class="pane-footer">
+                <div class="toolbar-actions">
+                  <button 
+                    class="secondary" 
+                    title="Edit Item" 
+                    ?disabled="${!this.selectedItemId}"
+                    @click="${() => this.dispatchEvent(new CustomEvent('edit-item', { detail: { id: this.selectedItemId } }))}"
+                  >
+                    <span class="material-icons" style="font-size: 18px;">edit</span>
+                  </button>
+                  <button 
+                    class="danger" 
+                    title="Delete Item" 
+                    ?disabled="${!this.selectedItemId}"
+                    @click="${() => this.dispatchEvent(new CustomEvent('delete-item', { detail: { id: this.selectedItemId } }))}"
+                  >
+                    <span class="material-icons" style="font-size: 18px;">delete</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>

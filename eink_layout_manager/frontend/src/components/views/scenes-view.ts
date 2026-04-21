@@ -54,11 +54,20 @@ export class ScenesView extends BaseResourceView {
         z-index: 2;
       }
       .pane-header {
-        padding: 1.25rem 1rem;
+        padding: 0.75rem 1rem;
         border-bottom: 1px solid var(--border-colour);
         display: flex;
         align-items: center;
         justify-content: space-between;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+      }
+      .pane-footer {
+        padding: 0.75rem 1rem;
+        border-top: 1px solid var(--border-colour);
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
         background: rgba(255, 255, 255, 0.9);
         backdrop-filter: blur(10px);
       }
@@ -109,39 +118,33 @@ export class ScenesView extends BaseResourceView {
         padding: 1.25rem 1rem;
       }
       .placeholder-item {
-        padding: 1rem;
-        border: 1px solid #f0f0f0;
-        border-radius: 12px;
-        margin-bottom: 1rem;
-        background: white;
+        padding: 12px;
+        min-height: 106px;
+        box-sizing: border-box;
+        border: 1px solid #eee;
+        border-radius: var(--border-radius);
+        margin-bottom: 0.5rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: #fff;
         display: flex;
         align-items: center;
-        gap: 14px;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        border-left: 4px solid #f0f0f0;
-        cursor: default;
+        gap: 16px;
       }
       .placeholder-item:hover {
-        border-color: #e0e0e0;
-        border-left-color: var(--primary-colour);
-        box-shadow: 0 8px 16px rgba(0,0,0,0.04);
-        transform: translateX(4px);
+        border-color: var(--primary-colour);
+        background: #f0faff;
       }
       .placeholder-item.selected {
         background: #e1f5fe;
         border-color: var(--primary-colour);
-        border-left-color: var(--primary-colour);
-        box-shadow: 0 4px 12px rgba(3, 169, 244, 0.1);
+        box-shadow: 0 2px 8px rgba(3,169,244,0.1);
       }
       .placeholder-item-icon {
-        width: 44px;
-        height: 44px;
-        border-radius: 10px;
-        background: #f8f9fa;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #aaa;
+        color: #888;
+      }
+      .selected .placeholder-item-icon {
+        color: var(--primary-colour);
       }
       .placeholder-item-info {
         flex: 1;
@@ -370,12 +373,14 @@ export class ScenesView extends BaseResourceView {
 
         <div slot="right-top-bar" class="toolbar-content">
           <div class="toolbar-title">
+            ${activeScene ? activeScene.name : 'Smart Scenes'}
+          </div>
+          <div class="toolbar-actions">
             ${activeScene ? html`
-              <button class="scene-settings-btn" @click="${() => this._sceneDialog.show(activeScene)}" title="Scene Settings">
-                <span class="material-icons" style="font-size: 18px;">settings</span>
+              <button class="secondary" @click="${() => this._sceneDialog.show(activeScene)}" title="Scene Settings">
+                <span class="material-icons">settings</span>
               </button>
-              <span>${activeScene.name}</span>
-            ` : 'Smart Scenes'}
+            ` : ''}
           </div>
         </div>
 
@@ -407,36 +412,20 @@ export class ScenesView extends BaseResourceView {
                 <div class="pane-title">Scene Content</div>
                 <div class="pane-toolbar">
                   <button 
-                    class="tool-button" 
+                    class="secondary" 
                     title="New Single Display" 
                     ?disabled="${this._selectedDisplayIds.length < 1}"
                     @click="${() => this._handleCreateSingleDisplayItems()}"
                   >
-                    <span class="material-icons">add_photo_alternate</span>
+                    <span class="material-icons" style="font-size: 18px;">add_photo_alternate</span>
                   </button>
                   <button 
-                    class="tool-button" 
+                    class="secondary" 
                     title="New Multi-Display (Tiled)"
                     ?disabled="${this._selectedDisplayIds.length < 2}"
                     @click="${() => this._handleCreateMultiDisplayItem()}"
                   >
-                    <span class="material-icons">grid_view</span>
-                  </button>
-                  <button 
-                    class="tool-button" 
-                    title="Edit Item"
-                    ?disabled="${!this._selectedItemId}"
-                    @click="${() => this._handleEditItem()}"
-                  >
-                    <span class="material-icons">edit</span>
-                  </button>
-                  <button 
-                    class="tool-button" 
-                    title="Delete Item"
-                    ?disabled="${!this._selectedItemId}"
-                    @click="${() => this._handleDeleteItem()}"
-                  >
-                    <span class="material-icons">delete</span>
+                    <span class="material-icons" style="font-size: 18px;">grid_view</span>
                   </button>
                 </div>
               </div>
@@ -471,9 +460,30 @@ export class ScenesView extends BaseResourceView {
                 ${(!activeScene.items || activeScene.items.length === 0) ? html`
                   <div class="empty-content-state">
                     <span class="material-icons">post_add</span>
-                    <span>No scene items. Select displays in the layout and click "+" to add them.</span>
+                    <span>No scene items. Select displays in the layout and click the add buttons to add them.</span>
                   </div>
                 ` : ''}
+              </div>
+
+              <div class="pane-footer">
+                <div class="toolbar-actions">
+                  <button 
+                    class="secondary" 
+                    title="Edit Item"
+                    ?disabled="${!this._selectedItemId}"
+                    @click="${() => this._handleEditItem()}"
+                  >
+                    <span class="material-icons" style="font-size: 18px;">edit</span>
+                  </button>
+                  <button 
+                    class="danger" 
+                    title="Delete Item"
+                    ?disabled="${!this._selectedItemId}"
+                    @click="${() => this._handleDeleteItem()}"
+                  >
+                    <span class="material-icons" style="font-size: 18px;">delete</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
