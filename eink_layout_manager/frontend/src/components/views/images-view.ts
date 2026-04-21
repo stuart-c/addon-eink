@@ -392,31 +392,29 @@ export class ImagesView extends BaseResourceView {
                 }}"
               >
             </div>
-            <div class="filter-grid">
-              <div class="form-group">
-                <label>Artist</label>
-                <input 
-                  type="text" 
-                  placeholder="Artist"
-                  .value="${this._filterArtist}"
-                  @input="${(e: any) => {
-                    this._filterArtist = e.target.value;
-                    this._triggerFilterChange();
-                  }}"
-                >
-              </div>
-              <div class="form-group">
-                <label>Collection</label>
-                <input 
-                  type="text" 
-                  placeholder="Collection"
-                  .value="${this._filterCollection}"
-                  @input="${(e: any) => {
-                    this._filterCollection = e.target.value;
-                    this._triggerFilterChange();
-                  }}"
-                >
-              </div>
+            <div class="form-group">
+              <label>Artist</label>
+              <input 
+                type="text" 
+                placeholder="Artist"
+                .value="${this._filterArtist}"
+                @input="${(e: any) => {
+                  this._filterArtist = e.target.value;
+                  this._triggerFilterChange();
+                }}"
+              >
+            </div>
+            <div class="form-group">
+              <label>Collection</label>
+              <input 
+                type="text" 
+                placeholder="Collection"
+                .value="${this._filterCollection}"
+                @input="${(e: any) => {
+                  this._filterCollection = e.target.value;
+                  this._triggerFilterChange();
+                }}"
+              >
             </div>
           </div>
 
