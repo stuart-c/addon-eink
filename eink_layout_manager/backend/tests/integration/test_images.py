@@ -35,7 +35,6 @@ async def test_image_upload_success(aiohttp_client, app, tmp_path):
     assert "id" in result
     assert "file_hash" not in result
     assert "file_path" not in result
-
     # Check for presence of all schema fields
     for field in [
         "artist",
@@ -46,8 +45,15 @@ async def test_image_upload_success(aiohttp_client, app, tmp_path):
         "original_archive_file",
         "license",
         "source",
+        "brightness",
+        "contrast",
+        "saturation",
     ]:
         assert field in result
+
+    assert result["brightness"] == 1.0
+    assert result["contrast"] == 1.0
+    assert result["saturation"] == 1.0
 
     # Verify internal fields are ABSENT
     assert "thumbnail_path" not in result
@@ -678,3 +684,60 @@ async def test_image_conversion_field(aiohttp_client, app):
     assert get_resp.status == 200
     get_result = await get_resp.json()
     assert get_result["conversion"] == conversion_settings
+
+
+@pytest.mark.asyncio
+async def test_image_processing_fields(aiohttp_client, app):
+    """Test updating and retrieving brightness, contrast, and saturation."""
+    client = await aiohttp_client(app)
+
+    # 1. Upload an image
+    img = PILImage.new("RGB", (10, 10), color="green")
+    img_byte_arr = io.BytesIO()
+    img.save(img_byte_arr, format="PNG")
+    data = aiohttp.FormData()
+    data.add_field(
+        "file",
+        img_byte_arr.getvalue(),
+        filename="processing_test.png",
+        content_type="image/png",
+    )
+    resp = await client.post("/api/image", data=data)
+    assert resp.status == 201
+    result = await resp.json()
+    image_id = result["id"]
+
+    # 2. Verify defaults
+    assert result["brightness"] == 1.0
+    assert result["contrast"] == 1.0
+    assert result["saturation"] == 1.0
+
+    # 3. Update fields
+    update_data = {
+        "brightness": 1.5,
+        "contrast": 0.5,
+        "saturation": 2.0,
+    }
+    resp = await client.put(f"/api/image/{image_id}", json=update_data)
+    assert resp.status == 200
+    updated_result = await resp.json()
+
+    assert updated_result["brightness"] == 1.5
+    assert updated_result["contrast"] == 0.5
+    assert updated_result["saturation"] == 2.0
+
+    # 4. Verify with GET
+    get_resp = await client.get(f"/api/image/{image_id}")
+    assert get_resp.status == 200
+    get_result = await get_resp.json()
+    assert get_result["brightness"] == 1.5
+    assert get_result["contrast"] == 0.5
+    assert get_result["saturation"] == 2.0
+
+    # 5. Verify range validation (too high)
+    resp = await client.put(f"/api/image/{image_id}", json={"brightness": 2.1})
+    assert resp.status == 400
+
+    # 6. Verify range validation (too low)
+    resp = await client.put(f"/api/image/{image_id}", json={"contrast": -0.1})
+    assert resp.status == 400
