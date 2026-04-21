@@ -114,16 +114,16 @@ describe('LayoutsView', () => {
     }));
   });
 
-  it('should dispatch set-section when add display button is clicked', async () => {
-    const spy = vi.fn();
-    element.addEventListener('set-section', spy);
-    
+  it('should show the display type menu when add display button is clicked', async () => {
     const addBtn = element.shadowRoot?.querySelector('button[title="Add Display"]');
-    addBtn?.dispatchEvent(new MouseEvent('click'));
+    const menu = element.shadowRoot?.querySelector('#menu-display-types');
     
-    expect(spy).toHaveBeenCalledWith(expect.objectContaining({
-      detail: 'display-types'
-    }));
+    expect(menu?.classList.contains('show')).toBe(false);
+    
+    addBtn?.dispatchEvent(new MouseEvent('click'));
+    await element.updateComplete;
+    
+    expect(menu?.classList.contains('show')).toBe(true);
   });
 
   it('should dispatch select-item when an item is clicked in the content pane', async () => {

@@ -340,26 +340,9 @@ export class LayoutsView extends BaseResourceView {
             ${this.isAdding ? 'Create New Layout' : (this.activeLayout ? `Layout: ${this.activeLayout.name}` : 'Layouts')}
           </div>
           <div class="toolbar-actions">
-             ${this.activeLayout ? html`
-              <div class="dropdown">
-                <button id="btn-add-display" class="secondary" title="Add Display Type" @click="${() => this._showDisplayMenu = !this._showDisplayMenu}">
-                  <span class="material-icons">add_box</span>
-                </button>
-                <div id="menu-display-types" class="dropdown-menu ${this._showDisplayMenu ? 'show' : ''}">
-                  ${this.displayTypes.map(dt => html`
-                    <div class="display-type-item" @click="${() => this._onAddItemToLayout(dt)}">
-                      <div class="display-type-info">
-                        <span class="display-type-name">${dt.name}</span>
-                        <span class="display-type-meta">${dt.width_mm}x${dt.height_mm}mm | ${dt.colour_type}</span>
-                      </div>
-                    </div>
-                  `)}
-                </div>
-              </div>
               <button class="secondary" title="Layout Settings" @click="${() => this._layoutSettingsDialog.show(this.activeLayout!)}">
                 <span class="material-icons">settings</span>
               </button>
-            ` : ''}
           </div>
         </div>
 
@@ -393,9 +376,21 @@ export class LayoutsView extends BaseResourceView {
               <div class="pane-header">
                 <div class="pane-title">Layout Items</div>
                 <div class="pane-toolbar">
-                  <button class="secondary" title="Add Display" @click="${() => this.dispatchEvent(new CustomEvent('set-section', { detail: 'display-types', bubbles: true, composed: true }))}">
-                    <span class="material-icons" style="font-size: 18px;">add</span>
-                  </button>
+                  <div class="dropdown">
+                    <button id="btn-add-display" class="secondary" title="Add Display" @click="${() => this._showDisplayMenu = !this._showDisplayMenu}">
+                      <span class="material-icons" style="font-size: 18px;">add</span>
+                    </button>
+                    <div id="menu-display-types" class="dropdown-menu ${this._showDisplayMenu ? 'show' : ''}">
+                      ${this.displayTypes.map(dt => html`
+                        <div class="display-type-item" @click="${() => this._onAddItemToLayout(dt)}">
+                          <div class="display-type-info">
+                            <span class="display-type-name">${dt.name}</span>
+                            <span class="display-type-meta">${dt.width_mm}x${dt.height_mm}mm | ${dt.colour_type}</span>
+                          </div>
+                        </div>
+                      `)}
+                    </div>
+                  </div>
                 </div>
               </div>
               
