@@ -82,7 +82,7 @@ test.describe('Layouts Management', () => {
     await expect(page.locator('app-header .message-badge')).not.toBeVisible({ timeout: 10000 });
 
     // Open the "Add Display" dropdown in the toolbar
-    await page.locator('button[title="Add Display Type"]').click();
+    await page.locator('button[title="Add Display"]').click();
     
     // Click the display type in the dropdown
     const menuItem = page.locator('#menu-display-types .display-type-item').filter({ hasText: dtName });
@@ -124,7 +124,7 @@ test.describe('Layouts Management', () => {
     await expect(page.locator('app-header .message-badge')).not.toBeVisible({ timeout: 10000 });
 
     // Add item via toolbar
-    await page.locator('button[title="Add Display Type"]').click();
+    await page.locator('button[title="Add Display"]').click();
     await page.locator('#menu-display-types .display-type-item').filter({ hasText: dtName }).click();
     
     // The item should appear in the item list pane
