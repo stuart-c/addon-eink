@@ -37,7 +37,6 @@ export class ImageDialog extends LitElement {
       .metadata-fields {
         display: flex;
         flex-direction: column;
-        gap: 1.25rem;
       }
 
       .upload-section {
@@ -128,7 +127,7 @@ export class ImageDialog extends LitElement {
         color: #f5222d;
         padding: 0.75rem;
         border-radius: var(--border-radius);
-        margin-bottom: 1.5rem;
+        margin-bottom: 1.25rem;
         font-size: 14px;
         display: flex;
         align-items: center;
@@ -139,8 +138,18 @@ export class ImageDialog extends LitElement {
       .accordion-item {
         border: 1px solid var(--border-colour);
         border-radius: var(--border-radius);
-        margin-bottom: 0.75rem;
         background: white;
+      }
+
+      .accordion-item:not(:last-child) {
+        border-bottom: none;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+      }
+
+      .accordion-item:not(:first-of-type) {
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
       }
 
       .accordion-header {
