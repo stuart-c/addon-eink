@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
     "target": "ES2025",
     "useDefineForClassFields": false,
     "module": "ESNext",
