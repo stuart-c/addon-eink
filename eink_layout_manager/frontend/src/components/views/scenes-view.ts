@@ -410,7 +410,7 @@ export class ScenesView extends BaseResourceView {
                     class="tool-button" 
                     title="New Single Display" 
                     ?disabled="${this._selectedDisplayIds.length < 1}"
-                    @click="${this._handleCreateSingleDisplayItems}"
+                    @click="${() => this._handleCreateSingleDisplayItems()}"
                   >
                     <span class="material-icons">add_photo_alternate</span>
                   </button>
@@ -418,7 +418,7 @@ export class ScenesView extends BaseResourceView {
                     class="tool-button" 
                     title="New Multi-Display (Tiled)"
                     ?disabled="${this._selectedDisplayIds.length < 2}"
-                    @click="${this._handleCreateMultiDisplayItem}"
+                    @click="${() => this._handleCreateMultiDisplayItem()}"
                   >
                     <span class="material-icons">grid_view</span>
                   </button>
@@ -426,7 +426,7 @@ export class ScenesView extends BaseResourceView {
                     class="tool-button" 
                     title="Edit Item"
                     ?disabled="${!this._selectedItemId}"
-                    @click="${this._handleEditItem}"
+                    @click="${() => this._handleEditItem()}"
                   >
                     <span class="material-icons">edit</span>
                   </button>
@@ -434,7 +434,7 @@ export class ScenesView extends BaseResourceView {
                     class="tool-button" 
                     title="Delete Item"
                     ?disabled="${!this._selectedItemId}"
-                    @click="${this._handleDeleteItem}"
+                    @click="${() => this._handleDeleteItem()}"
                   >
                     <span class="material-icons">delete</span>
                   </button>
