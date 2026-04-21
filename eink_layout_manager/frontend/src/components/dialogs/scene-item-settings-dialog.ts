@@ -1,9 +1,9 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { commonStyles } from '../../styles/common-styles';
+import { Layout, DisplayType, Image, api } from '../../services/HaApiClient';
 import '../shared/base-dialog';
 import { BaseDialog } from '../shared/base-dialog';
-import { Layout, DisplayType } from '../../services/HaApiClient';
 import '../layout/layout-editor';
 
 /**
@@ -26,6 +26,93 @@ export class SceneItemSettingsDialog extends LitElement {
         gap: 0;
         height: 600px;
         margin: -1.5rem; /* Offset the base-dialog padding */
+        transition: grid-template-columns 0.3s ease;
+      }
+
+      .dialog-content.adding-image {
+        grid-template-columns: 280px 1fr;
+      }
+
+      .search-box {
+        padding: 0 1rem 1rem;
+        background: #fcfcfc;
+        border-bottom: 1px solid var(--border-colour);
+      }
+
+      .search-box input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 20px;
+        font-size: 13px;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+
+      .search-box input:focus {
+        border-color: var(--primary-colour);
+      }
+
+      /* Image Grid Styles */
+      .image-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 1rem;
+        padding: 0.5rem;
+      }
+
+      .image-card {
+        background: white;
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        border: 1px solid var(--border-colour);
+        transition: all 0.2s;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .image-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-small);
+        border-color: var(--primary-colour);
+      }
+
+      .thumbnail-container {
+        aspect-ratio: 4 / 3;
+        background-color: #f0f2f5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        position: relative;
+        border-bottom: 1px solid var(--border-colour);
+      }
+
+      .thumbnail-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+
+      .image-info {
+        padding: 0.5rem;
+      }
+
+      .grid-image-name {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-colour);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin: 0;
+      }
+
+      .grid-image-meta {
+        font-size: 10px;
+        color: var(--text-muted);
+        margin-top: 2px;
       }
 
       /* Column common styles */
@@ -286,11 +373,15 @@ export class SceneItemSettingsDialog extends LitElement {
   @state() private _offsetY = 0;
   @state() private _layout: Layout | null = null;
   @state() private _displayTypes: DisplayType[] = [];
+  @state() private _isAddingImage = false;
+  @state() private _availableImages: Image[] = [];
+  @state() private _searchQuery = '';
 
   async show(item: any, layout: Layout, displayTypes: DisplayType[]) {
     this.item = item;
     this._layout = layout;
     this._displayTypes = displayTypes;
+    this._isAddingImage = false;
 
     // Set initial values from item if available
     if (item.images && item.images.length > 0) {
@@ -299,10 +390,48 @@ export class SceneItemSettingsDialog extends LitElement {
       this._offsetX = item.images[0].offset?.x || 0;
       this._offsetY = item.images[0].offset?.y || 0;
     } else {
-      this._selectedImageId = 'img-1';
+      this._selectedImageId = null;
     }
     await this.updateComplete;
     (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).show();
+  }
+
+  private async _toggleAddImage() {
+    this._isAddingImage = !this._isAddingImage;
+    if (this._isAddingImage && this._availableImages.length === 0) {
+      try {
+        this._availableImages = await api.getImages();
+      } catch (e) {
+        console.error('Failed to fetch images', e);
+      }
+    }
+  }
+
+  private _selectImage(image: Image) {
+    if (!this.item.images) {
+      this.item.images = [];
+    }
+    
+    // Check if image already exists
+    if (this.item.images.find((img: any) => img.image_id === image.id)) {
+      this._isAddingImage = false;
+      this._selectedImageId = image.id;
+      return;
+    }
+
+    const newImage = {
+      image_id: image.id,
+      scaling_factor: 100,
+      offset: { x: 0, y: 0 }
+    };
+    
+    this.item.images = [...this.item.images, newImage];
+    this._selectedImageId = image.id;
+    this._scalingFactor = 100;
+    this._offsetX = 0;
+    this._offsetY = 0;
+    this._isAddingImage = false;
+    this.requestUpdate();
   }
 
   private _handleOk() {
@@ -316,140 +445,230 @@ export class SceneItemSettingsDialog extends LitElement {
   render() {
     return html`
       <base-dialog title="Item Settings">
-        <div class="dialog-content">
+        <div class="dialog-content ${this._isAddingImage ? 'adding-image' : ''}">
           <!-- Left Column: Images -->
           <div class="column">
             <div class="column-header">
               <div class="column-title">Images</div>
-              <button class="icon-button" title="Add Image">
-                <span class="material-icons">add</span>
+              <button class="icon-button" title="Add Image" @click="${this._toggleAddImage}">
+                <span class="material-icons">${this._isAddingImage ? 'close' : 'add'}</span>
               </button>
             </div>
             <div class="column-body">
               <div class="image-list">
-                ${[1, 2, 3].map(i => html`
+                ${(this.item?.images || []).map((img: any) => html`
                   <div 
-                    class="image-item ${this._selectedImageId === `img-${i}` ? 'selected' : ''}"
-                    @click="${() => this._selectedImageId = `img-${i}`}"
+                    class="image-item ${this._selectedImageId === img.image_id ? 'selected' : ''}"
+                    @click="${() => {
+                      this._selectedImageId = img.image_id;
+                      this._scalingFactor = img.scaling_factor;
+                      this._offsetX = img.offset.x;
+                      this._offsetY = img.offset.y;
+                    }}"
                   >
                     <div class="image-thumbnail">
-                      <span class="material-icons">image</span>
+                      <img src="/api/image/${img.image_id}/thumbnail" style="width: 100%; height: 100%; object-fit: contain;">
                     </div>
-                    <div class="image-name">Sample Image ${i}.jpg</div>
+                    <div class="image-name">${img.image_id}</div>
                   </div>
                 `)}
+                ${(!this.item?.images || this.item.images.length === 0) ? html`
+                  <div style="text-align: center; color: #ccc; padding: 2rem 0; font-size: 12px;">
+                    No images added to this item yet.
+                  </div>
+                ` : ''}
               </div>
             </div>
             <div class="column-footer">
-              <button class="icon-button danger" title="Delete Image">
+              <button 
+                class="icon-button danger" 
+                title="Delete Image"
+                ?disabled="${!this._selectedImageId}"
+                @click="\${() => {
+                  this.item.images = this.item.images.filter((img: any) => img.image_id !== this._selectedImageId);
+                  this._selectedImageId = this.item.images.length > 0 ? this.item.images[0].image_id : null;
+                  this.requestUpdate();
+                }}"
+              >
                 <span class="material-icons">delete</span>
               </button>
             </div>
           </div>
 
-          <!-- Middle Column: Preview -->
-          <div class="column">
-            <div class="column-header">
-              <div class="column-title">Preview</div>
-            </div>
-            <div class="column-body" style="padding: 0;">
-              <div class="preview-container">
-                ${this._layout ? html`
-                  <layout-editor
-                    .width_mm="${this._layout.canvas_width_mm}"
-                    .height_mm="${this._layout.canvas_height_mm}"
-                    .items="${this._layout.items.filter(i => this.item?.displays?.includes(i.id))}"
-                    .displayTypes="${this._displayTypes}"
-                    .readOnly="${true}"
-                  ></layout-editor>
-                ` : html`
-                  <div class="preview-placeholder">
-                    <span class="material-icons">monochrome_photos</span>
-                    <span>Preview will appear here</span>
-                  </div>
-                `}
+          ${this._isAddingImage ? html`
+            <!-- Center + Right replacement: Image Library Grid -->
+            <div class="column">
+              <div class="column-header">
+                <div class="column-title">Image Library</div>
+              </div>
+              <div class="search-box">
+                <input 
+                  type="text" 
+                  placeholder="Search images..." 
+                  .value="${this._searchQuery}"
+                  @input="${(e: any) => this._searchQuery = e.target.value}"
+                >
+              </div>
+              <div class="column-body">
+                <div class="image-grid">
+                  ${this._availableImages
+                    .filter(img => !this._searchQuery || 
+                           img.name.toLowerCase().includes(this._searchQuery.toLowerCase()) ||
+                           img.artist?.toLowerCase().includes(this._searchQuery.toLowerCase()) ||
+                           img.collection?.toLowerCase().includes(this._searchQuery.toLowerCase()))
+                    .map(image => html`
+                      <div class="image-card" @click="${() => this._selectImage(image)}">
+                        <div class="thumbnail-container">
+                          <img src="/api/image/${image.id}/thumbnail" alt="${image.name}" loading="lazy">
+                        </div>
+                        <div class="image-info">
+                          <p class="grid-image-name" title="${image.name}">${image.name}</p>
+                          <div class="grid-image-meta">
+                            ${image.dimensions.width} &times; ${image.dimensions.height}
+                          </div>
+                        </div>
+                      </div>
+                    `)}
+                </div>
               </div>
             </div>
-          </div>
-
-          <!-- Right Column: Mapping -->
-          <div class="column">
-            <div class="column-header">
-              <div class="column-title">Mapping</div>
+          ` : html`
+            <!-- Middle Column: Preview -->
+            <div class="column">
+              <div class="column-header">
+                <div class="column-title">Preview</div>
+              </div>
+              <div class="column-body" style="padding: 0;">
+                <div class="preview-container">
+                  ${this._layout ? html`
+                    <layout-editor
+                      .width_mm="${this._layout.canvas_width_mm}"
+                      .height_mm="${this._layout.canvas_height_mm}"
+                      .items="${this._layout.items.filter(i => this.item?.displays?.includes(i.id))}"
+                      .displayTypes="${this._displayTypes}"
+                      .readOnly="${true}"
+                    ></layout-editor>
+                  ` : html`
+                    <div class="preview-placeholder">
+                      <span class="material-icons">monochrome_photos</span>
+                      <span>Preview will appear here</span>
+                    </div>
+                  `}
+                </div>
+              </div>
             </div>
-            <div class="column-body">
-              <!-- Scaling -->
-              <div class="controls-group">
-                <div class="controls-group-title">
-                  <span class="material-icons">aspect_ratio</span>
-                  Scaling Factor
-                </div>
-                <div class="control-row">
-                  <input 
-                    type="range" 
-                    min="1" 
-                    max="500" 
-                    .value="${this._scalingFactor}"
-                    @input="${(e: any) => this._scalingFactor = parseInt(e.target.value)}"
-                    style="flex: 1;"
-                  >
-                </div>
-                <div class="control-row">
-                  <div class="input-with-unit">
+
+            <!-- Right Column: Mapping -->
+            <div class="column">
+              <div class="column-header">
+                <div class="column-title">Mapping</div>
+              </div>
+              <div class="column-body">
+                <!-- Scaling -->
+                <div class="controls-group">
+                  <div class="controls-group-title">
+                    <span class="material-icons">aspect_ratio</span>
+                    Scaling Factor
+                  </div>
+                  <div class="control-row">
                     <input 
-                      type="number" 
+                      type="range" 
+                      min="1" 
+                      max="500" 
                       .value="${this._scalingFactor}"
-                      @input="${(e: any) => this._scalingFactor = parseInt(e.target.value)}"
+                      @input="${(e: any) => {
+                        this._scalingFactor = parseInt(e.target.value);
+                        if (this._selectedImageId) {
+                          const img = this.item.images.find((i: any) => i.image_id === this._selectedImageId);
+                          if (img) img.scaling_factor = this._scalingFactor;
+                        }
+                      }}"
+                      style="flex: 1;"
                     >
-                    <span class="unit-label">%</span>
                   </div>
-                  <button class="secondary" style="padding: 6px 12px; font-size: 11px;">FIT</button>
-                </div>
-              </div>
-
-              <!-- Offset -->
-              <div class="controls-group">
-                <div class="controls-group-title">
-                  <span class="material-icons">open_with</span>
-                  Offset
-                </div>
-                <div class="control-row">
-                  <label>X Offset</label>
-                  <div class="input-with-unit">
-                    <input 
-                      type="number" 
-                      .value="${this._offsetX}"
-                      @input="${(e: any) => this._offsetX = parseInt(e.target.value)}"
-                    >
-                    <span class="unit-label">px</span>
-                  </div>
-                </div>
-                <div class="control-row">
-                  <label>Y Offset</label>
-                  <div class="input-with-unit">
-                    <input 
-                      type="number" 
-                      .value="${this._offsetY}"
-                      @input="${(e: any) => this._offsetY = parseInt(e.target.value)}"
-                    >
-                    <span class="unit-label">px</span>
+                  <div class="control-row">
+                    <div class="input-with-unit">
+                      <input 
+                        type="number" 
+                        .value="${this._scalingFactor}"
+                        @input="${(e: any) => {
+                          this._scalingFactor = parseInt(e.target.value);
+                          if (this._selectedImageId) {
+                            const img = this.item.images.find((i: any) => i.image_id === this._selectedImageId);
+                            if (img) img.scaling_factor = this._scalingFactor;
+                          }
+                        }}"
+                      >
+                      <span class="unit-label">%</span>
+                    </div>
+                    <button class="secondary" style="padding: 6px 12px; font-size: 11px;">FIT</button>
                   </div>
                 </div>
 
-                <!-- D-Pad -->
-                <div class="dpad">
-                  <button class="dpad-btn up" title="Move Up"><span class="material-icons">keyboard_arrow_up</span></button>
-                  <button class="dpad-btn left" title="Move Left"><span class="material-icons">keyboard_arrow_left</span></button>
-                  <button class="dpad-btn reset" title="Reset Offset"><span class="material-icons">restart_alt</span></button>
-                  <button class="dpad-btn right" title="Move Right"><span class="material-icons">keyboard_arrow_right</span></button>
-                  <button class="dpad-btn down" title="Move Down"><span class="material-icons">keyboard_arrow_down</span></button>
+                <!-- Offset -->
+                <div class="controls-group">
+                  <div class="controls-group-title">
+                    <span class="material-icons">open_with</span>
+                    Offset
+                  </div>
+                  <div class="control-row">
+                    <label>X Offset</label>
+                    <div class="input-with-unit">
+                      <input 
+                        type="number" 
+                        .value="${this._offsetX}"
+                        @input="${(e: any) => {
+                          this._offsetX = parseInt(e.target.value);
+                          if (this._selectedImageId) {
+                            const img = this.item.images.find((i: any) => i.image_id === this._selectedImageId);
+                            if (img) img.offset.x = this._offsetX;
+                          }
+                        }}"
+                      >
+                      <span class="unit-label">px</span>
+                    </div>
+                  </div>
+                  <div class="control-row">
+                    <label>Y Offset</label>
+                    <div class="input-with-unit">
+                      <input 
+                        type="number" 
+                        .value="${this._offsetY}"
+                        @input="${(e: any) => {
+                          this._offsetY = parseInt(e.target.value);
+                          if (this._selectedImageId) {
+                            const img = this.item.images.find((i: any) => i.image_id === this._selectedImageId);
+                            if (img) img.offset.y = this._offsetY;
+                          }
+                        }}"
+                      >
+                      <span class="unit-label">px</span>
+                    </div>
+                  </div>
+
+                  <!-- D-Pad -->
+                  <div class="dpad">
+                    <button class="dpad-btn up" title="Move Up"><span class="material-icons">keyboard_arrow_up</span></button>
+                    <button class="dpad-btn left" title="Move Left"><span class="material-icons">keyboard_arrow_left</span></button>
+                    <button class="dpad-btn reset" title="Reset Offset"><span class="material-icons">restart_alt</span></button>
+                    <button class="dpad-btn right" title="Move Right"><span class="material-icons">keyboard_arrow_right</span></button>
+                    <button class="dpad-btn down" title="Move Down"><span class="material-icons">keyboard_arrow_down</span></button>
+                  </div>
                 </div>
               </div>
+              <div class="column-footer">
+                <button class="secondary" @click="\${() => { 
+                  this._offsetX = 0; 
+                  this._offsetY = 0; 
+                  if (this._selectedImageId) {
+                    const img = this.item.images.find((i: any) => i.image_id === this._selectedImageId);
+                    if (img) img.offset = { x: 0, y: 0 };
+                  }
+                  this.requestUpdate();
+                }}">Reset Mapping</button>
+              </div>
             </div>
-            <div class="column-footer">
-              <button class="secondary" @click="\${() => { this._offsetX = 0; this._offsetY = 0; }}">Reset Mapping</button>
-            </div>
-          </div>
+          `}
         </div>
 
         <div slot="footer" class="footer-actions">
