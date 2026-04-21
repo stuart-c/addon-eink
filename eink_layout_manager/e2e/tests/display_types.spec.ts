@@ -13,38 +13,6 @@ test.describe('Display Types Management', () => {
     await expect(page.locator('display-types-view')).toBeVisible();
   });
 
-  test('should create a new display type', async ({ page }) => {
-    // Click Add New Item
-    await page.locator('button[title="Add New Item"]').click();
-    
-    // Verify header says "Create New Display Type"
-    await page.waitForTimeout(200);
-    await expect(page.locator('display-types-view .toolbar-title')).toContainText('Create New Display Type');
-    
-    // Fill in the form
-    await page.getByPlaceholder('e.g. Living Room Display').fill('E2E Test Display');
-    await page.locator('div.form-group:has-text("Frame Outer Width (mm)") input').fill('200');
-    await page.locator('div.form-group:has-text("Frame Outer Height (mm)") input').fill('150');
-    await page.locator('div.form-group:has-text("Frame Border Width (mm)") input').fill('10');
-    await page.locator('div.form-group:has-text("Display Panel Width (mm)") input').fill('180');
-    await page.locator('div.form-group:has-text("Display Panel Height (mm)") input').fill('130');
-    await page.locator('div.form-group:has-text("Colour Type") select').selectOption('BWR');
-    await page.locator('div.form-group:has-text("Resolution Width (px)") input').fill('800');
-    await page.locator('div.form-group:has-text("Resolution Height (px)") input').fill('600');
-    
-    // Save
-    await page.locator('button[title="Save Changes"]').click();
-    
-    // Verify success message (toast)
-    await expect(page.locator('app-header')).toContainText('Display type "E2E Test Display" saved!');
-    
-    // Verify it appears in the sidebar
-    await expect(page.locator('sidebar-list .sidebar-item').getByText('E2E Test Display').first()).toBeVisible();
-    
-    // Verify header updated
-    await expect(page.locator('.toolbar-title')).toContainText('Editing: E2E Test Display');
-  });
-
   test('should edit an existing display type', async ({ page }) => {
     // First, ensure there's a display type to edit
     await page.locator('button[title="Add New Item"]').click();
