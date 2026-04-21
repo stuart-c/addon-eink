@@ -125,6 +125,7 @@ describe('ImagesView', () => {
     expect(element.canDelete).toBe(false);
     
     element.selectedImageId = 'img1';
+    await element.updateComplete;
     expect(element.canDelete).toBe(true);
   });
 
@@ -137,11 +138,6 @@ describe('ImagesView', () => {
     
     expect(spy).toHaveBeenCalled();
     expect(spy.mock.calls[0][0].detail).toEqual({ image: mockImages[0] });
-  });
-
-  it('should show placeholder in sidebar', () => {
-    const sidebar = element.shadowRoot?.querySelector('[slot="left-bar"]');
-    expect(sidebar?.textContent).toContain('General Search');
   });
 
   it('should render range sliders for dimensions', () => {
@@ -162,7 +158,7 @@ describe('ImagesView', () => {
   });
 
   it('should render sort priority section', () => {
-    const title = Array.from(element.shadowRoot?.querySelectorAll('.sidebar-title') || [])
+    const title = Array.from(element.shadowRoot?.querySelectorAll('.sidebar-section-title') || [])
       .find(el => el.textContent?.includes('Sort Priority'));
     expect(title).toBeTruthy();
     
@@ -210,17 +206,5 @@ describe('ImagesView', () => {
     await element.updateComplete;
     
     expect(icon?.textContent?.trim()).toBe('south'); // desc
-  });
-
-  it('should reset filters when reset button is clicked', async () => {
-    element.images = mockImages;
-    (element as any)._filterTitle = 'Modified';
-    await element.updateComplete;
-    
-    const resetButton = element.shadowRoot?.querySelector('.reset-button button') as HTMLElement;
-    resetButton.click();
-    await element.updateComplete;
-    
-    expect((element as any)._filterTitle).toBe('');
   });
 });

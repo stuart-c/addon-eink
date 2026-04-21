@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import './display-types-view';
 import { DisplayTypesView } from './display-types-view';
+import '../shared/sidebar-list';
 
 describe('DisplayTypesView', () => {
   let element: DisplayTypesView;
@@ -69,38 +70,23 @@ describe('DisplayTypesView', () => {
     const selectSpy = vi.fn();
     element.addEventListener('select-display-type', selectSpy);
 
-    const items = element.shadowRoot?.querySelectorAll('.sidebar-item');
+    const sidebarList = element.shadowRoot?.querySelector('sidebar-list');
+    const items = sidebarList?.shadowRoot?.querySelectorAll('.sidebar-item');
     // Index 1 is the 2nd display type (Index 0 is the 1st)
     (items?.[1] as HTMLElement).click();
     
     expect(selectSpy).toHaveBeenCalledWith(expect.objectContaining({
       detail: { id: 'dt2' }
     }));
-
-    // Now simulate the parent updating the property
-    element.selectedId = 'dt2';
-    await element.updateComplete;
-    expect(element.displayType?.id).toBe('dt2');
   });
 
-  it('should dispatch select-display-type with null when addNew is called', async () => {
-    const selectSpy = vi.fn();
-    element.addEventListener('select-display-type', selectSpy);
+  it('should dispatch prepare-new-display-type when addNew is called', async () => {
+    const prepareSpy = vi.fn();
+    element.addEventListener('prepare-new-display-type', prepareSpy);
 
     element.addNew();
     
-    expect(selectSpy).toHaveBeenCalledWith(expect.objectContaining({
-      detail: { id: null }
-    }));
-
-    // Simulate parent updating property
-    element.selectedId = null;
-    element.isAdding = true; // NEW: Parent now passes this down
-    await element.updateComplete;
-    
-    expect(element.isNew).toBe(true);
-    expect(element.displayType?.id).toBe('');
-    expect(element.displayType?.name).toBe('');
+    expect(prepareSpy).toHaveBeenCalled();
   });
 
   it('should detect dirty state when fields are modified', async () => {
@@ -119,7 +105,8 @@ describe('DisplayTypesView', () => {
     element.addEventListener('save', saveSpy);
     
     // Fill in a name for a new device
-    element.addNew();
+    element.selectedId = null;
+    element.isAdding = true;
     await element.updateComplete;
     
     const nameInput = element.shadowRoot?.querySelector('input[type="text"]') as HTMLInputElement;

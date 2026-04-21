@@ -38,7 +38,7 @@ test.describe('Smart Scene Items interaction', () => {
     await expect(page.locator('scenes-view')).toBeVisible();
     
     // Select our test scene
-    const sidebarItem = page.locator('.sidebar-item').getByText(sceneName);
+    const sidebarItem = page.locator('sidebar-list .sidebar-item').getByText(sceneName);
     await sidebarItem.click();
     await expect(page.locator('.toolbar-title')).toContainText(sceneName);
   });
@@ -109,7 +109,7 @@ test.describe('Smart Scene Items interaction', () => {
      await expect(editBtn).toBeEnabled();
      
      // Switch back to first scene
-     await page.locator('.sidebar-item').getByText(sceneName).click();
+     await page.locator('sidebar-list .sidebar-item').getByText(sceneName).click();
      await expect(page.locator('.toolbar-title')).toContainText(sceneName);
      
      // Selection should be cleared

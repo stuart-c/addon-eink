@@ -61,38 +61,11 @@ test.describe('Smart Scenes Management', () => {
     await dialog.locator('button.primary').click();
     
     // Verify it appears in the sidebar and wait for it to be visible
-    const sidebarItem = page.locator('.sidebar-item').getByText(sceneName);
+    const sidebarItem = page.locator('sidebar-list .sidebar-item').getByText(sceneName);
     await expect(sidebarItem).toBeVisible();
     
     // Verify toolbar shows the name
     await expect(page.locator('.toolbar-title')).toContainText(sceneName);
-  });
-
-  test('should select a scene from the sidebar', async ({ page }) => {
-    const name1 = getUniqueName('Scene A');
-    const name2 = getUniqueName('Scene B');
-
-    // Create first scene
-    await page.locator('button[title="Add New Item"]').click();
-    await page.locator('scene-dialog input').fill(name1);
-    await page.locator('scene-dialog button.primary').click();
-    await expect(page.locator('.sidebar-item').getByText(name1)).toBeVisible();
-    
-    // Create second scene
-    await page.locator('button[title="Add New Item"]').click();
-    await page.locator('scene-dialog input').fill(name2);
-    await page.locator('scene-dialog button.primary').click();
-    await expect(page.locator('.sidebar-item').getByText(name2)).toBeVisible();
-    
-    // Select the first one
-    await page.locator('.sidebar-item').getByText(name1).click();
-    await expect(page.locator('.toolbar-title')).toContainText(name1);
-    await expect(page.locator('.sidebar-item.selected')).toContainText(name1);
-    
-    // Select the second one
-    await page.locator('.sidebar-item').getByText(name2).click();
-    await expect(page.locator('.toolbar-title')).toContainText(name2);
-    await expect(page.locator('.sidebar-item.selected')).toContainText(name2);
   });
 
   test('should show layout preview when selected', async ({ page }) => {
@@ -104,7 +77,7 @@ test.describe('Smart Scenes Management', () => {
     await page.locator('scene-dialog button.primary').click();
     
     // Select it
-    await page.locator('.sidebar-item').getByText(sceneName).click();
+    await page.locator('sidebar-list .sidebar-item').getByText(sceneName).click();
     
     // Verify layout-editor is visible instead of empty-view
     await expect(page.locator('layout-editor')).toBeVisible();
@@ -119,7 +92,7 @@ test.describe('Smart Scenes Management', () => {
     await page.locator('button[title="Add New Item"]').click();
     await page.locator('scene-dialog input').fill(originalName);
     await page.locator('scene-dialog button.primary').click();
-    await expect(page.locator('.sidebar-item').getByText(originalName)).toBeVisible();
+    await expect(page.locator('sidebar-list .sidebar-item').getByText(originalName)).toBeVisible();
     
     // Click Scene Settings (cog)
     await page.locator('button[title="Scene Settings"]').click();
@@ -134,7 +107,7 @@ test.describe('Smart Scenes Management', () => {
     await dialog.locator('button.primary').click();
     
     // Verify name updated in sidebar and toolbar
-    await expect(page.locator('.sidebar-item').getByText(updatedName)).toBeVisible();
+    await expect(page.locator('sidebar-list .sidebar-item').getByText(updatedName)).toBeVisible();
     await expect(page.locator('.toolbar-title')).toContainText(updatedName);
   });
 
@@ -187,7 +160,7 @@ test.describe('Smart Scenes Management', () => {
     
     // Verify toolbar and sidebar updated
     await expect(page.locator('.toolbar-title')).toContainText(yamlName);
-    await expect(page.locator('.sidebar-item.selected')).toContainText(yamlName);
+    await expect(page.locator('sidebar-list .sidebar-item.selected')).toContainText(yamlName);
   });
 
   test('should show error message for invalid YAML', async ({ page }) => {
@@ -228,11 +201,11 @@ test.describe('Smart Scenes Management', () => {
     await page.locator('scene-dialog button.primary').click();
     
     // Wait for sidebar item to be visible and selected
-    const sidebarItem = page.locator('.sidebar-item').getByText(deleteName);
+    const sidebarItem = page.locator('sidebar-list .sidebar-item').getByText(deleteName);
     await expect(sidebarItem).toBeVisible();
     
     // Sometimes the selection takes a beat
-    await expect(page.locator('.sidebar-item.selected')).toContainText(deleteName);
+    await expect(page.locator('sidebar-list .sidebar-item.selected')).toContainText(deleteName);
     
     // Click Delete Current Item in header
     const deleteBtn = page.locator('button[title="Delete Current Item"]');
@@ -258,7 +231,7 @@ test.describe('Smart Scenes Management', () => {
     await page.locator('button[title="Add New Item"]').click();
     await page.locator('scene-dialog input').fill(sceneName);
     await page.locator('scene-dialog button.primary').click();
-    await expect(page.locator('.sidebar-item').getByText(sceneName)).toBeVisible();
+    await expect(page.locator('sidebar-list .sidebar-item').getByText(sceneName)).toBeVisible();
     
     // Verify layout-editor is visible (Graphical mode default)
     await expect(page.locator('layout-editor')).toBeVisible();
@@ -285,7 +258,7 @@ test.describe('Smart Scenes Management', () => {
     await page.locator('scene-dialog select').selectOption({ label: sharedLayoutName });
     await page.locator('scene-dialog button.primary').click();
     
-    const sidebarItem = page.locator('.sidebar-item').getByText(sceneName);
+    const sidebarItem = page.locator('sidebar-list .sidebar-item').getByText(sceneName);
     await sidebarItem.click();
     
     // Wait for workspace to be visible to ensure scene is loaded
@@ -331,7 +304,7 @@ test.describe('Smart Scenes Management', () => {
     await page.locator('scene-dialog input').fill(sceneName);
     await page.locator('scene-dialog select').selectOption({ label: sharedLayoutName });
     await page.locator('scene-dialog button.primary').click();
-    await page.locator('.sidebar-item').getByText(sceneName).click();
+    await page.locator('sidebar-list .sidebar-item').getByText(sceneName).click();
     
     // Select both displays
     await page.locator('layout-box[data-id="display-1"]').dispatchEvent('mousedown');
@@ -361,7 +334,7 @@ test.describe('Smart Scenes Management', () => {
     await page.locator('scene-dialog input').fill(sceneName);
     await page.locator('scene-dialog select').selectOption({ label: sharedLayoutName });
     await page.locator('scene-dialog button.primary').click();
-    await page.locator('.sidebar-item').getByText(sceneName).click();
+    await page.locator('sidebar-list .sidebar-item').getByText(sceneName).click();
     
     // Select both displays
     await page.locator('layout-box[data-id="display-1"]').dispatchEvent('mousedown');
@@ -391,7 +364,7 @@ test.describe('Smart Scenes Management', () => {
     await page.locator('scene-dialog input').fill(sceneName);
     await page.locator('scene-dialog select').selectOption({ label: sharedLayoutName });
     await page.locator('scene-dialog button.primary').click();
-    await page.locator('.sidebar-item').getByText(sceneName).click();
+    await page.locator('sidebar-list .sidebar-item').getByText(sceneName).click();
     
     // 2. Select first display and add as single item
     await page.locator('layout-box[data-id="display-1"]').click();

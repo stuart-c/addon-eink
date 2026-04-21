@@ -1,7 +1,8 @@
-import { LitElement, html, css } from 'lit';
+import { html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { Image } from '../../services/HaApiClient';
 import { commonStyles } from '../../styles/common-styles';
+import { BaseResourceView } from './base-resource-view';
 import '../shared/section-layout';
 import '../shared/empty-view';
 import '../shared/range-slider';
@@ -18,7 +19,7 @@ interface SortConfig {
  * A view component for managing the Image Library.
  */
 @customElement('images-view')
-export class ImagesView extends LitElement {
+export class ImagesView extends BaseResourceView {
   static styles = [
     commonStyles,
     css`
@@ -108,22 +109,6 @@ export class ImagesView extends LitElement {
         display: flex;
         flex-direction: column;
         gap: 0.75rem;
-      }
-
-      .sidebar-title {
-        font-size: 11px;
-        font-weight: 700;
-        color: var(--text-muted);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 0.25rem;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-
-      .sidebar-title .material-icons {
-        font-size: 14px;
       }
 
       .filter-grid {
@@ -273,8 +258,22 @@ export class ImagesView extends LitElement {
   @property({ type: Array }) images: Image[] = [];
   @property({ type: String }) selectedImageId: string | null = null;
 
-  get canDelete() {
-    return !!this.selectedImageId;
+  protected willUpdate(changedProperties: Map<string | number | symbol, unknown>) {
+    if (changedProperties.has('selectedImageId')) {
+      this.notifyCanDelete(!!this.selectedImageId);
+    }
+  }
+
+  public save() {
+    // Images are currently saved via dialog-driven upload, no inline saving yet.
+  }
+
+  public discard() {
+    // No inline discard logic needed for the grid view.
+  }
+
+  public addNew() {
+    // Handled via image-dialog triggered by app-root.
   }
 
   public requestDelete() {
@@ -286,6 +285,10 @@ export class ImagesView extends LitElement {
         composed: true
       }));
     }
+  }
+
+  get canDelete() {
+    return !!this.selectedImageId;
   }
 
   @state() private _filterTitle = '';
@@ -309,7 +312,6 @@ export class ImagesView extends LitElement {
     }
 
     const trigger = () => {
-      // Convert sort fields to string
       const sort = this._sortFields
         .map(s => `${s.field}:${s.direction}`)
         .join(',');
@@ -362,7 +364,7 @@ export class ImagesView extends LitElement {
         <div slot="left-bar" class="sidebar-content">
           <!-- General Search -->
           <div class="sidebar-section">
-            <div class="sidebar-title">
+            <div class="sidebar-section-title">
               <span class="material-icons">search</span>
               General Search
             </div>
@@ -420,7 +422,7 @@ export class ImagesView extends LitElement {
 
           <!-- Dimensions -->
           <div class="sidebar-section">
-            <div class="sidebar-title">
+            <div class="sidebar-section-title">
               <span class="material-icons">aspect_ratio</span>
               Dimensions (px)
             </div>
@@ -452,7 +454,7 @@ export class ImagesView extends LitElement {
 
           <!-- Classification -->
           <div class="sidebar-section">
-            <div class="sidebar-title">
+            <div class="sidebar-section-title">
               <span class="material-icons">sell</span>
               Classification
             </div>
@@ -471,7 +473,7 @@ export class ImagesView extends LitElement {
 
           <!-- Sorting -->
           <div class="sidebar-section">
-            <div class="sidebar-title">
+            <div class="sidebar-section-title">
               <span class="material-icons">sort</span>
               Sort Priority
             </div>
@@ -511,8 +513,8 @@ export class ImagesView extends LitElement {
           </div>
         </div>
 
-        <div slot="right-top-bar" style="font-weight: 600; color: #333;">
-          Image Library
+        <div slot="right-top-bar" class="toolbar-content">
+          <div class="toolbar-title">Image Library</div>
         </div>
 
         <div slot="right-main">

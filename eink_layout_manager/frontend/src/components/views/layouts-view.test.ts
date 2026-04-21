@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { LayoutsView } from './layouts-view';
 import './layouts-view';
+import '../shared/sidebar-list';
 import { Layout, DisplayType } from '../../services/HaApiClient';
 
 describe('LayoutsView', () => {
@@ -46,22 +47,37 @@ describe('LayoutsView', () => {
     element.remove();
   });
 
-  it('should render the side-bar and app-toolbar', () => {
-    const sideBar = element.shadowRoot?.querySelector('side-bar');
-    const toolbar = element.shadowRoot?.querySelector('app-toolbar');
-    expect(sideBar).toBeTruthy();
-    expect(toolbar).toBeTruthy();
+  it('should render the sidebar-list and toolbar-title', () => {
+    const sidebarList = element.shadowRoot?.querySelector('sidebar-list');
+    const toolbarTitle = element.shadowRoot?.querySelector('.toolbar-title');
+    expect(sidebarList).toBeTruthy();
+    expect(toolbarTitle).toBeTruthy();
   });
 
-  it('should dispatch dirty-state-change when activeLayout changes', async () => {
+  it('should reset baseline and report clean when activeLayout changes to a new layout', async () => {
     const spy = vi.fn();
     element.addEventListener('dirty-state-change', spy);
     
+    // Switch to a DIFFERENT layout
+    element.activeLayout = { ...mockLayouts[0], id: 'l2', name: 'Layout 2' };
+    await element.updateComplete;
+    
+    expect(spy).toHaveBeenCalledWith(expect.objectContaining({
+        detail: { isDirty: false }
+    }));
+  });
+
+  it('should report dirty when activeLayout content changes but ID remains same', async () => {
+    const spy = vi.fn();
+    element.addEventListener('dirty-state-change', spy);
+    
+    // Modify current layout (baseline is mockLayouts[0])
     element.activeLayout = { ...mockLayouts[0], name: 'Modified' };
     await element.updateComplete;
     
-    expect(spy).toHaveBeenCalled();
-    expect(spy.mock.calls[0][0].detail).toEqual({ isDirty: true });
+    expect(spy).toHaveBeenCalledWith(expect.objectContaining({
+        detail: { isDirty: true }
+    }));
   });
 
   it('should dispatch save-layout when save is called', async () => {
@@ -98,29 +114,31 @@ describe('LayoutsView', () => {
     }));
   });
 
-  it('should dispatch update-active-layout when an item is added', async () => {
+  it('should dispatch set-section when add display button is clicked', async () => {
     const spy = vi.fn();
-    element.addEventListener('update-active-layout', spy);
+    element.addEventListener('set-section', spy);
     
-    const sideBar = element.shadowRoot?.querySelector('side-bar');
-    sideBar?.dispatchEvent(new CustomEvent('add-item-to-layout', {
-      detail: mockDisplayTypes[0]
+    const addBtn = element.shadowRoot?.querySelector('button[title="Add Display"]');
+    addBtn?.dispatchEvent(new MouseEvent('click'));
+    
+    expect(spy).toHaveBeenCalledWith(expect.objectContaining({
+      detail: 'display-types'
     }));
-    
-    expect(spy).toHaveBeenCalled();
-    const updates = spy.mock.calls[0][0].detail;
-    expect(updates.items.length).toBe(1);
-    expect(updates.items[0].display_type_id).toBe('dt1');
   });
 
-  it('should dispatch select-item when an item is selected in editor', async () => {
+  it('should dispatch select-item when an item is clicked in the content pane', async () => {
+    // Add an item to active layout first
+    element.activeLayout = {
+        ...mockLayouts[0],
+        items: [{ id: 'item1', display_type_id: 'dt1', x_mm: 10, y_mm: 10, orientation: 'landscape' }]
+    };
+    await element.updateComplete;
+
     const spy = vi.fn();
     element.addEventListener('select-item', spy);
     
-    const editor = element.shadowRoot?.querySelector('layout-editor');
-    editor?.dispatchEvent(new CustomEvent('select-item', {
-      detail: { id: 'item1' }
-    }));
+    const card = element.shadowRoot?.querySelector('.layout-item-card');
+    card?.dispatchEvent(new MouseEvent('click'));
     
     expect(spy).toHaveBeenCalledWith(expect.objectContaining({
       detail: { id: 'item1' }
