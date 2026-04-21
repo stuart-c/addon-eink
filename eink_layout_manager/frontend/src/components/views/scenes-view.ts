@@ -262,8 +262,14 @@ export class ScenesView extends BaseResourceView {
   }
 
   private _handleItemDoubleClick(item: any) {
+    const activeScene = this.state?.activeScene || this.activeScene;
+    if (!activeScene) return;
+    
+    const layout = this.state.layouts.find((l: any) => l.id === activeScene.layout);
+    if (!layout) return;
+
     this._selectedItemId = item.id;
-    this._itemSettingsDialog.show(item);
+    this._itemSettingsDialog.show(item, layout, this.state.displayTypes);
   }
 
   private _handleEditItem() {
@@ -271,8 +277,10 @@ export class ScenesView extends BaseResourceView {
     if (!activeScene || !this._selectedItemId) return;
     
     const item = activeScene.items?.find((i: any) => i.id === this._selectedItemId);
-    if (item) {
-      this._itemSettingsDialog.show(item);
+    const layout = this.state.layouts.find((l: any) => l.id === activeScene.layout);
+    
+    if (item && layout) {
+      this._itemSettingsDialog.show(item, layout, this.state.displayTypes);
     }
   }
 

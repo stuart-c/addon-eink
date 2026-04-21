@@ -3,6 +3,8 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { commonStyles } from '../../styles/common-styles';
 import '../shared/base-dialog';
 import { BaseDialog } from '../shared/base-dialog';
+import { Layout, DisplayType } from '../../services/HaApiClient';
+import '../layout/layout-editor';
 
 /**
  * A dialog component for editing the settings of an item in a scene.
@@ -282,9 +284,14 @@ export class SceneItemSettingsDialog extends LitElement {
   @state() private _scalingFactor = 100;
   @state() private _offsetX = 0;
   @state() private _offsetY = 0;
+  @state() private _layout: Layout | null = null;
+  @state() private _displayTypes: DisplayType[] = [];
 
-  async show(item: any) {
+  async show(item: any, layout: Layout, displayTypes: DisplayType[]) {
     this.item = item;
+    this._layout = layout;
+    this._displayTypes = displayTypes;
+
     // Set initial values from item if available
     if (item.images && item.images.length > 0) {
       this._selectedImageId = item.images[0].image_id;
@@ -347,10 +354,20 @@ export class SceneItemSettingsDialog extends LitElement {
             </div>
             <div class="column-body" style="padding: 0;">
               <div class="preview-container">
-                <div class="preview-placeholder">
-                  <span class="material-icons">monochrome_photos</span>
-                  <span>Preview will appear here</span>
-                </div>
+                ${this._layout ? html`
+                  <layout-editor
+                    .width_mm="${this._layout.canvas_width_mm}"
+                    .height_mm="${this._layout.canvas_height_mm}"
+                    .items="${this._layout.items.filter(i => this.item?.displays?.includes(i.id))}"
+                    .displayTypes="${this._displayTypes}"
+                    .readOnly="${true}"
+                  ></layout-editor>
+                ` : html`
+                  <div class="preview-placeholder">
+                    <span class="material-icons">monochrome_photos</span>
+                    <span>Preview will appear here</span>
+                  </div>
+                `}
               </div>
             </div>
           </div>
