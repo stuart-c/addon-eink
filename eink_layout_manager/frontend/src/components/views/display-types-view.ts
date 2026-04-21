@@ -415,7 +415,7 @@ export class DisplayTypesView extends BaseResourceView {
                 .panel_height_mm="${dt.panel_height_mm}"
                 .frame_colour="${dt.frame.colour}"
                 .mat_colour="${dt.mat.colour}"
-                .scale="${60 / Math.max(dt.width_mm, dt.height_mm)}"
+                .scale="${40 / Math.max(dt.width_mm, dt.height_mm)}"
             ></hardware-preview>
         </div>
       `
