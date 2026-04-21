@@ -42,7 +42,7 @@ export class LayoutsView extends BaseResourceView {
       }
       
       .content-pane {
-        width: 320px;
+        width: 340px;
         background: white;
         border-left: 1px solid var(--border-colour);
         display: flex;
