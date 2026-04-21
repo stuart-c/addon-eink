@@ -159,7 +159,7 @@ export const commonStyles = css`
 
   .toolbar-actions {
     display: flex;
-    gap: 0.75rem;
+    gap: 0.5rem;
   }
 
   /* Sidebar Section Titles */

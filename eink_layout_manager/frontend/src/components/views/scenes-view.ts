@@ -80,7 +80,7 @@ export class ScenesView extends BaseResourceView {
       }
       .pane-toolbar {
         display: flex;
-        gap: 0.4rem;
+        gap: 0.5rem;
       }
       .tool-button {
         width: 34px;
