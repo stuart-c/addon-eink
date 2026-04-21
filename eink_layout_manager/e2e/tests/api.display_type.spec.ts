@@ -45,6 +45,32 @@ test('POST /api/display_type — creates a resource and returns 201', async ({ r
   expect(body.id).toBeDefined();
 });
 
+test('POST /api/display_type — normalizes dimensions to landscape (width >= height)', async ({ request }) => {
+  // Create a portrait display type (height > width)
+  const payload: Omit<DisplayType, 'id'> = {
+    ...DEFAULT_DISPLAY_TYPE,
+    name: 'Portrait DT',
+    width_mm: 50,
+    height_mm: 100,
+    panel_width_mm: 45,
+    panel_height_mm: 90,
+    width_px: 200,
+    height_px: 400,
+  };
+
+  const response = await request.post('/api/display_type', { data: payload });
+  expect(response.status()).toBe(201);
+
+  const body: DisplayType = await response.json();
+  // Expect swapped values
+  expect(body.width_mm).toBe(100);
+  expect(body.height_mm).toBe(50);
+  expect(body.panel_width_mm).toBe(90);
+  expect(body.panel_height_mm).toBe(45);
+  expect(body.width_px).toBe(400);
+  expect(body.height_px).toBe(200);
+});
+
 test('POST /api/display_type — creation response matches GET response', async ({ request }) => {
   const payload: Omit<DisplayType, 'id'> = { ...DEFAULT_DISPLAY_TYPE, name: 'Parity DT' };
 

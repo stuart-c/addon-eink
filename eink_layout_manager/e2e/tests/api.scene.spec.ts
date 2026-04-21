@@ -6,6 +6,8 @@
 
 import { test, expect } from '@playwright/test';
 import {
+  createLayout,
+  createImage,
   createScene,
   DEFAULT_SCENE,
   type Scene,
@@ -204,4 +206,90 @@ test('POST /api/scene — can create multiple resources and they all appear in t
 test('DELETE /api/scene/:id — returns 404 for non-existent ID', async ({ request }) => {
   const response = await request.delete('/api/scene/no-such-thing');
   expect(response.status()).toBe(404);
+});
+
+// ---------------------------------------------------------------------------
+// Scene Validation Tests
+// ---------------------------------------------------------------------------
+
+test('POST /api/scene — returns 400 when display does not exist in layout', async ({ request }) => {
+  const layout = await createLayout(request, {
+    name: 'Validation Layout',
+    items: [{ id: 'real-display', display_type_id: 'any', x_mm: 0, y_mm: 0, orientation: 'landscape' }]
+  });
+
+  const response = await request.post('/api/scene', {
+    data: {
+      name: 'Invalid Display Scene',
+      layout: layout.id,
+      items: [
+        {
+          id: 'item-1',
+          type: 'image',
+          displays: ['ghost-display'], // Doesn't exist in layout
+          images: []
+        }
+      ]
+    }
+  });
+
+  expect(response.status()).toBe(400);
+});
+
+test('POST /api/scene — returns 400 when display is used multiple times', async ({ request }) => {
+  const layout = await createLayout(request, {
+    name: 'Duplicate Layout',
+    items: [{ id: 'shared-display', display_type_id: 'any', x_mm: 0, y_mm: 0, orientation: 'landscape' }]
+  });
+
+  const response = await request.post('/api/scene', {
+    data: {
+      name: 'Duplicate Display Scene',
+      layout: layout.id,
+      items: [
+        {
+          id: 'item-1',
+          type: 'image',
+          displays: ['shared-display'],
+          images: []
+        },
+        {
+          id: 'item-2',
+          type: 'image',
+          displays: ['shared-display'], // Duplicate
+          images: []
+        }
+      ]
+    }
+  });
+
+  expect(response.status()).toBe(400);
+});
+
+test('POST /api/scene — returns 400 for negative scaling_factor', async ({ request }) => {
+  const layout = await createLayout(request);
+  const image = await createImage(request);
+
+  const response = await request.post('/api/scene', {
+    data: {
+      name: 'Bad Scale Scene',
+      layout: layout.id,
+      items: [
+        {
+          id: 'item-1',
+          type: 'image',
+          displays: [],
+          images: [
+            {
+              image_id: image.id,
+              scaling_factor: -1.0, // Invalid
+              offset: { x: 0, y: 0 }
+            }
+          ]
+        }
+      ]
+    }
+  });
+
+  expect(response.status()).toBe(400);
 });

@@ -9,6 +9,7 @@ import { test, expect } from '@playwright/test';
 import {
   createDisplayType,
   createLayout,
+  createScene,
   DEFAULT_LAYOUT,
   type Layout,
 } from './helpers/api.js';
@@ -198,6 +199,27 @@ test('DELETE /api/layout/:id — deletes resource and returns {status: "deleted"
 test('DELETE /api/layout/:id — returns 404 for non-existent ID', async ({ request }) => {
   const response = await request.delete('/api/layout/no-such-thing');
   expect(response.status()).toBe(404);
+});
+
+test('DELETE /api/layout/:id — returns 400 when layout is in use by a scene', async ({ request }) => {
+  const layout = await createLayout(request, { name: 'Ref Layout' });
+  const layoutId = layout.id;
+
+  const scene = await createScene(request, {
+    name: 'Ref Scene',
+    layout: layoutId,
+  });
+  const sceneId = scene.id;
+
+  const deleteResponse = await request.delete(`/api/layout/${layoutId}`);
+  expect(deleteResponse.status()).toBe(400);
+  const body = await deleteResponse.json();
+  expect(body.error).toBe('Conflict');
+
+  // Clean up — delete scene first, then layout
+  await request.delete(`/api/scene/${sceneId}`);
+  const retryDelete = await request.delete(`/api/layout/${layoutId}`);
+  expect(retryDelete.status()).toBe(200);
 });
 
 // ---------------------------------------------------------------------------
