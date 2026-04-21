@@ -388,6 +388,7 @@ export class LayoutEditor extends LitElement {
                     ?used="${this.usedIds.includes(item.id)}"
                     .readOnly="${this.readOnly}"
                     @mousedown="${() => this._handleBoxSelect(item.id)}"
+                    @dblclick="${() => this._handleBoxEdit(item.id)}"
                     @item-edit="${() => this._handleBoxEdit(item.id)}"
                     @item-rotate="${() => this._handleBoxRotate(item.id)}"
                     @item-delete="${() => this.dispatchEvent(new CustomEvent('item-delete', { detail: { id: item.id } }))}"

@@ -201,4 +201,38 @@ test.describe('Layouts Management', () => {
     // Verify gone from sidebar
     await expect(page.locator('sidebar-list .sidebar-item').filter({ hasText: layoutName })).not.toBeVisible();
   });
+
+  test('should open display settings by double clicking on the layout box', async ({ page, request }) => {
+    const uniqueId = Date.now();
+    const dtName = `DblClick DT ${uniqueId}`;
+    await createDisplayType(request, { name: dtName });
+    
+    // Create a layout
+    await page.locator('button[title="Add New Item"]').click();
+    await page.locator('layout-settings-dialog input[type="text"]').fill(`DblClick Layout ${uniqueId}`);
+    await page.locator('layout-settings-dialog input[type="number"]').nth(0).fill('600');
+    await page.locator('layout-settings-dialog input[type="number"]').nth(1).fill('400');
+    await page.locator('layout-settings-dialog grid-snap-slider .label-item').filter({ hasText: '5mm' }).click();
+    await page.getByRole('button', { name: 'Save Settings' }).click();
+    await page.locator('button[title="Save Changes"]').click();
+    await expect(page.locator('app-header').getByText(/Layout saved!|Layout ".*" created!/)).toBeVisible({ timeout: 10000 });
+
+    // Add item
+    await page.locator('button[title="Add Display"]').click();
+    await page.locator('#menu-display-types .display-type-item').filter({ hasText: dtName }).click();
+    
+    // Verify an item appeared
+    const layoutBox = page.locator('layout-box');
+    await expect(layoutBox).toBeVisible();
+    
+    // Double click the layout box in the editor
+    await layoutBox.dblclick({ force: true });
+    
+    // Verify dialog appears
+    const dialog = page.locator('item-settings-dialog');
+    await expect(dialog.getByRole('heading', { name: 'Display Settings' })).toBeVisible();
+    
+    // Close dialog
+    await dialog.getByRole('button', { name: 'Cancel' }).click();
+  });
 });
