@@ -28,7 +28,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           workdir: eink_layout_manager/backend
-          fail_on_error: true
+          fail_level: any
 
       - name: black Lint
         uses: reviewdog/action-black@644053a260402bc4278a865906107bd8aef7fae8 # v3.22.4
@@ -37,4 +37,4 @@ jobs:
           reporter: github-pr-check
           level: error
           workdir: eink_layout_manager/backend
-          fail_on_error: true
+          fail_level: any
