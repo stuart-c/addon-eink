@@ -72,7 +72,7 @@ test.describe('Smart Scene Items interaction', () => {
     const dialog = page.locator('scene-item-settings-dialog');
     const nativeDialog = dialog.locator('dialog');
     await expect(nativeDialog).toBeVisible();
-    await expect(dialog).toContainText('Mapping');
+    await expect(dialog).toContainText('Scaling Factor');
     
     // Close with Cancel
     await dialog.locator('button:has-text("Cancel")').click();
