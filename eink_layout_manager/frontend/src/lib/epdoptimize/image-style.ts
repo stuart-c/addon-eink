@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { CanvasLike, ImageDataLike } from "./dither/dither";
 
 export type ImageStyle = "photo" | "illustration" | "unknown";

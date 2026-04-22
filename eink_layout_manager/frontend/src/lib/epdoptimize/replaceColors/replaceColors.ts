@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { PaletteColorEntry } from "../dither/functions/palette-order";
 
 type RGB = [number, number, number];

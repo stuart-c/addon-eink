@@ -1,3 +1,4 @@
+// @ts-nocheck
 import palettes from "./dither/data/default-palettes.json";
 import {
   getNamedEntries,

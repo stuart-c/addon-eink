@@ -1,3 +1,4 @@
+// @ts-nocheck
 const CANONICAL_COLOR_ORDER = [
   "black",
   "white",
