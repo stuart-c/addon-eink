@@ -432,7 +432,7 @@ export class SceneItemSettingsDialog extends LitElement {
     // Load source image
     const imgElement = new Image();
     imgElement.crossOrigin = 'anonymous';
-    imgElement.src = `/api/image/${image.id}`;
+    imgElement.src = `/api/image/${image.id}/file`;
     await new Promise((resolve, reject) => {
       imgElement.onload = resolve;
       imgElement.onerror = reject;
@@ -442,7 +442,7 @@ export class SceneItemSettingsDialog extends LitElement {
     const firstDisplayId = this.item.displays[0];
     const layoutBox = this._layout?.items.find(i => i.id === firstDisplayId);
     const dt = this._displayTypes.find(t => t.id === layoutBox?.display_type_id);
-    if (!dt) return;
+    if (!dt || !dt.width_mm || !dt.width_px) return;
 
     const pxPerMm = dt.width_px / dt.width_mm;
     const canvasWidthPx = Math.round(this._previewData.width * pxPerMm);

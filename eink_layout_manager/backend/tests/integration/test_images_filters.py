@@ -4,7 +4,7 @@ from backend import database, models
 
 
 @pytest.mark.asyncio
-async def test_image_list_filter_status_ready(aiohttp_client, app):
+async def test_image_list_filter_status_active(aiohttp_client, app):
     """Test that only ACTIVE images are returned by default."""
     client = await aiohttp_client(app)
 

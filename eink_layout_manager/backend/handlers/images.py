@@ -243,6 +243,30 @@ class ImageHandler(BaseCRUDHandler):
 
             return web.FileResponse(thumb_file_path)
 
+    async def file_get(self, request):
+        """Custom endpoint for original image file retrieval."""
+        image_id = request.match_info["id"]
+        try:
+            image_id = validate_id(image_id)
+        except ValueError as e:
+            return web.json_response({"error": str(e)}, status=400)
+
+        async with database.get_session() as session:
+            stmt = select(models.Image).where(models.Image.id == image_id)
+            result = await session.execute(stmt)
+            image = result.scalar_one_or_none()
+
+            if not image or not image.file_path:
+                return web.json_response({"error": "Not Found"}, status=404)
+
+            image_storage_path = get_storage_path("image")
+            file_path = os.path.join(image_storage_path, image.file_path)
+
+            if not os.path.exists(file_path):
+                return web.json_response({"error": "Not Found"}, status=404)
+
+            return web.FileResponse(file_path)
+
     async def keywords_get(self, request):
         """Custom endpoint for keyword list."""
         async with database.get_session() as session:
@@ -290,6 +314,10 @@ async def handle_image_list(request):
 
 async def handle_image_thumbnail_get(request):
     return await image_handler.thumbnail_get(request)
+
+
+async def handle_image_file_get(request):
+    return await image_handler.file_get(request)
 
 
 @response_schema("status_response")
