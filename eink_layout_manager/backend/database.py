@@ -230,7 +230,6 @@ async def ensure_schema_up_to_date(conn):
 
 
 async def init_db():
-
     """Initialise the database engine and create tables."""
     global _engine, _session_factory
 
