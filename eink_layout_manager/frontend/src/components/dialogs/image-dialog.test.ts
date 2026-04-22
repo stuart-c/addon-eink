@@ -245,4 +245,44 @@ describe('ImageDialog', () => {
       expect(propertiesSection?.classList.contains('open')).toBe(false);
     });
   });
+
+  describe('Delete Logic', () => {
+    it('should not show delete button in add mode', async () => {
+      await element.show();
+      await element.updateComplete;
+
+      const deleteBtn = Array.from(element.shadowRoot?.querySelectorAll('button') || [])
+        .find(b => b.textContent?.trim().includes('Delete'));
+      
+      expect(deleteBtn).toBeFalsy();
+    });
+
+    it('should show delete button in edit mode', async () => {
+      await element.show(mockImage);
+      await element.updateComplete;
+
+      const deleteBtn = Array.from(element.shadowRoot?.querySelectorAll('button') || [])
+        .find(b => b.textContent?.trim().includes('Delete')) as HTMLButtonElement;
+      
+      expect(deleteBtn).toBeTruthy();
+      expect(deleteBtn.classList.contains('danger')).toBe(true);
+    });
+
+    it('should dispatch delete event when delete button is clicked', async () => {
+      await element.show(mockImage);
+      await element.updateComplete;
+
+      const deleteBtn = Array.from(element.shadowRoot?.querySelectorAll('button') || [])
+        .find(b => b.textContent?.trim().includes('Delete')) as HTMLButtonElement;
+      
+      const deleteListener = vi.fn();
+      element.addEventListener('delete', deleteListener);
+
+      await deleteBtn.click();
+
+      expect(deleteListener).toHaveBeenCalled();
+      const event = deleteListener.mock.calls[0][0];
+      expect(event.detail.image.id).toBe(mockImage.id);
+    });
+  });
 });

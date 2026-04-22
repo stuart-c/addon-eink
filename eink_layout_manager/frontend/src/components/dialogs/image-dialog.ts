@@ -435,6 +435,16 @@ export class ImageDialog extends LitElement {
     (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).close();
   }
 
+  private _handleDelete() {
+    if (!this._editingImage) return;
+    this.dispatchEvent(new CustomEvent('delete', { 
+      detail: { image: this._editingImage },
+      bubbles: true,
+      composed: true
+    }));
+    (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).close();
+  }
+
   private async _processFile(file: File) {
     this._isUploading = true;
     this._error = null;
@@ -824,6 +834,16 @@ export class ImageDialog extends LitElement {
         </div>
 
         <div slot="footer" class="footer-actions">
+          ${this._editingImage ? html`
+            <button 
+              class="danger" 
+              style="margin-right: auto;" 
+              @click="${this._handleDelete}"
+            >
+              <span class="material-icons">delete</span>
+              Delete
+            </button>
+          ` : ''}
           <button 
             class="secondary" 
             @click="${this._handleCancel}"
