@@ -15,13 +15,17 @@ class SceneHandler(BaseCRUDHandler):
 
     async def pre_create(self, data):
         """Set default status and map layout to layout_id."""
-        data["status"] = "draft"
         if "layout" in data:
             data["layout_id"] = data.pop("layout")
 
         # Validation
         if "items" in data and "layout_id" in data:
             await self._validate_scene_items(data["items"], data["layout_id"])
+
+        # Calculate status
+        layout_id = data.get("layout_id")
+        items = data.get("items", [])
+        data["status"] = await self._calculate_scene_status(items, layout_id)
 
         return data
 
@@ -30,14 +34,63 @@ class SceneHandler(BaseCRUDHandler):
         if "layout" in data:
             data["layout_id"] = data.pop("layout")
 
-        # Determine layout_id for validation
+        # Determine layout_id for validation and status calculation
         layout_id = data.get("layout_id") or existing_item.layout_id
 
         # Validation
         if "items" in data:
             await self._validate_scene_items(data["items"], layout_id)
 
+        # Calculate status
+        # Note: data might only contain partial updates,
+        # so we fall back to existing_item
+        items = data.get("items") if "items" in data else existing_item.items
+        data["status"] = await self._calculate_scene_status(items, layout_id)
+
         return data
+
+    async def _calculate_scene_status(self, items, layout_id):
+        """
+        Calculate if the scene is 'ready' or 'draft'.
+        'ready' if:
+        - items include every display in the layout.
+        - each item has at least one image.
+        """
+        if not items or not layout_id:
+            return "draft"
+
+        from sqlalchemy import select
+
+        async with database.get_session() as session:
+            stmt = select(models.Layout).where(models.Layout.id == layout_id)
+            result = await session.execute(stmt)
+            layout = result.scalars().first()
+            if not layout:
+                return "draft"
+
+            # 1. Check if all items have at least one image
+            for item in items:
+                if not item.get("images") or len(item["images"]) == 0:
+                    return "draft"
+
+            # 2. Check if all displays in layout are covered
+            layout_display_ids = set()
+            for layout_item in layout.items:
+                if isinstance(layout_item, dict) and "id" in layout_item:
+                    layout_display_ids.add(layout_item["id"])
+
+            scene_display_ids = set()
+            for item in items:
+                displays = item.get("displays", [])
+                scene_display_ids.update(displays)
+
+            if (
+                layout_display_ids == scene_display_ids
+                and len(layout_display_ids) > 0
+            ):
+                return "ready"
+
+            return "draft"
 
     async def _validate_scene_items(self, items, layout_id):
         """

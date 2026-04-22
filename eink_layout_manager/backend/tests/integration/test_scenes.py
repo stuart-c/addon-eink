@@ -114,7 +114,7 @@ async def test_create_scene_with_items(aiohttp_client, app):
     assert result["items"][0]["id"] == "comp-1"
     assert result["items"][0]["type"] == "image"
     assert result["items"][0]["images"][0]["scaling_factor"] == 1.5
-    assert result["status"] == "draft"
+    assert result["status"] == "ready"
 
 
 @pytest.mark.asyncio
