@@ -667,8 +667,8 @@ async def test_image_conversion_field(aiohttp_client, app):
         "errorDiffusionMatrix": "jarvis",
         "serpentine": True,
         "processingPreset": "vivid",
-        "palette": ["#000000", "#FFFFFF", "#FF0000"],
     }
+
     update_data = {"conversion": conversion_settings}
 
     resp = await client.put(f"/api/image/{image_id}", json=update_data)

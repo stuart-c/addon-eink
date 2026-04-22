@@ -262,7 +262,26 @@ export class ImageDialog extends LitElement {
         outline: none;
         border-color: var(--primary-colour);
       }
+
+      .preview-controls {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: var(--bg-light);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-colour);
+      }
+
+      .preview-controls label {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.75rem;
+      }
     `
+
   ];
 
   @state() private _uploadedImage: Image | null = null;
@@ -280,8 +299,9 @@ export class ImageDialog extends LitElement {
   @state() private _ditheringType: string = 'errorDiffusion';
   @state() private _errorDiffusionMatrix: string = 'floydSteinberg';
   @state() private _serpentine: boolean = false;
-  @state() private _palette: string = 'default';
+  @state() private _palette: string = 'aitjcizeSpectra6Palette';
   @state() private _processingPreset: '' | 'balanced' | 'dynamic' | 'vivid' | 'soft' | 'greyscale' = '';
+
   @state() private _detailsOpen = true;
   @state() private _propertiesOpen = false;
   private _updateTimer: any = null;
@@ -302,8 +322,9 @@ export class ImageDialog extends LitElement {
     this._ditheringType = image?.conversion?.ditheringType || 'errorDiffusion';
     this._errorDiffusionMatrix = image?.conversion?.errorDiffusionMatrix || 'floydSteinberg';
     this._serpentine = image?.conversion?.serpentine ?? false;
-    this._palette = (Array.isArray(image?.conversion?.palette) ? image?.conversion?.palette.join(', ') : image?.conversion?.palette) || 'default';
+    this._palette = 'aitjcizeSpectra6Palette';
     this._processingPreset = (image?.conversion?.processingPreset as any) || '';
+
     this._detailsOpen = true;
     this._propertiesOpen = false;
     await this.updateComplete;
@@ -409,10 +430,10 @@ export class ImageDialog extends LitElement {
           ditheringType: this._ditheringType as any,
           errorDiffusionMatrix: this._errorDiffusionMatrix as any,
           serpentine: this._serpentine,
-          palette: this._palette,
           processingPreset: this._processingPreset
         }
       };
+
 
       if (this._editingImage) {
         await api.updateImage(this._editingImage.id, { ...this._editingImage, ...metadata });
@@ -466,11 +487,12 @@ export class ImageDialog extends LitElement {
       ditheringType: this._ditheringType,
       errorDiffusionMatrix: this._errorDiffusionMatrix,
       serpentine: this._serpentine,
-      palette: this._palette.includes(',') 
-        ? this._palette.split(',').map(c => c.trim()) 
-        : this._palette,
+      palette: this._palette === 'defaultPalette' ? 'default' : 
+               this._palette === 'aitjcizeSpectra6Palette' ? 'spectra6' : 
+               this._palette === 'acepPalette' ? 'acep' : 'spectra6',
       processingPreset: this._processingPreset
     };
+
 
     try {
       await ditherImage(tempCanvas, this._canvas, options);
@@ -669,16 +691,6 @@ export class ImageDialog extends LitElement {
                       </label>
                     ` : ''}
 
-                    <!-- Palette -->
-                    <div class="form-group" style="margin-bottom: 0;">
-                      <label>Palette</label>
-                      <input 
-                        type="text" 
-                        placeholder="e.g. default, or #000000, #ffffff"
-                        .value="${this._palette}"
-                        @input="${(e: InputEvent) => this._palette = (e.target as HTMLInputElement).value}"
-                      >
-                    </div>
 
                     <!-- Processing Preset -->
                     <div class="form-group" style="margin-bottom: 0;">
@@ -737,7 +749,20 @@ export class ImageDialog extends LitElement {
               `}
             </div>
 
+            <div class="preview-controls">
+              <label>Preview Palette</label>
+              <select 
+                .value="${this._palette}"
+                @change="${(e: Event) => this._palette = (e.target as HTMLSelectElement).value}"
+              >
+                <option value="defaultPalette">Black and White (Default)</option>
+                <option value="aitjcizeSpectra6Palette">Spectra 6</option>
+                <option value="acepPalette">AcEP</option>
+              </select>
+            </div>
+
             <div class="grid" style="margin-top: 1.5rem;">
+
               <div class="form-group" style="margin-bottom: 0;">
                 <label>Dimensions</label>
                 <input 
