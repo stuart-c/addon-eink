@@ -281,8 +281,7 @@ export class ImageDialog extends LitElement {
   @state() private _errorDiffusionMatrix: string = 'floydSteinberg';
   @state() private _serpentine: boolean = false;
   @state() private _palette: string = 'default';
-  @state() private _sampleColoursFromImage: boolean = false;
-  @state() private _numberOfSampleColours: number = 10;
+  @state() private _processingPreset: '' | 'balanced' | 'dynamic' | 'vivid' | 'soft' | 'greyscale' = '';
   @state() private _detailsOpen = true;
   @state() private _propertiesOpen = false;
   private _updateTimer: any = null;
@@ -304,8 +303,7 @@ export class ImageDialog extends LitElement {
     this._errorDiffusionMatrix = image?.conversion?.errorDiffusionMatrix || 'floydSteinberg';
     this._serpentine = image?.conversion?.serpentine ?? false;
     this._palette = (Array.isArray(image?.conversion?.palette) ? image?.conversion?.palette.join(', ') : image?.conversion?.palette) || 'default';
-    this._sampleColoursFromImage = image?.conversion?.sampleColoursFromImage ?? false;
-    this._numberOfSampleColours = image?.conversion?.numberOfSampleColours ?? 10;
+    this._processingPreset = (image?.conversion?.processingPreset as any) || '';
     this._detailsOpen = true;
     this._propertiesOpen = false;
     await this.updateComplete;
@@ -412,8 +410,7 @@ export class ImageDialog extends LitElement {
           errorDiffusionMatrix: this._errorDiffusionMatrix as any,
           serpentine: this._serpentine,
           palette: this._palette,
-          sampleColoursFromImage: this._sampleColoursFromImage,
-          numberOfSampleColours: this._numberOfSampleColours
+          processingPreset: this._processingPreset
         }
       };
 
@@ -472,8 +469,7 @@ export class ImageDialog extends LitElement {
       palette: this._palette.includes(',') 
         ? this._palette.split(',').map(c => c.trim()) 
         : this._palette,
-      sampleColorsFromImage: this._sampleColoursFromImage,
-      numberOfSampleColors: this._numberOfSampleColours
+      processingPreset: this._processingPreset
     };
 
     try {
@@ -489,7 +485,7 @@ export class ImageDialog extends LitElement {
     const propertiesToTriggerUpdate = [
       '_brightness', '_contrast', '_saturation', 
       '_ditheringType', '_errorDiffusionMatrix', '_serpentine',
-      '_palette', '_sampleColoursFromImage', '_numberOfSampleColours',
+      '_palette', '_processingPreset',
       '_uploadedImage'
     ];
 
@@ -684,26 +680,21 @@ export class ImageDialog extends LitElement {
                       >
                     </div>
 
-                    <!-- Color Sampling -->
-                    <label class="checkbox-row">
-                      <input 
-                        type="checkbox"
-                        ?checked="${this._sampleColoursFromImage}"
-                        @change="${(e: Event) => this._sampleColoursFromImage = (e.target as HTMLInputElement).checked}"
+                    <!-- Processing Preset -->
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <label>Processing Preset</label>
+                      <select 
+                        .value="${this._processingPreset}"
+                        @change="${(e: Event) => this._processingPreset = (e.target as HTMLSelectElement).value as any}"
                       >
-                      Sample colours from image
-                    </label>
-
-                    ${this._sampleColoursFromImage ? html`
-                      <div class="form-group" style="margin-bottom: 0;">
-                        <label>Number of Colours to Sample</label>
-                        <input 
-                          type="number" min="1" max="256"
-                          .value="${this._numberOfSampleColours.toString()}"
-                          @input="${(e: InputEvent) => this._numberOfSampleColours = parseInt((e.target as HTMLInputElement).value)}"
-                        >
-                      </div>
-                    ` : ''}
+                        <option value="">Blank (Default)</option>
+                        <option value="balanced">Balanced</option>
+                        <option value="dynamic">Dynamic</option>
+                        <option value="vivid">Vivid</option>
+                        <option value="soft">Soft</option>
+                        <option value="greyscale">Greyscale</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
               </div>
