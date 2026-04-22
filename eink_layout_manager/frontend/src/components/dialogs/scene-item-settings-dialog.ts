@@ -224,6 +224,7 @@ export class SceneItemSettingsDialog extends LitElement {
         justify-content: center;
         position: relative;
         overflow: hidden;
+        border-right: 1px solid var(--border-colour);
       }
 
       .preview-placeholder {
@@ -450,6 +451,48 @@ export class SceneItemSettingsDialog extends LitElement {
     (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).close();
   }
 
+  private get _previewData() {
+    if (!this._layout || !this.item || !this.item.displays || this.item.displays.length === 0) {
+      return { width: 0, height: 0, items: [] };
+    }
+
+    const visibleItems = this._layout.items.filter(i => this.item.displays.includes(i.id));
+    if (visibleItems.length === 0) {
+      return { width: 0, height: 0, items: [] };
+    }
+
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    const itemsWithDimensions = visibleItems.map(item => {
+      const dt = this._displayTypes.find(t => t.id === item.display_type_id);
+      if (!dt) return { item, w: 0, h: 0 };
+      const isPortrait = item.orientation === 'portrait';
+      const w = isPortrait ? dt.height_mm : dt.width_mm;
+      const h = isPortrait ? dt.width_mm : dt.height_mm;
+      
+      minX = Math.min(minX, item.x_mm);
+      minY = Math.min(minY, item.y_mm);
+      maxX = Math.max(maxX, item.x_mm + w);
+      maxY = Math.max(maxY, item.y_mm + h);
+      
+      return { item, w, h };
+    });
+
+    const width = Math.max(1, maxX - minX);
+    const height = Math.max(1, maxY - minY);
+
+    const adjustedItems = itemsWithDimensions.map(({ item }) => ({
+      ...item,
+      x_mm: item.x_mm - minX,
+      y_mm: item.y_mm - minY
+    }));
+
+    return { width, height, items: adjustedItems };
+  }
+
   render() {
     return html`
       <base-dialog title="Item Settings">
@@ -550,11 +593,12 @@ export class SceneItemSettingsDialog extends LitElement {
                 <div class="preview-container">
                   ${this._layout ? html`
                     <layout-editor
-                      .width_mm="${this._layout.canvas_width_mm}"
-                      .height_mm="${this._layout.canvas_height_mm}"
-                      .items="${this._layout.items.filter(i => this.item?.displays?.includes(i.id))}"
+                      .width_mm="${this._previewData.width}"
+                      .height_mm="${this._previewData.height}"
+                      .items="${this._previewData.items}"
                       .displayTypes="${this._displayTypes}"
                       .readOnly="${true}"
+                      .noPadding="${true}"
                     ></layout-editor>
                   ` : html`
                     <div class="preview-placeholder">
