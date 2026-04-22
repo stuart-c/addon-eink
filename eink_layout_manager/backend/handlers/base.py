@@ -219,7 +219,8 @@ class BaseCRUDHandler:
             # Full validation and pre-update hook
             try:
                 validate_data(data_to_validate, self.schema_name)
-                data = await self.pre_update(data, item)
+                pre_update_data = await self.pre_update(data, item)
+                data_to_validate.update(pre_update_data)
             except ValidationError as e:
                 return web.json_response(
                     {"error": "Validation failed", "message": e.message},

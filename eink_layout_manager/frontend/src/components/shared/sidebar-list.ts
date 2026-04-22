@@ -106,6 +106,22 @@ export class SidebarList extends LitElement {
         font-size: 32px;
         opacity: 0.3;
       }
+      .status-badge {
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        padding: 2px 6px;
+        border-radius: 4px;
+        letter-spacing: 0.5px;
+      }
+      .status-badge.active {
+        background: #e8f5e9;
+        color: #2e7d32;
+      }
+      .status-badge.draft {
+        background: #f5f5f5;
+        color: #757575;
+      }
     `
   ];
 
@@ -127,6 +143,9 @@ export class SidebarList extends LitElement {
               `)}
             </div>
             <span class="sidebar-item-name" title="${item.name}">${item.name}</span>
+            ${item.status ? html`
+              <span class="status-badge ${item.status}">${item.status}</span>
+            ` : ''}
           </div>
         `)}
         ${this.items.length === 0 ? html`

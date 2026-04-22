@@ -212,6 +212,13 @@ async def ensure_schema_up_to_date(conn):
             )
         )
 
+    if "status" not in columns:
+        await conn.execute(
+            text(
+                "ALTER TABLE layouts ADD COLUMN status VARCHAR DEFAULT 'draft'"
+            )
+        )
+
 
 async def init_db():
     """Initialise the database engine and create tables."""

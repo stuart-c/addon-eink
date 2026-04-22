@@ -41,6 +41,7 @@ export interface LayoutItem {
   x_mm: number;
   y_mm: number;
   orientation: 'landscape' | 'portrait';
+  device_id?: string;
 }
 
 export interface Layout {
@@ -49,6 +50,7 @@ export interface Layout {
   canvas_width_mm: number;
   canvas_height_mm: number;
   items: LayoutItem[];
+  status?: 'draft' | 'active';
 }
 
 export interface Scene {
