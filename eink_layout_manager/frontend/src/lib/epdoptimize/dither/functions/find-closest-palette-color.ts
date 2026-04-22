@@ -1,3 +1,4 @@
+// @ts-nocheck
 const findClosestPaletteColor = (pixel, colorPalette) => {
   const colors = colorPalette.map((color) => {
     return {

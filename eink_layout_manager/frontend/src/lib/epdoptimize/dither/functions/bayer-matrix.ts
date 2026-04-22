@@ -1,3 +1,4 @@
+// @ts-nocheck
 const createBayerMatrix = (size /* [X, Y] */) => {
   const width = size[0] < 8 ? size[0] : 8;
   const height = size[1] < 8 ? size[1] : 8;

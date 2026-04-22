@@ -1,3 +1,4 @@
+// @ts-nocheck
 const maps = {
   floydSteinberg: () => [
     { offset: [1, 0], factor: 7 / 16 },

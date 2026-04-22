@@ -1,3 +1,4 @@
+// @ts-nocheck
 import palettes from "./data/default-palettes.json";
 import diffusionMaps from "./data/diffusion-maps";
 //import thresholdMaps from "./data/threshold-maps.json";

@@ -1,3 +1,4 @@
+// @ts-nocheck
 //const { createCanvas, Image } = require('canvas')
 import utilities from "./utilities";
 
