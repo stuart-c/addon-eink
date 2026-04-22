@@ -384,6 +384,15 @@ export class SceneItemSettingsDialog extends LitElement {
     this._displayTypes = displayTypes;
     this._isAddingImage = false;
 
+    // Fetch images if not already loaded to get names for the sidebar
+    if (this._availableImages.length === 0) {
+      try {
+        this._availableImages = await api.getImages();
+      } catch (e) {
+        console.error('Failed to fetch images', e);
+      }
+    }
+
     // Set initial values from item if available
     if (item.images && item.images.length > 0) {
       this._selectedImageId = item.images[0].image_id;
@@ -395,6 +404,11 @@ export class SceneItemSettingsDialog extends LitElement {
     }
     await this.updateComplete;
     (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).show();
+  }
+
+  private _getImageName(imageId: string) {
+    const img = this._availableImages.find(i => i.id === imageId);
+    return img ? img.name : imageId;
   }
 
   private async _toggleAddImage() {
@@ -520,7 +534,7 @@ export class SceneItemSettingsDialog extends LitElement {
                     <div class="image-thumbnail">
                       <img src="/api/image/${img.image_id}/thumbnail" style="width: 100%; height: 100%; object-fit: contain;">
                     </div>
-                    <div class="image-name">${img.image_id}</div>
+                    <div class="image-name">${this._getImageName(img.image_id)}</div>
                   </div>
                 `)}
                 ${(!this.item?.images || this.item.images.length === 0) ? html`
@@ -586,9 +600,6 @@ export class SceneItemSettingsDialog extends LitElement {
           ` : html`
             <!-- Middle Column: Preview -->
             <div class="column">
-              <div class="column-header">
-                <div class="column-title">Preview</div>
-              </div>
               <div class="column-body" style="padding: 0;">
                 <div class="preview-container">
                   ${this._layout ? html`
@@ -612,9 +623,6 @@ export class SceneItemSettingsDialog extends LitElement {
 
             <!-- Right Column: Mapping -->
             <div class="column">
-              <div class="column-header">
-                <div class="column-title">Mapping</div>
-              </div>
               <div class="column-body">
                 <!-- Scaling -->
                 <div class="controls-group">
