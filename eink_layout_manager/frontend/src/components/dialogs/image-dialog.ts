@@ -55,13 +55,12 @@ export class ImageDialog extends LitElement {
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        border: 2px dashed var(--border-colour);
-        border-radius: var(--border-radius);
         background: var(--bg-light);
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         cursor: pointer;
-        padding: 2rem;
+        padding: 1.5rem;
         text-align: center;
+        border-bottom: 1px solid var(--border-colour);
       }
 
       .upload-section:hover {
@@ -145,6 +144,15 @@ export class ImageDialog extends LitElement {
         display: flex;
         align-items: center;
         gap: 0.5rem;
+      }
+
+      .preview-details-card {
+        border: 1px solid var(--border-colour);
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        background: white;
+        display: flex;
+        flex-direction: column;
       }
 
       /* Accordion Styles */
@@ -353,21 +361,29 @@ export class ImageDialog extends LitElement {
       }
 
       .preview-controls {
-        margin-top: 1rem;
-        padding: 1rem;
-        background: var(--bg-light);
-        border-radius: var(--border-radius);
-        border: 1px solid var(--border-colour);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.75rem 1rem;
+        background: white;
+        border-bottom: 1px solid var(--border-colour);
       }
 
       .preview-controls label {
-        display: block;
+        margin: 0;
         font-size: 11px;
         font-weight: 700;
         color: var(--text-muted);
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        margin-bottom: 0.75rem;
+        white-space: nowrap;
+      }
+
+      .preview-controls select {
+        flex: 1;
+        max-width: 200px;
+        padding: 6px 10px;
       }
 
       .summary-table {
@@ -375,11 +391,10 @@ export class ImageDialog extends LitElement {
         border-collapse: collapse;
         background: transparent;
         font-size: 12px;
-        margin-top: 1.5rem;
       }
 
       .summary-table th, .summary-table td {
-        padding: 10px 12px;
+        padding: 8px 12px;
         text-align: left;
         border-bottom: 1px solid #f0f0f0;
       }
@@ -932,68 +947,70 @@ export class ImageDialog extends LitElement {
 
           <!-- Media & Technical Info (Right) -->
           <div class="media-section">
-            <div 
-              class="upload-section"
-              style="${this._editingImage ? 'cursor: default; border-style: solid; opacity: 0.9;' : ''}"
-              @click="${this._editingImage ? null : this._handleUploadClick}"
-              @dragover="${this._editingImage ? (e: Event) => e.preventDefault() : this._onDragOver}"
-              @dragleave="${this._editingImage ? null : this._onDragLeave}"
-              @drop="${this._editingImage ? (e: Event) => e.preventDefault() : this._onDrop}"
-            >
-              ${this._uploadedImage ? html`
-                <canvas id="preview-canvas" class="preview-image"></canvas>
-                <img 
-                  id="source-image"
-                  src="api/image/${this._uploadedImage.id}/thumbnail" 
-                  style="display: none;"
-                  alt="Source for preview"
-                  @load="${() => this._triggerUpdate()}"
-                >
-              ` : html`
-                <span class="material-icons">
-                  ${this._isUploading ? 'sync' : 'cloud_upload'}
-                </span>
-                <p>${this._isUploading ? 'Uploading...' : 'Drag & Drop Image'}</p>
-                <p class="hint">${this._isUploading ? 'This may take a moment' : 'or click to browse your files'}</p>
-              `}
-              ${this._editingImage ? '' : html`
-                <input 
-                  type="file" 
-                  style="display: none;" 
-                  accept="image/*"
-                  @change="${this._onFileChange}"
-                >
-              `}
-            </div>
-
-            <div class="preview-controls">
-              <label>Preview Palette</label>
-              <select 
-                .value="${this._palette}"
-                @change="${(e: Event) => this._palette = (e.target as HTMLSelectElement).value}"
+            <div class="preview-details-card">
+              <div 
+                class="upload-section"
+                style="${this._editingImage ? 'cursor: default; opacity: 0.9;' : ''}"
+                @click="${this._editingImage ? null : this._handleUploadClick}"
+                @dragover="${this._editingImage ? (e: Event) => e.preventDefault() : this._onDragOver}"
+                @dragleave="${this._editingImage ? null : this._onDragLeave}"
+                @drop="${this._editingImage ? (e: Event) => e.preventDefault() : this._onDrop}"
               >
-                <option value="defaultPalette">Black and White (Default)</option>
-                <option value="aitjcizeSpectra6Palette">Spectra 6</option>
-                <option value="acepPalette">AcEP</option>
-              </select>
-            </div>
+                ${this._uploadedImage ? html`
+                  <canvas id="preview-canvas" class="preview-image"></canvas>
+                  <img 
+                    id="source-image"
+                    src="api/image/${this._uploadedImage.id}/thumbnail" 
+                    style="display: none;"
+                    alt="Source for preview"
+                    @load="${() => this._triggerUpdate()}"
+                  >
+                ` : html`
+                  <span class="material-icons">
+                    ${this._isUploading ? 'sync' : 'cloud_upload'}
+                  </span>
+                  <p>${this._isUploading ? 'Uploading...' : 'Drag & Drop Image'}</p>
+                  <p class="hint">${this._isUploading ? 'This may take a moment' : 'or click to browse your files'}</p>
+                `}
+                ${this._editingImage ? '' : html`
+                  <input 
+                    type="file" 
+                    style="display: none;" 
+                    accept="image/*"
+                    @change="${this._onFileChange}"
+                  >
+                `}
+              </div>
 
-            <table class="summary-table">
-              <tr>
-                <th>Dimensions</th>
-                <td>
-                  <span class="val">${this._uploadedImage ? `${this._uploadedImage.dimensions.width} × ${this._uploadedImage.dimensions.height}` : '-'}</span><span class="unit">px</span>
-                </td>
-              </tr>
-              <tr>
-                <th>Format</th>
-                <td><span class="val">${this._uploadedImage?.file_type || '-'}</span></td>
-              </tr>
-              <tr>
-                <th>Colour Depth</th>
-                <td><span class="val">${this._uploadedImage?.colour_depth || '-'}</span></td>
-              </tr>
-            </table>
+              <div class="preview-controls">
+                <label>Display Type</label>
+                <select 
+                  .value="${this._palette}"
+                  @change="${(e: Event) => this._palette = (e.target as HTMLSelectElement).value}"
+                >
+                  <option value="defaultPalette">Black and White (Default)</option>
+                  <option value="aitjcizeSpectra6Palette">Spectra 6</option>
+                  <option value="acepPalette">AcEP</option>
+                </select>
+              </div>
+
+              <table class="summary-table">
+                <tr>
+                  <th>Dimensions</th>
+                  <td>
+                    <span class="val">${this._uploadedImage ? `${this._uploadedImage.dimensions.width} × ${this._uploadedImage.dimensions.height}` : '-'}</span><span class="unit">px</span>
+                  </td>
+                </tr>
+                <tr>
+                  <th>Format</th>
+                  <td><span class="val">${this._uploadedImage?.file_type || '-'}</span></td>
+                </tr>
+                <tr>
+                  <th>Colour Depth</th>
+                  <td><span class="val">${this._uploadedImage?.colour_depth || '-'}</span></td>
+                </tr>
+              </table>
+            </div>
           </div>
         </div>
 
