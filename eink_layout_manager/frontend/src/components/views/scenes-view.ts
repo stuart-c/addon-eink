@@ -402,7 +402,8 @@ export class ScenesView extends BaseResourceView {
     const listItems = scenes.map(scene => ({
       id: scene.id,
       name: scene.name,
-      icon: 'landscape'
+      icon: 'landscape',
+      status: scene.status
     }));
 
     return html`
@@ -417,7 +418,10 @@ export class ScenesView extends BaseResourceView {
 
         <div slot="right-top-bar" class="toolbar-content">
           <div class="toolbar-title">
-            ${activeScene ? activeScene.name : 'Smart Scenes'}
+            ${activeScene ? html`
+              ${activeScene.name}
+              <span class="status-badge ${activeScene.status}" style="margin-left: 8px;">${activeScene.status}</span>
+            ` : 'Smart Scenes'}
           </div>
           <div class="toolbar-actions">
             ${activeScene ? html`
