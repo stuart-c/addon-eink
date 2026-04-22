@@ -28,6 +28,16 @@ export class HardwarePreview extends LitElement {
     }
   `;
 
+  @property({ type: Number }) width_mm = 0;
+  @property({ type: Number }) height_mm = 0;
+  @property({ type: Number }) border_width_mm = 0;
+  @property({ type: Number }) panel_width_mm = 0;
+  @property({ type: Number }) panel_height_mm = 0;
+  @property({ type: String }) frame_colour = '#000';
+  @property({ type: String }) mat_colour = '#fff';
+  @property({ type: Number }) scale = 1; // Pixels per mm
+  @property({ type: String }) orientation: 'landscape' | 'portrait' = 'landscape';
+
   @property({ type: Object }) previewImage: HTMLCanvasElement | string | null = null;
   @property({ type: Object }) previewOffset: { x: number; y: number } = { x: 0, y: 0 };
   @property({ type: Object }) previewTotalSize: { width: number; height: number } = { width: 0, height: 0 };

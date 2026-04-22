@@ -1,7 +1,7 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, PropertyValues } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { commonStyles } from '../../styles/common-styles';
-import { Layout, DisplayType, Image, api } from '../../services/HaApiClient';
+import { Layout, DisplayType, Image as ImageMetadata, api } from '../../services/HaApiClient';
 import '../shared/base-dialog';
 import { BaseDialog } from '../shared/base-dialog';
 import '../layout/layout-editor';
@@ -379,7 +379,7 @@ export class SceneItemSettingsDialog extends LitElement {
   @state() private _layout: Layout | null = null;
   @state() private _displayTypes: DisplayType[] = [];
   @state() private _isAddingImage = false;
-  @state() private _availableImages: Image[] = [];
+  @state() private _availableImages: ImageMetadata[] = [];
   @state() private _searchQuery = '';
   @state() private _previewCanvas: HTMLCanvasElement | null = null;
   private _updateTimer: any = null;
@@ -539,7 +539,7 @@ export class SceneItemSettingsDialog extends LitElement {
     }
   }
 
-  private _selectImage(image: Image) {
+  private _selectImage(image: ImageMetadata) {
     if (!this.item.images) {
       this.item.images = [];
     }
