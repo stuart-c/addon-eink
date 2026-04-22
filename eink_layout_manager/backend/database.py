@@ -219,6 +219,22 @@ async def ensure_schema_up_to_date(conn):
             )
         )
 
+    # Cleanup: Remove palette from conversion settings (migrating to preview-only)
+    await conn.execute(
+        text(
+            "UPDATE images SET conversion = json_remove(conversion, '$.palette') "
+            "WHERE json_type(conversion) = 'object' AND json_extract(conversion, '$.palette') IS NOT NULL"
+        )
+    )
+
+    # Cleanup: Remove palette from conversion settings (migrating to preview-only)
+    await conn.execute(
+        text(
+            "UPDATE images SET conversion = json_remove(conversion, '$.palette') "
+            "WHERE json_type(conversion) = 'object' AND json_extract(conversion, '$.palette') IS NOT NULL"
+        )
+    )
+
 
 async def init_db():
     """Initialise the database engine and create tables."""

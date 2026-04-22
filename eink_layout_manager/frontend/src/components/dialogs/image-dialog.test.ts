@@ -34,10 +34,10 @@ describe('ImageDialog', () => {
       ditheringType: 'errorDiffusion',
       errorDiffusionMatrix: 'floydSteinberg',
       serpentine: true,
-      palette: 'default',
       processingPreset: ''
     }
   };
+
 
   beforeEach(async () => {
     element = document.createElement('image-dialog') as ImageDialog;
@@ -108,7 +108,22 @@ describe('ImageDialog', () => {
       name: 'Updated Name',
       artist: 'Test Artist'
     }));
+
+    // Verify palette was NOT in the conversion object
+    const updateCall = vi.mocked(api.updateImage).mock.calls[0];
+    const updatePayload = updateCall[1] as any;
+    expect(updatePayload.conversion.palette).toBeUndefined();
   });
+
+  it('should show palette dropdown and default to Spectra 6', async () => {
+    await element.show();
+    await element.updateComplete;
+
+    const paletteSelect = element.shadowRoot?.querySelector('.preview-controls select') as HTMLSelectElement;
+    expect(paletteSelect).toBeTruthy();
+    expect(paletteSelect.value).toBe('aitjcizeSpectra6Palette');
+  });
+
 
   it('should not call deleteItem when cancelling in edit mode', async () => {
     await element.show(mockImage);

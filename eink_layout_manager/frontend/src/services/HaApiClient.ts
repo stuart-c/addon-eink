@@ -50,7 +50,6 @@ export interface ImageConversion {
   orderedDitheringType?: 'bayer';
   orderedDitheringMatrix?: [number, number];
   randomDitheringType?: 'blackAndWhite' | 'rgb';
-  palette?: string | string[];
   processingPreset?: '' | 'balanced' | 'dynamic' | 'vivid' | 'soft' | 'greyscale';
 }
 
