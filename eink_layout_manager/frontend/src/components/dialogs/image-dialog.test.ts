@@ -35,8 +35,7 @@ describe('ImageDialog', () => {
       errorDiffusionMatrix: 'floydSteinberg',
       serpentine: true,
       palette: 'default',
-      sampleColoursFromImage: false,
-      numberOfSampleColours: 10
+      processingPreset: 'blank'
     }
   };
 

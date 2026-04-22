@@ -666,8 +666,7 @@ async def test_image_conversion_field(aiohttp_client, app):
         "ditheringType": "errorDiffusion",
         "errorDiffusionMatrix": "jarvis",
         "serpentine": True,
-        "sampleColoursFromImage": True,
-        "numberOfSampleColours": 16,
+        "processingPreset": "vivid",
         "palette": ["#000000", "#FFFFFF", "#FF0000"],
     }
     update_data = {"conversion": conversion_settings}

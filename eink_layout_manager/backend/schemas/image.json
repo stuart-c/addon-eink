@@ -103,14 +103,10 @@
           ],
           "default": "default"
         },
-        "sampleColoursFromImage": {
-          "type": "boolean",
-          "default": false
-        },
-        "numberOfSampleColours": {
-          "type": "integer",
-          "minimum": 1,
-          "default": 10
+        "processingPreset": {
+          "type": "string",
+          "enum": ["blank", "balanced", "dynamic", "vivid", "soft", "greyscale"],
+          "default": "blank"
         }
       }
     },
