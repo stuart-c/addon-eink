@@ -1,4 +1,3 @@
-// @ts-nocheck
 const maps = {
   floydSteinberg: () => [
     { offset: [1, 0], factor: 7 / 16 },
@@ -10,6 +9,14 @@ const maps = {
     { offset: [1, 0], factor: 3 / 8 },
     { offset: [0, 1], factor: 3 / 8 },
     { offset: [1, 1], factor: 2 / 8 },
+  ],
+  atkinson: () => [
+    { offset: [1, 0], factor: 1 / 8 },
+    { offset: [2, 0], factor: 1 / 8 },
+    { offset: [-1, 1], factor: 1 / 8 },
+    { offset: [0, 1], factor: 1 / 8 },
+    { offset: [1, 1], factor: 1 / 8 },
+    { offset: [0, 2], factor: 1 / 8 },
   ],
   jarvis: () => [
     { offset: [1, 0], factor: 7 / 48 },
@@ -77,11 +84,12 @@ const maps = {
     { offset: [1, 1], factor: 2 / 16 },
     { offset: [2, 1], factor: 1 / 16 },
   ],
-  "Sierra2-4A": () => [
+  "sierra2-4a": () => [
     { offset: [1, 0], factor: 2 / 4 },
     { offset: [-2, 1], factor: 1 / 4 },
     { offset: [-1, 1], factor: 1 / 4 },
   ],
+  "Sierra2-4A": () => maps["sierra2-4a"](),
 };
 
 export default maps;
