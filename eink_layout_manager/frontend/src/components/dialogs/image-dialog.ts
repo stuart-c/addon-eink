@@ -29,6 +29,8 @@ export class ImageDialog extends LitElement {
         padding: 0.5rem 0;
         width: 100%;
         box-sizing: border-box;
+        height: 65vh;
+        overflow: hidden;
       }
 
       .grid {
@@ -40,6 +42,8 @@ export class ImageDialog extends LitElement {
       .metadata-fields {
         display: flex;
         flex-direction: column;
+        overflow-y: auto;
+        padding-right: 0.5rem;
       }
 
       .upload-section {
@@ -122,6 +126,7 @@ export class ImageDialog extends LitElement {
       .media-section {
         display: flex;
         flex-direction: column;
+        overflow: hidden;
       }
 
       .error-message {
@@ -279,6 +284,44 @@ export class ImageDialog extends LitElement {
         text-transform: uppercase;
         letter-spacing: 0.5px;
         margin-bottom: 0.75rem;
+      }
+
+      .summary-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: transparent;
+        font-size: 12px;
+        margin-top: 1.5rem;
+      }
+
+      .summary-table th, .summary-table td {
+        padding: 10px 12px;
+        text-align: left;
+        border-bottom: 1px solid #f0f0f0;
+      }
+
+      .summary-table th {
+        background: var(--bg-light);
+        color: var(--text-muted);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        width: 40%;
+      }
+
+      .summary-table tr:last-child td, .summary-table tr:last-child th {
+        border-bottom: none;
+      }
+
+      .summary-table .val {
+        font-weight: 600;
+        color: var(--text-colour);
+      }
+
+      .summary-table .unit {
+        color: #aaa;
+        margin-left: 2px;
+        font-weight: normal;
       }
     `
 
@@ -608,7 +651,7 @@ export class ImageDialog extends LitElement {
                         >
                         <input 
                           type="number" min="0" max="2" step="0.05"
-                          .value="${this._brightness.toString()}"
+                          .value="${this._brightness.toFixed(2)}"
                           @input="${(e: InputEvent) => this._brightness = parseFloat((e.target as HTMLInputElement).value)}"
                         >
                       </div>
@@ -625,7 +668,7 @@ export class ImageDialog extends LitElement {
                         >
                         <input 
                           type="number" min="0" max="2" step="0.05"
-                          .value="${this._contrast.toString()}"
+                          .value="${this._contrast.toFixed(2)}"
                           @input="${(e: InputEvent) => this._contrast = parseFloat((e.target as HTMLInputElement).value)}"
                         >
                       </div>
@@ -642,7 +685,7 @@ export class ImageDialog extends LitElement {
                         >
                         <input 
                           type="number" min="0" max="2" step="0.05"
-                          .value="${this._saturation.toString()}"
+                          .value="${this._saturation.toFixed(2)}"
                           @input="${(e: InputEvent) => this._saturation = parseFloat((e.target as HTMLInputElement).value)}"
                         >
                       </div>
@@ -761,37 +804,22 @@ export class ImageDialog extends LitElement {
               </select>
             </div>
 
-            <div class="grid" style="margin-top: 1.5rem;">
-
-              <div class="form-group" style="margin-bottom: 0;">
-                <label>Dimensions</label>
-                <input 
-                  type="text" 
-                  readonly 
-                  placeholder="Auto-detected"
-                  .value="${this._uploadedImage ? `${this._uploadedImage.dimensions.width} × ${this._uploadedImage.dimensions.height} px` : ''}"
-                >
-              </div>
-              <div class="form-group" style="margin-bottom: 0;">
-                <label>Format</label>
-                <input 
-                  type="text" 
-                  readonly 
-                  placeholder="Auto-detected"
-                  .value="${this._uploadedImage?.file_type || ''}"
-                >
-              </div>
-            </div>
-
-            <div class="form-group" style="margin-top: 1rem; margin-bottom: 0;">
-              <label>Colour Depth</label>
-              <input 
-                type="text" 
-                readonly 
-                placeholder="Auto-detected"
-                .value="${this._uploadedImage?.colour_depth || ''}"
-              >
-            </div>
+            <table class="summary-table">
+              <tr>
+                <th>Dimensions</th>
+                <td>
+                  <span class="val">${this._uploadedImage ? `${this._uploadedImage.dimensions.width} × ${this._uploadedImage.dimensions.height}` : '-'}</span><span class="unit">px</span>
+                </td>
+              </tr>
+              <tr>
+                <th>Format</th>
+                <td><span class="val">${this._uploadedImage?.file_type || '-'}</span></td>
+              </tr>
+              <tr>
+                <th>Colour Depth</th>
+                <td><span class="val">${this._uploadedImage?.colour_depth || '-'}</span></td>
+              </tr>
+            </table>
           </div>
         </div>
 
