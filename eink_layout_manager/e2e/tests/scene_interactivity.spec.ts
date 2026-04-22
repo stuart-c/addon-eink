@@ -85,8 +85,9 @@ test.describe('Scene Interactivity', () => {
     await deleteBtn.click();
     
     // Confirm deletion
-    await expect(page.locator('confirm-dialog')).toBeVisible();
-    await page.locator('confirm-dialog button.danger').click();
+    const confirmDialog = page.locator('confirm-dialog');
+    await expect(confirmDialog.locator('dialog')).toBeVisible();
+    await confirmDialog.locator('button.danger').click();
     
     // Verify item is gone
     await expect(itemList).toHaveCount(0);
