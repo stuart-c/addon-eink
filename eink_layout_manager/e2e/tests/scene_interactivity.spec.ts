@@ -75,7 +75,9 @@ test.describe('Scene Interactivity', () => {
     
     // 6. Test Double Click to Open Dialog
     await box.dblclick();
-    await expect(page.locator('scene-item-settings-dialog base-dialog')).toBeVisible();
+    const dialog = page.locator('scene-item-settings-dialog');
+    await expect(dialog.locator('dialog')).toBeVisible();
+    await expect(dialog).toContainText('Item Settings');
     
     // 7. Test Delete Button in Dialog
     const deleteBtn = page.locator('scene-item-settings-dialog button.danger').getByText('Delete Item');
