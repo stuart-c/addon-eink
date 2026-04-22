@@ -345,6 +345,7 @@ export class ImageDialog extends LitElement {
   @state() private _palette: string = 'aitjcizeSpectra6Palette';
   @state() private _processingPreset: '' | 'balanced' | 'dynamic' | 'vivid' | 'soft' | 'greyscale' = '';
 
+
   @state() private _detailsOpen = true;
   @state() private _propertiesOpen = false;
   private _updateTimer: any = null;
@@ -650,6 +651,24 @@ export class ImageDialog extends LitElement {
               <div class="accordion-content-wrapper">
                 <div class="accordion-content">
                   <div class="accordion-content-inner">
+                    <!-- Processing Preset -->
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <label>Processing Preset</label>
+                      <select 
+                        .value="${this._processingPreset}"
+                        @change="${(e: Event) => this._processingPreset = (e.target as HTMLSelectElement).value as any}"
+                      >
+                        <option value="">Blank (Default)</option>
+                        <option value="balanced">Balanced</option>
+                        <option value="dynamic">Dynamic</option>
+                        <option value="vivid">Vivid</option>
+                        <option value="soft">Soft</option>
+                        <option value="greyscale">Greyscale</option>
+                      </select>
+                    </div>
+
+                    <hr style="border: 0; border-top: 1px solid var(--border-colour); margin: 0.5rem 0;">
+
                     <!-- Brightness -->
                     <div class="control-group">
                       <label>Brightness</label>
@@ -657,12 +676,18 @@ export class ImageDialog extends LitElement {
                         <input 
                           type="range" min="0" max="2" step="0.05"
                           .value="${this._brightness.toString()}"
-                          @input="${(e: InputEvent) => this._brightness = parseFloat((e.target as HTMLInputElement).value)}"
+                          @input="${(e: InputEvent) => {
+                            this._brightness = parseFloat((e.target as HTMLInputElement).value);
+                            this._processingPreset = '';
+                          }}"
                         >
                         <input 
                           type="number" min="0" max="2" step="0.05"
                           .value="${this._brightness.toFixed(2)}"
-                          @input="${(e: InputEvent) => this._brightness = parseFloat((e.target as HTMLInputElement).value)}"
+                          @input="${(e: InputEvent) => {
+                            this._brightness = parseFloat((e.target as HTMLInputElement).value);
+                            this._processingPreset = '';
+                          }}"
                         >
                       </div>
                     </div>
@@ -674,12 +699,18 @@ export class ImageDialog extends LitElement {
                         <input 
                           type="range" min="0" max="2" step="0.05"
                           .value="${this._contrast.toString()}"
-                          @input="${(e: InputEvent) => this._contrast = parseFloat((e.target as HTMLInputElement).value)}"
+                          @input="${(e: InputEvent) => {
+                            this._contrast = parseFloat((e.target as HTMLInputElement).value);
+                            this._processingPreset = '';
+                          }}"
                         >
                         <input 
                           type="number" min="0" max="2" step="0.05"
                           .value="${this._contrast.toFixed(2)}"
-                          @input="${(e: InputEvent) => this._contrast = parseFloat((e.target as HTMLInputElement).value)}"
+                          @input="${(e: InputEvent) => {
+                            this._contrast = parseFloat((e.target as HTMLInputElement).value);
+                            this._processingPreset = '';
+                          }}"
                         >
                       </div>
                     </div>
@@ -691,12 +722,18 @@ export class ImageDialog extends LitElement {
                         <input 
                           type="range" min="0" max="2" step="0.05"
                           .value="${this._saturation.toString()}"
-                          @input="${(e: InputEvent) => this._saturation = parseFloat((e.target as HTMLInputElement).value)}"
+                          @input="${(e: InputEvent) => {
+                            this._saturation = parseFloat((e.target as HTMLInputElement).value);
+                            this._processingPreset = '';
+                          }}"
                         >
                         <input 
                           type="number" min="0" max="2" step="0.05"
                           .value="${this._saturation.toFixed(2)}"
-                          @input="${(e: InputEvent) => this._saturation = parseFloat((e.target as HTMLInputElement).value)}"
+                          @input="${(e: InputEvent) => {
+                            this._saturation = parseFloat((e.target as HTMLInputElement).value);
+                            this._processingPreset = '';
+                          }}"
                         >
                       </div>
                     </div>
@@ -745,21 +782,6 @@ export class ImageDialog extends LitElement {
                     ` : ''}
 
 
-                    <!-- Processing Preset -->
-                    <div class="form-group" style="margin-bottom: 0;">
-                      <label>Processing Preset</label>
-                      <select 
-                        .value="${this._processingPreset}"
-                        @change="${(e: Event) => this._processingPreset = (e.target as HTMLSelectElement).value as any}"
-                      >
-                        <option value="">Blank (Default)</option>
-                        <option value="balanced">Balanced</option>
-                        <option value="dynamic">Dynamic</option>
-                        <option value="vivid">Vivid</option>
-                        <option value="soft">Soft</option>
-                        <option value="greyscale">Greyscale</option>
-                      </select>
-                    </div>
                   </div>
                 </div>
               </div>
