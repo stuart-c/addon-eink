@@ -140,6 +140,10 @@ export class ScenesView extends BaseResourceView {
         border-color: var(--primary-colour);
         box-shadow: 0 2px 8px rgba(3,169,244,0.1);
       }
+      .placeholder-item.hovered {
+        border-color: var(--primary-colour);
+        background: #f0faff;
+      }
       .placeholder-item-icon {
         color: #888;
       }
@@ -261,6 +265,24 @@ export class ScenesView extends BaseResourceView {
     this._selectedItemId = id;
   }
 
+  private _handleBoxClick(displayId: string) {
+    const activeScene = this.state?.activeScene || this.activeScene;
+    if (!activeScene) return;
+
+    const item = activeScene.items?.find((i: any) => i.displays?.includes(displayId));
+    if (item) {
+      this._selectedItemId = item.id;
+    }
+  }
+
+  private _handleBoxHover(displayId: string) {
+    const activeScene = this.state?.activeScene || this.activeScene;
+    if (!activeScene) return;
+
+    const item = activeScene.items?.find((i: any) => i.displays?.includes(displayId));
+    this._hoveredItemId = item ? item.id : null;
+  }
+
   private _handleItemDoubleClick(item: any) {
     const activeScene = this.state?.activeScene || this.activeScene;
     if (!activeScene) return;
@@ -272,15 +294,29 @@ export class ScenesView extends BaseResourceView {
     this._itemSettingsDialog.show(item, layout, this.state.displayTypes);
   }
 
-  private _handleEditItem() {
+  private _handleEditItem(id?: string) {
     const activeScene = this.state?.activeScene || this.activeScene;
-    if (!activeScene || !this._selectedItemId) return;
+    if (!activeScene) return;
     
-    const item = activeScene.items?.find((i: any) => i.id === this._selectedItemId);
+    const itemId = id || this._selectedItemId;
+    if (!itemId) return;
+
+    const item = activeScene.items?.find((i: any) => i.id === itemId);
     const layout = this.state.layouts.find((l: any) => l.id === activeScene.layout);
     
     if (item && layout) {
+      this._selectedItemId = itemId;
       this._itemSettingsDialog.show(item, layout, this.state.displayTypes);
+    }
+  }
+
+  private _handleBoxEdit(displayId: string) {
+    const activeScene = this.state?.activeScene || this.activeScene;
+    if (!activeScene) return;
+
+    const item = activeScene.items?.find((i: any) => i.displays?.includes(displayId));
+    if (item) {
+      this._handleEditItem(item.id);
     }
   }
 
@@ -412,6 +448,10 @@ export class ScenesView extends BaseResourceView {
                 .highlightedIds="${highlightedDisplayIds}"
                 .usedIds="${usedDisplayIds}"
                 @selection-change="${(e: CustomEvent) => this._selectedDisplayIds = e.detail.ids}"
+                @box-click="${(e: CustomEvent) => this._handleBoxClick(e.detail.id)}"
+                @edit-item="${(e: CustomEvent) => this._handleBoxEdit(e.detail.id)}"
+                @box-hover="${(e: CustomEvent) => this._handleBoxHover(e.detail.id)}"
+                @box-unhover="${() => this._hoveredItemId = null}"
               ></layout-editor>
             </div>
             
@@ -441,7 +481,7 @@ export class ScenesView extends BaseResourceView {
               <div class="content-list">
                 ${activeScene.items?.map((item: any, index: number) => html`
                   <div 
-                    class="placeholder-item ${this._selectedItemId === item.id ? 'selected' : ''}"
+                    class="placeholder-item ${this._selectedItemId === item.id ? 'selected' : ''} ${this._hoveredItemId === item.id ? 'hovered' : ''}"
                     @click="${() => this._handleItemClick(item.id)}"
                     @dblclick="${() => this._handleItemDoubleClick(item)}"
                     @mouseenter="${() => this._hoveredItemId = item.id}"
@@ -509,7 +549,9 @@ export class ScenesView extends BaseResourceView {
         @create="${(e: CustomEvent) => this.state.createScene(e.detail.name, e.detail.layout)}"
         @save="${(e: CustomEvent) => this.state.updateScene(e.detail.id, { name: e.detail.name, layout: e.detail.layout })}"
       ></scene-dialog>
-      <scene-item-settings-dialog></scene-item-settings-dialog>
+      <scene-item-settings-dialog
+        @delete="${() => this._handleDeleteItem()}"
+      ></scene-item-settings-dialog>
     `;
   }
 }

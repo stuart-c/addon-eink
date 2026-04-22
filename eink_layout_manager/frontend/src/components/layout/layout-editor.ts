@@ -301,9 +301,14 @@ export class LayoutEditor extends LitElement {
   }
 
   private _handleBoxSelect(id: string) {
-    if (this.usedIds.includes(id)) return;
-
     if (this.readOnly) {
+      this.dispatchEvent(new CustomEvent('box-click', { 
+        detail: { id },
+        bubbles: true,
+        composed: true
+      }));
+
+      if (this.usedIds.includes(id)) return;
       // Toggle selection in read-only mode
       const newSelectedIds = this.selectedIds.includes(id)
         ? this.selectedIds.filter(i => i !== id)
@@ -351,6 +356,21 @@ export class LayoutEditor extends LitElement {
     this.dispatchEvent(new CustomEvent('rotate-item', { detail: { id } }));
   }
 
+  private _handleBoxHover(id: string) {
+    this.dispatchEvent(new CustomEvent('box-hover', {
+      detail: { id },
+      bubbles: true,
+      composed: true
+    }));
+  }
+
+  private _handleBoxUnhover() {
+    this.dispatchEvent(new CustomEvent('box-unhover', {
+      bubbles: true,
+      composed: true
+    }));
+  }
+
   render() {
     const gridSize = this.gridSnap < 5 ? 10 : this.gridSnap;
     return html`
@@ -389,6 +409,8 @@ export class LayoutEditor extends LitElement {
                     .readOnly="${this.readOnly}"
                     @mousedown="${() => this._handleBoxSelect(item.id)}"
                     @dblclick="${() => this._handleBoxEdit(item.id)}"
+                    @mouseenter="${() => this._handleBoxHover(item.id)}"
+                    @mouseleave="${() => this._handleBoxUnhover()}"
                     @item-edit="${() => this._handleBoxEdit(item.id)}"
                     @item-rotate="${() => this._handleBoxRotate(item.id)}"
                     @item-delete="${() => this.dispatchEvent(new CustomEvent('item-delete', { detail: { id: item.id } }))}"

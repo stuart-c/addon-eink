@@ -20,11 +20,13 @@ export class LayoutBox extends LitElement {
         overflow: visible;
       }
       :host([readOnly]) {
-        cursor: default;
+        cursor: pointer;
       }
       :host([used]) {
-        cursor: not-allowed;
         opacity: 0.6;
+      }
+      :host([used]:not([readOnly])) {
+        cursor: not-allowed;
         pointer-events: none;
       }
       :host([used]) .container {
