@@ -22,6 +22,11 @@
         },
         "required": ["display_type_id", "x_mm", "y_mm", "orientation"]
       }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "active"],
+      "readOnly": true
     }
   },
   "required": ["name", "canvas_width_mm", "canvas_height_mm", "items"]

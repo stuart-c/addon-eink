@@ -202,6 +202,25 @@ export class LayoutsView extends BaseResourceView {
         from { transform: translateY(-10px); opacity: 0; }
         to { transform: translateY(0); opacity: 1; }
       }
+
+      .status-badge {
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        padding: 2px 6px;
+        border-radius: 4px;
+        letter-spacing: 0.5px;
+        margin-left: 8px;
+        vertical-align: middle;
+      }
+      .status-badge.active {
+        background: #e8f5e9;
+        color: #2e7d32;
+      }
+      .status-badge.draft {
+        background: #f5f5f5;
+        color: #757575;
+      }
     `
   ];
 
@@ -330,7 +349,8 @@ export class LayoutsView extends BaseResourceView {
     const listItems = this.layouts.map(l => ({
       id: l.id,
       name: l.name,
-      icon: 'layers'
+      icon: 'layers',
+      status: l.status
     }));
 
     return html`
@@ -345,7 +365,10 @@ export class LayoutsView extends BaseResourceView {
 
         <div slot="right-top-bar" class="toolbar-content">
           <div class="toolbar-title">
-            ${this.isAdding ? 'Create New Layout' : (this.activeLayout ? this.activeLayout.name : 'Layouts')}
+            ${this.isAdding ? 'Create New Layout' : (this.activeLayout ? html`
+              ${this.activeLayout.name}
+              <span class="status-badge ${this.activeLayout.status}">${this.activeLayout.status}</span>
+            ` : 'Layouts')}
           </div>
           <div class="toolbar-actions">
               <button class="secondary" title="Layout Settings" @click="${() => this._layoutSettingsDialog.show(this.activeLayout!)}">

@@ -86,8 +86,35 @@ class LayoutHandler(BaseCRUDHandler):
                 "canvas_width_mm",
                 "canvas_height_mm",
                 "items",
+                "status",
             },
         )
+
+    async def pre_create(self, data):
+        """Hook to calculate status before creation."""
+        data["status"] = self._calculate_status(data)
+        return data
+
+    async def pre_update(self, data, existing_item):
+        """Hook to calculate status before update."""
+        data["status"] = self._calculate_status(data)
+        return data
+
+    def _calculate_status(self, data):
+        """
+        Calculate status based on displays and their device IDs.
+        Active if at least 1 display AND all displays have a device_id.
+        """
+        items = data.get("items", [])
+        if not items:
+            return "draft"
+
+        for item in items:
+            device_id = item.get("device_id")
+            if not device_id:  # Handles None and ""
+                return "draft"
+
+        return "active"
 
     async def pre_delete(self, item, session):
         """Referential Integrity: Don't delete layout if used in any scene."""

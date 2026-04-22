@@ -283,3 +283,59 @@ test('POST /api/layout — can create multiple resources and they all appear in 
     await request.delete(`/api/layout/${id}`);
   }
 });
+
+// ---------------------------------------------------------------------------
+// Layout Status Field
+// ---------------------------------------------------------------------------
+
+test('Layout Status: new layout with no items is "draft"', async ({ request }) => {
+  const layout = await createLayout(request, { items: [] });
+  expect(layout.status).toBe('draft');
+});
+
+test('Layout Status: layout with items but missing device_id is "draft"', async ({ request }) => {
+  const dt = await createDisplayType(request);
+  const layout = await createLayout(request, {
+    items: [{ display_type_id: dt.id, x_mm: 0, y_mm: 0, orientation: 'landscape', device_id: '' }]
+  });
+  expect(layout.status).toBe('draft');
+});
+
+test('Layout Status: layout with items and all have device_id is "active"', async ({ request }) => {
+  const dt = await createDisplayType(request);
+  const layout = await createLayout(request, {
+    items: [{ display_type_id: dt.id, x_mm: 0, y_mm: 0, orientation: 'landscape', device_id: 'ha-device-1' }]
+  });
+  expect(layout.status).toBe('active');
+});
+
+test('Layout Status: updating layout items updates status', async ({ request }) => {
+  const dt = await createDisplayType(request);
+  
+  // Create draft
+  const layout = await createLayout(request, {
+    items: [{ display_type_id: dt.id, x_mm: 0, y_mm: 0, orientation: 'landscape' }]
+  });
+  expect(layout.status).toBe('draft');
+
+  // Update to active
+  const updateResponse = await request.put(`/api/layout/${layout.id}`, {
+    data: {
+      ...layout,
+      items: [{ ...layout.items[0], device_id: 'ha-device-1' }]
+    }
+  });
+  expect(updateResponse.status()).toBe(200);
+  const updated = await updateResponse.json();
+  expect(updated.status).toBe('active');
+
+  // Update back to draft (empty device_id)
+  const draftResponse = await request.put(`/api/layout/${layout.id}`, {
+    data: {
+      ...updated,
+      items: [{ ...updated.items[0], device_id: '' }]
+    }
+  });
+  expect(draftResponse.status()).toBe(200);
+  expect((await draftResponse.json()).status).toBe('draft');
+});

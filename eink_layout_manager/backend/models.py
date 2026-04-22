@@ -126,6 +126,7 @@ class Layout(Base):
     canvas_width_mm = Column(Integer, nullable=False)
     canvas_height_mm = Column(Integer, nullable=False)
     items = Column(JSON, nullable=False)
+    status = Column(String, nullable=False, default="draft")
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(
         DateTime, server_default=func.now(), onupdate=func.now()

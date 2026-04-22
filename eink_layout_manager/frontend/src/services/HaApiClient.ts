@@ -40,6 +40,7 @@ export interface Layout {
   canvas_height_mm: number;
   grid_snap_mm: number;
   items: LayoutItem[];
+  status?: 'draft' | 'active';
 }
 
 export interface ImageConversion {
