@@ -1,10 +1,11 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement, state, query } from 'lit/decorators.js';
 import '../shared/base-dialog';
 import '../shared/keyword-input';
 import { BaseDialog } from '../shared/base-dialog';
 import { commonStyles } from '../../styles/common-styles';
 import { api, Image } from '../../services/HaApiClient';
+import ditherImage from '../../lib/epdoptimize/dither/dither';
 
 /**
  * A dialog component for adding and processing new images.
@@ -12,6 +13,8 @@ import { api, Image } from '../../services/HaApiClient';
  */
 @customElement('image-dialog')
 export class ImageDialog extends LitElement {
+  @query('#preview-canvas') private _canvas!: HTMLCanvasElement;
+  @query('#source-image') private _sourceImg!: HTMLImageElement;
   static styles = [
     commonStyles,
     css`
@@ -282,6 +285,7 @@ export class ImageDialog extends LitElement {
   @state() private _numberOfSampleColours: number = 10;
   @state() private _detailsOpen = true;
   @state() private _propertiesOpen = false;
+  private _updateTimer: any = null;
 
   async show(image?: Image) {
     this._editingImage = image || null;
@@ -306,6 +310,7 @@ export class ImageDialog extends LitElement {
     this._propertiesOpen = false;
     await this.updateComplete;
     (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).show();
+    this._triggerUpdate();
   }
 
   private _toggleSection(section: 'details' | 'properties') {
@@ -315,6 +320,11 @@ export class ImageDialog extends LitElement {
     } else {
       this._propertiesOpen = !this._propertiesOpen;
       this._detailsOpen = !this._propertiesOpen;
+    }
+    
+    // Trigger update after animation finished or properties opened
+    if (this._propertiesOpen) {
+      setTimeout(() => this._triggerUpdate(), 300);
     }
   }
 
@@ -426,6 +436,65 @@ export class ImageDialog extends LitElement {
       console.error('Save error:', err);
     } finally {
       this._isUploading = false;
+    }
+  }
+
+  private _triggerUpdate() {
+    if (this._updateTimer) {
+      clearTimeout(this._updateTimer);
+    }
+    this._updateTimer = setTimeout(() => this._updatePreview(), 150);
+  }
+
+  private async _updatePreview() {
+    if (!this._sourceImg || !this._canvas || !this._uploadedImage) return;
+    if (!this._sourceImg.complete || this._sourceImg.naturalWidth === 0) return;
+
+    const width = this._sourceImg.naturalWidth;
+    const height = this._sourceImg.naturalHeight;
+
+    // Create a temporary canvas for adjustments
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = width;
+    tempCanvas.height = height;
+    const ctx = tempCanvas.getContext('2d');
+    if (!ctx) return;
+
+    // Apply brightness, contrast, saturation
+    ctx.filter = `brightness(${this._brightness}) contrast(${this._contrast}) saturate(${this._saturation})`;
+    ctx.drawImage(this._sourceImg, 0, 0);
+    ctx.filter = 'none';
+
+    const options = {
+      ditheringType: this._ditheringType,
+      errorDiffusionMatrix: this._errorDiffusionMatrix,
+      serpentine: this._serpentine,
+      palette: this._palette.includes(',') 
+        ? this._palette.split(',').map(c => c.trim()) 
+        : this._palette,
+      sampleColorsFromImage: this._sampleColoursFromImage,
+      numberOfSampleColors: this._numberOfSampleColours
+    };
+
+    try {
+      await ditherImage(tempCanvas, this._canvas, options);
+    } catch (err) {
+      console.error('Dithering error:', err);
+    }
+  }
+
+  protected updated(changedProperties: Map<string, any>) {
+    super.updated(changedProperties);
+    
+    const propertiesToTriggerUpdate = [
+      '_brightness', '_contrast', '_saturation', 
+      '_ditheringType', '_errorDiffusionMatrix', '_serpentine',
+      '_palette', '_sampleColoursFromImage', '_numberOfSampleColours',
+      '_uploadedImage'
+    ];
+
+    if ([...changedProperties.keys()].some(p => propertiesToTriggerUpdate.includes(p))) {
+      this._triggerUpdate();
     }
   }
 
@@ -652,10 +721,13 @@ export class ImageDialog extends LitElement {
               @drop="${this._editingImage ? (e: Event) => e.preventDefault() : this._onDrop}"
             >
               ${this._uploadedImage ? html`
+                <canvas id="preview-canvas" class="preview-image"></canvas>
                 <img 
+                  id="source-image"
                   src="api/image/${this._uploadedImage.id}/thumbnail" 
-                  class="preview-image"
-                  alt="Thumbnail preview"
+                  style="display: none;"
+                  alt="Source for preview"
+                  @load="${() => this._triggerUpdate()}"
                 >
               ` : html`
                 <span class="material-icons">
