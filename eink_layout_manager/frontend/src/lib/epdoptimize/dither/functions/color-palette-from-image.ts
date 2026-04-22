@@ -2,7 +2,7 @@
 //const { createCanvas, Image } = require('canvas')
 import utilities from "./utilities";
 
-const distanceInColorSpace = (color1, color2) => {
+const distanceInColorSpace = async (color1, color2) => {
   // Currenlty ignores alpha
 
   const r = color1[0] - color2[0];

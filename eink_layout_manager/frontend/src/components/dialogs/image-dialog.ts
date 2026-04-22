@@ -5,7 +5,11 @@ import '../shared/keyword-input';
 import { BaseDialog } from '../shared/base-dialog';
 import { commonStyles } from '../../styles/common-styles';
 import { api, Image } from '../../services/HaApiClient';
-import ditherImage from '../../lib/epdoptimize/dither/dither';
+import { 
+  ditherImage, 
+  suggestCanvasProcessingOptions,
+  getDefaultPalettes 
+} from '../../lib/epdoptimize/index';
 
 /**
  * A dialog component for adding and processing new images.
@@ -258,6 +262,7 @@ export class ImageDialog extends LitElement {
         margin-top: 0.25rem;
       }
 
+<<<<<<< HEAD
       .checkbox-row.reversed {
         justify-content: space-between;
         width: 100%;
@@ -270,6 +275,43 @@ export class ImageDialog extends LitElement {
         color: var(--text-muted);
         text-transform: uppercase;
         letter-spacing: 0.5px;
+=======
+      .summary-table td .unit {
+        font-size: 11px;
+        color: var(--secondary-text-colour);
+        margin-left: 2px;
+      }
+
+      .suggest-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 1rem;
+        background: var(--primary-colour);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+
+      .suggest-button:hover {
+        background: var(--primary-colour-dark, #3b82f6);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      }
+
+      .suggest-button:active {
+        transform: translateY(0);
+      }
+
+      .suggest-button .material-icons {
+        font-size: 18px;
       }
 
       .checkbox-row input {
@@ -564,38 +606,91 @@ export class ImageDialog extends LitElement {
     if (!this._sourceImg || !this._canvas || !this._uploadedImage) return;
     if (!this._sourceImg.complete || this._sourceImg.naturalWidth === 0) return;
 
+
+    const tempCanvas = this._prepareAdjustedCanvas();
+    if (!tempCanvas) return;
+
+    const paletteName = this._palette === 'defaultPalette' ? 'default' : 
+                       this._palette === 'aitjcizeSpectra6Palette' ? 'spectra6' : 
+                       this._palette === 'acepPalette' ? 'acep' : 'spectra6';
+
+    const options = {
+      ditheringType: this._ditheringType,
+      errorDiffusionMatrix: this._errorDiffusionMatrix,
+      serpentine: this._serpentine,
+      palette: getDefaultPalettes(paletteName),
+      processingPreset: this._processingPreset
+    };
+
+    try {
+      await ditherImage(tempCanvas, this._canvas, options as any);
+    } catch (err) {
+      console.error('Dithering error:', err);
+    }
+  }
+
+  private _prepareAdjustedCanvas(): HTMLCanvasElement | null {
+    if (!this._sourceImg || !this._sourceImg.complete) return null;
+    
     const width = this._sourceImg.naturalWidth;
     const height = this._sourceImg.naturalHeight;
 
-    // Create a temporary canvas for adjustments
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = width;
     tempCanvas.height = height;
     const ctx = tempCanvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) return null;
 
     // Apply brightness, contrast, saturation
     ctx.filter = `brightness(${this._brightness}) contrast(${this._contrast}) saturate(${this._saturation})`;
     ctx.drawImage(this._sourceImg, 0, 0);
     ctx.filter = 'none';
 
-    const options = {
-      ditheringType: this._ditheringType,
-      errorDiffusionMatrix: this._errorDiffusionMatrix,
-      serpentine: this._serpentine,
-      palette: this._palette === 'defaultPalette' ? 'default' : 
-               this._palette === 'aitjcizeSpectra6Palette' ? 'spectra6' : 
-               this._palette === 'acepPalette' ? 'acep' : 'spectra6',
-      processingPreset: this._processingPreset
-    };
+    return tempCanvas;
+  }
 
+  private async _handleSuggestSettings() {
+    if (!this._sourceImg || !this._uploadedImage) return;
+
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = this._sourceImg.naturalWidth;
+    tempCanvas.height = this._sourceImg.naturalHeight;
+    const ctx = tempCanvas.getContext('2d');
+    if (!ctx) return;
+    ctx.drawImage(this._sourceImg, 0, 0);
+
+    const paletteName = this._palette === 'defaultPalette' ? 'default' : 
+                       this._palette === 'aitjcizeSpectra6Palette' ? 'spectra6' : 
+                       this._palette === 'acepPalette' ? 'acep' : 'spectra6';
+    
+    const palette = getDefaultPalettes(paletteName);
 
     try {
-      await ditherImage(tempCanvas, this._canvas, options);
+      const suggestion = suggestCanvasProcessingOptions(tempCanvas, palette as any);
+      if (suggestion && suggestion.ditherOptions) {
+        const opts = suggestion.ditherOptions;
+        
+        // Update Dithering settings
+        if (opts.ditheringType) this._ditheringType = opts.ditheringType;
+        if (opts.errorDiffusionMatrix) this._errorDiffusionMatrix = opts.errorDiffusionMatrix;
+        
+        // Update Preset
+        if (opts.processingPreset) this._processingPreset = opts.processingPreset as any;
+
+        // Map Tone Mapping to our sliders if available
+        if (opts.toneMapping) {
+          if (opts.toneMapping.exposure !== undefined) this._brightness = opts.toneMapping.exposure;
+          if (opts.toneMapping.contrast !== undefined) this._contrast = opts.toneMapping.contrast;
+          if (opts.toneMapping.saturation !== undefined) this._saturation = opts.toneMapping.saturation;
+        }
+
+        this._triggerUpdate();
+      }
     } catch (err) {
-      console.error('Dithering error:', err);
+      console.error('Suggestion error:', err);
     }
   }
+
 
   protected updated(changedProperties: Map<string, any>) {
     super.updated(changedProperties);
@@ -708,6 +803,11 @@ export class ImageDialog extends LitElement {
                         <option value="greyscale">Greyscale</option>
                       </select>
                     </div>
+
+                    <button class="suggest-button" @click="${this._handleSuggestSettings}">
+                      <span class="material-icons">auto_awesome</span>
+                      Suggest Settings
+                    </button>
 
                     <hr style="border: 0; border-top: 1px solid var(--border-colour); margin: 0.5rem 0;">
 
