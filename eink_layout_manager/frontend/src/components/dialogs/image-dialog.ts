@@ -113,6 +113,7 @@ export class ImageDialog extends LitElement {
         display: flex;
         justify-content: flex-end;
         gap: 0.75rem;
+        width: 100%;
       }
 
       .preview-image {
