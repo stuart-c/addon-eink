@@ -222,6 +222,17 @@ export class ImageDialog extends LitElement {
         gap: 0.5rem;
       }
 
+      .control-group.horizontal {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .control-group.horizontal label {
+        margin-bottom: 0;
+        flex: 0 0 180px;
+      }
+
       .slider-row {
         display: flex;
         align-items: center;
@@ -247,9 +258,39 @@ export class ImageDialog extends LitElement {
         margin-top: 0.25rem;
       }
 
+      .checkbox-row.reversed {
+        justify-content: space-between;
+        width: 100%;
+        margin-top: 0.5rem;
+      }
+
+      .checkbox-row.reversed span {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
       .checkbox-row input {
         width: auto;
         margin: 0;
+      }
+
+      .form-group.horizontal {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+
+      .form-group.horizontal label {
+        margin-bottom: 0;
+        flex: 0 0 180px;
+      }
+
+      .form-group.horizontal select {
+        flex: 1;
       }
 
       select {
@@ -653,7 +694,7 @@ export class ImageDialog extends LitElement {
                 <div class="accordion-content">
                   <div class="accordion-content-inner">
                     <!-- Processing Preset -->
-                    <div class="form-group" style="margin-bottom: 0;">
+                    <div class="form-group horizontal" style="margin-bottom: 0;">
                       <label>Processing Preset</label>
                       <select 
                         .value="${this._processingPreset}"
@@ -671,7 +712,7 @@ export class ImageDialog extends LitElement {
                     <hr style="border: 0; border-top: 1px solid var(--border-colour); margin: 0.5rem 0;">
 
                     <!-- Brightness -->
-                    <div class="control-group">
+                    <div class="control-group horizontal">
                       <label>Brightness</label>
                       <div class="slider-row">
                         <input 
@@ -694,7 +735,7 @@ export class ImageDialog extends LitElement {
                     </div>
 
                     <!-- Contrast -->
-                    <div class="control-group">
+                    <div class="control-group horizontal">
                       <label>Contrast</label>
                       <div class="slider-row">
                         <input 
@@ -717,7 +758,7 @@ export class ImageDialog extends LitElement {
                     </div>
 
                     <!-- Saturation -->
-                    <div class="control-group">
+                    <div class="control-group horizontal">
                       <label>Saturation</label>
                       <div class="slider-row">
                         <input 
@@ -742,7 +783,7 @@ export class ImageDialog extends LitElement {
                     <hr style="border: 0; border-top: 1px solid var(--border-colour); margin: 0.5rem 0;">
 
                     <!-- Dithering Type -->
-                    <div class="form-group" style="margin-bottom: 0;">
+                    <div class="form-group horizontal" style="margin-bottom: 0;">
                       <label>Dithering Type</label>
                       <select 
                         .value="${this._ditheringType}"
@@ -756,7 +797,7 @@ export class ImageDialog extends LitElement {
                     </div>
 
                     ${this._ditheringType === 'errorDiffusion' ? html`
-                      <div class="form-group" style="margin-bottom: 0;">
+                      <div class="form-group horizontal" style="margin-bottom: 0;">
                         <label>Error Diffusion Matrix</label>
                         <select 
                           .value="${this._errorDiffusionMatrix}"
@@ -772,13 +813,13 @@ export class ImageDialog extends LitElement {
                           <option value="sierra2-4a">Sierra 2-4a</option>
                         </select>
                       </div>
-                      <label class="checkbox-row">
+                      <label class="checkbox-row reversed">
+                        <span>Serpentine Dithering</span>
                         <input 
                           type="checkbox"
                           ?checked="${this._serpentine}"
                           @change="${(e: Event) => this._serpentine = (e.target as HTMLInputElement).checked}"
                         >
-                        Serpentine Dithering
                       </label>
                     ` : ''}
 
