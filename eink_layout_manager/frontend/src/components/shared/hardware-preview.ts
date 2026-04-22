@@ -38,6 +38,10 @@ export class HardwarePreview extends LitElement {
   @property({ type: Number }) scale = 1; // Pixels per mm
   @property({ type: String }) orientation: 'landscape' | 'portrait' = 'landscape';
 
+  @property({ type: Object }) previewImage: HTMLCanvasElement | string | null = null;
+  @property({ type: Object }) previewOffset: { x: number; y: number } = { x: 0, y: 0 };
+  @property({ type: Object }) previewTotalSize: { width: number; height: number } = { width: 0, height: 0 };
+
   render() {
     const isPortrait = this.orientation === 'portrait';
     const frameW = isPortrait ? (this.height_mm || 0) : (this.width_mm || 0);
@@ -61,12 +65,33 @@ export class HardwarePreview extends LitElement {
       height: ${matH * this.scale}px; 
       background: ${this.mat_colour};
     `;
-    const displayStyle = `
+
+    let displayStyle = `
       top: ${(border + matT) * this.scale}px; 
       left: ${(border + matL) * this.scale}px; 
       width: ${panelW * this.scale}px; 
       height: ${panelH * this.scale}px;
     `;
+
+    if (this.previewImage && this.previewTotalSize.width > 0) {
+      // Calculate background position to align with the total preview area
+      // previewOffset is the top-left of this display's FRAME in the total area.
+      // We need to account for the border and mat offset to find the top-left of the DISPLAY PANEL.
+      const displayLeftInArea = this.previewOffset.x + border + matL;
+      const displayTopInArea = this.previewOffset.y + border + matT;
+
+      const bgPosX = -displayLeftInArea * this.scale;
+      const bgPosY = -displayTopInArea * this.scale;
+      const bgSizeW = this.previewTotalSize.width * this.scale;
+      const bgSizeH = this.previewTotalSize.height * this.scale;
+
+      displayStyle += `
+        background-image: url(${typeof this.previewImage === 'string' ? this.previewImage : (this.previewImage as HTMLCanvasElement).toDataURL()});
+        background-position: ${bgPosX}px ${bgPosY}px;
+        background-size: ${bgSizeW}px ${bgSizeH}px;
+        background-repeat: no-repeat;
+      `;
+    }
 
     return html`
       <div class="assembly" style="${assemblyStyle}">

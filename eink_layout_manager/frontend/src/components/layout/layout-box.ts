@@ -139,6 +139,11 @@ export class LayoutBox extends LitElement {
   @property({ type: String }) frame_colour = '';
   @property({ type: String }) mat_colour = '';
 
+  // Preview properties
+  @property({ type: Object }) previewImage: HTMLCanvasElement | string | null = null;
+  @property({ type: Object }) previewOffset: { x: number; y: number } = { x: 0, y: 0 };
+  @property({ type: Object }) previewTotalSize: { width: number; height: number } = { width: 0, height: 0 };
+
   protected updated(changedProperties: PropertyValues) {
     if (changedProperties.has('x') || changedProperties.has('y')) {
       this.style.transform = `translate(${this.x}px, ${this.y}px)`;
@@ -167,6 +172,9 @@ export class LayoutBox extends LitElement {
           .mat_colour="${this.mat_colour}"
           .scale="${1}"
           .orientation="${this.orientation}"
+          .previewImage="${this.previewImage}"
+          .previewOffset="${this.previewOffset}"
+          .previewTotalSize="${this.previewTotalSize}"
         ></hardware-preview>
 
         <div class="item-number">

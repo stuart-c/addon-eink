@@ -1,10 +1,14 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, PropertyValues } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { commonStyles } from '../../styles/common-styles';
-import { Layout, DisplayType, Image, api } from '../../services/HaApiClient';
+import { Layout, DisplayType, Image as ImageMetadata, api } from '../../services/HaApiClient';
 import '../shared/base-dialog';
 import { BaseDialog } from '../shared/base-dialog';
 import '../layout/layout-editor';
+import { 
+  ditherImage, 
+  getDefaultPalettes 
+} from '../../lib/epdoptimize/index';
 
 /**
  * A dialog component for editing the settings of an item in a scene.
@@ -375,8 +379,10 @@ export class SceneItemSettingsDialog extends LitElement {
   @state() private _layout: Layout | null = null;
   @state() private _displayTypes: DisplayType[] = [];
   @state() private _isAddingImage = false;
-  @state() private _availableImages: Image[] = [];
+  @state() private _availableImages: ImageMetadata[] = [];
   @state() private _searchQuery = '';
+  @state() private _previewCanvas: HTMLCanvasElement | null = null;
+  private _updateTimer: any = null;
 
   async show(item: any, layout: Layout, displayTypes: DisplayType[]) {
     this.item = item;
@@ -404,6 +410,117 @@ export class SceneItemSettingsDialog extends LitElement {
     }
     await this.updateComplete;
     (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).show();
+    this._triggerUpdate();
+  }
+
+  private _triggerUpdate() {
+    if (this._updateTimer) {
+      clearTimeout(this._updateTimer);
+    }
+    this._updateTimer = setTimeout(() => this._updatePreview(), 250);
+  }
+
+  private async _updatePreview() {
+    if (!this._selectedImageId || !this.item || !this._previewData.width) {
+      this._previewCanvas = null;
+      return;
+    }
+
+    const image = this._availableImages.find(i => i.id === this._selectedImageId);
+    if (!image) return;
+
+    // Load source image
+    const imgElement = new Image();
+    imgElement.crossOrigin = 'anonymous';
+    imgElement.src = `/api/image/${image.id}`;
+    await new Promise((resolve, reject) => {
+      imgElement.onload = resolve;
+      imgElement.onerror = reject;
+    });
+
+    // Reference display type for DPI
+    const firstDisplayId = this.item.displays[0];
+    const layoutBox = this._layout?.items.find(i => i.id === firstDisplayId);
+    const dt = this._displayTypes.find(t => t.id === layoutBox?.display_type_id);
+    if (!dt) return;
+
+    const pxPerMm = dt.width_px / dt.width_mm;
+    const canvasWidthPx = Math.round(this._previewData.width * pxPerMm);
+    const canvasHeightPx = Math.round(this._previewData.height * pxPerMm);
+
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = canvasWidthPx;
+    tempCanvas.height = canvasHeightPx;
+    const ctx = tempCanvas.getContext('2d');
+    if (!ctx) return;
+
+    // Draw background (white)
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvasWidthPx, canvasHeightPx);
+
+    // Apply adjustments if present in image metadata
+    const brightness = image.brightness ?? 1.0;
+    const contrast = image.contrast ?? 1.0;
+    const saturation = image.saturation ?? 1.0;
+    ctx.filter = `brightness(${brightness}) contrast(${contrast}) saturate(${saturation})`;
+
+    // Calculate image dimensions with scaling
+    const scaledWidth = (image.dimensions.width * this._scalingFactor) / 100;
+    const scaledHeight = (image.dimensions.height * this._scalingFactor) / 100;
+
+    // Draw image with offset
+    ctx.drawImage(
+      imgElement, 
+      this._offsetX, 
+      this._offsetY, 
+      scaledWidth, 
+      scaledHeight
+    );
+    ctx.filter = 'none';
+
+    // Dither
+    const ditherCanvas = document.createElement('canvas');
+    ditherCanvas.width = canvasWidthPx;
+    ditherCanvas.height = canvasHeightPx;
+
+    const palette = this._getPaletteForDisplays();
+    const options = {
+      ditheringType: image.conversion?.ditheringType || 'errorDiffusion',
+      errorDiffusionMatrix: image.conversion?.errorDiffusionMatrix || 'floydSteinberg',
+      serpentine: image.conversion?.serpentine ?? false,
+      palette,
+      processingPreset: image.conversion?.processingPreset || ''
+    };
+
+    try {
+      await ditherImage(tempCanvas, ditherCanvas, options as any);
+      this._previewCanvas = ditherCanvas;
+    } catch (e) {
+      console.error('Failed to dither preview', e);
+      this._previewCanvas = tempCanvas; // Fallback to raw canvas
+    }
+  }
+
+  private _getPaletteForDisplays(): string[] {
+    const displayTypeIds = new Set(
+      this._layout?.items
+        .filter(i => this.item.displays.includes(i.id))
+        .map(i => i.display_type_id)
+    );
+
+    const palettes: Set<string> = new Set();
+    displayTypeIds.forEach(id => {
+      const dt = this._displayTypes.find(t => t.id === id);
+      if (dt) {
+        if (dt.colour_type === 'BWGBRY') palettes.add('spectra6');
+        else if (dt.colour_type === 'BWR') palettes.add('acep'); // fallback or BWR palette if exists
+        else palettes.add('default');
+      }
+    });
+
+    // For now, just take the first palette identified
+    const paletteName = palettes.values().next().value || 'default';
+    return getDefaultPalettes(paletteName);
   }
 
   private _getImageName(imageId: string) {
@@ -422,7 +539,7 @@ export class SceneItemSettingsDialog extends LitElement {
     }
   }
 
-  private _selectImage(image: Image) {
+  private _selectImage(image: ImageMetadata) {
     if (!this.item.images) {
       this.item.images = [];
     }
@@ -446,6 +563,36 @@ export class SceneItemSettingsDialog extends LitElement {
     this._offsetX = 0;
     this._offsetY = 0;
     this._isAddingImage = false;
+    this.requestUpdate();
+  }
+
+  protected updated(changedProperties: PropertyValues) {
+    if (
+      changedProperties.has('_selectedImageId') || 
+      changedProperties.has('_scalingFactor') || 
+      changedProperties.has('_offsetX') || 
+      changedProperties.has('_offsetY')
+    ) {
+      this._triggerUpdate();
+    }
+  }
+
+  private _moveImage(dx: number, dy: number, reset = false) {
+    if (reset) {
+      this._offsetX = 0;
+      this._offsetY = 0;
+    } else {
+      this._offsetX += dx;
+      this._offsetY += dy;
+    }
+
+    if (this._selectedImageId) {
+      const img = this.item.images.find((i: any) => i.image_id === this._selectedImageId);
+      if (img) {
+        img.offset.x = this._offsetX;
+        img.offset.y = this._offsetY;
+      }
+    }
     this.requestUpdate();
   }
 
@@ -610,6 +757,8 @@ export class SceneItemSettingsDialog extends LitElement {
                       .displayTypes="${this._displayTypes}"
                       .readOnly="${true}"
                       .noPadding="${true}"
+                      .previewImage="${this._previewCanvas}"
+                      .previewTotalSize="${{ width: this._previewData.width, height: this._previewData.height }}"
                     ></layout-editor>
                   ` : html`
                     <div class="preview-placeholder">
@@ -708,11 +857,11 @@ export class SceneItemSettingsDialog extends LitElement {
 
                   <!-- D-Pad -->
                   <div class="dpad">
-                    <button class="dpad-btn up" title="Move Up"><span class="material-icons">keyboard_arrow_up</span></button>
-                    <button class="dpad-btn left" title="Move Left"><span class="material-icons">keyboard_arrow_left</span></button>
-                    <button class="dpad-btn reset" title="Reset Offset"><span class="material-icons">restart_alt</span></button>
-                    <button class="dpad-btn right" title="Move Right"><span class="material-icons">keyboard_arrow_right</span></button>
-                    <button class="dpad-btn down" title="Move Down"><span class="material-icons">keyboard_arrow_down</span></button>
+                    <button class="dpad-btn up" title="Move Up" @click="${() => this._moveImage(0, -10)}"><span class="material-icons">keyboard_arrow_up</span></button>
+                    <button class="dpad-btn left" title="Move Left" @click="${() => this._moveImage(-10, 0)}"><span class="material-icons">keyboard_arrow_left</span></button>
+                    <button class="dpad-btn reset" title="Reset Offset" @click="${() => this._moveImage(0, 0, true)}"><span class="material-icons">restart_alt</span></button>
+                    <button class="dpad-btn right" title="Move Right" @click="${() => this._moveImage(10, 0)}"><span class="material-icons">keyboard_arrow_right</span></button>
+                    <button class="dpad-btn down" title="Move Down" @click="${() => this._moveImage(0, 10)}"><span class="material-icons">keyboard_arrow_down</span></button>
                   </div>
                 </div>
               </div>

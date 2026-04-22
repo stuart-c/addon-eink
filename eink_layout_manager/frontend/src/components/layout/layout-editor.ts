@@ -91,6 +91,10 @@ export class LayoutEditor extends LitElement {
   @property({ type: Boolean, reflect: true }) readOnly = false;
   @property({ type: Boolean, reflect: true }) noPadding = false;
   
+  // Preview properties
+  @property({ type: Object }) previewImage: HTMLCanvasElement | string | null = null;
+  @property({ type: Object }) previewTotalSize: { width: number; height: number } = { width: 0, height: 0 };
+  
   @state() private _scale = 1;
 
   private _resizeObserver: ResizeObserver;
@@ -411,6 +415,9 @@ export class LayoutEditor extends LitElement {
                     ?invalid="${item.invalid}"
                     ?used="${this.usedIds.includes(item.id)}"
                     .readOnly="${this.readOnly}"
+                    .previewImage="${this.previewImage}"
+                    .previewOffset="${{ x: item.x_mm, y: item.y_mm }}"
+                    .previewTotalSize="${this.previewTotalSize}"
                     @mousedown="${() => this._handleBoxSelect(item.id)}"
                     @dblclick="${() => this._handleBoxEdit(item.id)}"
                     @mouseenter="${() => this._handleBoxHover(item.id)}"
