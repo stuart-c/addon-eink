@@ -140,6 +140,10 @@ export class ScenesView extends BaseResourceView {
         border-color: var(--primary-colour);
         box-shadow: 0 2px 8px rgba(3,169,244,0.1);
       }
+      .placeholder-item.hovered {
+        border-color: var(--primary-colour);
+        background: #f0faff;
+      }
       .placeholder-item-icon {
         color: #888;
       }
@@ -477,7 +481,7 @@ export class ScenesView extends BaseResourceView {
               <div class="content-list">
                 ${activeScene.items?.map((item: any, index: number) => html`
                   <div 
-                    class="placeholder-item ${this._selectedItemId === item.id ? 'selected' : ''}"
+                    class="placeholder-item ${this._selectedItemId === item.id ? 'selected' : ''} ${this._hoveredItemId === item.id ? 'hovered' : ''}"
                     @click="${() => this._handleItemClick(item.id)}"
                     @dblclick="${() => this._handleItemDoubleClick(item)}"
                     @mouseenter="${() => this._hoveredItemId = item.id}"
