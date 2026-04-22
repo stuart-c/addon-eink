@@ -105,8 +105,8 @@
         },
         "processingPreset": {
           "type": "string",
-          "enum": ["blank", "balanced", "dynamic", "vivid", "soft", "greyscale"],
-          "default": "blank"
+          "enum": ["", "balanced", "dynamic", "vivid", "soft", "greyscale"],
+          "default": ""
         }
       }
     },

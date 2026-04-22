@@ -35,7 +35,7 @@ describe('ImageDialog', () => {
       errorDiffusionMatrix: 'floydSteinberg',
       serpentine: true,
       palette: 'default',
-      processingPreset: 'blank'
+      processingPreset: ''
     }
   };
 

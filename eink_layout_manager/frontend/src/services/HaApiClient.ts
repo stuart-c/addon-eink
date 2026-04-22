@@ -50,7 +50,7 @@ export interface ImageConversion {
   orderedDitheringMatrix?: [number, number];
   randomDitheringType?: 'blackAndWhite' | 'rgb';
   palette?: string | string[];
-  processingPreset?: 'blank' | 'balanced' | 'dynamic' | 'vivid' | 'soft' | 'greyscale';
+  processingPreset?: '' | 'balanced' | 'dynamic' | 'vivid' | 'soft' | 'greyscale';
 }
 
 export interface Image {

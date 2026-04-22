@@ -281,7 +281,7 @@ export class ImageDialog extends LitElement {
   @state() private _errorDiffusionMatrix: string = 'floydSteinberg';
   @state() private _serpentine: boolean = false;
   @state() private _palette: string = 'default';
-  @state() private _processingPreset: 'blank' | 'balanced' | 'dynamic' | 'vivid' | 'soft' | 'greyscale' = 'blank';
+  @state() private _processingPreset: '' | 'balanced' | 'dynamic' | 'vivid' | 'soft' | 'greyscale' = '';
   @state() private _detailsOpen = true;
   @state() private _propertiesOpen = false;
   private _updateTimer: any = null;
@@ -303,7 +303,7 @@ export class ImageDialog extends LitElement {
     this._errorDiffusionMatrix = image?.conversion?.errorDiffusionMatrix || 'floydSteinberg';
     this._serpentine = image?.conversion?.serpentine ?? false;
     this._palette = (Array.isArray(image?.conversion?.palette) ? image?.conversion?.palette.join(', ') : image?.conversion?.palette) || 'default';
-    this._processingPreset = (image?.conversion?.processingPreset as any) || 'blank';
+    this._processingPreset = (image?.conversion?.processingPreset as any) || '';
     this._detailsOpen = true;
     this._propertiesOpen = false;
     await this.updateComplete;
@@ -687,7 +687,7 @@ export class ImageDialog extends LitElement {
                         .value="${this._processingPreset}"
                         @change="${(e: Event) => this._processingPreset = (e.target as HTMLSelectElement).value as any}"
                       >
-                        <option value="blank">Blank (Default)</option>
+                        <option value="">Blank (Default)</option>
                         <option value="balanced">Balanced</option>
                         <option value="dynamic">Dynamic</option>
                         <option value="vivid">Vivid</option>
