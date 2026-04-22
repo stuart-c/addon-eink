@@ -606,8 +606,6 @@ export class ImageDialog extends LitElement {
     if (!this._sourceImg || !this._canvas || !this._uploadedImage) return;
     if (!this._sourceImg.complete || this._sourceImg.naturalWidth === 0) return;
 
-    const width = this._sourceImg.naturalWidth;
-    const height = this._sourceImg.naturalHeight;
 
     const tempCanvas = this._prepareAdjustedCanvas();
     if (!tempCanvas) return;
