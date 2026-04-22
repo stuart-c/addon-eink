@@ -442,6 +442,14 @@ export class SceneItemSettingsDialog extends LitElement {
     (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).close();
   }
 
+  private _handleDeleteItem() {
+    this.dispatchEvent(new CustomEvent('delete', {
+      bubbles: true,
+      composed: true
+    }));
+    (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).close();
+  }
+
   render() {
     return html`
       <base-dialog title="Item Settings">
@@ -671,7 +679,8 @@ export class SceneItemSettingsDialog extends LitElement {
           `}
         </div>
 
-        <div slot="footer" class="footer-actions">
+        <div slot="footer" class="footer-actions" style="display: flex; width: 100%;">
+          <button class="danger" style="margin-right: auto;" @click="${this._handleDeleteItem}">Delete Item</button>
           <button class="secondary" @click="${this._handleCancel}">Cancel</button>
           <button class="primary" @click="${this._handleOk}">Save Changes</button>
         </div>
