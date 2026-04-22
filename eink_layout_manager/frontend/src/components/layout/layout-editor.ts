@@ -21,6 +21,9 @@ export class LayoutEditor extends LitElement {
       box-sizing: border-box;
       padding: 40px;
     }
+    :host([noPadding]) {
+      padding: 0;
+    }
     :host([hidden]) {
       display: none !important;
     }
@@ -86,6 +89,7 @@ export class LayoutEditor extends LitElement {
   @property({ type: Array }) highlightedIds: string[] = [];
   @property({ type: Array }) usedIds: string[] = [];
   @property({ type: Boolean, reflect: true }) readOnly = false;
+  @property({ type: Boolean, reflect: true }) noPadding = false;
   
   @state() private _scale = 1;
 
@@ -133,7 +137,7 @@ export class LayoutEditor extends LitElement {
       rect = { width: bcr.width, height: bcr.height };
     }
 
-    const padding = 80;
+    const padding = this.noPadding ? 0 : 80;
     const availableWidth = Math.max(0, (rect.width || 0) - padding);
     const availableHeight = Math.max(0, (rect.height || 0) - padding);
     
