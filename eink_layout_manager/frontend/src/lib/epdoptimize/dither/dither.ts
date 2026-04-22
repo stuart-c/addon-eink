@@ -6,7 +6,7 @@ import diffusionMaps from "./data/diffusion-maps";
 /* Functions */
 import bayerMatrix from "./functions/bayer-matrix";
 import colorHelpers from "./functions/color-helpers";
-import colorPaletteFromImage from "./functions/color-palette-from-image";
+// import colorPaletteFromImage from "./functions/color-palette-from-image";
 import utilities from "./functions/utilities";
 import findClosestPaletteColor from "./functions/find-closest-palette-color";
 
@@ -41,7 +41,7 @@ const dither = async (sourceCanvas, canvas, opts) => {
   let colorPalette = [];
 
   if (!options.palette || options.sampleColorsFromImage === true) {
-    colorPalette = colorPaletteFromImage(image, options.numberOfSampleColors);
+    // colorPalette = colorPaletteFromImage(image, options.numberOfSampleColors);
   } else {
     colorPalette = setColorPalette(options.palette);
   }
