@@ -205,7 +205,7 @@ export class AppRoot extends LitElement {
         @delete="${(e: CustomEvent) => this._onDeleteLayoutItem(e)}"
       ></item-settings-dialog>
       <image-dialog 
-        @image-saved="${() => this.state.refreshImages()}"
+        @image-saved="${() => { this.state.refreshImages(); this.state.showMessage('Image saved', 'success'); }}"
         @delete="${(e: CustomEvent) => this._onDeleteImage(e)}"
       ></image-dialog>
       <confirm-dialog></confirm-dialog>

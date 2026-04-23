@@ -134,19 +134,19 @@ export class AppHeader extends LitElement {
       <header>
         <div class="header-title">
           <div class="nav-group">
-            <button class="nav-item ${this.activeSection === 'display-types' ? 'active' : ''}" 
+            <button id="nav-display-types" class="nav-item ${this.activeSection === 'display-types' ? 'active' : ''}" 
               @click="${() => this._dispatchSection('display-types')}" title="Display Types">
               <span class="material-icons">settings_input_component</span>
             </button>
-            <button class="nav-item ${this.activeSection === 'layouts' ? 'active' : ''}" 
+            <button id="nav-layouts" class="nav-item ${this.activeSection === 'layouts' ? 'active' : ''}" 
               @click="${() => this._dispatchSection('layouts')}" title="Layouts">
               <span class="material-icons">dashboard</span>
             </button>
-            <button class="nav-item ${this.activeSection === 'images' ? 'active' : ''}" 
+            <button id="nav-images" class="nav-item ${this.activeSection === 'images' ? 'active' : ''}" 
               @click="${() => this._dispatchSection('images')}" title="Images">
               <span class="material-icons">image</span>
             </button>
-            <button class="nav-item ${this.activeSection === 'scenes' ? 'active' : ''}" 
+            <button id="nav-scenes" class="nav-item ${this.activeSection === 'scenes' ? 'active' : ''}" 
               @click="${() => this._dispatchSection('scenes')}" title="Scenes">
               <span class="material-icons">landscape</span>
             </button>
@@ -158,27 +158,27 @@ export class AppHeader extends LitElement {
           ${this.message ? html`<span class="message-badge">${this.message}</span>` : ''}
           
           ${this.activeSection !== 'images' ? html`
-          <button class="secondary icon-button" @click="${() => this._dispatch('toggle-view-mode')}" title="Switch to ${this.viewMode === 'graphical' ? 'YAML' : 'Graphical'} Mode">
+          <button id="btn-toggle-view" class="secondary icon-button" @click="${() => this._dispatch('toggle-view-mode')}" title="Switch to ${this.viewMode === 'graphical' ? 'YAML' : 'Graphical'} Mode">
             <span class="material-icons">${this.viewMode === 'graphical' ? 'code' : 'dashboard'}</span>
           </button>
           ` : ''}
 
-          <button class="secondary icon-button" @click="${() => this._dispatch('add-item')}" title="Add New Item">
+          <button id="btn-header-add" class="secondary icon-button" @click="${() => this._dispatch('add-item')}" title="Add New Item">
             <span class="material-icons">add</span>
           </button>
 
           ${this.activeSection !== 'images' ? html`
-          <button class="secondary icon-button" @click="${() => this._dispatch('discard-changes')}" ?disabled="${!this.isDirty || this.isSaving}" title="Discard Changes">
+          <button id="btn-discard" class="secondary icon-button" @click="${() => this._dispatch('discard-changes')}" ?disabled="${!this.isDirty || this.isSaving}" title="Discard Changes">
             <span class="material-icons">history</span>
           </button>
           ` : ''}
 
-          <button class="secondary icon-button" @click="${() => this._dispatch('delete-item')}" ?disabled="${!this.canDelete || this.isSaving}" title="Delete Current Item">
+          <button id="btn-header-delete" class="secondary icon-button" @click="${() => this._dispatch('delete-item')}" ?disabled="${!this.canDelete || this.isSaving}" title="Delete Current Item">
             <span class="material-icons" style="color: var(--danger-colour);">delete</span>
           </button>
           
           ${this.activeSection !== 'images' ? html`
-          <button class="secondary icon-button" @click="${() => this._dispatch('save-changes')}" ?disabled="${this.isSaving}" title="${this.isSaving ? 'Saving...' : 'Save Changes'}">
+          <button id="btn-header-save" class="secondary icon-button" @click="${() => this._dispatch('save-changes')}" ?disabled="${this.isSaving}" title="${this.isSaving ? 'Saving...' : 'Save Changes'}">
             <span class="material-icons">${this.isSaving ? 'sync' : 'save'}</span>
           </button>
           ` : ''}
