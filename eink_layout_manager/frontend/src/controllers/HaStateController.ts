@@ -46,39 +46,56 @@ export class HaStateController implements ReactiveController {
 
   async refresh() {
     this.connected = await api.ping();
-    if (!this.connected) return;
-
-    try {
-      this.displayTypes = await api.getCollection<DisplayType>('display_type');
-      this.layouts = await api.getCollection<Layout>('layout');
-      this.images = await api.getImages();
-      this.scenes = await api.getCollection<Scene>('scene');
-      this.haDevices = await api.getHaDevices();
-      
-      if (this.layouts.length > 0) {
-        if (!this.activeLayout) {
-          this.activeLayout = this.layouts[0];
-        } else {
-          const fresh = this.layouts.find(l => l.id === this.activeLayout?.id);
-          if (fresh) this.activeLayout = fresh;
-        }
-        this._originalLayout = this.activeLayout.id ? JSON.stringify(this.activeLayout) : null;
-      } else {
-        await this.createDefaultLayout();
-      }
-
-      if (this.scenes.length > 0 && this.activeScene) {
-        const fresh = this.scenes.find(s => s.id === this.activeScene?.id);
-        if (fresh) this.activeScene = fresh;
-      }
-      this.host.requestUpdate();
-      console.info('[HaStateController] refresh complete');
-      this._ensureSelection();
-      this._applyHash();
-    } catch (e: any) {
-      console.error('Fetch failed', e);
-      this.showMessage(`Fetch failed: ${e.message}`, 'error');
+    if (!this.connected) {
+      console.warn('[HaStateController] ping failed, backend unreachable');
+      return;
     }
+
+    console.info('[HaStateController] refresh started');
+    
+    // Helper to fetch and log
+    const fetchSafe = async <T>(name: string, promise: Promise<T>, defaultValue: T): Promise<T> => {
+      try {
+        const result = await promise;
+        console.debug(`[HaStateController] fetched ${name}:`, result);
+        return result;
+      } catch (e) {
+        console.error(`[HaStateController] failed to fetch ${name}`, e);
+        return defaultValue;
+      }
+    };
+
+    this.displayTypes = await fetchSafe('displayTypes', api.getCollection<DisplayType>('display_type'), []);
+    this.layouts = await fetchSafe('layouts', api.getCollection<Layout>('layout'), []);
+    this.images = await fetchSafe('images', api.getImages(), []);
+    this.scenes = await fetchSafe('scenes', api.getCollection<Scene>('scene'), []);
+    this.haDevices = await fetchSafe('haDevices', api.getHaDevices(), []);
+    
+    console.info(`[HaStateController] Data summary: ${this.images.length} images, ${this.layouts.length} layouts`);
+
+    if (this.layouts.length > 0) {
+      if (!this.activeLayout) {
+        this.activeLayout = this.layouts[0];
+      } else {
+        const fresh = this.layouts.find(l => l.id === this.activeLayout?.id);
+        if (fresh) this.activeLayout = fresh;
+      }
+      this._originalLayout = this.activeLayout.id ? JSON.stringify(this.activeLayout) : null;
+    } else {
+      // Don't auto-create default layout if it already exists or if we failed to fetch
+      // Creating a local one if none exist is fine
+      await this.createDefaultLayout();
+    }
+
+    if (this.scenes.length > 0 && this.activeScene) {
+      const fresh = this.scenes.find(s => s.id === this.activeScene?.id);
+      if (fresh) this.activeScene = fresh;
+    }
+
+    this.host.requestUpdate();
+    console.info('[HaStateController] refresh complete - host update requested');
+    this._ensureSelection();
+    this._applyHash();
   }
 
   /**

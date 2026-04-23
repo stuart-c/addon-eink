@@ -147,7 +147,9 @@ export class HaApiClient {
       return null as any;
     }
 
-    return response.json();
+    const data = await response.json();
+    console.debug(`[HaApiClient] Received data from ${url}:`, data);
+    return data;
   }
 
   // --- Generic CRUD ---
