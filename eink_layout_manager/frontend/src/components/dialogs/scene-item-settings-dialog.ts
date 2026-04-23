@@ -696,7 +696,7 @@ export class SceneItemSettingsDialog extends LitElement {
                 class="icon-button danger" 
                 title="Delete Image"
                 ?disabled="${!this._selectedImageId}"
-                @click="\${() => {
+                @click="${() => {
                   this.item.images = this.item.images.filter((img: any) => img.image_id !== this._selectedImageId);
                   this._selectedImageId = this.item.images.length > 0 ? this.item.images[0].image_id : null;
                   this.requestUpdate();
@@ -866,7 +866,7 @@ export class SceneItemSettingsDialog extends LitElement {
                 </div>
               </div>
               <div class="column-footer">
-                <button class="secondary" @click="\${() => { 
+                <button class="secondary" @click="${() => { 
                   this._offsetX = 0; 
                   this._offsetY = 0; 
                   if (this._selectedImageId) {
