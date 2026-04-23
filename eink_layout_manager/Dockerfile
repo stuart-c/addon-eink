@@ -14,12 +14,26 @@ RUN \
     apk add --no-cache \
         build-base \
         libjpeg-turbo-dev \
-        zlib-dev
+        zlib-dev \
+        nodejs \
+        npm \
+        pixman-dev \
+        cairo-dev \
+        pango-dev \
+        giflib-dev \
+        librsvg-dev
 
 # Build wheels for backend dependencies to isolate build artifacts
 COPY backend/requirements.txt /tmp/
 RUN \
     pip3 wheel --no-cache-dir --wheel-dir /tmp/wheels -r /tmp/requirements.txt
+
+# Install converter dependencies
+WORKDIR /converter
+COPY epdoptimize /epdoptimize
+COPY converter/package.json converter/package-lock.json* ./
+RUN npm install
+COPY converter .
 
 # Stage 2: Test & Lint stage
 FROM builder AS tester
@@ -46,7 +60,13 @@ RUN rm -rf /backend_verified
 RUN \
     apk add --no-cache \
         libjpeg-turbo \
-        zlib
+        zlib \
+        nodejs \
+        pixman \
+        cairo \
+        pango \
+        giflib \
+        librsvg
 
 # Install pre-built wheels from builder stage
 COPY --from=builder /tmp/wheels /tmp/wheels
@@ -59,6 +79,9 @@ COPY rootfs /
 
 # Copy application
 COPY backend /backend
+
+# Copy built converter from builder
+COPY --from=builder /converter /converter
 
 # Copy built frontend assets from node-builder
 COPY --from=node-builder /frontend/dist /backend/static_dist

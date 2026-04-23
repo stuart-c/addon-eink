@@ -6,6 +6,11 @@
   "scripts": {
     "test": "vitest"
   },
+  "dependencies": {
+    "canvas": "^2.11.2",
+    "epdoptimize": "file:../epdoptimize",
+    "yargs": "^17.7.2"
+  },
   "devDependencies": {
     "vitest": "^1.6.0"
   },
