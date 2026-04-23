@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const INGRESS_PORT = process.env.INGRESS_PORT || '8099';
+const INGRESS_PORT = process.env.INGRESS_PORT || '8444';
 const DATA_DIR = process.env.DATA_DIR || path.resolve(__dirname, 'test_data_e2e');
 
 
@@ -20,7 +20,7 @@ export default defineConfig({
     ? [['list'], ['github'], ['blob', { outputDir: 'blob-report' }], ['html', { open: 'never' }]]
     : 'line',
   use: {
-    baseURL: process.env.BASE_URL || `http://127.0.0.1:${INGRESS_PORT}`,
+    baseURL: 'http://localhost:8444',
     trace: 'retain-on-failure',
   },
   expect: {
@@ -29,9 +29,14 @@ export default defineConfig({
   webServer: process.env.CI ? undefined : {
     command: `cd ../.. && export DATA_DIR=${DATA_DIR} && export MEDIA_DIR=${DATA_DIR}/media && export INGRESS_PORT=${INGRESS_PORT} && cd eink && PYTHONPATH=. backend/.venv/bin/python3 -m backend.main`,
     url: `http://localhost:${INGRESS_PORT}/api/ping`,
-    reuseExistingServer: true,
+    reuseExistingServer: false,
     stdout: 'pipe',
     stderr: 'pipe',
+    env: {
+      DATA_DIR: DATA_DIR,
+      INGRESS_PORT: INGRESS_PORT,
+      PYTHONPATH: '.',
+    }
   },
   projects: [
     {
