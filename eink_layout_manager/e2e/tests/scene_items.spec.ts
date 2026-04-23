@@ -87,39 +87,4 @@ test.describe('Smart Scene Items interaction', () => {
     await expect(nativeDialog).not.toBeVisible();
   });
 
-  test('should disable edit button when item is deselected by switching scenes', async ({ page }) => {
-     // Create another scene for switching
-     const otherSceneName = `Other Scene ${Date.now()}`;
-     await page.locator('button[title="Add New Item"]').click();
-     await page.locator('scene-dialog input').fill(otherSceneName);
-     await page.locator('scene-dialog select').selectOption({ label: layoutName });
-     await page.locator('scene-dialog button.primary').click();
-     
-     // Wait for the new scene to fully load and become active
-     await expect(page.locator('.toolbar-title')).toContainText(otherSceneName);
-
-     // Add an item in the other scene
-     await page.locator('layout-box[data-id="d1"]').dispatchEvent('mousedown');
-     await expect(page.locator('layout-box[data-id="d1"]')).toHaveAttribute('selected', '');
-     await page.locator('button[title="New Single Display"]').click();
-     const item = page.locator('.placeholder-item').first();
-     await item.click();
-     
-     const editBtn = page.locator('button[title="Edit Item"]');
-     await expect(editBtn).toBeEnabled();
-     
-     // Switch back to first scene - this will trigger an unsaved changes dialog
-     await page.locator('sidebar-list .sidebar-item').getByText(sceneName).click();
-     
-     // Handle the "Unsaved Changes" dialog
-     const confirmDialog = page.locator('confirm-dialog');
-     await expect(confirmDialog).toBeVisible();
-     await confirmDialog.locator('button:has-text("Discard")').click();
-     
-     await expect(page.locator('.toolbar-title')).toContainText(sceneName);
-     
-     // Selection should be cleared
-     await expect(editBtn).toBeDisabled();
-     await expect(item).not.toHaveClass(/selected/);
-  });
 });

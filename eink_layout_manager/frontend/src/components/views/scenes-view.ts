@@ -425,8 +425,8 @@ export class ScenesView extends BaseResourceView {
     const highlightedDisplayIds = activeScene?.items?.find((i: any) => i.id === highlightedItemId)?.displays || [];
 
     const listItems = scenes.map(scene => {
-      const isSelected = activeScene && scene.id === activeScene.id;
-      const displayData = isSelected ? activeScene : scene;
+      const isSelected = !!(activeScene && scene.id === activeScene.id);
+      const displayData = isSelected ? activeScene! : scene;
       return {
         id: displayData.id,
         name: displayData.name,

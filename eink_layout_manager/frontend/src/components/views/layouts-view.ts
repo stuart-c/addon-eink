@@ -337,8 +337,8 @@ export class LayoutsView extends BaseResourceView {
 
   render() {
     const listItems = this.layouts.map(l => {
-      const isSelected = this.activeLayout && l.id === this.activeLayout.id;
-      const displayData = isSelected ? this.activeLayout : l;
+      const isSelected = !!(this.activeLayout && l.id === this.activeLayout.id);
+      const displayData = isSelected ? this.activeLayout! : l;
       return {
         id: displayData.id,
         name: displayData.name,
