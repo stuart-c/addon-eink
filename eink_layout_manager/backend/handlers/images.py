@@ -2,10 +2,13 @@ import hashlib
 import io
 import os
 import uuid
+import logging
 from collections import Counter
 from PIL import Image as PILImage, UnidentifiedImageError
 from sqlalchemy import select, func
 from aiohttp import web
+
+logger = logging.getLogger(__name__)
 
 from .base import BaseCRUDHandler
 from .. import database, models
@@ -167,8 +170,10 @@ class ImageHandler(BaseCRUDHandler):
                     .limit(limit)
                     .offset(offset)
                 )
+                logger.info(f"Executing image list query: {stmt}")
                 result = await session.execute(stmt)
                 images = result.scalars().all()
+                logger.info(f"Found {len(images)} images (total_count: {total_count})")
 
                 summary_list = [image_model_to_summary_dict(i) for i in images]
                 total_pages = (

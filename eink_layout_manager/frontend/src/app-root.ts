@@ -263,6 +263,7 @@ export class AppRoot extends LitElement {
             class="active-view"
             .state="${this.state}"
             .images="${this.state.images}"
+            ${console.debug('[AppRoot] Passing images to ImagesView:', this.state.images.length), ''}
             .selectedImageId="${this.state.selectedImageId}"
             @edit-image="${(e: CustomEvent) => this._imageDialog.show(e.detail.image)}"
             @image-click="${(e: CustomEvent) => { 

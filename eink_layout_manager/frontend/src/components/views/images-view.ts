@@ -531,12 +531,23 @@ export class ImagesView extends BaseResourceView {
             ></empty-view>
           ` : html`
             <div class="image-grid">
-              ${this.images.map(image => this._renderImage(image))}
+              ${this.images.map(image => {
+                console.debug('[ImagesView] Rendering image:', image.name);
+                return this._renderImage(image);
+              })}
             </div>
           `}
         </div>
       </section-layout>
     `;
+  }
+
+  protected updated(changedProperties: Map<string | number | symbol, unknown>) {
+    super.updated(changedProperties);
+    if (changedProperties.has('images')) {
+      console.info(`[ImagesView] images property changed. New length: ${this.images?.length ?? 'undefined'}`);
+      console.debug('[ImagesView] Current images:', this.images);
+    }
   }
 
   private _renderImage(image: Image) {
