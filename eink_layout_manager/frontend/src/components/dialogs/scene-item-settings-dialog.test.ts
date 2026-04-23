@@ -67,7 +67,7 @@ describe('SceneItemSettingsDialog', () => {
     addBtn.click();
     await element.updateComplete;
 
-    expect(element.shadowRoot?.querySelector('.adding-image')).not.toBeNull();
+    expect(element.shadowRoot?.querySelector('.adding-image') !== null).toBe(true);
     const imageCards = element.shadowRoot?.querySelectorAll('.image-card');
     expect(imageCards?.length).toBe(1);
   });
