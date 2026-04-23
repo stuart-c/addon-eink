@@ -468,11 +468,17 @@ export class SceneItemSettingsDialog extends LitElement {
     const scaledWidth = (image.dimensions.width * this._scalingFactor) / 100;
     const scaledHeight = (image.dimensions.height * this._scalingFactor) / 100;
 
+    // Account for relative offset between display areas and frame area
+    const frameBB = this._previewData;
+    const panelBB = this._panelBoundingBox;
+    const relX = (panelBB.minX - frameBB.minX) * pxPerMm;
+    const relY = (panelBB.minY - frameBB.minY) * pxPerMm;
+
     // Draw image with offset
     ctx.drawImage(
       imgElement, 
-      this._offsetX, 
-      this._offsetY, 
+      relX + this._offsetX, 
+      relY + this._offsetY, 
       scaledWidth, 
       scaledHeight
     );
@@ -562,6 +568,10 @@ export class SceneItemSettingsDialog extends LitElement {
     this._scalingFactor = 100;
     this._offsetX = 0;
     this._offsetY = 0;
+    
+    // Automatically fit new image
+    this._fitImage();
+
     this._isAddingImage = false;
     this.requestUpdate();
   }
@@ -614,12 +624,12 @@ export class SceneItemSettingsDialog extends LitElement {
 
   private get _previewData() {
     if (!this._layout || !this.item || !this.item.displays || this.item.displays.length === 0) {
-      return { width: 0, height: 0, items: [] };
+      return { width: 0, height: 0, items: [], minX: 0, minY: 0 };
     }
 
     const visibleItems = this._layout.items.filter(i => this.item.displays.includes(i.id));
     if (visibleItems.length === 0) {
-      return { width: 0, height: 0, items: [] };
+      return { width: 0, height: 0, items: [], minX: 0, minY: 0 };
     }
 
     let minX = Infinity;
@@ -651,7 +661,80 @@ export class SceneItemSettingsDialog extends LitElement {
       y_mm: item.y_mm - minY
     }));
 
-    return { width, height, items: adjustedItems };
+    return { width, height, items: adjustedItems, minX, minY };
+  }
+
+  private get _panelBoundingBox() {
+    if (!this._layout || !this.item || !this.item.displays || this.item.displays.length === 0) {
+      return { width: 0, height: 0, minX: 0, minY: 0 };
+    }
+
+    const visibleItems = this._layout.items.filter(i => this.item.displays.includes(i.id));
+    if (visibleItems.length === 0) {
+      return { width: 0, height: 0, minX: 0, minY: 0 };
+    }
+
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    visibleItems.forEach(item => {
+      const dt = this._displayTypes.find(t => t.id === item.display_type_id);
+      if (!dt) return;
+
+      const isPortrait = item.orientation === 'portrait';
+      const frameW = isPortrait ? dt.height_mm : dt.width_mm;
+      const frameH = isPortrait ? dt.width_mm : dt.height_mm;
+      const panelW = isPortrait ? dt.panel_height_mm : dt.panel_width_mm;
+      const panelH = isPortrait ? dt.panel_width_mm : dt.panel_height_mm;
+
+      const panelX = item.x_mm + (frameW - panelW) / 2;
+      const panelY = item.y_mm + (frameH - panelH) / 2;
+
+      minX = Math.min(minX, panelX);
+      minY = Math.min(minY, panelY);
+      maxX = Math.max(maxX, panelX + panelW);
+      maxY = Math.max(maxY, panelY + panelH);
+    });
+
+    return { 
+      width: Math.max(0, maxX - minX), 
+      height: Math.max(0, maxY - minY),
+      minX, 
+      minY 
+    };
+  }
+
+  private _fitImage() {
+    if (!this._selectedImageId || !this.item || !this.item.displays || this.item.displays.length === 0) return;
+    const image = this._availableImages.find(i => i.id === this._selectedImageId);
+    if (!image) return;
+
+    const panelBB = this._panelBoundingBox;
+    const firstDisplayId = this.item.displays[0];
+    const layoutBox = this._layout?.items.find(i => i.id === firstDisplayId);
+    const dt = this._displayTypes.find(t => t.id === layoutBox?.display_type_id);
+    if (!dt || !dt.width_mm || !dt.width_px) return;
+
+    const pxPerMm = dt.width_px / dt.width_mm;
+    const targetWidthPx = panelBB.width * pxPerMm;
+    const targetHeightPx = panelBB.height * pxPerMm;
+
+    const scaleW = targetWidthPx / image.dimensions.width;
+    const scaleH = targetHeightPx / image.dimensions.height;
+    
+    this._scalingFactor = Math.floor(Math.min(scaleW, scaleH) * 100);
+    this._offsetX = 0;
+    this._offsetY = 0;
+
+    // Update the item data
+    const img = this.item.images.find((i: any) => i.image_id === this._selectedImageId);
+    if (img) {
+      img.scaling_factor = this._scalingFactor;
+      img.offset = { x: 0, y: 0 };
+    }
+    this.requestUpdate();
   }
 
   render() {
@@ -810,7 +893,7 @@ export class SceneItemSettingsDialog extends LitElement {
                       >
                       <span class="unit-label">%</span>
                     </div>
-                    <button class="secondary" style="padding: 6px 12px; font-size: 11px;">FIT</button>
+                    <button class="secondary" style="padding: 6px 12px; font-size: 11px;" @click="${this._fitImage}">FIT</button>
                   </div>
                 </div>
 
