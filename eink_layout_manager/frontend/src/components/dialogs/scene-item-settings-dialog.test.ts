@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import './scene-item-settings-dialog';
 import { SceneItemSettingsDialog } from './scene-item-settings-dialog';
-import { api } from '../../services/HaApiClient';
 
 // Mock the API and epdoptimize
 vi.mock('../../services/HaApiClient', async () => {
@@ -82,7 +81,7 @@ describe('SceneItemSettingsDialog', () => {
     expect((element as any)._selectedImageId).toBe('img1');
 
     const deleteBtn = element.shadowRoot?.querySelector('button[title="Delete Image"]') as HTMLButtonElement;
-    expect(deleteBtn).not.toBeNull();
+    expect(deleteBtn !== null).toBe(true);
     expect(deleteBtn.disabled).toBe(false);
     
     deleteBtn.click();
