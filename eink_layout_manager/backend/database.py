@@ -272,6 +272,18 @@ async def ensure_schema_up_to_date(conn):
             )
         )
 
+    # Check 'image_palettes' table for recently added columns
+    result = await conn.execute(text("PRAGMA table_info(image_palettes)"))
+    columns = [row[1] for row in result.fetchall()]
+
+    if "image_settings_hash" not in columns:
+        await conn.execute(
+            text(
+                "ALTER TABLE image_palettes ADD COLUMN image_settings_hash "
+                "VARCHAR DEFAULT ''"
+            )
+        )
+
     # Cleanup: Remove palette from conversion settings (migrating to preview-only)
     await conn.execute(
         text(
