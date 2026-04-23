@@ -49,6 +49,14 @@ class SceneHandler(BaseCRUDHandler):
 
         return data
 
+    async def post_create(self, item, session):
+        """Update image palettes after creation."""
+        await self._update_image_palettes(item, session)
+
+    async def post_update(self, item, session):
+        """Update image palettes after update."""
+        await self._update_image_palettes(item, session)
+
     async def _calculate_scene_status(self, items, layout_id):
         """
         Calculate if the scene is 'active' or 'draft'.
@@ -133,6 +141,74 @@ class SceneHandler(BaseCRUDHandler):
                             "in scene"
                         )
                     seen_display_ids.add(display_id)
+
+    async def _update_image_palettes(self, scene, session):
+        """
+        Record all image/palette combinations used in the scene.
+        """
+        if not scene.items or not scene.layout_id:
+            return
+
+        from sqlalchemy import select
+
+        # 1. Fetch the layout to get display mappings
+        stmt = select(models.Layout).where(models.Layout.id == scene.layout_id)
+        result = await session.execute(stmt)
+        layout = result.scalars().first()
+        if not layout:
+            return
+
+        # 2. Map display_id to display_type_id
+        display_to_type = {}
+        for layout_item in layout.items:
+            if isinstance(layout_item, dict) and "id" in layout_item:
+                display_to_type[layout_item["id"]] = layout_item.get(
+                    "display_type_id"
+                )
+
+        # 3. Fetch all needed display types to get palettes
+        type_ids = {tid for tid in display_to_type.values() if tid}
+        if not type_ids:
+            return
+
+        stmt = select(models.DisplayType).where(
+            models.DisplayType.id.in_(type_ids)
+        )
+        result = await session.execute(stmt)
+        display_types = {dt.id: dt.colour_type for dt in result.scalars().all()}
+
+        # 4. Process scene items to find all image/palette pairs
+        for item in scene.items:
+            image_ids = [
+                img.get("image_id")
+                for img in item.get("images", [])
+                if img.get("image_id")
+            ]
+            display_ids = item.get("displays", [])
+
+            # Resolve unique palettes for this item
+            palettes = set()
+            for d_id in display_ids:
+                type_id = display_to_type.get(d_id)
+                if type_id and type_id in display_types:
+                    palettes.add(display_types[type_id])
+
+            for image_id in image_ids:
+                for palette in palettes:
+                    # Check if entry already exists
+                    stmt = select(models.ImagePalette).where(
+                        models.ImagePalette.image_id == image_id,
+                        models.ImagePalette.palette == palette,
+                    )
+                    result = await session.execute(stmt)
+                    if not result.scalars().first():
+                        session.add(
+                            models.ImagePalette(
+                                image_id=image_id,
+                                palette=palette,
+                                filename="",
+                            )
+                        )
 
 
 # Instantiate handler
