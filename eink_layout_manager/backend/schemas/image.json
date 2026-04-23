@@ -124,6 +124,11 @@
       "maximum": 2.0,
       "default": 1.0,
       "description": "Image saturation adjustment (0.0 to 2.0)"
+    },
+    "settings_hash": {
+      "type": "string",
+      "description": "SHA-256 hash of image settings and file content",
+      "readOnly": true
     }
   },
   "required": [

@@ -1,4 +1,15 @@
-from sqlalchemy import Column, String, Integer, Float, JSON, DateTime, func
+import hashlib
+import json
+from sqlalchemy import (
+    Column,
+    String,
+    Integer,
+    Float,
+    JSON,
+    DateTime,
+    func,
+    event,
+)
 
 try:
     from .database import Base
@@ -34,6 +45,23 @@ class Image(Base):
     brightness = Column(Float, nullable=False, default=1.0)
     contrast = Column(Float, nullable=False, default=1.0)
     saturation = Column(Float, nullable=False, default=1.0)
+    settings_hash = Column(String, nullable=True)
+
+    def compute_settings_hash(self) -> str:
+        """
+        Compute a SHA-256 hash of the image settings and file hash.
+        Includes: conversion, brightness, contrast, saturation, and file_hash.
+        """
+        settings = {
+            "conversion": self.conversion,
+            "brightness": self.brightness,
+            "contrast": self.contrast,
+            "saturation": self.saturation,
+        }
+        # Use sort_keys=True for consistent JSON representation
+        settings_json = json.dumps(settings, sort_keys=True)
+        combined = settings_json + (self.file_hash or "")
+        return hashlib.sha256(combined.encode()).hexdigest()
 
     __filterable_fields__ = {
         "title": "name",
@@ -53,6 +81,13 @@ class Image(Base):
         "width": "width",
         "height": "height",
     }
+
+
+@event.listens_for(Image, "before_insert")
+@event.listens_for(Image, "before_update")
+def update_image_settings_hash(mapper, connection, target):
+    """Automatically update the settings_hash before saving."""
+    target.settings_hash = target.compute_settings_hash()
 
 
 class Scene(Base):
