@@ -11,34 +11,36 @@ export class AppHeader extends LitElement {
       header {
         background-color: var(--primary-colour);
         color: white;
-        padding: 1rem 2rem;
+        padding: 0.5rem 1.5rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
         box-shadow: var(--shadow-small);
         z-index: 10;
+        height: 56px;
+        box-sizing: border-box;
       }
       .header-title {
         display: flex;
         align-items: center;
-        gap: 1.5rem;
+        gap: 1rem;
       }
       .nav-group {
         display: flex;
         align-items: center;
         gap: 0.25rem;
-        background: rgba(255,255,255,0.15);
+        background: rgba(255,255,255,0.1);
         padding: 4px;
-        border-radius: 8px;
+        border-radius: 10px;
       }
       .nav-item {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 32px;
-        height: 32px;
-        border-radius: 6px;
-        color: rgba(255,255,255,0.7);
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        color: rgba(255,255,255,0.8);
         cursor: pointer;
         transition: all 0.2s;
         border: none;
@@ -52,28 +54,47 @@ export class AppHeader extends LitElement {
       .nav-item.active {
         background: white;
         color: var(--primary-colour);
+        box-shadow: var(--shadow-small);
       }
       .header-actions {
         display: flex;
-        gap: 0.75rem;
+        gap: 0.5rem;
         align-items: center;
       }
       .message-badge {
-        font-size: 13px;
+        font-size: 12px;
         background: rgba(255,255,255,0.2);
         padding: 4px 12px;
         border-radius: 20px;
+        font-weight: 500;
+        margin-right: 0.5rem;
       }
       .status-dot {
         font-size: 11px;
         opacity: 0.8;
         margin-left: 0.5rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
       }
       header button:not(.nav-item) {
-        width: 40px;
-        height: 40px;
-        padding: 0;
-        border-radius: 50%;
+        border-radius: 8px;
+      }
+      header button.secondary {
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: white;
+        box-shadow: none;
+      }
+      header button.secondary:hover {
+        background: rgba(255,255,255,0.2);
+        border-color: rgba(255,255,255,0.2);
+        color: white;
+      }
+      header button.secondary:disabled {
+        background: rgba(255,255,255,0.05);
+        color: rgba(255,255,255,0.3);
+        border-color: transparent;
       }
     `
   ];
@@ -137,27 +158,27 @@ export class AppHeader extends LitElement {
           ${this.message ? html`<span class="message-badge">${this.message}</span>` : ''}
           
           ${this.activeSection !== 'images' ? html`
-          <button class="secondary" @click="${() => this._dispatch('toggle-view-mode')}" title="Switch to ${this.viewMode === 'graphical' ? 'YAML' : 'Graphical'} Mode">
+          <button class="secondary icon-button" @click="${() => this._dispatch('toggle-view-mode')}" title="Switch to ${this.viewMode === 'graphical' ? 'YAML' : 'Graphical'} Mode">
             <span class="material-icons">${this.viewMode === 'graphical' ? 'code' : 'dashboard'}</span>
           </button>
           ` : ''}
 
-          <button class="secondary" @click="${() => this._dispatch('add-item')}" title="Add New Item">
+          <button class="secondary icon-button" @click="${() => this._dispatch('add-item')}" title="Add New Item">
             <span class="material-icons">add</span>
           </button>
 
           ${this.activeSection !== 'images' ? html`
-          <button class="secondary" @click="${() => this._dispatch('discard-changes')}" ?disabled="${!this.isDirty || this.isSaving}" title="Discard Changes">
+          <button class="secondary icon-button" @click="${() => this._dispatch('discard-changes')}" ?disabled="${!this.isDirty || this.isSaving}" title="Discard Changes">
             <span class="material-icons">history</span>
           </button>
           ` : ''}
 
-          <button class="secondary" @click="${() => this._dispatch('delete-item')}" ?disabled="${!this.canDelete || this.isSaving}" title="Delete Current Item">
+          <button class="secondary icon-button" @click="${() => this._dispatch('delete-item')}" ?disabled="${!this.canDelete || this.isSaving}" title="Delete Current Item">
             <span class="material-icons" style="color: var(--danger-colour);">delete</span>
           </button>
           
           ${this.activeSection !== 'images' ? html`
-          <button class="secondary" @click="${() => this._dispatch('save-changes')}" ?disabled="${this.isSaving}" title="${this.isSaving ? 'Saving...' : 'Save Changes'}">
+          <button class="secondary icon-button" @click="${() => this._dispatch('save-changes')}" ?disabled="${this.isSaving}" title="${this.isSaving ? 'Saving...' : 'Save Changes'}">
             <span class="material-icons">${this.isSaving ? 'sync' : 'save'}</span>
           </button>
           ` : ''}

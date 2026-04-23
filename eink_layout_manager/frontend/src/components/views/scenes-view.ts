@@ -32,7 +32,7 @@ export class ScenesView extends BaseResourceView {
         display: flex;
         height: 100%;
         width: 100%;
-        background: #f0f2f5;
+        background: var(--bg-light);
         overflow: hidden;
       }
       .preview-pane {
@@ -44,13 +44,13 @@ export class ScenesView extends BaseResourceView {
         overflow: hidden;
       }
       .content-pane {
-        width: 340px;
+        width: 320px;
         background: white;
         border-left: 1px solid var(--border-colour);
         display: flex;
         flex-direction: column;
         height: 100%;
-        box-shadow: -2px 0 10px rgba(0,0,0,0.02);
+        box-shadow: -1px 0 3px rgba(0,0,0,0.02);
         z-index: 2;
       }
       .pane-header {
@@ -59,8 +59,10 @@ export class ScenesView extends BaseResourceView {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(8px);
+        height: 48px;
+        box-sizing: border-box;
       }
       .pane-footer {
         padding: 0.75rem 1rem;
@@ -68,84 +70,57 @@ export class ScenesView extends BaseResourceView {
         display: flex;
         align-items: center;
         justify-content: flex-end;
-        background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(8px);
+        height: 52px;
+        box-sizing: border-box;
       }
       .pane-title {
-        font-weight: 800;
-        font-size: 0.75rem;
+        font-weight: 700;
+        font-size: 11px;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 0.5px;
         color: var(--text-muted);
       }
       .pane-toolbar {
         display: flex;
         gap: 0.5rem;
       }
-      .tool-button {
-        width: 34px;
-        height: 34px;
-        padding: 0;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #fff;
-        border: 1px solid #efefef;
-        cursor: pointer;
-        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        color: #555;
-      }
-      .tool-button:hover:not(:disabled) {
-        background: var(--bg-light);
-        border-color: var(--primary-colour);
-        color: var(--primary-colour);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(3, 169, 244, 0.15);
-      }
-      .tool-button:disabled {
-        opacity: 0.3;
-        cursor: not-allowed;
-        background: #f5f5f5;
-        border-color: #eee;
-      }
-      .tool-button .material-icons {
-        font-size: 18px;
-      }
       .content-list {
         flex: 1;
         overflow-y: auto;
-        padding: 1.25rem 1rem;
+        padding: 0.75rem;
       }
       .placeholder-item {
-        padding: 12px;
-        min-height: 64px;
+        padding: 10px 12px;
+        min-height: 60px;
         box-sizing: border-box;
-        border: 1px solid #eee;
+        border: 1px solid var(--border-colour);
         border-radius: var(--border-radius);
         margin-bottom: 0.5rem;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         background: #fff;
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: 12px;
       }
       .placeholder-item:hover {
         border-color: var(--primary-colour);
-        background: #f0faff;
+        background: var(--bg-light);
       }
       .placeholder-item.selected {
-        background: #e1f5fe;
+        background: rgba(3, 169, 244, 0.08);
         border-color: var(--primary-colour);
         box-shadow: 0 2px 8px rgba(3,169,244,0.1);
       }
       .placeholder-item.hovered {
         border-color: var(--primary-colour);
-        background: #f0faff;
+        background: var(--bg-light);
       }
       .placeholder-item-icon {
-        color: #888;
+        color: var(--text-muted);
+        font-size: 20px;
       }
       .selected .placeholder-item-icon {
         color: var(--primary-colour);
@@ -154,14 +129,14 @@ export class ScenesView extends BaseResourceView {
         flex: 1;
       }
       .placeholder-item-name {
-        font-weight: 700;
+        font-weight: var(--font-weight-semi-bold);
         font-size: 13px;
         color: var(--text-colour);
-        margin-bottom: 3px;
+        margin-bottom: 2px;
       }
       .placeholder-item-details {
         font-size: 11px;
-        color: #999;
+        color: var(--text-muted);
         font-weight: 500;
       }
       .empty-content-state {
@@ -464,20 +439,20 @@ export class ScenesView extends BaseResourceView {
                 <div class="pane-title">Scene Content</div>
                 <div class="pane-toolbar">
                   <button 
-                    class="secondary" 
+                    class="secondary icon-button" 
                     title="New Single Display" 
                     ?disabled="${this._selectedDisplayIds.length < 1}"
                     @click="${() => this._handleCreateSingleDisplayItems()}"
                   >
-                    <span class="material-icons" style="font-size: 18px;">add_photo_alternate</span>
+                    <span class="material-icons">add_photo_alternate</span>
                   </button>
                   <button 
-                    class="secondary" 
+                    class="secondary icon-button" 
                     title="New Multi-Display (Tiled)"
                     ?disabled="${this._selectedDisplayIds.length < 2}"
                     @click="${() => this._handleCreateMultiDisplayItem()}"
                   >
-                    <span class="material-icons" style="font-size: 18px;">grid_view</span>
+                    <span class="material-icons">grid_view</span>
                   </button>
                 </div>
               </div>
@@ -520,20 +495,20 @@ export class ScenesView extends BaseResourceView {
               <div class="pane-footer">
                 <div class="toolbar-actions">
                   <button 
-                    class="secondary" 
+                    class="secondary icon-button" 
                     title="Edit Item"
                     ?disabled="${!this._selectedItemId}"
                     @click="${() => this._handleEditItem()}"
                   >
-                    <span class="material-icons" style="font-size: 18px;">edit</span>
+                    <span class="material-icons">edit</span>
                   </button>
                   <button 
-                    class="danger" 
+                    class="danger icon-button" 
                     title="Delete Item"
                     ?disabled="${!this._selectedItemId}"
                     @click="${() => this._handleDeleteItem()}"
                   >
-                    <span class="material-icons" style="font-size: 18px;">delete</span>
+                    <span class="material-icons">delete</span>
                   </button>
                 </div>
               </div>

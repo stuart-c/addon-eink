@@ -31,8 +31,8 @@ export class LayoutBox extends LitElement {
       }
       :host([used]) .container {
         filter: grayscale(0.8) contrast(0.8);
-        border-color: #999;
-        background-color: #f9f9f9;
+        border-color: var(--text-muted);
+        background-color: var(--bg-light);
         box-shadow: none;
       }
       .container {
@@ -41,13 +41,13 @@ export class LayoutBox extends LitElement {
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        border: 2px solid #333;
+        border: 2px solid var(--text-colour);
         box-shadow: var(--shadow-small);
       }
-      :host([selected]) .container { border-color: var(--primary-colour); box-shadow: 0 0 0 2px rgba(3,169,244,0.3); z-index: 10; }
+      :host([selected]) .container { border-color: var(--primary-colour); box-shadow: 0 0 0 2px rgba(3,169,244,0.25); z-index: 10; }
       :host([highlighted]) .container { 
         border-color: var(--primary-colour); 
-        box-shadow: 0 0 15px rgba(3, 169, 244, 0.6); 
+        box-shadow: 0 0 12px rgba(3, 169, 244, 0.4); 
         z-index: 20;
         transform: scale(1.02);
       }
@@ -55,7 +55,7 @@ export class LayoutBox extends LitElement {
         filter: none;
         opacity: 1;
       }
-      :host([invalid]) .container { border-color: var(--danger-colour); background-color: rgba(244, 67, 54, 0.1); }
+      :host([invalid]) .container { border-color: var(--danger-colour); background-color: rgba(244, 67, 54, 0.08); }
       
       .label {
         position: absolute;
@@ -71,21 +71,25 @@ export class LayoutBox extends LitElement {
       .actions {
         position: absolute;
         top: -15px; right: -15px;
-        display: flex; gap: 12px;
+        display: flex; gap: 8px;
         opacity: 0; visibility: hidden;
-        background: white; padding: 6px 10px; border-radius: 20px;
-        box-shadow: var(--shadow-medium); z-index: 50;
+        background: white; 
+        padding: 4px 8px; 
+        border-radius: 20px;
+        box-shadow: var(--shadow-medium); 
+        z-index: 50;
         transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         transform: scale(calc(0.8 / var(--editor-scale, 1)));
+        border: 1px solid var(--border-colour);
       }
       :host(:hover:not([readOnly])) .actions { opacity: 1; visibility: visible; transform: scale(calc(1 / var(--editor-scale, 1))); }
       
       .action-icon {
-        cursor: pointer; color: #555; width: 24px; height: 24px;
+        cursor: pointer; color: var(--text-muted); width: 24px; height: 24px;
         display: flex; align-items: center; justify-content: center;
-        transition: color 0.2s, transform 0.1s;
+        transition: all 0.2s;
       }
-      .action-icon:hover { color: var(--primary-colour); transform: scale(1.2); }
+      .action-icon:hover { color: var(--primary-colour); transform: scale(1.1); }
       .action-icon.delete:hover { color: var(--danger-colour); }
       
       .item-number {
@@ -95,12 +99,12 @@ export class LayoutBox extends LitElement {
         transform: translate(-50%, -50%);
         font-size: 60px;
         font-weight: 900;
-        color: rgba(0, 0, 0, 0.15);
+        color: rgba(0, 0, 0, 0.12);
         pointer-events: none;
         z-index: 35;
         font-family: 'Outfit', sans-serif;
       }
-
+      
       .used-icon {
         position: absolute;
         top: 50%;

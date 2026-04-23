@@ -20,7 +20,7 @@ export class SideBar extends LitElement {
       }
       .sidebar-section {
         padding: 1rem;
-        border-bottom: 1px solid #eee;
+        border-bottom: 1px solid var(--border-colour);
         flex: 1;
         overflow-y: auto;
       }
@@ -30,36 +30,38 @@ export class SideBar extends LitElement {
         align-items: center;
         margin-bottom: 1rem;
       }
-      h3 { margin: 0; font-size: 0.9rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
       
       .list-item {
-        padding: 0.75rem;
-        border: 1px solid #eee;
+        padding: 10px 12px;
+        border: 1px solid var(--border-colour);
         border-radius: var(--border-radius);
         margin-bottom: 0.5rem;
         cursor: pointer;
-        transition: all 0.2s ease;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         user-select: none;
+        background: white;
       }
-      .list-item:hover { border-color: var(--primary-colour); background: #f0faff; }
+      .list-item:hover { 
+        border-color: var(--primary-colour); 
+        background: var(--bg-light); 
+      }
       .list-item.selected { 
         border-color: var(--primary-colour); 
-        background: #e1f5fe; 
+        background: rgba(3, 169, 244, 0.1); 
         box-shadow: 0 2px 8px rgba(3,169,244,0.1); 
       }
       
       .item-details { display: flex; justify-content: space-between; align-items: center; }
       .item-info { flex: 1; }
-      .item-name { font-weight: 600; display: block; }
-      .item-meta { font-size: 11px; color: #888; }
+      .item-name { font-weight: var(--font-weight-semi-bold); font-size: 14px; display: block; color: var(--text-colour); }
+      .item-meta { font-size: 11px; color: var(--text-muted); font-weight: 500; }
       .item-actions { display: flex; gap: 4px; }
       
-      .sidebar button.secondary,
-      .sidebar button.danger {
-        padding: 4px;
-        border-radius: 4px;
-        min-width: 24px;
-        height: 24px;
+      .sidebar button.secondary {
+        padding: 0;
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
       }
     `
   ];
@@ -75,7 +77,10 @@ export class SideBar extends LitElement {
   render() {
     return html`
       <div class="sidebar-section" style="flex: 2;">
-        <h3>Layout Items</h3>
+        <div class="sidebar-section-title">
+          <span class="material-icons">layers</span>
+          Layout Items
+        </div>
         ${(this.activeLayout?.items || []).map((item, index) => {
           const dt = this.displayTypes.find(t => t.id === item.display_type_id);
           return html`

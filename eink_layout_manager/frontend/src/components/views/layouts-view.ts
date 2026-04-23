@@ -28,7 +28,7 @@ export class LayoutsView extends BaseResourceView {
         display: flex;
         height: 100%;
         width: 100%;
-        background: #f0f2f5;
+        background: var(--bg-light);
         overflow: hidden;
       }
       
@@ -42,13 +42,13 @@ export class LayoutsView extends BaseResourceView {
       }
       
       .content-pane {
-        width: 340px;
+        width: 320px;
         background: white;
         border-left: 1px solid var(--border-colour);
         display: flex;
         flex-direction: column;
         height: 100%;
-        box-shadow: -2px 0 10px rgba(0,0,0,0.02);
+        box-shadow: -1px 0 3px rgba(0,0,0,0.02);
         z-index: 2;
       }
       
@@ -58,8 +58,10 @@ export class LayoutsView extends BaseResourceView {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(8px);
+        height: 48px;
+        box-sizing: border-box;
       }
 
       .pane-footer {
@@ -68,52 +70,55 @@ export class LayoutsView extends BaseResourceView {
         display: flex;
         align-items: center;
         justify-content: flex-end;
-        background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(8px);
+        height: 52px;
+        box-sizing: border-box;
       }
       
       .pane-title {
-        font-weight: 800;
-        font-size: 0.75rem;
+        font-weight: 700;
+        font-size: 11px;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 0.5px;
         color: var(--text-muted);
       }
       
       .content-list {
         flex: 1;
         overflow-y: auto;
-        padding: 1rem;
+        padding: 0.75rem;
       }
       
       .layout-item-card {
-        padding: 12px;
-        min-height: 64px;
+        padding: 10px 12px;
+        min-height: 60px;
         box-sizing: border-box;
-        border: 1px solid #eee;
+        border: 1px solid var(--border-colour);
         border-radius: var(--border-radius);
         margin-bottom: 0.5rem;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         background: #fff;
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: 12px;
       }
       
       .layout-item-card:hover {
         border-color: var(--primary-colour);
-        background: #f0faff;
+        background: var(--bg-light);
       }
       
       .layout-item-card.selected {
-        background: #e1f5fe;
+        background: rgba(3, 169, 244, 0.08);
         border-color: var(--primary-colour);
         box-shadow: 0 2px 8px rgba(3,169,244,0.1);
       }
       
       .item-icon {
-        color: #888;
+        color: var(--text-muted);
+        font-size: 20px;
       }
       
       .layout-item-card.selected .item-icon {
@@ -126,8 +131,8 @@ export class LayoutsView extends BaseResourceView {
       }
       
       .item-name {
-        font-weight: 600;
-        font-size: 14px;
+        font-weight: var(--font-weight-semi-bold);
+        font-size: 13px;
         color: var(--text-colour);
         display: block;
         white-space: nowrap;
@@ -139,6 +144,8 @@ export class LayoutsView extends BaseResourceView {
         font-size: 11px;
         color: var(--text-muted);
         display: block;
+        margin-top: 2px;
+        font-weight: 500;
       }
 
       .pane-toolbar {
@@ -157,10 +164,10 @@ export class LayoutsView extends BaseResourceView {
         top: 100%;
         right: 0;
         background: white;
-        min-width: 280px;
+        min-width: 260px;
         box-shadow: var(--shadow-medium);
         border: 1px solid var(--border-colour);
-        border-radius: 12px;
+        border-radius: 8px;
         margin-top: 0.5rem;
         z-index: 100;
         overflow: hidden;
@@ -172,34 +179,35 @@ export class LayoutsView extends BaseResourceView {
       }
 
       .display-type-item {
-        padding: 0.75rem 1rem;
+        padding: 10px 12px;
         cursor: pointer;
         display: flex;
         align-items: center;
-        gap: 1rem;
-        transition: background 0.2s;
-        border-bottom: 1px solid #f0f0f0;
+        gap: 12px;
+        transition: all 0.2s;
+        border-bottom: 1px solid var(--border-colour-light);
       }
       .display-type-item:last-child { border-bottom: none; }
-      .display-type-item:hover { background: #f0faff; }
+      .display-type-item:hover { background: var(--bg-light); color: var(--primary-colour); }
       
       .display-type-info {
         display: flex;
         flex-direction: column;
-        line-height: 1.2;
+        line-height: 1.3;
       }
       .display-type-name {
         font-weight: 600;
-        font-size: 0.9rem;
+        font-size: 13px;
         color: var(--text-colour);
       }
       .display-type-meta {
-        font-size: 0.75rem;
+        font-size: 11px;
         color: var(--text-muted);
+        font-weight: 500;
       }
 
       @keyframes slideIn {
-        from { transform: translateY(-10px); opacity: 0; }
+        from { transform: translateY(-8px); opacity: 0; }
         to { transform: translateY(0); opacity: 1; }
       }
 
@@ -353,7 +361,7 @@ export class LayoutsView extends BaseResourceView {
             ` : 'Layouts')}
           </div>
           <div class="toolbar-actions">
-              <button class="secondary" title="Layout Settings" @click="${() => this._layoutSettingsDialog.show(this.activeLayout!)}">
+              <button class="secondary icon-button" title="Layout Settings" @click="${() => this._layoutSettingsDialog.show(this.activeLayout!)}">
                 <span class="material-icons">settings</span>
               </button>
           </div>
@@ -390,8 +398,8 @@ export class LayoutsView extends BaseResourceView {
                 <div class="pane-title">Layout Items</div>
                 <div class="pane-toolbar">
                   <div class="dropdown">
-                    <button id="btn-add-display" class="secondary" title="Add Display" @click="${() => this._showDisplayMenu = !this._showDisplayMenu}">
-                      <span class="material-icons" style="font-size: 18px;">add</span>
+                    <button id="btn-add-display" class="secondary icon-button" title="Add Display" @click="${() => this._showDisplayMenu = !this._showDisplayMenu}">
+                      <span class="material-icons">add</span>
                     </button>
                     <div id="menu-display-types" class="dropdown-menu ${this._showDisplayMenu ? 'show' : ''}">
                       ${this.displayTypes.map(dt => html`
@@ -435,20 +443,20 @@ export class LayoutsView extends BaseResourceView {
               <div class="pane-footer">
                 <div class="toolbar-actions">
                   <button 
-                    class="secondary" 
+                    class="secondary icon-button" 
                     title="Edit Item" 
                     ?disabled="${!this.selectedItemId}"
                     @click="${() => this.dispatchEvent(new CustomEvent('edit-item', { detail: { id: this.selectedItemId } }))}"
                   >
-                    <span class="material-icons" style="font-size: 18px;">edit</span>
+                    <span class="material-icons">edit</span>
                   </button>
                   <button 
-                    class="danger" 
+                    class="danger icon-button" 
                     title="Delete Item" 
                     ?disabled="${!this.selectedItemId}"
                     @click="${() => this.dispatchEvent(new CustomEvent('delete-item', { detail: { id: this.selectedItemId } }))}"
                   >
-                    <span class="material-icons" style="font-size: 18px;">delete</span>
+                    <span class="material-icons">delete</span>
                   </button>
                 </div>
               </div>

@@ -16,7 +16,7 @@ export class LayoutEditor extends LitElement {
       display: block;
       width: 100%;
       height: 100%;
-      background-color: #f5f5f5;
+      background-color: var(--bg-light);
       overflow: auto;
       box-sizing: border-box;
       padding: 40px;
@@ -46,22 +46,22 @@ export class LayoutEditor extends LitElement {
     }
     .canvas {
       background-color: white;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      box-shadow: var(--shadow-large);
       position: relative;
-      border: 1px solid #ccc;
+      border: 1px solid var(--border-colour);
       box-sizing: content-box; /* Match physical mm exactly */
     }
     .canvas.resizing {
-      border-color: #03a9f4;
-      box-shadow: 0 0 0 2px rgba(3, 169, 244, 0.2), 0 10px 30px rgba(0, 0, 0, 0.15);
+      border-color: var(--primary-colour);
+      box-shadow: 0 0 0 2px rgba(3, 169, 244, 0.2), var(--shadow-large);
     }
     .grid-overlay {
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
       pointer-events: none;
       background-image: 
-      linear-gradient(to right, #f0f0f0 1px, transparent 1px),
-      linear-gradient(to bottom, #f0f0f0 1px, transparent 1px);
+      linear-gradient(to right, var(--border-colour-light) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--border-colour-light) 1px, transparent 1px);
       background-size: var(--grid-size, 10px) var(--grid-size, 10px);
     }
     /* Resize handles hints */
@@ -71,7 +71,7 @@ export class LayoutEditor extends LitElement {
       right: -5px; bottom: -5px;
       width: 15px; height: 15px;
       cursor: nwse-resize;
-      background: linear-gradient(135deg, transparent 50%, #ccc 50%, #ccc 60%, transparent 60%, transparent 70%, #ccc 70%);
+      background: linear-gradient(135deg, transparent 50%, var(--border-colour) 50%, var(--border-colour) 60%, transparent 60%, transparent 70%, var(--border-colour) 70%);
       opacity: 0.5;
     }
     .canvas:hover::after { opacity: 1; }
