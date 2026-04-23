@@ -26,6 +26,8 @@ describe('ScenesView', () => {
     layouts: [mockLayout],
     displayTypes: [{ id: 'dt1', name: '7.5in' }],
     updateScene: vi.fn(),
+    updateActiveScene: vi.fn(),
+    saveActiveScene: vi.fn(),
     showMessage: vi.fn()
   };
 
@@ -129,7 +131,7 @@ describe('ScenesView', () => {
     expect(event.detail.config.title).toBe('Delete Scene Item?');
   });
 
-  it('updates scene and clears selection when confirmation result is true', async () => {
+  it('updates local state and clears selection when confirmation result is true', async () => {
     const item = element.shadowRoot?.querySelector('.placeholder-item') as HTMLElement;
     item.click();
     await element.updateComplete;
@@ -144,7 +146,7 @@ describe('ScenesView', () => {
     
     await confirmCallback(true);
     
-    expect(mockState.updateScene).toHaveBeenCalledWith('scene1', {
+    expect(mockState.updateActiveScene).toHaveBeenCalledWith({
       items: [mockScene.items[1]]
     });
     expect((element as any)._selectedItemId).toBeNull();

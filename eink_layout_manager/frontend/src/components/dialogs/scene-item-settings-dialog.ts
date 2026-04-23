@@ -607,6 +607,11 @@ export class SceneItemSettingsDialog extends LitElement {
   }
 
   private _handleOk() {
+    this.dispatchEvent(new CustomEvent('save-item', {
+      detail: { item: this.item },
+      bubbles: true,
+      composed: true
+    }));
     (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).close();
   }
 
