@@ -138,3 +138,15 @@ class Layout(Base):
     __sortable_fields__ = {
         "name": "name",
     }
+
+
+class ImagePalette(Base):
+    __tablename__ = "image_palettes"
+
+    image_id = Column(String, primary_key=True)
+    palette = Column(String, primary_key=True)
+    filename = Column(String, nullable=False, default="")
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(
+        DateTime, server_default=func.now(), onupdate=func.now()
+    )
