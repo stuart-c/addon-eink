@@ -424,12 +424,16 @@ export class ScenesView extends BaseResourceView {
     const highlightedItemId = this._hoveredItemId || this._selectedItemId;
     const highlightedDisplayIds = activeScene?.items?.find((i: any) => i.id === highlightedItemId)?.displays || [];
 
-    const listItems = scenes.map(scene => ({
-      id: scene.id,
-      name: scene.name,
-      icon: 'landscape',
-      status: scene.status
-    }));
+    const listItems = scenes.map(scene => {
+      const isSelected = activeScene && scene.id === activeScene.id;
+      const displayData = isSelected ? activeScene : scene;
+      return {
+        id: displayData.id,
+        name: displayData.name,
+        icon: 'landscape',
+        status: displayData.status
+      };
+    });
 
     return html`
       <section-layout>

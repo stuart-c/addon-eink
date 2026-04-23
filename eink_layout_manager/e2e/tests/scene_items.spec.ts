@@ -108,8 +108,14 @@ test.describe('Smart Scene Items interaction', () => {
      const editBtn = page.locator('button[title="Edit Item"]');
      await expect(editBtn).toBeEnabled();
      
-     // Switch back to first scene
+     // Switch back to first scene - this will trigger an unsaved changes dialog
      await page.locator('sidebar-list .sidebar-item').getByText(sceneName).click();
+     
+     // Handle the "Unsaved Changes" dialog
+     const confirmDialog = page.locator('confirm-dialog');
+     await expect(confirmDialog).toBeVisible();
+     await confirmDialog.locator('button:has-text("Discard")').click();
+     
      await expect(page.locator('.toolbar-title')).toContainText(sceneName);
      
      // Selection should be cleared
