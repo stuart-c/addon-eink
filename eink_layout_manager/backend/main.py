@@ -49,6 +49,7 @@ def init_app():
     try:
         os.makedirs(get_storage_path("image"), exist_ok=True)
         os.makedirs(get_storage_path("thumbnail"), exist_ok=True)
+        os.makedirs(get_storage_path("conversion"), exist_ok=True)
     except ValueError as e:
         print(f"Error initialising storage: {str(e)}")
 
