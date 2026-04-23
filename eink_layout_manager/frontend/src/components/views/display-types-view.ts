@@ -26,20 +26,20 @@ export class DisplayTypesView extends BaseResourceView {
     
     .editor-layout {
       display: grid;
-      grid-template-columns: 1fr 340px;
+      grid-template-columns: 1fr 320px;
       height: 100%;
       overflow: hidden;
     }
 
     form {
-      padding: 2rem;
+      padding: 1.5rem 2rem;
       overflow-y: auto;
-      border-right: 1px solid #eee;
+      border-right: 1px solid var(--border-colour);
       background: white;
     }
 
     .preview-column {
-      background: #f8f9fa;
+      background: var(--bg-light);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -51,83 +51,59 @@ export class DisplayTypesView extends BaseResourceView {
     .preview-header {
       padding: 0.75rem 1rem;
       border-bottom: 1px solid var(--border-colour);
-      background: rgba(255, 255, 255, 0.9);
-      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
       width: 100%;
       box-sizing: border-box;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      height: 48px;
     }
 
     .preview-body {
-      padding: 1.5rem;
+      padding: 1.25rem;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 1.5rem;
+      gap: 1.25rem;
       width: 100%;
       box-sizing: border-box;
     }
 
     .preview-canvas {
-      width: 300px;
-      height: 300px;
-      background: #e9ecef;
-      border-radius: 8px;
+      width: 280px;
+      height: 280px;
+      background: #fff;
+      border: 1px solid var(--border-colour);
+      border-radius: var(--border-radius);
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+      box-shadow: var(--shadow-small);
       position: relative;
       overflow: hidden;
     }
 
     .preview-label {
-      font-size: 0.75rem;
-      font-weight: 800;
+      font-size: 11px;
+      font-weight: 700;
       color: var(--text-muted);
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
       width: 100%;
     }
 
-    .preview-separator {
-      width: 100%;
-      height: 1px;
-      background: var(--border-colour);
-      margin: 0.5rem 0;
-    }
-
-    .summary-panel {
-      background: white;
-      border: 1px solid #eee;
-      border-radius: 12px;
-      box-shadow: var(--shadow-small);
-      display: flex;
-      flex-direction: column;
-      width: 100%;
-    }
-    .summary-content {
-      padding: 0;
-    }
-
-    .row {
-      display: flex;
-      gap: 1.5rem;
-    }
-    .row > * { flex: 1; }
-    
     .section-header {
-      margin-top: 2rem;
-      margin-bottom: 1.25rem;
+      margin-top: 1.75rem;
+      margin-bottom: 1rem;
       padding-bottom: 8px;
-      border-bottom: 2px solid #f0f0f0;
-      font-size: 13px;
-      font-weight: 800;
-      color: #000;
+      border-bottom: 1px solid var(--border-colour-light);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
     }
     .swatch-group {
       display: flex;
@@ -138,77 +114,84 @@ export class DisplayTypesView extends BaseResourceView {
     .swatch {
       width: 32px;
       height: 32px;
-      border-radius: 8px;
+      border-radius: 6px;
       cursor: pointer;
-      border: 1px solid #ddd;
-      transition: all 0.2s ease;
+      border: 1px solid var(--border-colour);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       position: relative;
     }
     .swatch:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      box-shadow: var(--shadow-small);
       border-color: var(--primary-colour);
     }
     .swatch.selected {
       border: 2px solid var(--primary-colour);
-      box-shadow: 0 0 0 3px rgba(3, 169, 244, 0.2);
+      box-shadow: 0 0 0 3px rgba(3, 169, 244, 0.15);
     }
     .colour-input-container {
       display: flex;
       align-items: center;
       gap: 12px;
-      background: #f8f9fa;
-      padding: 8px;
-      border-radius: 10px;
-      border: 1px solid #eee;
+      background: var(--bg-light);
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-colour);
     }
     input[type="color"] {
-      width: 44px;
-      height: 38px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
+      width: 40px;
+      height: 36px;
+      border: 1px solid var(--border-colour);
+      border-radius: 4px;
       cursor: pointer;
       padding: 2px;
+      background: #fff;
     }
     .hex-value {
-      font-family: 'JetBrains Mono', 'Roboto Mono', monospace;
-      font-size: 13px;
-      color: #555;
+      font-family: var(--font-family-mono);
+      font-size: 12px;
+      color: var(--text-colour);
       text-transform: uppercase;
       font-weight: 600;
       flex: 1;
+      letter-spacing: 0.5px;
     }
 
     .summary-table {
       width: 100%;
       border-collapse: collapse;
-      background: transparent;
+      background: #fff;
       font-size: 12px;
+      border: 1px solid var(--border-colour);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
     }
     .summary-table th, .summary-table td {
       padding: 10px 12px;
       text-align: left;
-      border-bottom: 1px solid #f0f0f0;
+      border-bottom: 1px solid var(--border-colour-light);
     }
     .summary-table th {
-      background: #f8f9fa;
-      color: #666;
-      font-weight: 700;
+      background: var(--bg-light);
+      color: var(--text-muted);
+      font-weight: 600;
       text-transform: uppercase;
+      font-size: 10px;
       letter-spacing: 0.5px;
-      width: 40%;
+      width: 45%;
     }
     .summary-table tr:last-child td, .summary-table tr:last-child th {
       border-bottom: none;
     }
     .summary-table .val {
       font-weight: 600;
-      color: #333;
+      color: var(--text-colour);
     }
     .summary-table .unit {
-      color: #aaa;
+      color: var(--text-muted);
       margin-left: 2px;
-      font-weight: normal;
+      font-size: 11px;
     }
     `
   ];

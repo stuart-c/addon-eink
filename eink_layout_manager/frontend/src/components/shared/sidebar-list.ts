@@ -38,7 +38,7 @@ export class SidebarList extends LitElement {
         padding: 10px 12px;
         min-height: 64px;
         box-sizing: border-box;
-        border: 1px solid #eee;
+        border: 1px solid var(--border-colour);
         border-radius: var(--border-radius);
         margin-bottom: 0.5rem;
         cursor: pointer;
@@ -47,28 +47,28 @@ export class SidebarList extends LitElement {
         display: flex;
         align-items: center;
         gap: 12px;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.03);
         flex-shrink: 0;
       }
       .sidebar-item:hover {
         border-color: var(--primary-colour);
-        background: #f0faff;
+        background: var(--bg-light);
         transform: translateX(2px);
       }
       .sidebar-item.selected {
-        background: #e1f5fe;
+        background: rgba(3, 169, 244, 0.1);
         border-color: var(--primary-colour);
-        box-shadow: 0 2px 8px rgba(3, 169, 244, 0.15);
+        box-shadow: 0 2px 8px rgba(3, 169, 244, 0.1);
       }
       .sidebar-item-icon {
-        color: #888;
+        color: var(--text-muted);
         font-size: 20px;
       }
       .sidebar-item.selected .sidebar-item-icon {
         color: var(--primary-colour);
       }
       .sidebar-item-name {
-        font-weight: 600;
+        font-weight: var(--font-weight-semi-bold);
         font-size: 14px;
         color: var(--text-colour);
         white-space: nowrap;
@@ -80,12 +80,12 @@ export class SidebarList extends LitElement {
         width: 40px;
         height: 30px;
         border-radius: 4px;
-        background: #f0f2f5;
+        background: var(--border-colour-light);
         display: flex;
         align-items: center;
         justify-content: center;
         overflow: hidden;
-        border: 1px solid #eee;
+        border: 1px solid var(--border-colour);
       }
       .sidebar-thumbnail img {
         width: 100%;
@@ -94,13 +94,14 @@ export class SidebarList extends LitElement {
       }
       .empty-state {
         padding: 2rem 1rem;
-        color: #888;
+        color: var(--text-muted);
         font-size: 13px;
         text-align: center;
         display: flex;
         flex-direction: column;
         align-items: center;
         gap: 0.5rem;
+        font-weight: 500;
       }
       .empty-state .material-icons {
         font-size: 32px;

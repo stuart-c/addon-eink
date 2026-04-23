@@ -31,11 +31,13 @@ export class AppRoot extends LitElement {
       width: 100vw;
       overflow: hidden;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
     main {
       flex: 1;
       display: flex;
-      background-color: #f0f2f5;
+      background-color: #f7f9fc;
       overflow: hidden;
     }
   `;

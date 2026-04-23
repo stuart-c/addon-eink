@@ -9,11 +9,14 @@ export const commonStyles = css`
     --text-colour: #333;
     --text-muted: #666;
     --border-colour: #ddd;
+    --border-colour-light: #f0f2f5;
     --bg-light: #f8f9fa;
-    --shadow-small: 0 2px 4px rgba(0,0,0,0.1);
-    --shadow-medium: 0 4px 15px rgba(0,0,0,0.15);
-    --shadow-large: 0 15px 35px rgba(0,0,0,0.25);
+    --shadow-small: 0 1px 3px rgba(0,0,0,0.1);
+    --shadow-medium: 0 4px 15px rgba(0,0,0,0.1);
+    --shadow-large: 0 15px 35px rgba(0,0,0,0.2);
     --border-radius: 6px;
+    --font-weight-medium: 500;
+    --font-weight-semi-bold: 600;
   }
 
   .material-icons {
@@ -36,46 +39,67 @@ export const commonStyles = css`
     background: var(--primary-colour);
     color: white;
     border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
+    padding: 0 1rem;
+    height: 36px;
+    border-radius: var(--border-radius);
     cursor: pointer;
-    font-weight: 600;
+    font-weight: var(--font-weight-medium);
+    font-size: 14px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    transition: all 0.2s;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
   }
 
   button:hover {
     background: var(--primary-hover);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  button:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
   }
 
   button:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
+    box-shadow: none;
   }
 
   button.secondary {
     background: white;
-    color: var(--primary-colour);
-    border: 1px solid var(--primary-colour);
+    color: var(--text-colour);
+    border: 1px solid var(--border-colour);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
   }
 
   button.secondary:hover {
-    background: #f0faff;
+    background: var(--bg-light);
+    border-color: #ccc;
+    color: var(--primary-colour);
   }
 
   button.danger {
     background: white;
     color: var(--danger-colour);
-    border: 1px solid var(--danger-colour);
+    border: 1px solid var(--border-colour);
   }
 
   button.danger:hover {
     background: #fff1f0;
-    border-color: #f5222d;
-    color: #f5222d;
+    border-color: var(--danger-colour);
+    color: var(--danger-hover);
+  }
+
+  button.icon-button {
+    padding: 0;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    border-radius: 8px;
   }
 
   .form-group {
@@ -94,17 +118,20 @@ export const commonStyles = css`
 
   input, select {
     width: 100%;
-    padding: 10px;
+    height: 38px;
+    padding: 0 10px;
     border: 1px solid var(--border-colour);
     border-radius: var(--border-radius);
     box-sizing: border-box;
     font-size: 14px;
-    transition: border-color 0.2s;
+    transition: all 0.2s;
+    background: white;
   }
 
   input:focus, select:focus {
     outline: none;
     border-color: var(--primary-colour);
+    box-shadow: 0 0 0 3px rgba(3, 169, 244, 0.1);
   }
 
   .draggable-item {

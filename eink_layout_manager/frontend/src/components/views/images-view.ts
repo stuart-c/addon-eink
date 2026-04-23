@@ -32,35 +32,37 @@ export class ImagesView extends BaseResourceView {
       .image-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-        gap: 1.5rem;
-        padding: 1.5rem;
+        gap: 1.25rem;
+        padding: 1.25rem;
       }
 
       .image-card {
         background: white;
+        border: 1px solid var(--border-colour);
         border-radius: var(--border-radius);
         overflow: hidden;
         box-shadow: var(--shadow-small);
-        transition: transform 0.2s, box-shadow 0.2s;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         cursor: pointer;
         display: flex;
         flex-direction: column;
       }
 
       .image-card:hover {
-        transform: translateY(-4px);
+        transform: translateY(-2px);
         box-shadow: var(--shadow-medium);
+        border-color: var(--primary-colour);
       }
 
       .image-card.selected {
-        outline: 2px solid var(--primary-colour);
-        background: #f0faff;
-        box-shadow: var(--shadow-medium);
+        border-color: var(--primary-colour);
+        box-shadow: 0 0 0 2px var(--primary-colour), var(--shadow-medium);
+        background: rgba(3, 169, 244, 0.05);
       }
 
       .thumbnail-container {
         aspect-ratio: 1 / 1;
-        background-color: #f0f2f5;
+        background-color: var(--border-colour-light);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -77,12 +79,12 @@ export class ImagesView extends BaseResourceView {
 
       .image-info {
         padding: 0.75rem;
-        border-top: 1px solid var(--border-colour);
+        border-top: 1px solid var(--border-colour-light);
       }
 
       .image-name {
         font-size: 14px;
-        font-weight: 600;
+        font-weight: var(--font-weight-semi-bold);
         color: var(--text-colour);
         white-space: nowrap;
         overflow: hidden;
@@ -91,13 +93,14 @@ export class ImagesView extends BaseResourceView {
       }
 
       .image-meta {
-        font-size: 12px;
+        font-size: 11px;
         color: var(--text-muted);
         margin-top: 4px;
+        font-weight: 500;
       }
 
       .sidebar-content {
-        padding: 1rem;
+        padding: 1.25rem;
         display: flex;
         flex-direction: column;
         gap: 1.5rem;
@@ -108,7 +111,7 @@ export class ImagesView extends BaseResourceView {
       .sidebar-section {
         display: flex;
         flex-direction: column;
-        gap: 0.75rem;
+        gap: 1rem;
       }
 
       .filter-grid {
@@ -119,25 +122,26 @@ export class ImagesView extends BaseResourceView {
 
       .reset-button {
         margin-top: auto;
-        padding-top: 1rem;
-        border-top: 1px solid #eee;
+        padding-top: 1.25rem;
+        border-top: 1px solid var(--border-colour);
       }
 
       .actions {
         position: absolute;
-        top: 10px;
-        right: 10px;
+        top: 8px;
+        right: 8px;
         display: flex;
-        gap: 8px;
+        gap: 6px;
         opacity: 0;
         visibility: hidden;
         background: white;
-        padding: 6px;
-        border-radius: 20px;
+        padding: 4px;
+        border-radius: 8px;
         box-shadow: var(--shadow-medium);
         z-index: 10;
         transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         transform: translateY(-5px) scale(0.9);
+        border: 1px solid var(--border-colour);
       }
 
       .image-card:hover .actions {
@@ -148,18 +152,19 @@ export class ImagesView extends BaseResourceView {
 
       .action-icon {
         cursor: pointer;
-        color: #555;
+        color: var(--text-muted);
         width: 28px;
         height: 28px;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: color 0.2s, transform 0.1s;
+        transition: all 0.2s;
+        border-radius: 6px;
       }
 
       .action-icon:hover {
         color: var(--primary-colour);
-        transform: scale(1.1);
+        background: var(--bg-light);
       }
 
       .sort-list {
@@ -172,12 +177,13 @@ export class ImagesView extends BaseResourceView {
         display: flex;
         align-items: center;
         background: white;
-        padding: 0.5rem;
+        padding: 8px 10px;
         border: 1px solid var(--border-colour);
         border-radius: var(--border-radius);
-        gap: 0.5rem;
+        gap: 8px;
         font-size: 13px;
         color: var(--text-colour);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.03);
       }
 
       .sort-item.drag-over {
@@ -208,7 +214,7 @@ export class ImagesView extends BaseResourceView {
       }
 
       .sort-action:hover {
-        background: #f0f2f5;
+        background: var(--bg-light);
         color: var(--primary-colour);
       }
 
@@ -224,7 +230,8 @@ export class ImagesView extends BaseResourceView {
       .add-sort-button {
         width: 100%;
         font-size: 12px;
-        padding: 6px 12px;
+        padding: 0 12px;
+        height: 32px;
       }
 
       .add-sort-menu {
@@ -249,7 +256,7 @@ export class ImagesView extends BaseResourceView {
       }
 
       .add-sort-item:hover {
-        background: #f0faff;
+        background: var(--bg-light);
         color: var(--primary-colour);
       }
     `
