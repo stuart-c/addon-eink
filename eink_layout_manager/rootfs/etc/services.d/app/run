@@ -4,6 +4,15 @@ bashio::log.info "Starting eInk Layout Manager frontend & backend..."
 
 export INGRESS_PORT=$(bashio::addon.ingress_port)
 
+if bashio::services.available "mqtt"; then
+    export MQTT_HOST=$(bashio::services mqtt "host")
+    export MQTT_PORT=$(bashio::services mqtt "port")
+    export MQTT_USER=$(bashio::services mqtt "username")
+    export MQTT_PASSWORD=$(bashio::services mqtt "password")
+else
+    bashio::log.warning "MQTT service not available."
+fi
+
 # Ensure /data is writable by the addon user (it's a mounted volume)
 chown -R addon:addon /data
 
