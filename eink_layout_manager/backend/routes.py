@@ -1,3 +1,5 @@
+"""API and static routes for the eInk Layout Manager."""
+
 import os
 from aiohttp import web
 from .handlers import common, items, images, scenes, homeassistant
@@ -5,7 +7,6 @@ from .handlers import common, items, images, scenes, homeassistant
 
 def setup_routes(app):
     """Register all API and static routes."""
-
     # RESTful API
     # Valid resource types: display_type, layout
     api_prefix = "/api/{resource_type:(?:display_type|layout)}"
@@ -17,6 +18,7 @@ def setup_routes(app):
     app.router.add_get(
         "/api/image/{id}/thumbnail", images.handle_image_thumbnail_get
     )
+    app.router.add_get("/api/image/{id}/file", images.handle_image_file_get)
     app.router.add_post("/api/image", images.handle_image_create)
     app.router.add_put("/api/image/{id}", images.handle_image_update)
     app.router.add_delete("/api/image/{id}", images.handle_image_delete)
@@ -45,16 +47,16 @@ def setup_routes(app):
 
     # Static Lit frontend files
     # Try new structure first (eink_layout_manager/frontend/dist)
-    # Then fallback to Docker/Legacy structure (eink_layout_manager/backend/static_dist)
-    static_dist = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)), "frontend", "dist"
-    )
+    # Then fallback to Docker/Legacy structure
+    # (eink_layout_manager/backend/static_dist)
+    root_dir = os.path.dirname(os.path.dirname(__file__))
+    static_dist = os.path.join(root_dir, "frontend", "dist")
     if not os.path.exists(static_dist):
         static_dist = os.path.join(os.path.dirname(__file__), "static_dist")
 
     if os.path.exists(static_dist):
         # Serve index.html at the root
-        async def index(request):
+        async def index(_):  # noqa: U101
             return web.FileResponse(os.path.join(static_dist, "index.html"))
 
         app.router.add_get("/", index)
