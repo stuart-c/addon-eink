@@ -26,7 +26,7 @@ async def test_get_keywords_ordered(aiohttp_client, app):
             width=100,
             height=100,
             file_path="img1.png",
-            status="READY",
+            status="ACTIVE",
             file_hash="hash1",
             keywords=["landscape", "nature", "summer"],
         )
@@ -37,7 +37,7 @@ async def test_get_keywords_ordered(aiohttp_client, app):
             width=100,
             height=100,
             file_path="img2.png",
-            status="READY",
+            status="ACTIVE",
             file_hash="hash2",
             keywords=["landscape", "winter"],
         )
@@ -48,7 +48,7 @@ async def test_get_keywords_ordered(aiohttp_client, app):
             width=100,
             height=100,
             file_path="img3.png",
-            status="READY",
+            status="ACTIVE",
             file_hash="hash3",
             keywords=["landscape", "nature", "A_keyword"],
         )
@@ -60,7 +60,7 @@ async def test_get_keywords_ordered(aiohttp_client, app):
             width=100,
             height=100,
             file_path="img4.png",
-            status="READY",
+            status="ACTIVE",
             file_hash="hash4",
             keywords=None,
         )

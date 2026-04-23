@@ -131,7 +131,7 @@ def parse_image_sort_params(sort_query):
 
 def build_image_filters(query_params):
     """
-    Build image filters, ensuring status=READY is the first filter
+    Build image filters, ensuring status=ACTIVE is the first filter
     unless overridden, to match legacy behavior and test expectations.
     """
     filters = build_filters(models.Image, query_params)
@@ -145,7 +145,7 @@ def build_image_filters(query_params):
 
     if not has_status:
         # Prepend to match legacy order (important for some tests)
-        filters.insert(0, models.Image.status == "READY")
+        filters.insert(0, models.Image.status == "ACTIVE")
 
     return filters
 
