@@ -2,39 +2,27 @@ import asyncio
 import json
 import logging
 import os
-import signal
 import uuid
 from datetime import datetime
 
 from gmqtt import Client as MQTTClient
 from sqlalchemy import select
 
-from backend import database, models
-
-# Configuration
-LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
-MQTT_HOST = os.environ.get("MQTT_HOST")
-MQTT_PORT = int(os.environ.get("MQTT_PORT", 1883))
-MQTT_USER = os.environ.get("MQTT_USER")
-MQTT_PASSWORD = os.environ.get("MQTT_PASSWORD")
-MQTT_CLIENT_ID = os.environ.get(
-    "MQTT_CLIENT_ID", f"eink_layout_manager_{uuid.uuid4().hex[:8]}"
-)
+from .. import database, models
 
 # Home Assistant Discovery Prefix
 DISCOVERY_PREFIX = "homeassistant"
 BASE_TOPIC = "eink_layout_manager"
 
-logging.basicConfig(
-    level=getattr(logging, LOG_LEVEL, logging.INFO),
-    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
-)
 logger = logging.getLogger("mqtt_manager")
 
 
 class MQTTManager:
     def __init__(self):
-        self.client = MQTTClient(MQTT_CLIENT_ID)
+        mqtt_client_id = os.environ.get(
+            "MQTT_CLIENT_ID", f"eink_layout_manager_{uuid.uuid4().hex[:8]}"
+        )
+        self.client = MQTTClient(mqtt_client_id)
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
         self.client.on_disconnect = self.on_disconnect
@@ -44,6 +32,7 @@ class MQTTManager:
         self.layout_states = (
             {}
         )  # layout_id -> { "current_scene": str, "last_updated": str }
+        self.task = None
 
     def on_connect(self, client, flags, rc, properties):
         logger.info("Connected to MQTT broker")
@@ -62,15 +51,22 @@ class MQTTManager:
         logger.info(f"Subscribed: {mid}")
 
     async def connect(self):
-        if not MQTT_HOST:
-            logger.error("MQTT_HOST not set. Cannot connect.")
+        mqtt_host = os.environ.get("MQTT_HOST")
+        mqtt_port = int(os.environ.get("MQTT_PORT", 1883))
+        mqtt_user = os.environ.get("MQTT_USER")
+        mqtt_password = os.environ.get("MQTT_PASSWORD")
+
+        if not mqtt_host:
+            logger.info(
+                "MQTT_HOST not set. MQTT Manager will not start."
+            )
             return False
 
-        if MQTT_USER and MQTT_PASSWORD:
-            self.client.set_auth_credentials(MQTT_USER, MQTT_PASSWORD)
+        if mqtt_user and mqtt_password:
+            self.client.set_auth_credentials(mqtt_user, mqtt_password)
 
         try:
-            await self.client.connect(MQTT_HOST, MQTT_PORT)
+            await self.client.connect(mqtt_host, mqtt_port)
             return True
         except Exception as e:
             logger.error(f"Failed to connect to MQTT: {e}")
@@ -169,8 +165,6 @@ class MQTTManager:
         )
 
     async def run_loop(self):
-        await database.init_db()
-
         while self.running:
             try:
                 async with database.get_session() as session:
@@ -196,27 +190,39 @@ class MQTTManager:
                 # Poll every 30 seconds
                 await asyncio.sleep(30)
             except Exception as e:
-                logger.error(f"Error in MQTT loop: {e}")
-                await asyncio.sleep(10)
+                if self.running:
+                    logger.error(f"Error in MQTT loop: {e}")
+                    await asyncio.sleep(10)
+
+    async def start(self):
+        if await self.connect():
+            self.task = asyncio.create_task(self.run_loop())
 
     async def stop(self):
         self.running = False
+        if self.task:
+            self.task.cancel()
+            try:
+                await self.task
+            except asyncio.CancelledError:
+                pass
         await self.client.disconnect()
 
 
-async def main():
-    manager = MQTTManager()
-
-    # Handle signals
-    loop = asyncio.get_running_loop()
-    for sig in (signal.SIGINT, signal.SIGTERM):
-        loop.add_signal_handler(
-            sig, lambda: asyncio.create_task(manager.stop())
-        )
-
-    if await manager.connect():
-        await manager.run_loop()
+_manager = None
 
 
-if __name__ == "__main__":
-    asyncio.run(main())
+async def start_mqtt(app):
+    """aiohttp startup hook to start MQTT manager."""
+    global _manager
+    _manager = MQTTManager()
+    await _manager.start()
+    app["mqtt_manager"] = _manager
+
+
+async def stop_mqtt(app):
+    """aiohttp cleanup hook to stop MQTT manager."""
+    global _manager
+    if _manager:
+        await _manager.stop()
+        _manager = None
