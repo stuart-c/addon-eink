@@ -293,6 +293,11 @@ async def ensure_schema_up_to_date(conn):
         )
     )
 
+    # Ensure all images have status 'ACTIVE' (legacy READY status migration)
+    await conn.execute(
+        text("UPDATE images SET status = 'ACTIVE' WHERE status = 'READY'")
+    )
+
 
 async def init_db():
     """Initialise the database engine and create tables."""
