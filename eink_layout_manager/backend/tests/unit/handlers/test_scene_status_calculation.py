@@ -3,9 +3,11 @@ from unittest.mock import MagicMock, AsyncMock, patch
 from backend.handlers.scenes import SceneHandler
 from backend import models
 
+
 @pytest.fixture
 def handler():
     return SceneHandler()
+
 
 @pytest.mark.asyncio
 async def test_calculate_scene_status_ready(handler):
@@ -31,6 +33,7 @@ async def test_calculate_scene_status_ready(handler):
         status = await handler._calculate_scene_status(items, "layout1")
         assert status == "ready"
 
+
 @pytest.mark.asyncio
 async def test_calculate_scene_status_draft_missing_image(handler):
     mock_session = AsyncMock()
@@ -42,14 +45,13 @@ async def test_calculate_scene_status_draft_missing_image(handler):
     mock_result.scalars.return_value.first.return_value = mock_layout
     mock_session.execute.return_value = mock_result
 
-    items = [
-        {"id": "item1", "displays": ["d1"], "images": []} # No images
-    ]
+    items = [{"id": "item1", "displays": ["d1"], "images": []}]  # No images
 
     with patch("backend.database.get_session") as mock_get_session:
         mock_get_session.return_value.__aenter__.return_value = mock_session
         status = await handler._calculate_scene_status(items, "layout1")
         assert status == "draft"
+
 
 @pytest.mark.asyncio
 async def test_calculate_scene_status_draft_missing_display(handler):

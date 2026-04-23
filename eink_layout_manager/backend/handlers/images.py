@@ -37,7 +37,7 @@ class ImageHandler(BaseCRUDHandler):
             field = await reader.next()
             if not field or field.name != "file":
                 return web.json_response(
-                    {'error': 'Missing "file" field'}, status=400
+                    {"error": 'Missing "file" field'}, status=400
                 )
             filename = field.filename
             content = await field.read()
@@ -148,7 +148,7 @@ class ImageHandler(BaseCRUDHandler):
         filters = build_filters(self.model_class, request.query)
         # Images MUST be ACTIVE unless specified
         if not any(
-            hasattr(f, 'left') and f.left.name == 'status' for f in filters
+            hasattr(f, "left") and f.left.name == "status" for f in filters
         ):
             filters.append(models.Image.status == "ACTIVE")
 
