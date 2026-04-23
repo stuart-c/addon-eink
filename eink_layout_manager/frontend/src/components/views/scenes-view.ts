@@ -187,6 +187,7 @@ export class ScenesView extends BaseResourceView {
   @state() private _selectedDisplayIds: string[] = [];
   @state() private _selectedItemId: string | null = null;
   @state() private _hoveredItemId: string | null = null;
+  @state() private _originalSceneJson: string | null = null;
   @query('scene-dialog') private _sceneDialog!: SceneDialog;
   @query('scene-item-settings-dialog') private _itemSettingsDialog!: SceneItemSettingsDialog;
 
@@ -194,17 +195,34 @@ export class ScenesView extends BaseResourceView {
     super.updated(changedProperties);
     if (changedProperties.has('activeScene')) {
       this.notifyCanDelete(!!this.activeScene);
-      this.notifyDirty(false);
       this._selectedItemId = null;
+      if (this.activeScene && (!this._originalSceneJson || JSON.parse(this._originalSceneJson).id !== this.activeScene.id)) {
+        this.resetBaseline();
+      }
+    }
+    
+    if (changedProperties.has('activeScene') || changedProperties.has('scenes')) {
+      const dirty = this.isDirty;
+      this.notifyDirty(dirty);
     }
   }
 
-  public save() {
-    // Scenes are currently auto-saved or saved via dialog
+  public resetBaseline() {
+    this._originalSceneJson = this.activeScene ? JSON.stringify(this.activeScene) : null;
+    this.notifyDirty(false);
+  }
+
+  public async save() {
+    if (!this.activeScene) return;
+    await this.state.saveActiveScene();
+    this.resetBaseline();
   }
 
   public discard() {
-    // No inline discard for scenes currently
+    if (!this._originalSceneJson) return;
+    this.state.activeScene = JSON.parse(this._originalSceneJson);
+    this.resetBaseline();
+    this.requestUpdate();
   }
 
   public addNew() {
@@ -220,20 +238,52 @@ export class ScenesView extends BaseResourceView {
     }));
   }
 
-  get isDirty() { return false; }
+  get isDirty() {
+    if (!this.activeScene || !this._originalSceneJson) return false;
+    return JSON.stringify(this.activeScene) !== this._originalSceneJson;
+  }
   get canDelete() { return !!this.activeScene; }
 
-  private _handleSelect(sceneId: string) {
-    const scene = this.state.scenes.find((s: any) => s.id === sceneId);
-    if (!scene) return;
-    
-    this._selectedDisplayIds = [];
-    this._selectedItemId = null;
-    this.dispatchEvent(new CustomEvent('select-scene', {
-      detail: { scene },
-      bubbles: true,
-      composed: true
-    }));
+  private async _handleSelect(sceneId: string) {
+    if (this.activeScene?.id === sceneId) return;
+
+    const performSwitch = () => {
+      const scene = this.state.scenes.find((s: any) => s.id === sceneId);
+      if (!scene) return;
+      
+      this._selectedDisplayIds = [];
+      this._selectedItemId = null;
+      this.dispatchEvent(new CustomEvent('select-scene', {
+        detail: { scene },
+        bubbles: true,
+        composed: true
+      }));
+    };
+
+    if (this.isDirty) {
+      this._requestConfirmation(
+        {
+          title: 'Unsaved Changes',
+          message: `You have unsaved changes to "${this.activeScene?.name}". What would you like to do?`,
+          buttons: [
+            { text: 'Save', value: 'save', type: 'primary' },
+            { text: 'Discard', value: 'discard', type: 'danger' },
+            { text: 'Cancel', value: 'cancel', type: 'secondary' }
+          ]
+        },
+        async (choice: string) => {
+          if (choice === 'save') {
+            await this.save();
+            performSwitch();
+          } else if (choice === 'discard') {
+            this.discard();
+            performSwitch();
+          }
+        }
+      );
+    } else {
+      performSwitch();
+    }
   }
 
   private _handleItemClick(id: string) {
@@ -307,7 +357,7 @@ export class ScenesView extends BaseResourceView {
     }));
 
     const existingItems = activeScene.items || [];
-    await this.state.updateScene(activeScene.id, {
+    this.state.updateActiveScene({
       items: [...existingItems, ...newItems]
     });
 
@@ -327,7 +377,7 @@ export class ScenesView extends BaseResourceView {
     };
 
     const existingItems = activeScene.items || [];
-    await this.state.updateScene(activeScene.id, {
+    this.state.updateActiveScene({
       items: [...existingItems, newItem]
     });
 
@@ -349,7 +399,7 @@ export class ScenesView extends BaseResourceView {
       async (confirmed: boolean) => {
         if (confirmed) {
           const items = activeScene.items?.filter((i: any) => i.id !== this._selectedItemId) || [];
-          await this.state.updateScene(activeScene.id, { items });
+          this.state.updateActiveScene({ items });
           this._selectedItemId = null;
           this.showMessage('Scene item removed', 'success');
         }
@@ -412,7 +462,7 @@ export class ScenesView extends BaseResourceView {
             slot="right-main"
             .data="${activeScene}"
             .schemaName="Scene"
-            @data-update="${(e: CustomEvent) => this.state.updateScene(activeScene.id, e.detail)}"
+            @data-update="${(e: CustomEvent) => this.state.updateActiveScene(e.detail)}"
           ></yaml-editor>
         ` : (activeScene && activeLayout ? html`
           <div slot="right-main" class="workspace">
@@ -530,6 +580,15 @@ export class ScenesView extends BaseResourceView {
       ></scene-dialog>
       <scene-item-settings-dialog
         @delete="${() => this._handleDeleteItem()}"
+        @save-item="${(e: CustomEvent) => {
+          const activeScene = this.state?.activeScene || this.activeScene;
+          if (!activeScene) return;
+          const items = activeScene.items?.map((item: any) => 
+            item.id === e.detail.item.id ? e.detail.item : item
+          ) || [];
+          this.state.updateActiveScene({ items });
+          this.requestUpdate();
+        }}"
       ></scene-item-settings-dialog>
     `;
   }

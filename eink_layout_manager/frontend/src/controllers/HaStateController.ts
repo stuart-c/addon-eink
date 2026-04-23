@@ -296,6 +296,29 @@ export class HaStateController implements ReactiveController {
     }
   }
 
+  async updateActiveScene(updates: Partial<Scene>) {
+    if (!this.activeScene) return;
+    this.activeScene = { ...this.activeScene, ...updates };
+    this.host.requestUpdate();
+  }
+
+  async saveActiveScene() {
+    if (!this.activeScene) return;
+    
+    this.isSaving = true;
+    this.host.requestUpdate();
+    try {
+      await api.updateItem('scene', this.activeScene.id, this.activeScene);
+      await this.refresh();
+      this.showMessage('Scene saved!', 'success');
+    } catch (e: any) {
+      this.showMessage(`Failed to save scene: ${e.message}`, 'error');
+    } finally {
+      this.isSaving = false;
+      this.host.requestUpdate();
+    }
+  }
+
   async deleteScene(scene: Scene): Promise<boolean> {
     try {
       const oldIndex = this.scenes.findIndex(s => s.id === scene.id);

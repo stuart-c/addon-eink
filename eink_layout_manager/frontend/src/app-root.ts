@@ -150,6 +150,29 @@ export class AppRoot extends LitElement {
     }
   }
 
+  private async _requestNavigationConfirmation(): Promise<boolean> {
+    if (!this._isDirty) return true;
+
+    const result = await this._confirmDialog.show({
+      title: 'Unsaved Changes',
+      message: 'You have unsaved changes. What would you like to do?',
+      buttons: [
+        { text: 'Save', value: 'save', type: 'primary' },
+        { text: 'Discard', value: 'discard', type: 'danger' },
+        { text: 'Cancel', value: 'cancel', type: 'secondary' }
+      ]
+    });
+
+    if (result === 'save') {
+      await this._handleSave();
+      return true;
+    } else if (result === 'discard') {
+      await this._activeViewComponent?.discard();
+      return true;
+    }
+    return false;
+  }
+
   private async _onDeleteLayoutItem(e: CustomEvent<{ id: string }>) {
     const item = this.state.activeLayout?.items.find(i => i.id === e.detail.id);
     const dt = this.state.displayTypes.find(t => t.id === item?.display_type_id);
@@ -187,7 +210,11 @@ export class AppRoot extends LitElement {
         @delete-item="${this._onHeaderDeleteItem}"
         @add-item="${this._onHeaderAddItem}"
         @toggle-view-mode="${() => this.state.setViewMode(this.state.viewMode === 'graphical' ? 'yaml' : 'graphical')}"
-        @set-section="${(e: CustomEvent) => this.state.setSection(e.detail)}"
+        @set-section="${async (e: CustomEvent) => {
+          if (await this._requestNavigationConfirmation()) {
+            this.state.setSection(e.detail);
+          }
+        }}"
       ></app-header>
 
       <main 
@@ -226,7 +253,11 @@ export class AppRoot extends LitElement {
             .viewMode="${this.state.viewMode}"
             .isSaving="${this.state.isSaving}"
             .isAdding="${this.state.isAddingNew}"
-            @switch-layout="${(e: CustomEvent) => this.state.switchLayout(e.detail)}"
+            @switch-layout="${async (e: CustomEvent) => {
+              if (await this._requestNavigationConfirmation()) {
+                this.state.switchLayout(e.detail);
+              }
+            }}"
             @update-active-layout="${(e: CustomEvent) => this.state.updateActiveLayout(e.detail)}"
             @update-item="${(e: CustomEvent) => this.state.updateItem(e.detail.id, e.detail.updates)}"
             @select-item="${(e: CustomEvent) => this.state.selectItem(e.detail.id)}"
@@ -281,8 +312,10 @@ export class AppRoot extends LitElement {
             .scenes="${this.state.scenes}"
             .activeScene="${this.state.activeScene}"
             .viewMode="${this.state.viewMode}"
-            @select-scene="${(e: CustomEvent<{ scene: Scene }>) => {
-              this.state.switchScene(e.detail.scene);
+            @select-scene="${async (e: CustomEvent<{ scene: Scene }>) => {
+              if (await this._requestNavigationConfirmation()) {
+                this.state.switchScene(e.detail.scene);
+              }
             }}"
             @delete-scene="${this._onDeleteScene}"
           ></scenes-view>

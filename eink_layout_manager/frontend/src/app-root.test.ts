@@ -44,7 +44,11 @@ describe('AppRoot', () => {
       composed: true
     }));
 
-    await element.updateComplete;
+    // Wait for the async handler to complete
+    await vi.waitFor(() => {
+      const imagesView = element.shadowRoot?.querySelector('images-view');
+      if (!imagesView) throw new Error('images-view not found');
+    });
     
     // Check if images-view is rendered
     const imagesView = element.shadowRoot?.querySelector('images-view');
@@ -78,7 +82,11 @@ describe('AppRoot', () => {
       bubbles: true,
       composed: true
     }));
-    await element.updateComplete;
+    // Wait for the async handler to complete
+    await vi.waitFor(() => {
+      const scenesView = element.shadowRoot?.querySelector('scenes-view');
+      if (!scenesView) throw new Error('scenes-view not found');
+    });
 
     const scenesView = element.shadowRoot?.querySelector('scenes-view');
     expect(scenesView).toBeTruthy();
@@ -93,8 +101,12 @@ describe('AppRoot', () => {
       composed: true
     }));
 
-    // Wait for app-root to update
-    await element.updateComplete;
+    // Wait for the async handler to complete
+    await vi.waitFor(() => {
+      if ((element as any).state.activeScene?.id !== testScene.id) {
+        throw new Error('Scene not switched');
+      }
+    });
     
     // In our refactored state, AppRoot simply calls switchScene on the controller
     expect((element as any).state.activeScene).toEqual(testScene);
