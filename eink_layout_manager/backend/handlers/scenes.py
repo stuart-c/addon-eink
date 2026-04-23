@@ -124,7 +124,8 @@ class SceneHandler(BaseCRUDHandler):
                 for display_id in displays:
                     if display_id not in valid_display_ids:
                         raise ValidationError(
-                            f"Display '{display_id}' not in layout '{layout_id}'"
+                            f"Display '{display_id}' not in "
+                            f"layout '{layout_id}'"
                         )
                     if display_id in seen_display_ids:
                         raise ValidationError(
