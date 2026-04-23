@@ -11,6 +11,10 @@ from backend.background.cleanup import (
     schedule_image_cleanup,
     stop_image_cleanup,
 )
+from backend.background.mqtt import (
+    start_mqtt,
+    stop_mqtt,
+)
 
 
 def init_app():
@@ -30,7 +34,9 @@ def init_app():
 
     app.on_startup.append(on_startup)
     app.on_startup.append(schedule_image_cleanup)
+    app.on_startup.append(start_mqtt)
     app.on_cleanup.append(stop_image_cleanup)
+    app.on_cleanup.append(stop_mqtt)
     app.on_cleanup.append(on_cleanup)
 
     # Data directory setup
