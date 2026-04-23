@@ -216,7 +216,7 @@ export const commonStyles = css`
     letter-spacing: 0.5px;
     vertical-align: middle;
   }
-  .status-badge.active, .status-badge.ready {
+  .status-badge.active, .status-badge.active {
     background: #e8f5e9;
     color: #2e7d32;
   }

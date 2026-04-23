@@ -49,8 +49,8 @@ def test_build_image_filters_basic():
     """Test building basic (mandatory) filters."""
     filters = build_image_filters({})
     assert len(filters) == 1
-    # Check for status == 'READY'
-    assert "status = 'READY'" in str(
+    # Check for status == 'ACTIVE'
+    assert "status = 'ACTIVE'" in str(
         filters[0]
     ) or "images.status = :status_1" in str(filters[0])
 

@@ -414,7 +414,7 @@ async def test_image_list_success(aiohttp_client, app):
     assert upload_resp.status == 201
     image_id = (await upload_resp.json())["id"]
 
-    # 2.5 Manually set status to READY so it appears in filtered list
+    # 2.5 Manually set status to ACTIVE so it appears in filtered list
     from backend import database, models
     from sqlalchemy import update
 
@@ -422,7 +422,7 @@ async def test_image_list_success(aiohttp_client, app):
         await session.execute(
             update(models.Image)
             .where(models.Image.id == image_id)
-            .values(status="READY")
+            .values(status="ACTIVE")
         )
         await session.commit()
 
@@ -475,7 +475,7 @@ async def test_image_list_pagination(aiohttp_client, app):
         assert resp.status == 201
         image_ids.append((await resp.json())["id"])
 
-    # 1.5 Manually set ALL images to READY
+    # 1.5 Manually set ALL images to ACTIVE
     from backend import database, models
     from sqlalchemy import update
 
@@ -483,7 +483,7 @@ async def test_image_list_pagination(aiohttp_client, app):
         await session.execute(
             update(models.Image)
             .where(models.Image.id.in_(image_ids))
-            .values(status="READY")
+            .values(status="ACTIVE")
         )
         await session.commit()
 

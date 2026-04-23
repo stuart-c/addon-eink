@@ -16,7 +16,7 @@ async def sample_images(app):
             width=100,
             height=200,
             file_path="1.png",
-            status="READY",
+            status="ACTIVE",
             file_hash="h1",
         ),
         models.Image(
@@ -28,7 +28,7 @@ async def sample_images(app):
             width=300,
             height=100,
             file_path="2.png",
-            status="READY",
+            status="ACTIVE",
             file_hash="h2",
         ),
         models.Image(
@@ -40,7 +40,7 @@ async def sample_images(app):
             width=200,
             height=300,
             file_path="3.png",
-            status="READY",
+            status="ACTIVE",
             file_hash="h3",
         ),
     ]

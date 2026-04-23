@@ -58,7 +58,7 @@
     "status": {
       "type": "string",
       "description": "Processing status of the image",
-      "enum": ["UPLOADED", "PROCESSING", "READY", "ERROR"],
+      "enum": ["UPLOADED", "PROCESSING", "ACTIVE", "ERROR"],
       "readOnly": true
     },
     "conversion": {

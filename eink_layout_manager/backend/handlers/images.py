@@ -108,7 +108,7 @@ class ImageHandler(BaseCRUDHandler):
                     width=width,
                     height=height,
                     file_path=filename_on_disk,
-                    status="READY",
+                    status="ACTIVE",
                     file_hash=file_hash,
                     thumbnail_path=filename_on_disk,
                     brightness=1.0,
@@ -146,11 +146,11 @@ class ImageHandler(BaseCRUDHandler):
         offset = (page - 1) * limit
 
         filters = build_filters(self.model_class, request.query)
-        # Images MUST be READY unless specified
+        # Images MUST be ACTIVE unless specified
         if not any(
             hasattr(f, "left") and f.left.name == "status" for f in filters
         ):
-            filters.append(models.Image.status == "READY")
+            filters.append(models.Image.status == "ACTIVE")
 
         try:
             async with database.get_session() as session:

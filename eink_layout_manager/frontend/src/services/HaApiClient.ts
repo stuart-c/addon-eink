@@ -81,7 +81,7 @@ export interface Scene {
   id: string;
   name: string;
   layout: string;
-  status?: 'draft' | 'ready';
+  status?: 'draft' | 'active';
   items?: {
     id: string;
     type: 'image' | 'tile';

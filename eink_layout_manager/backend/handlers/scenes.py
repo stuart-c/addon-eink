@@ -51,8 +51,8 @@ class SceneHandler(BaseCRUDHandler):
 
     async def _calculate_scene_status(self, items, layout_id):
         """
-        Calculate if the scene is 'ready' or 'draft'.
-        'ready' if:
+        Calculate if the scene is 'active' or 'draft'.
+        'active' if:
         - items include every display in the layout.
         - each item has at least one image.
         """
@@ -88,7 +88,7 @@ class SceneHandler(BaseCRUDHandler):
                 layout_display_ids == scene_display_ids
                 and len(layout_display_ids) > 0
             ):
-                return "ready"
+                return "active"
 
             return "draft"
 
