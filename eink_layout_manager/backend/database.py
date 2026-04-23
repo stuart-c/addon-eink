@@ -137,6 +137,59 @@ async def ensure_schema_up_to_date(conn):
             )
         )
 
+    if "settings_hash" not in columns:
+        await conn.execute(
+            text("ALTER TABLE images ADD COLUMN settings_hash VARCHAR")
+        )
+
+    # Populate missing settings_hash for existing images
+    result = await conn.execute(
+        text(
+            "SELECT id, conversion, brightness, contrast, saturation, "
+            "file_hash FROM images WHERE settings_hash IS NULL"
+        )
+    )
+    rows = result.fetchall()
+    if rows:
+        import hashlib
+
+        for row in rows:
+            (
+                img_id,
+                conversion_raw,
+                brightness,
+                contrast,
+                saturation,
+                file_hash,
+            ) = row
+
+            # conversion_raw might be a string from sqlite or a dict if
+            # handled by sqlalchemy
+            if isinstance(conversion_raw, str):
+                try:
+                    conversion = json.loads(conversion_raw)
+                except json.JSONDecodeError:
+                    conversion = (
+                        None  # Or handle as needed, but usually it's JSON
+                    )
+            else:
+                conversion = conversion_raw
+
+            settings = {
+                "conversion": conversion,
+                "brightness": brightness,
+                "contrast": contrast,
+                "saturation": saturation,
+            }
+            settings_json = json.dumps(settings, sort_keys=True)
+            combined = settings_json + (file_hash or "")
+            s_hash = hashlib.sha256(combined.encode()).hexdigest()
+
+            await conn.execute(
+                text("UPDATE images SET settings_hash = :h WHERE id = :id"),
+                {"h": s_hash, "id": img_id},
+            )
+
     # Check 'scenes' table for recently added columns
     result = await conn.execute(text("PRAGMA table_info(scenes)"))
     columns = [row[1] for row in result.fetchall()]

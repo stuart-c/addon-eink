@@ -57,6 +57,7 @@ def image_model_to_dict(image):
         "brightness": image.brightness,
         "contrast": image.contrast,
         "saturation": image.saturation,
+        "settings_hash": image.settings_hash,
     }
 
 

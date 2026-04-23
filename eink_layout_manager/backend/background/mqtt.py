@@ -57,9 +57,7 @@ class MQTTManager:
         mqtt_password = os.environ.get("MQTT_PASSWORD")
 
         if not mqtt_host:
-            logger.info(
-                "MQTT_HOST not set. MQTT Manager will not start."
-            )
+            logger.info("MQTT_HOST not set. MQTT Manager will not start.")
             return False
 
         if mqtt_user and mqtt_password:
