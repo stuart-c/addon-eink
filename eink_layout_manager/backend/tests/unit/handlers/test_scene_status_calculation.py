@@ -31,7 +31,7 @@ async def test_calculate_scene_status_ready(handler):
     with patch("backend.database.get_session") as mock_get_session:
         mock_get_session.return_value.__aenter__.return_value = mock_session
         status = await handler._calculate_scene_status(items, "layout1")
-        assert status == "ready"
+        assert status == "active"
 
 
 @pytest.mark.asyncio

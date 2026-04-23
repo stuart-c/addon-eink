@@ -56,7 +56,7 @@ def setup_routes(app):
 
     if os.path.exists(static_dist):
         # Serve index.html at the root
-        async def index(_):
+        async def index(_):  # noqa: U101
             return web.FileResponse(os.path.join(static_dist, "index.html"))
 
         app.router.add_get("/", index)

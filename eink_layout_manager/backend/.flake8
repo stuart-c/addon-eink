@@ -1,7 +1,7 @@
 [flake8]
 max-line-length = 80
 extend-select = B950
-extend-ignore = E203,E501,E701,D,U100
+ignore = E203,E501,E701,D,U100,U101,W503
 inline-quotes = double
 exclude =
     .git,

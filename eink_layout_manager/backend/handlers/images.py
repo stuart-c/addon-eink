@@ -267,7 +267,7 @@ class ImageHandler(BaseCRUDHandler):
 
             return web.FileResponse(file_path)
 
-    async def keywords_get(self, _request):
+    async def keywords_get(self, _request):  # noqa: U101
         """Custom endpoint for keyword list."""
         async with database.get_session() as session:
             stmt = select(models.Image.keywords).where(
