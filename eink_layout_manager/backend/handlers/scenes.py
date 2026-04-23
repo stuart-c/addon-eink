@@ -175,7 +175,9 @@ class SceneHandler(BaseCRUDHandler):
             models.DisplayType.id.in_(type_ids)
         )
         result = await session.execute(stmt)
-        display_types = {dt.id: dt.colour_type for dt in result.scalars().all()}
+        display_types = {
+            dt.id: dt.colour_type for dt in result.scalars().all()
+        }
 
         # 4. Process scene items to find all image/palette pairs
         for item in scene.items:
