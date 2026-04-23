@@ -37,7 +37,7 @@ class ImageHandler(BaseCRUDHandler):
             field = await reader.next()
             if not field or field.name != "file":
                 return web.json_response(
-                    {"error": 'Missing "file" field'}, status=400
+                    {'error': 'Missing "file" field'}, status=400
                 )
             filename = field.filename
             content = await field.read()
@@ -148,7 +148,7 @@ class ImageHandler(BaseCRUDHandler):
         filters = build_filters(self.model_class, request.query)
         # Images MUST be ACTIVE unless specified
         if not any(
-            hasattr(f, "left") and f.left.name == "status" for f in filters
+            hasattr(f, 'left') and f.left.name == 'status' for f in filters
         ):
             filters.append(models.Image.status == "ACTIVE")
 
@@ -267,7 +267,7 @@ class ImageHandler(BaseCRUDHandler):
 
             return web.FileResponse(file_path)
 
-    async def keywords_get(self, request):
+    async def keywords_get(self, _request):
         """Custom endpoint for keyword list."""
         async with database.get_session() as session:
             stmt = select(models.Image.keywords).where(
@@ -299,37 +299,45 @@ image_handler = ImageHandler()
 # Map routes to handler methods
 @response_schema("image")
 async def handle_image_create(request):
+    """Handle image creation via multipart upload."""
     return await image_handler.create(request)
 
 
 @response_schema("image")
 async def handle_image_get(request):
+    """Handle retrieval of image metadata."""
     return await image_handler.get(request)
 
 
 @response_schema("image_list_response")
 async def handle_image_list(request):
+    """Handle retrieval of a list of image metadata."""
     return await image_handler.list(request)
 
 
 async def handle_image_thumbnail_get(request):
+    """Handle retrieval of image thumbnail binary."""
     return await image_handler.thumbnail_get(request)
 
 
 async def handle_image_file_get(request):
+    """Handle retrieval of original image binary."""
     return await image_handler.file_get(request)
 
 
 @response_schema("status_response")
 async def handle_image_delete(request):
+    """Handle image deletion."""
     return await image_handler.delete(request)
 
 
 @response_schema("keyword_list_response")
 async def handle_image_keywords_get(request):
+    """Handle retrieval of all used image keywords."""
     return await image_handler.keywords_get(request)
 
 
 @response_schema("image")
 async def handle_image_update(request):
+    """Handle update of image metadata."""
     return await image_handler.update(request)
