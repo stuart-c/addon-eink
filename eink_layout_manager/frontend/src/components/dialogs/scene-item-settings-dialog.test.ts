@@ -117,8 +117,7 @@ describe('SceneItemSettingsDialog', () => {
     await element.show(mockItem, mockLayout as any, customDisplayTypes as any);
     await element.updateComplete;
 
-    const fitBtn = Array.from(element.shadowRoot?.querySelectorAll('button') || [])
-        .find(b => b.textContent === 'FIT') as HTMLButtonElement;
+    const fitBtn = element.shadowRoot?.querySelector('button[title="Fit to Panel"]') as HTMLButtonElement;
     fitBtn.click();
     await element.updateComplete;
 
@@ -148,8 +147,7 @@ describe('SceneItemSettingsDialog', () => {
     await element.show(mockItem, mockLayout as any, customDisplayTypes as any);
     await element.updateComplete;
 
-    const fillBtn = Array.from(element.shadowRoot?.querySelectorAll('button') || [])
-        .find(b => b.textContent === 'FILL') as HTMLButtonElement;
+    const fillBtn = element.shadowRoot?.querySelector('button[title="Fill Panel"]') as HTMLButtonElement;
     fillBtn.click();
     await element.updateComplete;
 
