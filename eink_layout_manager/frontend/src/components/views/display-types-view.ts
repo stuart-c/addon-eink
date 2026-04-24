@@ -296,7 +296,10 @@ export class DisplayTypesView extends BaseResourceView {
   }
 
   public discard() {
-    this._handleSelect(this.isNew ? null : (this.displayType?.id || null));
+    this.displayType = undefined;
+    this._syncSelection();
+    this._updateDirtyState();
+    this.requestUpdate();
   }
 
   public addNew() {

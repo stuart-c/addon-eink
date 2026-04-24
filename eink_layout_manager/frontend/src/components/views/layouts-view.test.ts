@@ -34,8 +34,15 @@ describe('LayoutsView', () => {
     }
   ];
 
+  const mockState = {
+    saveActiveLayout: vi.fn(),
+    activeLayout: mockLayouts[0],
+    showMessage: vi.fn()
+  };
+
   beforeEach(async () => {
     element = document.createElement('layouts-view') as LayoutsView;
+    element.state = mockState as any;
     element.layouts = mockLayouts;
     element.displayTypes = mockDisplayTypes;
     element.activeLayout = mockLayouts[0];
@@ -80,27 +87,21 @@ describe('LayoutsView', () => {
     }));
   });
 
-  it('should dispatch save-layout when save is called', async () => {
-    const spy = vi.fn();
-    element.addEventListener('save-layout', spy);
-    
+  it('should call state.saveActiveLayout when save is called', async () => {
     await element.save();
-    
-    expect(spy).toHaveBeenCalled();
+    expect(mockState.saveActiveLayout).toHaveBeenCalled();
   });
 
-  it('should dispatch update-active-layout with original data when discard is called', async () => {
+  it('should reset activeLayout from baseline and update state when discard is called', async () => {
     const originalName = mockLayouts[0].name;
+    
+    // Modify current layout (baseline is mockLayouts[0] from beforeEach)
     element.activeLayout = { ...mockLayouts[0], name: 'Modified' };
     await element.updateComplete;
     
-    const spy = vi.fn();
-    element.addEventListener('update-active-layout', spy);
-    
     await element.discard();
     
-    expect(spy).toHaveBeenCalled();
-    expect(spy.mock.calls[0][0].detail).toEqual(expect.objectContaining({ name: originalName }));
+    expect(mockState.activeLayout.name).toEqual(originalName);
   });
 
   it('should dispatch delete-layout when requestDelete is called', async () => {

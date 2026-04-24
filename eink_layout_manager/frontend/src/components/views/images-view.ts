@@ -271,6 +271,14 @@ export class ImagesView extends BaseResourceView {
     }
   }
 
+  get isDirty() {
+    return false;
+  }
+
+  protected firstUpdated() {
+    this.notifyDirty(false);
+  }
+
   public save() {
     // Images are currently saved via dialog-driven upload, no inline saving yet.
   }

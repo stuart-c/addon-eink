@@ -253,21 +253,13 @@ export class AppRoot extends LitElement {
             .viewMode="${this.state.viewMode}"
             .isSaving="${this.state.isSaving}"
             .isAdding="${this.state.isAddingNew}"
-            @switch-layout="${async (e: CustomEvent) => {
-              if (await this._requestNavigationConfirmation()) {
-                this.state.switchLayout(e.detail);
-              }
-            }}"
+            @switch-layout="${(e: CustomEvent) => this.state.switchLayout(e.detail)}"
             @update-active-layout="${(e: CustomEvent) => this.state.updateActiveLayout(e.detail)}"
             @update-item="${(e: CustomEvent) => this.state.updateItem(e.detail.id, e.detail.updates)}"
             @select-item="${(e: CustomEvent) => this.state.selectItem(e.detail.id)}"
             @edit-item="${(e: CustomEvent) => this._itemDialog.show(this.state.activeLayout?.items.find(i => i.id === e.detail.id)!, this.state.displayTypes, this.state.haDevices)}"
             @delete-item="${this._onDeleteLayoutItem}"
             @delete-layout="${this._onDeleteLayout}"
-            @save-layout="${async () => {
-              await this.state.saveActiveLayout();
-              (this.shadowRoot?.querySelector('layouts-view') as any)?.resetBaseline();
-            }}"
             @set-section="${(e: CustomEvent) => this.state.setSection(e.detail)}"
             @prepare-new-layout="${() => this.state.prepareNewLayout()}"
             @delete-display-type="${this._onDeleteDisplayType}"
@@ -312,11 +304,7 @@ export class AppRoot extends LitElement {
             .scenes="${this.state.scenes}"
             .activeScene="${this.state.activeScene}"
             .viewMode="${this.state.viewMode}"
-            @select-scene="${async (e: CustomEvent<{ scene: Scene }>) => {
-              if (await this._requestNavigationConfirmation()) {
-                this.state.switchScene(e.detail.scene);
-              }
-            }}"
+            @select-scene="${(e: CustomEvent<{ scene: Scene }>) => this.state.switchScene(e.detail.scene)}"
             @delete-scene="${this._onDeleteScene}"
           ></scenes-view>
         `;
