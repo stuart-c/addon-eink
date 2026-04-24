@@ -5,6 +5,7 @@ IMAGE="ghcr.io/stuart-c/eink-layout-manager:dev"
 CONTAINER_NAME="eink-layout-manager-dev"
 PORT=8099
 DATA_DIR="$(pwd)/.data"
+SHARE_DIR="$(pwd)/.share"
 
 # Ensure we are in the project root (simple check for eink_layout_manager dir)
 if [ ! -d "eink_layout_manager" ]; then
@@ -43,14 +44,17 @@ echo "🧹 Cleaning up existing container: $CONTAINER_NAME"
 docker rm -f $CONTAINER_NAME 2>/dev/null
 
 echo "📦 Starting container: $CONTAINER_NAME"
-# Ensure data directory exists
+# Ensure data directories exist and are writable
 mkdir -p "$DATA_DIR"
+mkdir -p "$SHARE_DIR"
+chmod 777 "$DATA_DIR" "$SHARE_DIR"
 
 docker run -d \
   --name "$CONTAINER_NAME" \
   -e PYTHONUNBUFFERED=1 \
   -p $PORT:8099 \
   -v "$DATA_DIR:/data" \
+  -v "$SHARE_DIR:/share" \
   $IMAGE
 
 echo "🌐 Opening browser at http://localhost:$PORT"

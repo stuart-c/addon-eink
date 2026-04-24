@@ -149,12 +149,16 @@ jobs:
       - name: Start application container
         run: |
           mkdir -p $(pwd)/test_data
+          mkdir -p $(pwd)/test_share
+          chmod 777 $(pwd)/test_data $(pwd)/test_share
           docker run -d \
             -p 8099:8099 \
             --name test-app \
             -v $(pwd)/test_data:/data \
+            -v $(pwd)/test_share:/share \
             -e INGRESS_PORT=8099 \
             -e DATA_DIR=/data \
+            -e SHARE_DIR=/share \
             eink-layout-manager:test
 
       - name: Set up Node.js
