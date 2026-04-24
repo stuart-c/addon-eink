@@ -67,7 +67,9 @@ async def run_conversion(palette_entry, image_entry, session):
     """Run the conversion utility for a specific image/palette combination."""
     try:
         # 1. Setup paths
-        src_path = image_entry.file_path
+        src_path = os.path.join(
+            get_storage_path("image"), image_entry.file_path
+        )
         palette = palette_entry.palette
         settings_hash = image_entry.settings_hash
 
