@@ -206,7 +206,7 @@ class SceneDisplayImage(Base):
 
     scene_id = Column(String, primary_key=True)
     display_id = Column(String, primary_key=True)
-    image_id = Column(String, nullable=False)
+    image_id = Column(String, primary_key=True)
     image_hash = Column(String, nullable=False)
     scene_hash = Column(String, nullable=False)
     filename = Column(String, nullable=False)

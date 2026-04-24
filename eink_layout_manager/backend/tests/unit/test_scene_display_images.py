@@ -46,6 +46,7 @@ async def test_scene_display_images_crud(db_setup):
         stmt = select(models.SceneDisplayImage).where(
             models.SceneDisplayImage.scene_id == "scene1",
             models.SceneDisplayImage.display_id == "display1",
+            models.SceneDisplayImage.image_id == "image1",
         )
         result = await session.execute(stmt)
         entry = result.scalar_one()
