@@ -712,6 +712,14 @@ export class SceneItemSettingsDialog extends LitElement {
   }
 
   private _fitImage() {
+    this._applyImageFitting('fit');
+  }
+
+  private _fillImage() {
+    this._applyImageFitting('fill');
+  }
+
+  private _applyImageFitting(mode: 'fit' | 'fill') {
     if (!this._selectedImageId || !this.item || !this.item.displays || this.item.displays.length === 0) return;
     const image = this._availableImages.find(i => i.id === this._selectedImageId);
     if (!image) return;
@@ -729,15 +737,23 @@ export class SceneItemSettingsDialog extends LitElement {
     const scaleW = targetWidthPx / image.dimensions.width;
     const scaleH = targetHeightPx / image.dimensions.height;
     
-    this._scalingFactor = Math.floor(Math.min(scaleW, scaleH) * 100);
-    this._offsetX = 0;
-    this._offsetY = 0;
+    if (mode === 'fit') {
+      this._scalingFactor = Math.floor(Math.min(scaleW, scaleH) * 100);
+    } else {
+      this._scalingFactor = Math.ceil(Math.max(scaleW, scaleH) * 100);
+    }
+
+    const scaledWidth = (image.dimensions.width * this._scalingFactor) / 100;
+    const scaledHeight = (image.dimensions.height * this._scalingFactor) / 100;
+
+    this._offsetX = Math.round((targetWidthPx - scaledWidth) / 2);
+    this._offsetY = Math.round((targetHeightPx - scaledHeight) / 2);
 
     // Update the item data
     const img = this.item.images.find((i: any) => i.image_id === this._selectedImageId);
     if (img) {
       img.scaling_factor = this._scalingFactor;
-      img.offset = { x: 0, y: 0 };
+      img.offset = { x: this._offsetX, y: this._offsetY };
     }
     this.requestUpdate();
   }
@@ -898,7 +914,10 @@ export class SceneItemSettingsDialog extends LitElement {
                       >
                       <span class="unit-label">%</span>
                     </div>
-                    <button class="secondary" style="padding: 6px 12px; font-size: 11px;" @click="${this._fitImage}">FIT</button>
+                    <div style="display: flex; gap: 4px;">
+                      <button class="secondary" style="padding: 6px 12px; font-size: 11px; flex: 1;" @click="${this._fitImage}">FIT</button>
+                      <button class="secondary" style="padding: 6px 12px; font-size: 11px; flex: 1;" @click="${this._fillImage}">FILL</button>
+                    </div>
                   </div>
                 </div>
 

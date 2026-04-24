@@ -103,4 +103,66 @@ describe('SceneItemSettingsDialog', () => {
     expect((element as any)._scalingFactor).toBe(150);
     expect(element.item.images[0].scaling_factor).toBe(150);
   });
+
+  it('fits image correctly and centers it', async () => {
+    const customDisplayTypes = [{ 
+      id: 'dt1', 
+      name: 'Custom', 
+      width_px: 1000, height_px: 500,
+      width_mm: 100, height_mm: 50,
+      panel_width_mm: 100, panel_height_mm: 50,
+      colour_type: 'BW'
+    }];
+    
+    await element.show(mockItem, mockLayout as any, customDisplayTypes as any);
+    await element.updateComplete;
+
+    const fitBtn = Array.from(element.shadowRoot?.querySelectorAll('button') || [])
+        .find(b => b.textContent === 'FIT') as HTMLButtonElement;
+    fitBtn.click();
+    await element.updateComplete;
+
+    // Panel is 1000x500px
+    // Image is 100x100px (from mock)
+    // scaleW = 1000/100 = 10, scaleH = 500/100 = 5
+    // Fit should take min scale = 5 -> 500%
+    // Scaled size: 500x500
+    // offsetX = (1000 - 500) / 2 = 250
+    // offsetY = (500 - 500) / 2 = 0
+    
+    expect((element as any)._scalingFactor).toBe(500);
+    expect((element as any)._offsetX).toBe(250);
+    expect((element as any)._offsetY).toBe(0);
+  });
+
+  it('fills image correctly and centers it', async () => {
+    const customDisplayTypes = [{ 
+      id: 'dt1', 
+      name: 'Custom', 
+      width_px: 1000, height_px: 500,
+      width_mm: 100, height_mm: 50,
+      panel_width_mm: 100, panel_height_mm: 50,
+      colour_type: 'BW'
+    }];
+    
+    await element.show(mockItem, mockLayout as any, customDisplayTypes as any);
+    await element.updateComplete;
+
+    const fillBtn = Array.from(element.shadowRoot?.querySelectorAll('button') || [])
+        .find(b => b.textContent === 'FILL') as HTMLButtonElement;
+    fillBtn.click();
+    await element.updateComplete;
+
+    // Panel is 1000x500px
+    // Image is 100x100px
+    // scaleW = 10, scaleH = 5
+    // Fill should take max scale = 10 -> 1000%
+    // Scaled size: 1000x1000
+    // offsetX = (1000 - 1000) / 2 = 0
+    // offsetY = (500 - 1000) / 2 = -250
+    
+    expect((element as any)._scalingFactor).toBe(1000);
+    expect((element as any)._offsetX).toBe(0);
+    expect((element as any)._offsetY).toBe(-250);
+  });
 });
