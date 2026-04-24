@@ -20,7 +20,7 @@ async def db_setup(tmp_path):
 
 @pytest.mark.asyncio
 async def test_scene_processor_identifies_work(db_setup, tmp_path):
-    """Test that scene_processor identifies an active scene and calls the converter."""
+    """Test that scene_processor identifies an active scene."""
 
     async with database.get_session() as session:
         # 1. Setup Display Type
