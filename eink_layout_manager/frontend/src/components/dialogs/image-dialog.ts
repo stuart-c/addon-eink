@@ -9,7 +9,7 @@ import {
   ditherImage, 
   suggestCanvasProcessingOptions,
   getDefaultPalettes 
-} from '../../lib/epdoptimize/index';
+} from 'epdoptimize';
 
 /**
  * A dialog component for adding and processing new images.

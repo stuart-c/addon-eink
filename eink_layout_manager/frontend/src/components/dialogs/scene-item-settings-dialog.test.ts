@@ -20,7 +20,7 @@ vi.mock('../../services/HaApiClient', async () => {
     };
 });
 
-vi.mock('../../lib/epdoptimize/index', () => ({
+vi.mock('epdoptimize', () => ({
     ditherImage: vi.fn().mockResolvedValue(undefined),
     getDefaultPalettes: vi.fn().mockReturnValue(['#000', '#fff'])
 }));

@@ -23,6 +23,6 @@
     }
   },
   "include": ["src/**/*.ts", "src/**/*.js"],
-  "exclude": ["src/lib/epdoptimize/**/*"],
+  "exclude": [],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
