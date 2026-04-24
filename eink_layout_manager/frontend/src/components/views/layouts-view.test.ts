@@ -94,14 +94,9 @@ describe('LayoutsView', () => {
 
   it('should reset activeLayout from baseline and update state when discard is called', async () => {
     const originalName = mockLayouts[0].name;
+    
+    // Modify current layout (baseline is mockLayouts[0] from beforeEach)
     element.activeLayout = { ...mockLayouts[0], name: 'Modified' };
-    await element.updateComplete;
-    
-    // Set baseline by forcing resetBaseline
-    element.resetBaseline();
-    
-    // Modify again
-    element.activeLayout = { ...mockLayouts[0], name: 'Modified Again' };
     await element.updateComplete;
     
     await element.discard();
