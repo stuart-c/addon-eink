@@ -135,6 +135,7 @@ export class LayoutBox extends LitElement {
   @property({ type: Boolean, reflect: true }) invalid = false;
   @property({ type: Boolean, reflect: true }) used = false;
   @property({ type: Boolean, reflect: true }) readOnly = false;
+  @property({ type: Boolean }) hideNumber = false;
   
   // Hardware details
   @property({ type: Number }) border_width_mm = 0;
@@ -181,9 +182,11 @@ export class LayoutBox extends LitElement {
           .previewTotalSize="${this.previewTotalSize}"
         ></hardware-preview>
 
-        <div class="item-number">
-          ${this.itemIndex}
-        </div>
+        ${!this.hideNumber ? html`
+          <div class="item-number">
+            ${this.itemIndex}
+          </div>
+        ` : ''}
 
         <div class="label">
           ${this.name} ${this.invalid ? '(Overlap!)' : ''}

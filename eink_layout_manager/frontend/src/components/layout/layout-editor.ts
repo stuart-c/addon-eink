@@ -16,6 +16,8 @@ export class LayoutEditor extends LitElement {
       display: block;
       width: 100%;
       height: 100%;
+      min-width: 0;
+      min-height: 0;
       background-color: var(--bg-light);
       overflow: auto;
       box-sizing: border-box;
@@ -90,6 +92,7 @@ export class LayoutEditor extends LitElement {
   @property({ type: Array }) usedIds: string[] = [];
   @property({ type: Boolean, reflect: true }) readOnly = false;
   @property({ type: Boolean, reflect: true }) noPadding = false;
+  @property({ type: Boolean }) hideNumber = false;
   
   // Preview properties
   @property({ type: Object }) previewImage: HTMLCanvasElement | string | null = null;
@@ -413,8 +416,9 @@ export class LayoutEditor extends LitElement {
                     ?selected="${this.selectedIds.includes(item.id)}"
                     ?highlighted="${this.highlightedIds.includes(item.id)}"
                     ?invalid="${item.invalid}"
-                    ?used="${this.usedIds.includes(item.id)}"
+                    .used="${this.usedIds.includes(item.id)}"
                     .readOnly="${this.readOnly}"
+                    .hideNumber="${this.hideNumber}"
                     .previewImage="${this.previewImage}"
                     .previewOffset="${{ x: item.x_mm, y: item.y_mm }}"
                     .previewTotalSize="${this.previewTotalSize}"
