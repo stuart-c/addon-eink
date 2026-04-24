@@ -114,7 +114,9 @@ async def test_scene_processor_identifies_work(db_setup, tmp_path):
             
             # Verify DB was updated
             async with database.get_session() as session:
-                stmt = select(models.SceneDisplayImage).where(models.SceneDisplayImage.scene_id == "scene1")
+                stmt = select(models.SceneDisplayImage).where(
+                    models.SceneDisplayImage.scene_id == "scene1"
+                )
                 result = await session.execute(stmt)
                 records = result.scalars().all()
                 assert len(records) == 2

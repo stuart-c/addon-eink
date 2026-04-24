@@ -77,9 +77,11 @@ async def process_scene(scene, session):
             item_panels = []
             for d_id in displays_in_item:
                 l_item = layout_items.get(d_id)
-                if not l_item: continue
+                if not l_item:
+                    continue
                 dt = display_types.get(l_item["display_type_id"])
-                if not dt: continue
+                if not dt:
+                    continue
                 
                 is_portrait = l_item.get("orientation") == "portrait"
                 frame_w = dt.height_mm if is_portrait else dt.width_mm
@@ -99,7 +101,8 @@ async def process_scene(scene, session):
                     "dt": dt
                 })
             
-            if not item_panels: continue
+            if not item_panels:
+                continue
             
             min_x = min(p["x"] for p in item_panels)
             min_y = min(p["y"] for p in item_panels)
@@ -113,7 +116,9 @@ async def process_scene(scene, session):
                 image_id = image_meta["image_id"]
                 
                 # Get Image record
-                stmt = select(models.Image).where(models.Image.id == image_id)
+                stmt = select(models.Image).where(
+                    models.Image.id == image_id
+                )
                 result = await session.execute(stmt)
                 image_record = result.scalar_one_or_none()
                 if not image_record:

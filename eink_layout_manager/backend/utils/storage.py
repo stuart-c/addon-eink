@@ -23,7 +23,8 @@ def get_storage_path(resource_type):
     real_path = os.path.realpath(path)
 
     # Security: Canonical path validation (only if base exists)
-    if os.path.exists(data_root_canonical) and not real_path.startswith(data_root_canonical):
+    if (os.path.exists(data_root_canonical) and 
+            not real_path.startswith(data_root_canonical)):
         raise ValueError(f"Invalid storage path (traversal): {path}")
 
     os.makedirs(real_path, exist_ok=True)
