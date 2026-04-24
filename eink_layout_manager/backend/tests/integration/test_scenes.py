@@ -118,6 +118,82 @@ async def test_create_scene_with_items(aiohttp_client, app):
 
 
 @pytest.mark.asyncio
+async def test_create_scene_with_background_color(aiohttp_client, app):
+    """Test creating a scene with an optional background color."""
+    client = await aiohttp_client(app)
+
+    # Pre-requisite: Create the layout
+    layout_data = {
+        "name": "Color Layout",
+        "canvas_width_mm": 500,
+        "canvas_height_mm": 500,
+        "items": [
+            {
+                "id": "display-1",
+                "display_type_id": "epd_2in13",
+                "x_mm": 0,
+                "y_mm": 0,
+                "orientation": "landscape",
+            }
+        ],
+    }
+    resp = await client.post("/api/layout", json=layout_data)
+    assert resp.status == 201
+    layout_id = (await resp.json())["id"]
+
+    scene_data = {
+        "name": "Color Scene",
+        "layout": layout_id,
+        "items": [
+            {
+                "id": "comp-1",
+                "type": "image",
+                "displays": ["display-1"],
+                "images": [
+                    {
+                        "image_id": "img-123",
+                        "scaling_factor": 1.0,
+                        "offset": {"x": 0, "y": 0},
+                        "background_color": "#FF5733",
+                    }
+                ],
+            }
+        ],
+    }
+
+    resp = await client.post("/api/scene", json=scene_data)
+    assert resp.status == 201
+
+    result = await resp.json()
+    assert result["items"][0]["images"][0]["background_color"] == "#FF5733"
+
+    # Also test that it's optional
+    scene_data_no_color = {
+        "name": "No Color Scene",
+        "layout": layout_id,
+        "items": [
+            {
+                "id": "comp-1",
+                "type": "image",
+                "displays": ["display-1"],
+                "images": [
+                    {
+                        "image_id": "img-123",
+                        "scaling_factor": 1.0,
+                        "offset": {"x": 0, "y": 0},
+                    }
+                ],
+            }
+        ],
+    }
+
+    resp = await client.post("/api/scene", json=scene_data_no_color)
+    assert resp.status == 201
+    result = await resp.json()
+    assert "background_color" not in result["items"][0]["images"][0]
+
+
+@pytest.mark.asyncio
 async def test_delete_scene(aiohttp_client, app):
     """Test scene deletion."""
     client = await aiohttp_client(app)

@@ -200,3 +200,53 @@ async def test_update_scene_validation(aiohttp_client, app):
     assert resp.status == 400
     result = await resp.json()
     assert "mentioned more than once" in result.get("message", "").lower()
+
+
+@pytest.mark.asyncio
+async def test_create_scene_invalid_color(aiohttp_client, app):
+    """Test that invalid hex colors are rejected."""
+    client = await aiohttp_client(app)
+
+    # 1. Create a layout
+    layout_data = {
+        "name": "Validation Layout",
+        "canvas_width_mm": 500,
+        "canvas_height_mm": 500,
+        "items": [
+            {
+                "id": "display-1",
+                "display_type_id": "epd_2in13",
+                "x_mm": 0,
+                "y_mm": 0,
+                "orientation": "landscape",
+            }
+        ],
+    }
+    resp = await client.post("/api/layout", json=layout_data)
+    assert resp.status == 201
+    layout_id = (await resp.json())["id"]
+
+    # 2. Try to create a scene with an invalid hex color
+    scene_data = {
+        "name": "Invalid Color Scene",
+        "layout": layout_id,
+        "items": [
+            {
+                "id": "item-1",
+                "type": "image",
+                "displays": ["display-1"],
+                "images": [
+                    {
+                        "image_id": "img-1",
+                        "scaling_factor": 1.0,
+                        "offset": {"x": 0, "y": 0},
+                        "background_color": "not-a-color",
+                    }
+                ],
+            }
+        ],
+    }
+    resp = await client.post("/api/scene", json=scene_data)
+    assert resp.status == 400
+    result = await resp.json()
+    assert "Validation failed" in result["error"]
