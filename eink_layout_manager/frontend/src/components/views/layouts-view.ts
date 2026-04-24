@@ -286,14 +286,16 @@ export class LayoutsView extends BaseResourceView {
   }
 
   public async save() {
-    this.dispatchEvent(new CustomEvent('save-layout'));
+    if (!this.activeLayout) return;
+    await this.state.saveActiveLayout();
+    this.resetBaseline();
   }
 
   public async discard() {
     if (this._originalLayoutJson) {
-      const original = JSON.parse(this._originalLayoutJson);
-      this.dispatchEvent(new CustomEvent('update-active-layout', { detail: original }));
-      this.notifyDirty(false);
+      this.state.activeLayout = JSON.parse(this._originalLayoutJson);
+      this.resetBaseline();
+      this.requestUpdate();
     }
   }
 
@@ -313,6 +315,41 @@ export class LayoutsView extends BaseResourceView {
   public async requestDelete() {
     if (!this.activeLayout) return;
     this.dispatchEvent(new CustomEvent('delete-layout', { detail: { layout: this.activeLayout } }));
+  }
+
+  private async _handleSelect(id: string) {
+    if (this.activeLayout?.id === id) return;
+
+    const performSwitch = () => {
+      const layout = this.layouts.find(l => l.id === id);
+      if (!layout) return;
+      this.dispatchEvent(new CustomEvent('switch-layout', { detail: layout }));
+    };
+
+    if (this.isDirty) {
+      this._requestConfirmation(
+        {
+          title: 'Unsaved Changes',
+          message: `You have unsaved changes to "${this.activeLayout?.name}". What would you like to do?`,
+          buttons: [
+            { text: 'Save', value: 'save', type: 'primary' },
+            { text: 'Discard', value: 'discard', type: 'danger' },
+            { text: 'Cancel', value: 'cancel', type: 'secondary' }
+          ]
+        },
+        async (choice: string) => {
+          if (choice === 'save') {
+             await this.save();
+             performSwitch();
+          } else if (choice === 'discard') {
+             await this.discard();
+             performSwitch();
+          }
+        }
+      );
+    } else {
+      performSwitch();
+    }
   }
 
   private _onAddItemToLayout(dt: DisplayType) {
@@ -353,7 +390,7 @@ export class LayoutsView extends BaseResourceView {
           <sidebar-list
             .items="${listItems}"
             .selectedId="${this.activeLayout?.id || null}"
-            @select="${(e: CustomEvent) => this.dispatchEvent(new CustomEvent('switch-layout', { detail: this.layouts.find(l => l.id === e.detail.item.id) }))}"
+            @select="${(e: CustomEvent) => this._handleSelect(e.detail.item.id)}"
           ></sidebar-list>
         </div>
 
