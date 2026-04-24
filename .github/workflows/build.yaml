@@ -46,10 +46,10 @@ jobs:
       matrix:
         include:
           - arch: amd64
-            build_from: ghcr.io/home-assistant/amd64-base-python:3.12-alpine3.19
+            build_from: ghcr.io/home-assistant/amd64-base-python:3.13-alpine3.23
             runs_on: ubuntu-latest
           - arch: aarch64
-            build_from: ghcr.io/home-assistant/aarch64-base-python:3.12-alpine3.19
+            build_from: ghcr.io/home-assistant/aarch64-base-python:3.13-alpine3.23
             runs_on: ubuntu-24.04-arm
     steps:
       - name: Checkout

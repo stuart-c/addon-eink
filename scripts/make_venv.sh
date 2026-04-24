@@ -14,9 +14,9 @@ source "$VENV_PATH/bin/activate"
 echo "--- Installing Nodeenv ---"
 pip install -q nodeenv
 
-echo "--- Initialising Nodeenv (Node 24.14.1) ---"
+echo "--- Initialising Nodeenv (Node 24.15.0) ---"
 if [ ! -f "$VENV_PATH/bin/node" ]; then
-    nodeenv -p --node=24.14.1
+    nodeenv -p --node=24.15.0
 else
     echo "Nodeenv already initialised."
 fi
