@@ -1,7 +1,7 @@
 import os
 import json
 import pytest
-from unittest.mock import patch, AsyncMock, MagicMock
+from unittest.mock import patch, AsyncMock
 from sqlalchemy import select
 from backend import database, models
 from backend.background.scene_processor import check_for_scene_work

@@ -187,8 +187,8 @@ async def process_slice(
 
         # Need to run conversion
         logger.info(
-            f'Generating slice for Scene {scene_id}, '
-            f'Display {display_id}, Image {image_id}'
+            f"Generating slice for Scene {scene_id}, "
+            f"Display {display_id}, Image {image_id}"
         )
 
         # Calculate offsets
@@ -276,7 +276,7 @@ async def process_slice(
 
     except Exception as e:
         logger.exception(
-            f'Failed to process slice for '
+            f"Failed to process slice for "
             f"{scene.id}/{panel['id']}/{image_record.id}: {str(e)}"
         )
 
