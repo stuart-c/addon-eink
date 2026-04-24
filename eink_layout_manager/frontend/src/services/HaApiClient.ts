@@ -90,6 +90,7 @@ export interface Scene {
       image_id: string;
       scaling_factor: number;
       offset: { x: number; y: number };
+      background_color?: string;
     }[];
   }[];
 }

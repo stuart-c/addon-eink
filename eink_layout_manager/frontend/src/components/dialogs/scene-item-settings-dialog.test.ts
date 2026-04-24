@@ -41,7 +41,7 @@ describe('SceneItemSettingsDialog', () => {
   const mockItem = {
     id: 'si1',
     displays: ['d1'],
-    images: [{ image_id: 'img1', scaling_factor: 100, offset: { x: 0, y: 0 } }]
+    images: [{ image_id: 'img1', scaling_factor: 100, offset: { x: 0, y: 0 }, background_color: '#ffffff' }]
   };
 
   beforeEach(async () => {
@@ -164,5 +164,32 @@ describe('SceneItemSettingsDialog', () => {
     expect((element as any)._scalingFactor).toBe(1000);
     expect((element as any)._offsetX).toBe(0);
     expect((element as any)._offsetY).toBe(-250);
+  });
+
+  it('updates background color', async () => {
+    await element.show(mockItem, mockLayout as any, mockDisplayTypes as any);
+    await element.updateComplete;
+
+    // Check default color
+    expect((element as any)._backgroundColor).toBe('#ffffff');
+
+    // Click Black swatch
+    const blackBtn = element.shadowRoot?.querySelector('button[title="Black"]') as HTMLButtonElement;
+    expect(blackBtn).toBeTruthy();
+    blackBtn.click();
+    await element.updateComplete;
+
+    expect((element as any)._backgroundColor).toBe('#000000');
+    expect((mockItem.images[0] as any).background_color).toBe('#000000');
+
+    // Use custom color picker
+    const colorInput = element.shadowRoot?.querySelector('input[type="color"]') as HTMLInputElement;
+    expect(colorInput).toBeTruthy();
+    colorInput.value = '#ff0000';
+    colorInput.dispatchEvent(new Event('input'));
+    await element.updateComplete;
+
+    expect((element as any)._backgroundColor).toBe('#ff0000');
+    expect((mockItem.images[0] as any).background_color).toBe('#ff0000');
   });
 });

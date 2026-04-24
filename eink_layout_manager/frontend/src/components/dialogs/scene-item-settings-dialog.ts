@@ -368,6 +368,54 @@ export class SceneItemSettingsDialog extends LitElement {
         background: #fff5f5;
         color: var(--danger-colour);
       }
+
+      .color-selector {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 4px;
+      }
+
+      .color-swatch {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 2px solid #ddd;
+        cursor: pointer;
+        transition: all 0.2s;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      .color-swatch:hover {
+        transform: scale(1.1);
+        border-color: var(--primary-colour);
+      }
+
+      .color-swatch.selected {
+        border-color: var(--primary-colour);
+        box-shadow: 0 0 0 2px rgba(3, 169, 244, 0.2);
+      }
+
+      .custom-color-input {
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        border: 2px solid #ddd;
+        border-radius: 50%;
+        cursor: pointer;
+        overflow: hidden;
+        background: transparent;
+      }
+
+      .custom-color-input::-webkit-color-swatch-wrapper {
+        padding: 0;
+      }
+
+      .custom-color-input::-webkit-color-swatch {
+        border: none;
+        border-radius: 50%;
+      }
     `
   ];
 
@@ -376,6 +424,7 @@ export class SceneItemSettingsDialog extends LitElement {
   @state() private _scalingFactor = 100;
   @state() private _offsetX = 0;
   @state() private _offsetY = 0;
+  @state() private _backgroundColor = '#ffffff';
   @state() private _layout: Layout | null = null;
   @state() private _displayTypes: DisplayType[] = [];
   @state() private _isAddingImage = false;
@@ -405,8 +454,10 @@ export class SceneItemSettingsDialog extends LitElement {
       this._scalingFactor = item.images[0].scaling_factor || 100;
       this._offsetX = item.images[0].offset?.x || 0;
       this._offsetY = item.images[0].offset?.y || 0;
+      this._backgroundColor = item.images[0].background_color || '#ffffff';
     } else {
       this._selectedImageId = null;
+      this._backgroundColor = '#ffffff';
     }
     await this.updateComplete;
     (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).show();
@@ -454,8 +505,8 @@ export class SceneItemSettingsDialog extends LitElement {
     const ctx = tempCanvas.getContext('2d');
     if (!ctx) return;
 
-    // Draw background (white)
-    ctx.fillStyle = '#ffffff';
+    // Draw background
+    ctx.fillStyle = this._backgroundColor;
     ctx.fillRect(0, 0, canvasWidthPx, canvasHeightPx);
 
     // Apply adjustments if present in image metadata
@@ -560,7 +611,8 @@ export class SceneItemSettingsDialog extends LitElement {
     const newImage = {
       image_id: image.id,
       scaling_factor: 100,
-      offset: { x: 0, y: 0 }
+      offset: { x: 0, y: 0 },
+      background_color: '#ffffff'
     };
     
     this.item.images = [...this.item.images, newImage];
@@ -581,7 +633,8 @@ export class SceneItemSettingsDialog extends LitElement {
       changedProperties.has('_selectedImageId') || 
       changedProperties.has('_scalingFactor') || 
       changedProperties.has('_offsetX') || 
-      changedProperties.has('_offsetY')
+      changedProperties.has('_offsetY') ||
+      changedProperties.has('_backgroundColor')
     ) {
       this._triggerUpdate();
     }
@@ -601,6 +654,17 @@ export class SceneItemSettingsDialog extends LitElement {
       if (img) {
         img.offset.x = this._offsetX;
         img.offset.y = this._offsetY;
+      }
+    }
+    this.requestUpdate();
+  }
+
+  private _updateBackgroundColor(color: string) {
+    this._backgroundColor = color;
+    if (this._selectedImageId) {
+      const img = this.item.images.find((i: any) => i.image_id === this._selectedImageId);
+      if (img) {
+        img.background_color = color;
       }
     }
     this.requestUpdate();
@@ -780,6 +844,7 @@ export class SceneItemSettingsDialog extends LitElement {
                       this._scalingFactor = img.scaling_factor;
                       this._offsetX = img.offset.x;
                       this._offsetY = img.offset.y;
+                      this._backgroundColor = img.background_color || '#ffffff';
                     }}"
                   >
                     <div class="image-thumbnail">
@@ -961,7 +1026,6 @@ export class SceneItemSettingsDialog extends LitElement {
                       <span class="unit-label">px</span>
                     </div>
                   </div>
-
                   <!-- D-Pad -->
                   <div class="dpad">
                     <button class="dpad-btn up" title="Move Up" @click="${() => this._moveImage(0, -10)}"><span class="material-icons">keyboard_arrow_up</span></button>
@@ -969,6 +1033,35 @@ export class SceneItemSettingsDialog extends LitElement {
                     <button class="dpad-btn reset" title="Reset Offset" @click="${() => this._moveImage(0, 0, true)}"><span class="material-icons">restart_alt</span></button>
                     <button class="dpad-btn right" title="Move Right" @click="${() => this._moveImage(10, 0)}"><span class="material-icons">keyboard_arrow_right</span></button>
                     <button class="dpad-btn down" title="Move Down" @click="${() => this._moveImage(0, 10)}"><span class="material-icons">keyboard_arrow_down</span></button>
+                  </div>
+                </div>
+
+                <!-- Background Color -->
+                <div class="controls-group">
+                  <div class="controls-group-title">
+                    <span class="material-icons">palette</span>
+                    Background Color
+                  </div>
+                  <div class="color-selector">
+                    <button 
+                      class="color-swatch ${this._backgroundColor.toLowerCase() === '#ffffff' ? 'selected' : ''}" 
+                      style="background: #ffffff;"
+                      title="White"
+                      @click="${() => this._updateBackgroundColor('#ffffff')}"
+                    ></button>
+                    <button 
+                      class="color-swatch ${this._backgroundColor.toLowerCase() === '#000000' ? 'selected' : ''}" 
+                      style="background: #000000;"
+                      title="Black"
+                      @click="${() => this._updateBackgroundColor('#000000')}"
+                    ></button>
+                    <input 
+                      type="color" 
+                      class="custom-color-input" 
+                      .value="${this._backgroundColor}"
+                      @input="${(e: any) => this._updateBackgroundColor(e.target.value)}"
+                      title="Custom Color"
+                    >
                   </div>
                 </div>
               </div>
