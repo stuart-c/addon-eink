@@ -6,14 +6,16 @@ from backend.background.image_processor import check_for_work
 
 
 @pytest.fixture
-def test_image(tmp_path):
+def test_image(app):
     """Create a small valid PNG for testing."""
     from PIL import Image
+    from backend.utils.storage import get_storage_path
 
-    img_path = tmp_path / "test.png"
+    filename = "test.png"
+    img_path = os.path.join(get_storage_path("image"), filename)
     img = Image.new("RGB", (10, 10), color="red")
     img.save(img_path)
-    return str(img_path)
+    return filename
 
 
 @pytest.mark.asyncio
