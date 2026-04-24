@@ -72,6 +72,9 @@
                     "y": { "type": "number" }
                   },
                   "required": ["x", "y"]
+                },
+                "background_color": {
+                  "$ref": "common.json#/definitions/hex_color"
                 }
               },
               "required": ["image_id", "scaling_factor", "offset"]
