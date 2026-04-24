@@ -44,9 +44,10 @@ echo "🧹 Cleaning up existing container: $CONTAINER_NAME"
 docker rm -f $CONTAINER_NAME 2>/dev/null
 
 echo "📦 Starting container: $CONTAINER_NAME"
-# Ensure data directories exist
+# Ensure data directories exist and are writable
 mkdir -p "$DATA_DIR"
 mkdir -p "$SHARE_DIR"
+chmod 777 "$DATA_DIR" "$SHARE_DIR"
 
 docker run -d \
   --name "$CONTAINER_NAME" \

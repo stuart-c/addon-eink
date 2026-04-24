@@ -150,6 +150,7 @@ jobs:
         run: |
           mkdir -p $(pwd)/test_data
           mkdir -p $(pwd)/test_share
+          chmod 777 $(pwd)/test_data $(pwd)/test_share
           docker run -d \
             -p 8099:8099 \
             --name test-app \
