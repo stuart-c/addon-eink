@@ -199,3 +199,18 @@ class ImagePalette(Base):
     updated_at = Column(
         DateTime, server_default=func.now(), onupdate=func.now()
     )
+
+
+class SceneDisplayImage(Base):
+    __tablename__ = "scene_display_images"
+
+    scene_id = Column(String, primary_key=True)
+    display_id = Column(String, primary_key=True)
+    image_id = Column(String, nullable=False)
+    image_hash = Column(String, nullable=False)
+    scene_hash = Column(String, nullable=False)
+    filename = Column(String, nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(
+        DateTime, server_default=func.now(), onupdate=func.now()
+    )
