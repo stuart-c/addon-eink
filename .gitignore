@@ -234,7 +234,8 @@ server.pid
 eink_layout_manager/e2e/playwright-report/
 eink_layout_manager/e2e/test-results/
 eink_layout_manager/frontend/dist/
-eink_layout_manager/frontend/.npm-cache
+eink_layout_manager/frontend/.npm-cache/
+.npm-local/
 .npm-cache/
 node-env/
 .gh_token
