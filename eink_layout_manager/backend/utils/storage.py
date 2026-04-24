@@ -13,7 +13,7 @@ def get_storage_path(resource_type):
         raise ValueError(f"Invalid resource type: {resource_type}")
 
     if resource_type == "scene_display":
-        data_dir = "/share/eink_layout_manager"
+        data_dir = os.environ.get("SHARE_DIR", "/share/eink_layout_manager")
     else:
         data_dir = os.environ.get("DATA_DIR", "/data")
 
