@@ -16,15 +16,18 @@ def get_storage_path(resource_type):
         data_dir = "/share/eink_layout_manager"
     else:
         data_dir = os.environ.get("DATA_DIR", "/data")
-    
-    data_root_canonical = os.path.realpath(data_dir) if os.path.exists(data_dir) else data_dir
+
+    data_root_canonical = (
+        os.path.realpath(data_dir) if os.path.exists(data_dir) else data_dir
+    )
 
     path = os.path.join(data_dir, resource_type)
     real_path = os.path.realpath(path)
 
     # Security: Canonical path validation (only if base exists)
-    if (os.path.exists(data_root_canonical) and 
-            not real_path.startswith(data_root_canonical)):
+    if os.path.exists(data_root_canonical) and not real_path.startswith(
+        data_root_canonical
+    ):
         raise ValueError(f"Invalid storage path (traversal): {path}")
 
     os.makedirs(real_path, exist_ok=True)
