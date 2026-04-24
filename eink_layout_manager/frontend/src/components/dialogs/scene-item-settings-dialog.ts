@@ -276,6 +276,31 @@ export class SceneItemSettingsDialog extends LitElement {
         font-size: 12px;
         color: var(--text-muted);
         font-weight: 500;
+        flex-shrink: 0;
+      }
+
+      .offset-grid {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 1rem;
+        align-items: center;
+      }
+
+      .narrow-input {
+        width: 80px !important;
+        flex: none !important;
+      }
+
+      .scaling-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+      }
+
+      .scaling-icons {
+        display: flex;
+        gap: 4px;
       }
 
       .input-with-unit {
@@ -421,7 +446,7 @@ export class SceneItemSettingsDialog extends LitElement {
 
   @property({ type: Object }) item: any = null;
   @state() private _selectedImageId: string | null = null;
-  @state() private _scalingFactor = 100;
+  @state() private _scalingFactor = 100.0;
   @state() private _offsetX = 0;
   @state() private _offsetY = 0;
   @state() private _backgroundColor = '#ffffff';
@@ -621,8 +646,8 @@ export class SceneItemSettingsDialog extends LitElement {
     this._offsetX = 0;
     this._offsetY = 0;
     
-    // Automatically fit new image
-    this._fitImage();
+    // Automatically fill new image
+    this._fillImage();
 
     this._isAddingImage = false;
     this.requestUpdate();
@@ -802,9 +827,9 @@ export class SceneItemSettingsDialog extends LitElement {
     const scaleH = targetHeightPx / image.dimensions.height;
     
     if (mode === 'fit') {
-      this._scalingFactor = Math.floor(Math.min(scaleW, scaleH) * 100);
+      this._scalingFactor = parseFloat((Math.min(scaleW, scaleH) * 100).toFixed(1));
     } else {
-      this._scalingFactor = Math.ceil(Math.max(scaleW, scaleH) * 100);
+      this._scalingFactor = parseFloat((Math.max(scaleW, scaleH) * 100).toFixed(1));
     }
 
     const scaledWidth = (image.dimensions.width * this._scalingFactor) / 100;
@@ -945,17 +970,30 @@ export class SceneItemSettingsDialog extends LitElement {
                 <!-- Scaling -->
                 <div class="controls-group">
                   <div class="controls-group-title">
-                    <span class="material-icons">aspect_ratio</span>
-                    Scaling Factor
+                    <div class="scaling-header">
+                      <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="material-icons">aspect_ratio</span>
+                        Scaling Factor
+                      </div>
+                      <div class="scaling-icons">
+                        <button class="icon-button" title="Fit to Panel" @click="${this._fitImage}">
+                          <span class="material-icons">fit_screen</span>
+                        </button>
+                        <button class="icon-button" title="Fill Panel" @click="${this._fillImage}">
+                          <span class="material-icons">filter_center_focus</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                   <div class="control-row">
                     <input 
                       type="range" 
                       min="1" 
                       max="500" 
+                      step="0.1"
                       .value="${this._scalingFactor}"
                       @input="${(e: any) => {
-                        this._scalingFactor = parseInt(e.target.value);
+                        this._scalingFactor = parseFloat(e.target.value);
                         if (this._selectedImageId) {
                           const img = this.item.images.find((i: any) => i.image_id === this._selectedImageId);
                           if (img) img.scaling_factor = this._scalingFactor;
@@ -963,14 +1001,13 @@ export class SceneItemSettingsDialog extends LitElement {
                       }}"
                       style="flex: 1;"
                     >
-                  </div>
-                  <div class="control-row">
-                    <div class="input-with-unit">
+                    <div class="input-with-unit narrow-input">
                       <input 
                         type="number" 
+                        step="0.1"
                         .value="${this._scalingFactor}"
                         @input="${(e: any) => {
-                          this._scalingFactor = parseInt(e.target.value);
+                          this._scalingFactor = parseFloat(e.target.value);
                           if (this._selectedImageId) {
                             const img = this.item.images.find((i: any) => i.image_id === this._selectedImageId);
                             if (img) img.scaling_factor = this._scalingFactor;
@@ -978,10 +1015,6 @@ export class SceneItemSettingsDialog extends LitElement {
                         }}"
                       >
                       <span class="unit-label">%</span>
-                    </div>
-                    <div style="display: flex; gap: 4px;">
-                      <button class="secondary" style="padding: 6px 12px; font-size: 11px; flex: 1;" @click="${this._fitImage}">FIT</button>
-                      <button class="secondary" style="padding: 6px 12px; font-size: 11px; flex: 1;" @click="${this._fillImage}">FILL</button>
                     </div>
                   </div>
                 </div>
@@ -992,47 +1025,51 @@ export class SceneItemSettingsDialog extends LitElement {
                     <span class="material-icons">open_with</span>
                     Offset
                   </div>
-                  <div class="control-row">
-                    <label>X Offset</label>
-                    <div class="input-with-unit">
-                      <input 
-                        type="number" 
-                        .value="${this._offsetX}"
-                        @input="${(e: any) => {
-                          this._offsetX = parseInt(e.target.value);
-                          if (this._selectedImageId) {
-                            const img = this.item.images.find((i: any) => i.image_id === this._selectedImageId);
-                            if (img) img.offset.x = this._offsetX;
-                          }
-                        }}"
-                      >
-                      <span class="unit-label">px</span>
+                  <div class="offset-grid">
+                    <div>
+                      <div class="control-row">
+                        <label style="width: 60px;">X Offset</label>
+                        <div class="input-with-unit narrow-input">
+                          <input 
+                            type="number" 
+                            .value="${this._offsetX}"
+                            @input="${(e: any) => {
+                              this._offsetX = parseInt(e.target.value);
+                              if (this._selectedImageId) {
+                                const img = this.item.images.find((i: any) => i.image_id === this._selectedImageId);
+                                if (img) img.offset.x = this._offsetX;
+                              }
+                            }}"
+                          >
+                          <span class="unit-label">px</span>
+                        </div>
+                      </div>
+                      <div class="control-row" style="margin-bottom: 0;">
+                        <label style="width: 60px;">Y Offset</label>
+                        <div class="input-with-unit narrow-input">
+                          <input 
+                            type="number" 
+                            .value="${this._offsetY}"
+                            @input="${(e: any) => {
+                              this._offsetY = parseInt(e.target.value);
+                              if (this._selectedImageId) {
+                                const img = this.item.images.find((i: any) => i.image_id === this._selectedImageId);
+                                if (img) img.offset.y = this._offsetY;
+                              }
+                            }}"
+                          >
+                          <span class="unit-label">px</span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <div class="control-row">
-                    <label>Y Offset</label>
-                    <div class="input-with-unit">
-                      <input 
-                        type="number" 
-                        .value="${this._offsetY}"
-                        @input="${(e: any) => {
-                          this._offsetY = parseInt(e.target.value);
-                          if (this._selectedImageId) {
-                            const img = this.item.images.find((i: any) => i.image_id === this._selectedImageId);
-                            if (img) img.offset.y = this._offsetY;
-                          }
-                        }}"
-                      >
-                      <span class="unit-label">px</span>
+                    <!-- D-Pad -->
+                    <div class="dpad" style="margin: 0;">
+                      <button class="dpad-btn up" title="Move Up" @click="${() => this._moveImage(0, -10)}"><span class="material-icons">keyboard_arrow_up</span></button>
+                      <button class="dpad-btn left" title="Move Left" @click="${() => this._moveImage(-10, 0)}"><span class="material-icons">keyboard_arrow_left</span></button>
+                      <button class="dpad-btn reset" title="Reset Offset" @click="${() => this._moveImage(0, 0, true)}"><span class="material-icons">restart_alt</span></button>
+                      <button class="dpad-btn right" title="Move Right" @click="${() => this._moveImage(10, 0)}"><span class="material-icons">keyboard_arrow_right</span></button>
+                      <button class="dpad-btn down" title="Move Down" @click="${() => this._moveImage(0, 10)}"><span class="material-icons">keyboard_arrow_down</span></button>
                     </div>
-                  </div>
-                  <!-- D-Pad -->
-                  <div class="dpad">
-                    <button class="dpad-btn up" title="Move Up" @click="${() => this._moveImage(0, -10)}"><span class="material-icons">keyboard_arrow_up</span></button>
-                    <button class="dpad-btn left" title="Move Left" @click="${() => this._moveImage(-10, 0)}"><span class="material-icons">keyboard_arrow_left</span></button>
-                    <button class="dpad-btn reset" title="Reset Offset" @click="${() => this._moveImage(0, 0, true)}"><span class="material-icons">restart_alt</span></button>
-                    <button class="dpad-btn right" title="Move Right" @click="${() => this._moveImage(10, 0)}"><span class="material-icons">keyboard_arrow_right</span></button>
-                    <button class="dpad-btn down" title="Move Down" @click="${() => this._moveImage(0, 10)}"><span class="material-icons">keyboard_arrow_down</span></button>
                   </div>
                 </div>
 
