@@ -173,7 +173,9 @@ class ImageHandler(BaseCRUDHandler):
                 logger.info(f"Executing image list query: {stmt}")
                 result = await session.execute(stmt)
                 images = result.scalars().all()
-                logger.info(f"Found {len(images)} images (total_count: {total_count})")
+                logger.info(
+                    f"Found {len(images)} images (total_count: {total_count})"
+                )
 
                 summary_list = [image_model_to_summary_dict(i) for i in images]
                 total_pages = (
