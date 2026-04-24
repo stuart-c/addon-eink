@@ -64,7 +64,7 @@ test.describe('Scene Item Fitting', () => {
     await expect(dialog.locator('.image-grid')).toBeVisible();
     
     // Click our test image
-    await dialog.locator(`.image-card:has-text("${imageName}")`).click();
+    await dialog.locator(`.image-card[data-image-id="${imageId}"]`).click();
     
     // 4. Verify auto-fit: Check that scaling factor is updated
     const scalingInput = dialog.locator('input[type="number"]').first();

@@ -228,7 +228,6 @@ export class SceneItemSettingsDialog extends LitElement {
         justify-content: center;
         position: relative;
         overflow: hidden;
-        border-right: 1px solid var(--border-colour);
       }
 
       .preview-placeholder {
@@ -923,7 +922,7 @@ export class SceneItemSettingsDialog extends LitElement {
                            img.artist?.toLowerCase().includes(this._searchQuery.toLowerCase()) ||
                            img.collection?.toLowerCase().includes(this._searchQuery.toLowerCase()))
                     .map(image => html`
-                      <div class="image-card" @click="${() => this._selectImage(image)}">
+                      <div class="image-card" data-image-id="${image.id}" @click="${() => this._selectImage(image)}">
                         <div class="thumbnail-container">
                           <img src="/api/image/${image.id}/thumbnail" alt="${image.name}" loading="lazy">
                         </div>
@@ -951,6 +950,7 @@ export class SceneItemSettingsDialog extends LitElement {
                       .displayTypes="${this._displayTypes}"
                       .readOnly="${true}"
                       .noPadding="${true}"
+                      .hideNumber="${true}"
                       .previewImage="${this._previewCanvas}"
                       .previewTotalSize="${{ width: this._previewData.width, height: this._previewData.height }}"
                     ></layout-editor>
