@@ -28,6 +28,11 @@
       "readOnly": true,
       "default": "draft"
     },
+    "scene_hash": {
+      "type": "string",
+      "description": "Hash of the scene items array",
+      "readOnly": true
+    },
     "items": {
       "type": "array",
       "description": "List of components in the scene",

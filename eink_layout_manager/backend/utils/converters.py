@@ -85,4 +85,5 @@ def scene_model_to_dict(scene):
         "layout": scene.layout_id,
         "status": scene.status,
         "items": scene.items if scene.items is not None else [],
+        "scene_hash": scene.scene_hash,
     }

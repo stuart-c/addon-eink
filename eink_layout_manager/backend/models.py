@@ -98,10 +98,16 @@ class Scene(Base):
     layout_id = Column(String, nullable=False)
     status = Column(String, nullable=False, default="draft")
     items = Column(JSON, nullable=True)
+    scene_hash = Column(String, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(
         DateTime, server_default=func.now(), onupdate=func.now()
     )
+
+    def compute_scene_hash(self) -> str:
+        """Compute a SHA-256 hash of the scene items."""
+        items_json = json.dumps(self.items or [], sort_keys=True)
+        return hashlib.sha256(items_json.encode()).hexdigest()
 
     __filterable_fields__ = {
         "title": "name",
@@ -110,6 +116,13 @@ class Scene(Base):
     __sortable_fields__ = {
         "name": "name",
     }
+
+
+@event.listens_for(Scene, "before_insert")
+@event.listens_for(Scene, "before_update")
+def update_scene_hash(mapper, connection, target):
+    """Automatically update the scene_hash before saving."""
+    target.scene_hash = target.compute_scene_hash()
 
 
 class DisplayType(Base):
