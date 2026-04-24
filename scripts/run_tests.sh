@@ -15,6 +15,10 @@ echo "--- Installing Python Dependencies ---"
 cd "$TOP_DIR/eink_layout_manager/backend"
 pip install -q -r requirements.txt -r requirements_test.txt
 
+echo "--- Building and Testing Converter Tool ---"
+"$TOP_DIR/scripts/build_converter.sh"
+
+
 echo "--- Running Python Lints (Black & Flake8) ---"
 black .
 flake8 .
@@ -34,5 +38,4 @@ npx tsc --noEmit
 echo "--- Running Frontend Tests (Vitest) ---"
 npm test -- --run
 
-echo "--- Building and Testing Converter Tool ---"
-"$TOP_DIR/scripts/build_converter.sh"
+
