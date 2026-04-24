@@ -225,6 +225,40 @@ async def ensure_schema_up_to_date(conn):
             )
         )
 
+    if "scene_hash" not in columns:
+        await conn.execute(
+            text("ALTER TABLE scenes ADD COLUMN scene_hash VARCHAR")
+        )
+
+    # Populate missing scene_hash for existing scenes
+    result = await conn.execute(
+        text("SELECT id, items FROM scenes WHERE scene_hash IS NULL")
+    )
+    rows = result.fetchall()
+    if rows:
+        import hashlib
+
+        for row in rows:
+            scene_id, items_raw = row
+
+            # items_raw might be a string from sqlite or a list if
+            # handled by sqlalchemy
+            if isinstance(items_raw, str):
+                try:
+                    items = json.loads(items_raw)
+                except json.JSONDecodeError:
+                    items = []
+            else:
+                items = items_raw
+
+            items_json = json.dumps(items or [], sort_keys=True)
+            s_hash = hashlib.sha256(items_json.encode()).hexdigest()
+
+            await conn.execute(
+                text("UPDATE scenes SET scene_hash = :h WHERE id = :id"),
+                {"h": s_hash, "id": scene_id},
+            )
+
     # Check 'display_types' table for recently added columns
     result = await conn.execute(text("PRAGMA table_info(display_types)"))
     columns = [row[1] for row in result.fetchall()]
