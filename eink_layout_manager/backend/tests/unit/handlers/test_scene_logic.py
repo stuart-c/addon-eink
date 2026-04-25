@@ -15,9 +15,7 @@ async def test_pre_create_transformations(handler):
     """Test pre_create maps 'layout' to 'layout_id' and sets status."""
     data = {"name": "Test Scene", "layout": "layout1", "items": []}
     # Mock validation to avoid DB lookup
-    with patch.object(
-        handler, "_validate_scene_items", new_callable=AsyncMock
-    ):
+    with patch.object(handler, "_validate_scene_items", new_callable=AsyncMock):
         result = await handler.pre_create(data)
         assert result["status"] == "draft"
         assert result["layout_id"] == "layout1"
@@ -68,9 +66,7 @@ async def test_validate_scene_items_missing_display(handler):
         mock_get_session.return_value.__aenter__.return_value = mock_session
         with pytest.raises(ValidationError) as excinfo:
             await handler._validate_scene_items(items, "layout1")
-        assert "Display 'MISSING' not in layout 'layout1'" in str(
-            excinfo.value
-        )
+        assert "Display 'MISSING' not in layout 'layout1'" in str(excinfo.value)
 
 
 @pytest.mark.asyncio
@@ -94,6 +90,4 @@ async def test_validate_scene_items_duplicate_display(handler):
         mock_get_session.return_value.__aenter__.return_value = mock_session
         with pytest.raises(ValidationError) as excinfo:
             await handler._validate_scene_items(items, "layout1")
-        assert "Display 'd1' mentioned more than once in scene" in str(
-            excinfo.value
-        )
+        assert "Display 'd1' mentioned more than once in scene" in str(excinfo.value)

@@ -76,9 +76,7 @@ class BaseCRUDHandler:
             async with database.get_session() as session:
                 result = await session.execute(stmt)
                 items = result.scalars().all()
-                return web.json_response(
-                    [self.model_to_dict(item) for item in items]
-                )
+                return web.json_response([self.model_to_dict(item) for item in items])
         except Exception as e:
             logger.error(f"Error in list for {self.schema_name}: {e}")
             return web.json_response(
@@ -95,15 +93,11 @@ class BaseCRUDHandler:
 
         try:
             async with database.get_session() as session:
-                stmt = select(self.model_class).where(
-                    self.model_class.id == item_id
-                )
+                stmt = select(self.model_class).where(self.model_class.id == item_id)
                 result = await session.execute(stmt)
                 item = result.scalars().first()
                 if not item:
-                    return web.json_response(
-                        {"error": "Not Found"}, status=404
-                    )
+                    return web.json_response({"error": "Not Found"}, status=404)
                 return web.json_response(self.model_to_dict(item))
         except Exception as e:
             logger.error(f"Error in get for {self.schema_name}: {e}")
@@ -147,9 +141,7 @@ class BaseCRUDHandler:
 
         async with database.get_session() as session:
             # Check for existence
-            stmt = select(self.model_class).where(
-                self.model_class.id == data["id"]
-            )
+            stmt = select(self.model_class).where(self.model_class.id == data["id"])
             result = await session.execute(stmt)
             if result.scalars().first():
                 return web.json_response(
@@ -157,9 +149,7 @@ class BaseCRUDHandler:
                 )
 
             # Defensive: Filter data to only include valid model columns
-            valid_columns = {
-                c.name for c in self.model_class.__table__.columns
-            }
+            valid_columns = {c.name for c in self.model_class.__table__.columns}
             model_data = {k: v for k, v in data.items() if k in valid_columns}
 
             item = self.model_class(**model_data)
@@ -176,18 +166,12 @@ class BaseCRUDHandler:
             data = await request.json()
         except (ValueError, json.JSONDecodeError) as e:
             return web.json_response(
-                {
-                    "error": (
-                        str(e) if isinstance(e, ValueError) else "Invalid JSON"
-                    )
-                },
+                {"error": (str(e) if isinstance(e, ValueError) else "Invalid JSON")},
                 status=400,
             )
 
         async with database.get_session() as session:
-            stmt = select(self.model_class).where(
-                self.model_class.id == item_id
-            )
+            stmt = select(self.model_class).where(self.model_class.id == item_id)
             result = await session.execute(stmt)
             item = result.scalars().first()
             if not item:
@@ -204,9 +188,7 @@ class BaseCRUDHandler:
 
             # Validate read-only fields
             try:
-                validate_read_only(
-                    data, self.schema_name, existing_data=existing_data
-                )
+                validate_read_only(data, self.schema_name, existing_data=existing_data)
             except ValidationError as e:
                 return web.json_response({"error": str(e)}, status=400)
 
@@ -231,9 +213,7 @@ class BaseCRUDHandler:
                 return web.json_response({"error": str(e)}, status=500)
 
             # Update fields
-            valid_columns = {
-                c.name for c in self.model_class.__table__.columns
-            }
+            valid_columns = {c.name for c in self.model_class.__table__.columns}
             for key, value in data_to_validate.items():
                 if key in valid_columns:
                     setattr(item, key, value)
@@ -251,9 +231,7 @@ class BaseCRUDHandler:
             return web.json_response({"error": str(e)}, status=400)
 
         async with database.get_session() as session:
-            stmt = select(self.model_class).where(
-                self.model_class.id == item_id
-            )
+            stmt = select(self.model_class).where(self.model_class.id == item_id)
             result = await session.execute(stmt)
             item = result.scalars().first()
             if not item:

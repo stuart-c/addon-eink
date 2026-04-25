@@ -15,9 +15,7 @@ def setup_routes(app):
     app.router.add_get("/api/image/keywords", images.handle_image_keywords_get)
     app.router.add_get("/api/image", images.handle_image_list)
     app.router.add_get("/api/image/{id}", images.handle_image_get)
-    app.router.add_get(
-        "/api/image/{id}/thumbnail", images.handle_image_thumbnail_get
-    )
+    app.router.add_get("/api/image/{id}/thumbnail", images.handle_image_thumbnail_get)
     app.router.add_get("/api/image/{id}/file", images.handle_image_file_get)
     app.router.add_post("/api/image", images.handle_image_create)
     app.router.add_put("/api/image/{id}", images.handle_image_update)
@@ -41,9 +39,7 @@ def setup_routes(app):
     app.router.add_get("/api/ping", common.ping)
 
     # Home Assistant integration
-    app.router.add_get(
-        "/api/homeassistant/device", homeassistant.handle_device_list
-    )
+    app.router.add_get("/api/homeassistant/device", homeassistant.handle_device_list)
 
     # Static Lit frontend files
     # Try new structure first (eink_layout_manager/frontend/dist)

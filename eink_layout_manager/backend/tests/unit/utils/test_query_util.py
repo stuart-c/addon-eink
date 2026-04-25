@@ -50,9 +50,9 @@ def test_build_image_filters_basic():
     filters = build_image_filters({})
     assert len(filters) == 1
     # Check for status == 'ACTIVE'
-    assert "status = 'ACTIVE'" in str(
+    assert "status = 'ACTIVE'" in str(filters[0]) or "images.status = :status_1" in str(
         filters[0]
-    ) or "images.status = :status_1" in str(filters[0])
+    )
 
 
 def test_build_image_filters_numeric():

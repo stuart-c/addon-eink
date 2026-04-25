@@ -48,9 +48,7 @@ async def check_for_work():
                 )
 
                 # Perform conversion
-                success = await run_conversion(
-                    palette_entry, image_entry, session
-                )
+                success = await run_conversion(palette_entry, image_entry, session)
                 if success:
                     logger.info(
                         f"Completed work for image {palette_entry.image_id} with "
@@ -67,9 +65,7 @@ async def run_conversion(palette_entry, image_entry, session):
     """Run the conversion utility for a specific image/palette combination."""
     try:
         # 1. Setup paths
-        src_path = os.path.join(
-            get_storage_path("image"), image_entry.file_path
-        )
+        src_path = os.path.join(get_storage_path("image"), image_entry.file_path)
         palette = palette_entry.palette
         settings_hash = image_entry.settings_hash
 
@@ -119,9 +115,7 @@ async def run_conversion(palette_entry, image_entry, session):
         return True
 
     except Exception as e:
-        logger.error(
-            f"Failed to run conversion for {image_entry.id}: {str(e)}"
-        )
+        logger.error(f"Failed to run conversion for {image_entry.id}: {str(e)}")
         return False
 
 

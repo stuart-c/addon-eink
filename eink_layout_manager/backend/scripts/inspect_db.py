@@ -21,10 +21,7 @@ async def inspect():
         result = await session.execute(stmt)
         layouts = result.scalars().all()
         for layout in layouts:
-            print(
-                f"ID: {layout.id}, Name: {layout.name}, "
-                f"Status: {layout.status}"
-            )
+            print(f"ID: {layout.id}, Name: {layout.name}, " f"Status: {layout.status}")
             print(f"Items: {json.dumps(layout.items, indent=2)}")
 
         # Inspect Scenes

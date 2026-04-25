@@ -47,9 +47,7 @@ async def process_scene(scene, session):
         result = await session.execute(stmt)
         layout = result.scalar_one_or_none()
         if not layout:
-            logger.warning(
-                f"Layout {scene.layout_id} not found for scene {scene.id}"
-            )
+            logger.warning(f"Layout {scene.layout_id} not found for scene {scene.id}")
             return
 
         # Load all display types needed for this layout
@@ -90,12 +88,8 @@ async def process_scene(scene, session):
                 is_portrait = l_item.get("orientation") == "portrait"
                 frame_w = dt.height_mm if is_portrait else dt.width_mm
                 frame_h = dt.width_mm if is_portrait else dt.height_mm
-                panel_w = (
-                    dt.panel_height_mm if is_portrait else dt.panel_width_mm
-                )
-                panel_h = (
-                    dt.panel_width_mm if is_portrait else dt.panel_height_mm
-                )
+                panel_w = dt.panel_height_mm if is_portrait else dt.panel_width_mm
+                panel_h = dt.panel_width_mm if is_portrait else dt.panel_height_mm
 
                 panel_x = l_item["x_mm"] + (frame_w - panel_w) / 2
                 panel_y = l_item["y_mm"] + (frame_h - panel_h) / 2
@@ -131,9 +125,7 @@ async def process_scene(scene, session):
                 result = await session.execute(stmt)
                 image_record = result.scalar_one_or_none()
                 if not image_record:
-                    logger.warning(
-                        f"Image {image_id} not found for scene {scene.id}"
-                    )
+                    logger.warning(f"Image {image_id} not found for scene {scene.id}")
                     continue
 
                 for panel in item_panels:
@@ -177,13 +169,13 @@ async def process_slice(
         result = await session.execute(stmt)
         record = result.scalar_one_or_none()
 
-        if record:
-            if (
-                record.scene_hash == scene.scene_hash
-                and record.image_hash == image_record.settings_hash
-            ):
-                # Up to date
-                return
+        if (
+            record
+            and record.scene_hash == scene.scene_hash
+            and record.image_hash == image_record.settings_hash
+        ):
+            # Up to date
+            return
 
         # Need to run conversion
         logger.info(
@@ -196,31 +188,19 @@ async def process_slice(
         rel_y_mm = panel["y"] - item_min_y
 
         # In pixels
-        draw_x = (image_meta.get("offset", {}).get("x", 0)) - (
-            rel_x_mm * px_per_mm
-        )
-        draw_y = (image_meta.get("offset", {}).get("y", 0)) - (
-            rel_y_mm * px_per_mm
-        )
-        draw_w = (
-            image_record.width * image_meta.get("scaling_factor", 100)
-        ) / 100
-        draw_h = (
-            image_record.height * image_meta.get("scaling_factor", 100)
-        ) / 100
+        draw_x = (image_meta.get("offset", {}).get("x", 0)) - (rel_x_mm * px_per_mm)
+        draw_y = (image_meta.get("offset", {}).get("y", 0)) - (rel_y_mm * px_per_mm)
+        draw_w = (image_record.width * image_meta.get("scaling_factor", 100)) / 100
+        draw_h = (image_record.height * image_meta.get("scaling_factor", 100)) / 100
 
         # Output pixels
         out_w = panel["dt"].width_px
         out_h = panel["dt"].height_px
 
         # Paths
-        src_path = os.path.join(
-            get_storage_path("image"), image_record.file_path
-        )
+        src_path = os.path.join(get_storage_path("image"), image_record.file_path)
         dest_filename = f"slice_{scene_id}_{display_id}_{image_id}.png"
-        dest_path = os.path.join(
-            get_storage_path("scene_display"), dest_filename
-        )
+        dest_path = os.path.join(get_storage_path("scene_display"), dest_filename)
 
         # Palette
         palette = get_palette_for_display(panel["dt"])

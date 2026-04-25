@@ -19,9 +19,7 @@ def test_image(app):
 
 
 @pytest.mark.asyncio
-async def test_check_for_work_completes_conversion(
-    app, aiohttp_client, test_image
-):
+async def test_check_for_work_completes_conversion(app, aiohttp_client, test_image):
     """Test that check_for_work performs conversion and updates database."""
     await aiohttp_client(app)
 

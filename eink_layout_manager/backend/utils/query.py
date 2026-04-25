@@ -101,14 +101,9 @@ def build_filters(model, query_params):
                 kw_filters = []
                 for kw in kws:
                     # Generic keyword search in JSON array
-                    kw_je = func.json_each(models.Image.keywords).table_valued(
-                        "value"
-                    )
+                    kw_je = func.json_each(models.Image.keywords).table_valued("value")
                     kw_subquery = (
-                        select(1)
-                        .select_from(kw_je)
-                        .where(kw_je.c.value == kw)
-                        .exists()
+                        select(1).select_from(kw_je).where(kw_je.c.value == kw).exists()
                     )
                     kw_filters.append(kw_subquery)
                 if kw_filters:

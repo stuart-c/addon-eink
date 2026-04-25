@@ -43,9 +43,7 @@ def test_validate_read_only_fail_top_level(monkeypatch):
 
     with pytest.raises(ValidationError) as excinfo:
         validate_read_only({"id": "123", "name": "Test"}, "any")
-    assert "Attempted to include read-only fields in request: id" in str(
-        excinfo.value
-    )
+    assert "Attempted to include read-only fields in request: id" in str(excinfo.value)
 
 
 def test_validate_read_only_fail_nested(monkeypatch):
@@ -53,18 +51,15 @@ def test_validate_read_only_fail_nested(monkeypatch):
 
     def mock_load_schema(name):
         return {
-            "properties": {
-                "dimensions": {"properties": {"width": {"readOnly": True}}}
-            }
+            "properties": {"dimensions": {"properties": {"width": {"readOnly": True}}}}
         }
 
     monkeypatch.setattr(validation, "load_schema", mock_load_schema)
 
     with pytest.raises(ValidationError) as excinfo:
         validate_read_only({"dimensions": {"width": 100}}, "any")
-    assert (
-        "Attempted to include read-only fields in request: dimensions.width"
-        in str(excinfo.value)
+    assert "Attempted to include read-only fields in request: dimensions.width" in str(
+        excinfo.value
     )
 
 
@@ -99,7 +94,6 @@ def test_validate_read_only_comparison_fail(monkeypatch):
             "any",
             existing_data={"id": "old_id", "name": "Old Name"},
         )
-    assert (
-        "Attempted to update read-only fields with changed values: id"
-        in str(excinfo.value)
+    assert "Attempted to update read-only fields with changed values: id" in str(
+        excinfo.value
     )

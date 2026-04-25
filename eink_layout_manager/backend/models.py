@@ -38,9 +38,7 @@ class Image(Base):
     file_hash = Column(String, nullable=False)
     thumbnail_path = Column(String, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(
-        DateTime, server_default=func.now(), onupdate=func.now()
-    )
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
     conversion = Column(JSON, nullable=True)
     brightness = Column(Float, nullable=False, default=1.0)
     contrast = Column(Float, nullable=False, default=1.0)
@@ -100,9 +98,7 @@ class Scene(Base):
     items = Column(JSON, nullable=True)
     scene_hash = Column(String, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(
-        DateTime, server_default=func.now(), onupdate=func.now()
-    )
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     def compute_scene_hash(self) -> str:
         """Compute a SHA-256 hash of the scene items."""
@@ -140,9 +136,7 @@ class DisplayType(Base):
     frame = Column(JSON, nullable=False)
     mat = Column(JSON, nullable=False)
     created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(
-        DateTime, server_default=func.now(), onupdate=func.now()
-    )
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     @property
     def pixel_width_mm(self) -> float:
@@ -176,9 +170,7 @@ class Layout(Base):
     items = Column(JSON, nullable=False)
     status = Column(String, nullable=False, default="draft")
     created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(
-        DateTime, server_default=func.now(), onupdate=func.now()
-    )
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     __filterable_fields__ = {
         "name": "name",
@@ -196,9 +188,7 @@ class ImagePalette(Base):
     filename = Column(String, nullable=False, default="")
     image_settings_hash = Column(String, nullable=False, default="")
     created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(
-        DateTime, server_default=func.now(), onupdate=func.now()
-    )
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
 
 class SceneDisplayImage(Base):
@@ -211,6 +201,4 @@ class SceneDisplayImage(Base):
     scene_hash = Column(String, nullable=False)
     filename = Column(String, nullable=False)
     created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(
-        DateTime, server_default=func.now(), onupdate=func.now()
-    )
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())

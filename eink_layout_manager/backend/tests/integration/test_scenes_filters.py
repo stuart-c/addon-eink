@@ -42,15 +42,9 @@ async def test_get_scenes_filtered_by_title(aiohttp_client, app):
     client = await aiohttp_client(app)
 
     # Create scenes with different names
-    await client.post(
-        "/api/scene", json={"name": "Morning Routine", "layout": "l1"}
-    )
-    await client.post(
-        "/api/scene", json={"name": "Evening Setup", "layout": "l1"}
-    )
-    await client.post(
-        "/api/scene", json={"name": "Night Mode", "layout": "l1"}
-    )
+    await client.post("/api/scene", json={"name": "Morning Routine", "layout": "l1"})
+    await client.post("/api/scene", json={"name": "Evening Setup", "layout": "l1"})
+    await client.post("/api/scene", json={"name": "Night Mode", "layout": "l1"})
 
     # Substring match (case-insensitive)
     resp = await client.get("/api/scene", params={"title": "routine"})
@@ -81,15 +75,9 @@ async def test_get_scenes_combined_filters(aiohttp_client, app):
     """Test combining layout and title filters."""
     client = await aiohttp_client(app)
 
-    await client.post(
-        "/api/scene", json={"name": "Alpha One", "layout": "layout-1"}
-    )
-    await client.post(
-        "/api/scene", json={"name": "Alpha Two", "layout": "layout-2"}
-    )
-    await client.post(
-        "/api/scene", json={"name": "Beta One", "layout": "layout-1"}
-    )
+    await client.post("/api/scene", json={"name": "Alpha One", "layout": "layout-1"})
+    await client.post("/api/scene", json={"name": "Alpha Two", "layout": "layout-2"})
+    await client.post("/api/scene", json={"name": "Beta One", "layout": "layout-1"})
 
     # Combined filters
     resp = await client.get(
@@ -100,9 +88,7 @@ async def test_get_scenes_combined_filters(aiohttp_client, app):
     assert len(data) == 1
     assert data[0]["name"] == "Alpha One"
 
-    resp = await client.get(
-        "/api/scene", params={"title": "One", "layout": "layout-1"}
-    )
+    resp = await client.get("/api/scene", params={"title": "One", "layout": "layout-1"})
     assert resp.status == 200
     data = await resp.json()
     assert len(data) == 2

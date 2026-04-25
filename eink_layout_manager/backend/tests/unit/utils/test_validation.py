@@ -9,13 +9,9 @@ def test_validate_id_success():
 
 def test_validate_id_invalid_type():
     """Test non-string IDs are rejected."""
-    with pytest.raises(
-        ValueError, match="Invalid ID: Must be a non-empty string"
-    ):
+    with pytest.raises(ValueError, match="Invalid ID: Must be a non-empty string"):
         validate_id(None)
-    with pytest.raises(
-        ValueError, match="Invalid ID: Must be a non-empty string"
-    ):
+    with pytest.raises(ValueError, match="Invalid ID: Must be a non-empty string"):
         validate_id(123)
 
 
@@ -39,9 +35,7 @@ def test_validate_id_traversal():
 
 def test_validate_id_empty():
     """Test empty string is rejected."""
-    with pytest.raises(
-        ValueError, match="Invalid ID: Must be a non-empty string"
-    ):
+    with pytest.raises(ValueError, match="Invalid ID: Must be a non-empty string"):
         validate_id("")
 
 

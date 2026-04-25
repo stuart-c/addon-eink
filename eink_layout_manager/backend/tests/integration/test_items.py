@@ -155,9 +155,7 @@ async def test_update_item(aiohttp_client, app):
     update_payload = data.copy()
     update_payload["id"] = item_id
     update_payload["name"] = "Updated"
-    resp = await client.put(
-        f"/api/display_type/{item_id}", json=update_payload
-    )
+    resp = await client.put(f"/api/display_type/{item_id}", json=update_payload)
     assert resp.status == 200
     assert (await resp.json())["name"] == "Updated"
 
@@ -254,9 +252,7 @@ async def test_not_found(aiohttp_client, app):
     }
     update_payload = valid_data.copy()
     del update_payload["id"]
-    resp = await client.put(
-        "/api/display_type/non_existent", json=update_payload
-    )
+    resp = await client.put("/api/display_type/non_existent", json=update_payload)
     assert resp.status == 404
 
     resp = await client.delete("/api/display_type/non_existent")

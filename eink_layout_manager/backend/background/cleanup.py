@@ -32,9 +32,7 @@ async def cleanup_expired_images():
                     await delete_image_files_and_record(image, session)
                     count += 1
                 except Exception as e:
-                    logger.error(
-                        f"Failed to clean up image {image.id}: {str(e)}"
-                    )
+                    logger.error(f"Failed to clean up image {image.id}: {str(e)}")
 
             return count
     except Exception as e:
