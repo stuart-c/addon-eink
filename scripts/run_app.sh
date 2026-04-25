@@ -24,6 +24,7 @@ export PYTHONPATH="$TOP_DIR/eink_layout_manager"
 # Set defaults if not provided
 export DATA_DIR="${DATA_DIR:-$TOP_DIR/.data}"
 export INGRESS_PORT="${INGRESS_PORT:-8099}"
+export LOG_LEVEL="${LOG_LEVEL:-info}"
 export PYTHONUNBUFFERED=1
 
 mkdir -p "$DATA_DIR"

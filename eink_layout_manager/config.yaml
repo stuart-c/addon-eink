@@ -19,4 +19,4 @@ hassio_api: true
 options:
   log_level: "info"
 schema:
-  log_level: "match(^info|debug|warning|error$)"
+  log_level: "match(^trace|debug|info|notice|warning|error|fatal|critical$)"
