@@ -87,7 +87,7 @@ describe('SceneItemSettingsDialog', () => {
     deleteBtn.click();
     await element.updateComplete;
 
-    expect(element.item.images.length).toBe(0);
+    expect(element.controller.item.images.length).toBe(0);
     expect(element.shadowRoot?.querySelectorAll('.image-item').length).toBe(0);
   });
 
@@ -101,7 +101,7 @@ describe('SceneItemSettingsDialog', () => {
     await element.updateComplete;
 
     expect(element.controller.scalingFactor).toBe(150);
-    expect(element.item.images[0].scaling_factor).toBe(150);
+    expect(element.controller.item.images[0].scaling_factor).toBe(150);
   });
 
   it('fits image correctly and centers it', async () => {

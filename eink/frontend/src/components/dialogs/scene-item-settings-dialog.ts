@@ -1,7 +1,7 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { customElement } from 'lit/decorators.js';
 import { commonStyles } from '../../styles/common-styles';
-import { Layout, DisplayType, Image as ImageMetadata, api } from '../../services/HaApiClient';
+import { Layout, DisplayType } from '../../services/HaApiClient';
 import '../shared/base-dialog';
 import { BaseDialog } from '../shared/base-dialog';
 import '../layout/layout-editor';
