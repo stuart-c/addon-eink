@@ -24,6 +24,10 @@ def setup_routes(app):
     # Scene specific routes
     app.router.add_get("/api/scene", scenes.handle_scene_list)
     app.router.add_get("/api/scene/{id}", scenes.handle_scene_get)
+    app.router.add_get(
+        "/api/scene/{scene_id}/slice/{display_id}/{image_id}",
+        scenes.handle_scene_slice_get,
+    )
     app.router.add_post("/api/scene", scenes.handle_scene_create)
     app.router.add_put("/api/scene/{id}", scenes.handle_scene_update)
     app.router.add_delete("/api/scene/{id}", scenes.handle_scene_delete)

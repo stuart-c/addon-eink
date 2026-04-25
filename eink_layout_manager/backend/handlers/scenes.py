@@ -1,7 +1,10 @@
+import os
+from aiohttp import web
 from jsonschema import ValidationError
 from .base import BaseCRUDHandler
 from .. import models, database
 from ..utils.converters import scene_model_to_dict
+from ..utils.storage import get_storage_path
 from ..utils.validation import response_schema, validate_id  # noqa: F401
 
 
@@ -202,6 +205,41 @@ class SceneHandler(BaseCRUDHandler):
                             )
                         )
 
+    async def slice_get(self, request):
+        """Custom endpoint for scene slice retrieval."""
+        scene_id = request.match_info["scene_id"]
+        display_id = request.match_info["display_id"]
+        image_id = request.match_info["image_id"]
+
+        try:
+            scene_id = validate_id(scene_id)
+            display_id = validate_id(display_id)
+            image_id = validate_id(image_id)
+        except ValueError as e:
+            return web.json_response({"error": str(e)}, status=400)
+
+        from sqlalchemy import select
+
+        async with database.get_session() as session:
+            stmt = select(models.SceneDisplayImage).where(
+                models.SceneDisplayImage.scene_id == scene_id,
+                models.SceneDisplayImage.display_id == display_id,
+                models.SceneDisplayImage.image_id == image_id,
+            )
+            result = await session.execute(stmt)
+            record = result.scalar_one_or_none()
+
+            if not record or not record.filename:
+                return web.json_response({"error": "Not Found"}, status=404)
+
+            slice_storage_path = get_storage_path("scene_display")
+            file_path = os.path.join(slice_storage_path, record.filename)
+
+            if not os.path.exists(file_path):
+                return web.json_response({"error": "Not Found"}, status=404)
+
+            return web.FileResponse(file_path)
+
 
 # Instantiate handler
 scene_handler = SceneHandler()
@@ -231,3 +269,8 @@ async def handle_scene_update(request):
 @response_schema("status_response")
 async def handle_scene_delete(request):
     return await scene_handler.delete(request)
+
+
+async def handle_scene_slice_get(request):
+    """Handle retrieval of a scene slice binary."""
+    return await scene_handler.slice_get(request)
