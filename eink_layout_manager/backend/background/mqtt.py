@@ -19,7 +19,7 @@ logger = logging.getLogger("mqtt_manager")
 
 
 class MQTTManager:
-    def __init__(self):
+    def __init__(self, app=None):
         mqtt_client_id = os.environ.get(
             "MQTT_CLIENT_ID", f"eink_layout_manager_{uuid.uuid4().hex[:8]}"
         )
@@ -29,6 +29,7 @@ class MQTTManager:
         self.client.on_disconnect = self.on_disconnect
         self.client.on_subscribe = self.on_subscribe
 
+        self.app = app
         self.running = True
         self.layout_states = (
             {}
@@ -41,9 +42,22 @@ class MQTTManager:
         self.client.subscribe(f"{BASE_TOPIC}/layout/+/+/set")
 
     def on_message(self, client, topic, payload, qos, properties):
-        logger.info(f"Received message on {topic}: {payload.decode()}")
-        # As per requirement: "changes to them should not result in any action"
-        pass
+        message = payload.decode()
+        logger.info(f"Received message on {topic}: {message}")
+
+        # Topic format: eink_layout_manager/layout/{layout_id}/{command}/set
+        parts = topic.split("/")
+        if len(parts) >= 5 and parts[1] == "layout" and parts[4] == "set":
+            layout_id = parts[2]
+            command = parts[3]
+
+            if command == "scene":
+                self.layout_states.setdefault(layout_id, {})["current_scene"] = message
+                asyncio.create_task(
+                    self._handle_layout_update(layout_id, scene_name=message)
+                )
+            elif command == "refresh":
+                asyncio.create_task(self._handle_layout_update(layout_id))
 
     def on_disconnect(self, client, packet, exc=None):
         logger.info("Disconnected from MQTT broker")
@@ -85,9 +99,7 @@ class MQTTManager:
         sensor_config = {
             "name": "Last Updated",
             "unique_id": f"eink_layout_manager_{layout_id}_last_updated",
-            "state_topic": (
-                f"{BASE_TOPIC}/layout/{layout_id}/last_updated/state"
-            ),
+            "state_topic": (f"{BASE_TOPIC}/layout/{layout_id}/last_updated/state"),
             "device": device,
             "device_class": "timestamp",
             "entity_category": "diagnostic",
@@ -128,8 +140,7 @@ class MQTTManager:
             "icon": "mdi:refresh",
         }
         discovery_topic = (
-            f"{DISCOVERY_PREFIX}/button/{BASE_TOPIC}/"
-            f"{layout_id}_refresh/config"
+            f"{DISCOVERY_PREFIX}/button/{BASE_TOPIC}/" f"{layout_id}_refresh/config"
         )
         self.client.publish(
             discovery_topic,
@@ -168,9 +179,7 @@ class MQTTManager:
             try:
                 async with database.get_session() as session:
                     # Get all active layouts
-                    stmt = select(models.Layout).where(
-                        models.Layout.status == "active"
-                    )
+                    stmt = select(models.Layout).where(models.Layout.status == "active")
                     result = await session.execute(stmt)
                     layouts = result.scalars().all()
 
@@ -197,6 +206,165 @@ class MQTTManager:
         if await self.connect():
             self.task = asyncio.create_task(self.run_loop())
 
+    async def _handle_layout_update(self, layout_id, scene_name=None):
+        """Trigger update of all displays for a given layout/scene."""
+        try:
+            async with database.get_session() as session:
+                # 1. Fetch the layout
+                stmt = select(models.Layout).where(models.Layout.id == layout_id)
+                result = await session.execute(stmt)
+                layout = result.scalar_one_or_none()
+                if not layout:
+                    logger.warning(f"Layout {layout_id} not found for update")
+                    return
+
+                # 2. Identify the active scene
+                if not scene_name:
+                    scene_name = self.layout_states.get(layout_id, {}).get(
+                        "current_scene"
+                    )
+
+                if not scene_name:
+                    # Try to find the first active scene if none specified
+                    scene_stmt = (
+                        select(models.Scene)
+                        .where(
+                            models.Scene.layout_id == layout_id,
+                            models.Scene.status == "active",
+                        )
+                        .limit(1)
+                    )
+                    scene_result = await session.execute(scene_stmt)
+                    scene = scene_result.scalar_one_or_none()
+                else:
+                    scene_stmt = select(models.Scene).where(
+                        models.Scene.layout_id == layout_id,
+                        models.Scene.name == scene_name,
+                    )
+                    scene_result = await session.execute(scene_stmt)
+                    scene = scene_result.scalar_one_or_none()
+
+                if not scene:
+                    logger.warning(f"Active scene not found for layout {layout_id}")
+                    return
+
+                # 3. Update states and timestamp
+                timestamp = datetime.now().isoformat()
+                self.client.publish(
+                    f"{BASE_TOPIC}/layout/{layout_id}/last_updated/state",
+                    timestamp,
+                    retain=True,
+                )
+                self.client.publish(
+                    f"{BASE_TOPIC}/layout/{layout_id}/scene/state",
+                    scene.name,
+                    retain=True,
+                )
+
+                # 4. Query SceneDisplayImage for all available images in this scene
+                slice_stmt = select(models.SceneDisplayImage).where(
+                    models.SceneDisplayImage.scene_id == scene.id
+                )
+                slice_result = await session.execute(slice_stmt)
+                slices = slice_result.scalars().all()
+
+                if not slices:
+                    logger.warning(
+                        f"No slices found in SceneDisplayImage " f"for scene {scene.id}"
+                    )
+                    return
+
+                # 5. Group slices to find items
+                display_images = {}  # display_id -> set(image_id)
+                slice_map = {}  # (display_id, image_id) -> filename
+                for s in slices:
+                    display_images.setdefault(s.display_id, set()).add(s.image_id)
+                    slice_map[(s.display_id, s.image_id)] = s.filename
+
+                # Group displays by their image set (reconstructing clusters/items)
+                image_set_to_displays = {}  # frozenset(image_ids) -> [display_id, ...]
+                for d_id, i_ids in display_images.items():
+                    key = frozenset(i_ids)
+                    image_set_to_displays.setdefault(key, []).append(d_id)
+
+                # 6. For each cluster, pick a random image and call HA
+                import random
+
+                for i_ids, d_ids in image_set_to_displays.items():
+                    chosen_image_id = random.choice(list(i_ids))
+
+                    for d_id in d_ids:
+                        filename = slice_map.get((d_id, chosen_image_id))
+                        if not filename:
+                            continue
+
+                        # Find device_id from layout
+                        device_id = next(
+                            (
+                                item.get("device_id")
+                                for item in layout.items
+                                if item.get("id") == d_id
+                            ),
+                            None,
+                        )
+
+                        if device_id:
+                            await self._call_ha_upload(device_id, filename)
+                        else:
+                            logger.warning(
+                                f"No device_id found in layout {layout_id} "
+                                f"for display {d_id}"
+                            )
+
+        except Exception as e:
+            logger.exception(f"Error handling layout update for {layout_id}: {e}")
+
+    async def _call_ha_upload(self, device_id, filename):
+        """Call HA opendisplay.upload_image service."""
+        token = os.environ.get("SUPERVISOR_TOKEN")
+        if not token or not self.app:
+            logger.warning(
+                "No SUPERVISOR_TOKEN or app instance, " "skipping HA service call"
+            )
+            return
+
+        url = "http://supervisor/core/api/services/opendisplay/upload_image"
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        }
+
+        payload = {
+            "device_id": device_id,
+            "image": {
+                "media_content_id": (
+                    f"media-source://media_source/local/"
+                    f"eink_layout_manager/scene_display/{filename}"
+                ),
+                "media_content_type": "image/png",
+            },
+            "dither_mode": "None",
+            "rotation": 0,
+            "fit_mode": "Stretch",
+        }
+
+        try:
+            session = self.app["client_session"]
+            async with session.post(url, headers=headers, json=payload) as resp:
+                if resp.status != 200:
+                    text = await resp.text()
+                    logger.error(
+                        f"Failed to call HA service for device {device_id}: "
+                        f"{resp.status} - {text}"
+                    )
+                else:
+                    logger.info(
+                        f"Successfully triggered image upload for "
+                        f"device {device_id}"
+                    )
+        except Exception as e:
+            logger.error(f"Error calling HA service for device {device_id}: {e}")
+
     async def stop(self):
         self.running = False
         if self.task:
@@ -212,7 +380,7 @@ _manager = None
 async def start_mqtt(app):
     """aiohttp startup hook to start MQTT manager."""
     global _manager
-    _manager = MQTTManager()
+    _manager = MQTTManager(app=app)
     await _manager.start()
     app["mqtt_manager"] = _manager
 

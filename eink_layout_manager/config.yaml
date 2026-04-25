@@ -8,7 +8,7 @@ arch:
   - amd64
 init: false
 map:
-  - type: share
+  - type: media
     read_only: false
 panel_icon: "mdi:tablet-dashboard"
 panel_title: "eInk Displays"
