@@ -1,6 +1,7 @@
 import asyncio
 import contextlib
 import logging
+import hashlib
 import json
 import os
 from sqlalchemy import select
@@ -172,6 +173,7 @@ async def process_slice(
 
         if (
             record
+            and record.file_hash
             and record.scene_hash == scene.scene_hash
             and record.image_hash == image_record.settings_hash
         ):
@@ -196,12 +198,8 @@ async def process_slice(
 
         # Output pixels
         is_portrait = panel.get("orientation") == "portrait"
-        out_w = (
-            panel["dt"].height_px if is_portrait else panel["dt"].width_px
-        )
-        out_h = (
-            panel["dt"].width_px if is_portrait else panel["dt"].height_px
-        )
+        out_w = panel["dt"].height_px if is_portrait else panel["dt"].width_px
+        out_h = panel["dt"].width_px if is_portrait else panel["dt"].height_px
 
         # Paths
         src_path = os.path.join(get_storage_path("image"), image_record.file_path)
@@ -253,8 +251,13 @@ async def process_slice(
             )
             session.add(record)
 
+        # Calculate hash of the generated file
+        with open(dest_path, "rb") as f:
+            file_hash = hashlib.sha256(f.read()).hexdigest()
+
         record.scene_hash = scene.scene_hash
         record.image_hash = image_record.settings_hash
+        record.file_hash = file_hash
         record.filename = dest_filename
 
         await session.commit()

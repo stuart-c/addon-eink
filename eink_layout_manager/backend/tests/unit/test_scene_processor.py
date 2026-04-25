@@ -109,10 +109,19 @@ async def test_scene_processor_identifies_work(db_setup, tmp_path):
 
     # Mock the subprocess call
     with patch("asyncio.create_subprocess_exec") as mock_exec:
-        mock_process = AsyncMock()
-        mock_process.communicate.return_value = (b"Done", b"")
-        mock_process.returncode = 0
-        mock_exec.return_value = mock_process
+
+        def side_effect(*args, **kwargs):
+            # args[2] is the JSON config
+            config = json.loads(args[2])
+            dest = config["dest"]
+            with open(dest, "wb") as f:
+                f.write(b"dummy image data")
+            mock_process = AsyncMock()
+            mock_process.communicate.return_value = (b"Done", b"")
+            mock_process.returncode = 0
+            return mock_process
+
+        mock_exec.side_effect = side_effect
 
         # Mock get_storage_path to avoid /share permission issues in tests
         with patch(
@@ -153,3 +162,117 @@ async def test_scene_processor_identifies_work(db_setup, tmp_path):
                 assert len(records) == 2
                 assert records[0].scene_hash == scene.scene_hash
                 assert records[0].image_hash == img.settings_hash
+                assert records[0].file_hash is not None
+                assert len(records[0].file_hash) == 64  # SHA-256
+
+
+@pytest.mark.asyncio
+async def test_scene_processor_retriggers_if_file_hash_empty(db_setup, tmp_path):
+    """Test that scene_processor retriggers if file_hash is empty."""
+
+    async with database.get_session() as session:
+        # Minimal setup for one display
+        dt = models.DisplayType(
+            id="dt1",
+            name="7.5",
+            width_mm=163,
+            height_mm=98,
+            panel_width_mm=163,
+            panel_height_mm=98,
+            width_px=800,
+            height_px=480,
+            colour_type="BW",
+            frame={},
+            mat={},
+        )
+        session.add(dt)
+        layout = models.Layout(
+            id="l1",
+            name="L",
+            canvas_width_mm=200,
+            canvas_height_mm=200,
+            items=[{"id": "d1", "display_type_id": "dt1", "x_mm": 0, "y_mm": 0}],
+            status="active",
+        )
+        session.add(layout)
+        img = models.Image(
+            id="i1",
+            name="I",
+            file_path="t.png",
+            width=100,
+            height=100,
+            file_type="png",
+            status="ACTIVE",
+            file_hash="h1",
+        )
+        session.add(img)
+        await session.commit()
+        await session.refresh(img)
+
+        scene = models.Scene(
+            id="s1",
+            name="S",
+            layout_id="l1",
+            status="active",
+            items=[
+                {
+                    "id": "it1",
+                    "type": "image",
+                    "displays": ["d1"],
+                    "images": [
+                        {
+                            "image_id": "i1",
+                            "scaling_factor": 100,
+                            "offset": {"x": 0, "y": 0},
+                        }
+                    ],
+                }
+            ],
+        )
+        session.add(scene)
+        await session.commit()
+        await session.refresh(scene)
+
+        # Create record with matching hashes but MISSING file_hash
+        record = models.SceneDisplayImage(
+            scene_id="s1",
+            display_id="d1",
+            image_id="i1",
+            image_hash=img.settings_hash,
+            scene_hash=scene.scene_hash,
+            file_hash=None,  # This is what we are testing
+            filename="old.png",
+        )
+        session.add(record)
+        await session.commit()
+
+    # Mock the subprocess call
+    with patch("asyncio.create_subprocess_exec") as mock_exec:
+
+        def side_effect(*args, **kwargs):
+            config = json.loads(args[2])
+            with open(config["dest"], "wb") as f:
+                f.write(b"new data")
+            m = AsyncMock()
+            m.communicate.return_value = (b"Done", b"")
+            m.returncode = 0
+            return m
+
+        mock_exec.side_effect = side_effect
+
+        with patch(
+            "backend.background.scene_processor.get_storage_path",
+            return_value=str(tmp_path),
+        ):
+            await check_for_scene_work()
+
+            # Verify converter WAS called because file_hash was missing
+            assert mock_exec.call_count == 1
+
+            async with database.get_session() as session:
+                stmt = select(models.SceneDisplayImage).where(
+                    models.SceneDisplayImage.scene_id == "s1"
+                )
+                result = await session.execute(stmt)
+                updated_record = result.scalar_one()
+                assert updated_record.file_hash is not None
