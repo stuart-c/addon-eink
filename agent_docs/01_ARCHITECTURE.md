@@ -18,6 +18,14 @@ The `addon-eink` repository is designed to be deployed as a Home Assistant Addon
     - **Playwright:** End-to-end verification of the integrated system.
 - **Addon Integration:** Uses Home Assistant **Ingress** to securely surface the UI within the Home Assistant sidebar.
 
+## Frontend Architecture (MVC)
+
+The frontend follows a strict **Model-View-Controller (MVC)** pattern to ensure a clean separation between UI representation and business logic:
+
+- **View (LitElement):** "Dumb" components that handle rendering and UI-specific events. They delegate all complex logic to their respective controllers.
+- **Controller (BaseViewController):** Classes that manage the business logic for specific views or dialogs. They interface with the State Model and API services.
+- **Model (HaStateController):** A centralised state manager that maintains the application state (layouts, scenes, images, display types) and provides reactive updates across the entire UI.
+
 ## Core Conceptual Flow
 
 1. **Asset Management:** Users upload images via the frontend. The backend validates images, calculates SHA-256 hashes to prevent duplicates, generates thumbnails, and persists metadata in SQLite.

@@ -12,6 +12,7 @@ This file serves as a ledger of unknown design components. Agents should resolve
 - **Scene Slicing:** Background scene processing automatically slices and tiles images for multi-display layouts, generating per-display assets.
 - **Asymmetrical Mat Support:** The `DisplayType` schema supports both symmetrical thickness and asymmetrical (horizontal/vertical) mat dimensions.
 - **Display Orientation Normalisation:** All `DisplayType` records are normalised to landscape orientation in the database to ensure consistency in dimension handling.
+- **Frontend Architecture:** Adopted a strict **MVC pattern** utilising dedicated Lit Reactive Controllers for all views and dialogs, ensuring separation of business logic from UI rendering.
 
 ## Out of Scope
 

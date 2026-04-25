@@ -8,7 +8,7 @@ This document provides a comprehensive review of the **addon-eink** project and 
 
 ### Current State
 - **Backend**: Python with `aiohttp`, SQLAlchemy, and a background task system.
-- **Frontend**: Lit-based web application using a single `HaStateController` for state management and basic hash-based routing.
+- **Frontend**: Lit-based web application following a strict **MVC pattern**. Dedicated ViewControllers manage business logic, while `HaStateController` serves as the centralized Model/State.
 - **Converter**: Node.js utility for image processing using `epdoptimize`.
 
 ### Critique
@@ -51,7 +51,7 @@ This document provides a comprehensive review of the **addon-eink** project and 
 
 | Task | Description | Reason | Priority | Associated Prompt |
 | :--- | :--- | :--- | :--- | :--- |
-| **Refactor State Management** | Decouple `HaStateController` into focused controllers (Navigation, Notification, ResourceService). | Improve maintainability and reduce code complexity. | **High** | "Refactor `HaStateController.ts` by splitting its responsibilities into smaller, focused Lit Reactive Controllers. Start with a dedicated `NavigationService`." |
+| **Refactor State Management** | Decouple `HaStateController` into focused controllers (Navigation, Notification, ResourceService). | Improve maintainability and reduce code complexity. | **COMPLETED** | "Refactor `HaStateController.ts` by splitting its responsibilities into smaller, focused Lit Reactive Controllers." |
 | **Premium UI Overhaul** | Update `common-styles.ts` with a curated HSL color palette, modern typography, glassmorphism, and improved shadows. | Align with modern 'premium' web design standards. | **High** | "Update the application's global styles in `common-styles.ts` to use a premium design system with HSL colors, Inter/Outfit typography, and subtle micro-animations for interactions." |
 | **Scene Item Live Preview** | Implement real image rendering in the canvas preview within `ScenesView`. | Allow users to see exactly what will be sent to the display. | **High** | "Enhance the `layout-editor` and `scenes-view` to fetch and render converted image previews directly on the canvas instead of showing placeholders." |
 | **Display Health Dashboard** | Add a status section showing online state, battery, and signal strength for all configured devices. | Provide vital feedback on the physical hardware state. | **Medium** | "Implement a health dashboard or status bar that visualizes display-specific telemetry (battery, online status, last seen) fetched from the backend MQTT/Device state." |
