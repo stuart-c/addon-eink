@@ -37,6 +37,7 @@ async def test_scene_display_images_crud(db_setup):
             image_id="image1",
             image_hash="ihash1",
             scene_hash="shash1",
+            file_hash="fhash1",
             filename="output1.png",
         )
         session.add(new_entry)
@@ -51,6 +52,7 @@ async def test_scene_display_images_crud(db_setup):
         result = await session.execute(stmt)
         entry = result.scalar_one()
         assert entry.image_id == "image1"
+        assert entry.file_hash == "fhash1"
         assert entry.filename == "output1.png"
 
         # Update
