@@ -77,5 +77,3 @@ The following gaps have been identified in the current system and represent oppo
 - **Empty States**: Improving the onboarding experience with "getting started" guides or more descriptive prompts when no data exists.
 - **Dark Mode**: The application lacks a native dark mode theme.
 
-### Connectivity
-- **MQTT UI Integration**: While the backend supports MQTT, the frontend lacks deep integration for direct device interaction or status reporting beyond what is exposed through Home Assistant.
