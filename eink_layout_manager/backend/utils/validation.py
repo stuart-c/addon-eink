@@ -161,6 +161,7 @@ def load_schema(name):
         "layout",
         "pagination",
         "scene",
+        "scene_slice_list",
         "status_response",
     }
     if name not in allowed_schemas:

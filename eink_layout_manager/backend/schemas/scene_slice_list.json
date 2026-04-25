@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SceneSliceList",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "display_id": { "$ref": "common.json#/definitions/id" },
+      "image_id": { "$ref": "common.json#/definitions/id" },
+      "file_hash": { "type": ["string", "null"] }
+    },
+    "required": ["display_id", "image_id", "file_hash"]
+  }
+}
