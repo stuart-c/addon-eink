@@ -9,7 +9,7 @@ def app(tmp_path):
     Fixture to initialise the application for testing
     using a temporary data directory.
     """
-    # Override DATA_DIR and SHARE_DIR for tests
+    # Override DATA_DIR and MEDIA_DIR for tests
     os.environ["DATA_DIR"] = str(tmp_path)
-    os.environ["SHARE_DIR"] = os.path.join(tmp_path, "share")
+    os.environ["MEDIA_DIR"] = os.path.join(tmp_path, "media")
     return init_app()
