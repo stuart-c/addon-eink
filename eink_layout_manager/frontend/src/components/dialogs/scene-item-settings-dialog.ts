@@ -519,7 +519,7 @@ export class SceneItemSettingsDialog extends LitElement {
     const dt = this._displayTypes.find(t => t.id === layoutBox?.display_type_id);
     if (!dt || !dt.width_mm || !dt.width_px) return;
 
-    const pxPerMm = dt.width_px / dt.width_mm;
+    const pxPerMm = dt.width_px / dt.panel_width_mm;
     const canvasWidthPx = Math.round(this._previewData.width * pxPerMm);
     const canvasHeightPx = Math.round(this._previewData.height * pxPerMm);
 
@@ -818,7 +818,7 @@ export class SceneItemSettingsDialog extends LitElement {
     const dt = this._displayTypes.find(t => t.id === layoutBox?.display_type_id);
     if (!dt || !dt.width_mm || !dt.width_px) return;
 
-    const pxPerMm = dt.width_px / dt.width_mm;
+    const pxPerMm = dt.width_px / dt.panel_width_mm;
     const targetWidthPx = panelBB.width * pxPerMm;
     const targetHeightPx = panelBB.height * pxPerMm;
 

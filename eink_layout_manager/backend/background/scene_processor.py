@@ -102,6 +102,7 @@ async def process_scene(scene, session):
                         "w": panel_w,
                         "h": panel_h,
                         "dt": dt,
+                        "orientation": l_item.get("orientation", "landscape"),
                     }
                 )
 
@@ -194,8 +195,13 @@ async def process_slice(
         draw_h = (image_record.height * image_meta.get("scaling_factor", 100)) / 100
 
         # Output pixels
-        out_w = panel["dt"].width_px
-        out_h = panel["dt"].height_px
+        is_portrait = panel.get("orientation") == "portrait"
+        out_w = (
+            panel["dt"].height_px if is_portrait else panel["dt"].width_px
+        )
+        out_h = (
+            panel["dt"].width_px if is_portrait else panel["dt"].height_px
+        )
 
         # Paths
         src_path = os.path.join(get_storage_path("image"), image_record.file_path)
