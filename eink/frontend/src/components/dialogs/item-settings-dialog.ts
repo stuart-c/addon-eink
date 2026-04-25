@@ -1,10 +1,10 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement } from 'lit/decorators.js';
 import { live } from 'lit/directives/live.js';
-import { LayoutItem, DisplayType, HaDevice } from '../../services/HaApiClient';
 import '../shared/base-dialog';
 import { commonStyles } from '../../styles/common-styles';
 import { BaseDialog } from '../shared/base-dialog';
+import { ItemSettingsController } from '../../controllers/ItemSettingsController';
 
 /**
  * A dialog component for editing the settings of a display item in the layout.
@@ -18,40 +18,22 @@ export class ItemSettingsDialog extends LitElement {
     `
   ];
 
-  @property({ type: Object }) item: LayoutItem | null = null;
-  @property({ type: Array }) displayTypes: DisplayType[] = [];
-  @property({ type: Array }) haDevices: HaDevice[] = [];
+  private controller = new ItemSettingsController(this);
 
-  async show(item: LayoutItem, displayTypes: DisplayType[], haDevices: HaDevice[]) {
-    this.item = JSON.parse(JSON.stringify(item));
-    this.displayTypes = displayTypes;
-    this.haDevices = haDevices;
+  async show(item: any, displayTypes: any[], haDevices: any[]) {
+    this.controller.initialise(item, displayTypes, haDevices);
     await this.updateComplete;
     (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).show();
   }
 
   private _handleSubmit(e: Event) {
     e.preventDefault();
-    if (!this.item) return;
-
-    this.dispatchEvent(new CustomEvent('save', { 
-        detail: { 
-            id: this.item.id,
-            updates: {
-                x_mm: parseInt(this.item.x_mm as any),
-                y_mm: parseInt(this.item.y_mm as any),
-                display_type_id: this.item.display_type_id,
-                orientation: this.item.orientation,
-                device_id: this.item.device_id
-            }
-        } 
-    }));
+    this.controller.save();
     (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).close();
   }
   
   private _handleDelete() {
-    if (!this.item) return;
-    this.dispatchEvent(new CustomEvent('delete', { detail: { id: this.item.id } }));
+    this.controller.delete();
     (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).close();
   }
 
@@ -61,8 +43,8 @@ export class ItemSettingsDialog extends LitElement {
         <form id="item-form" @submit="${this._handleSubmit}">
           <div class="form-group">
             <label>Display Type</label>
-            <select .value="${live(this.item?.display_type_id || '')}" @change="${(e: any) => this.item ? this.item.display_type_id = e.target.value : null}">
-              ${this.displayTypes.map(dt => html`
+            <select .value="${live(this.controller.item?.display_type_id || '')}" @change="${(e: any) => this.controller.updateItem({ display_type_id: e.target.value })}">
+              ${this.controller.displayTypes.map(dt => html`
                 <option value="${dt.id}">${dt.name} (${dt.width_mm}x${dt.height_mm}mm)</option>
               `)}
             </select>
@@ -74,8 +56,8 @@ export class ItemSettingsDialog extends LitElement {
               <input 
                 type="number" 
                 required 
-                .value="${live(this.item?.x_mm.toString() || '0')}" 
-                @input="${(e: any) => this.item ? this.item.x_mm = e.target.value : null}"
+                .value="${live(this.controller.item?.x_mm.toString() || '0')}" 
+                @input="${(e: any) => this.controller.updateItem({ x_mm: parseInt(e.target.value) })}"
               >
             </div>
             <div class="form-group">
@@ -83,8 +65,8 @@ export class ItemSettingsDialog extends LitElement {
               <input 
                 type="number" 
                 required 
-                .value="${live(this.item?.y_mm.toString() || '0')}" 
-                @input="${(e: any) => this.item ? this.item.y_mm = e.target.value : null}"
+                .value="${live(this.controller.item?.y_mm.toString() || '0')}" 
+                @input="${(e: any) => this.controller.updateItem({ y_mm: parseInt(e.target.value) })}"
               >
             </div>
           </div>
@@ -92,8 +74,8 @@ export class ItemSettingsDialog extends LitElement {
           <div class="form-group">
             <label>Orientation</label>
             <select 
-              .value="${live(this.item?.orientation || 'landscape')}" 
-              @change="${(e: any) => this.item ? this.item.orientation = e.target.value : null}"
+              .value="${live(this.controller.item?.orientation || 'landscape')}" 
+              @change="${(e: any) => this.controller.updateItem({ orientation: e.target.value })}"
             >
               <option value="landscape">Landscape</option>
               <option value="portrait">Portrait</option>
@@ -103,11 +85,11 @@ export class ItemSettingsDialog extends LitElement {
           <div class="form-group">
             <label>Device ID (Optional)</label>
             <select 
-              .value="${live(this.item?.device_id || '')}" 
-              @change="${(e: any) => this.item ? this.item.device_id = e.target.value : null}"
+              .value="${live(this.controller.item?.device_id || '')}" 
+              @change="${(e: any) => this.controller.updateItem({ device_id: e.target.value })}"
             >
               <option value="">(None)</option>
-              ${this.haDevices.map(device => html`
+              ${this.controller.haDevices.map(device => html`
                 <option value="${device.id}">${device.name} (${device.id})</option>
               `)}
             </select>

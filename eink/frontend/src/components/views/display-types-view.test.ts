@@ -48,16 +48,16 @@ describe('DisplayTypesView', () => {
   });
 
   it('should initialise with the first display type selected', () => {
-    expect(element.displayType?.id).toBe('dt1');
-    expect(element.isNew).toBe(false);
+    expect(element.controller.activeType?.id).toBe('dt1');
+    expect(element.controller.isAdding).toBe(false);
   });
 
   it('should be blank when nothing is selected and not adding', async () => {
     element.selectedId = null;
-    element.isAdding = false;
+    element.controller.isAdding = false;
     await element.updateComplete;
     
-    expect(element.displayType).toBeUndefined();
+    expect(element.controller.activeType).toBeNull();
     
     const toolbarTitle = element.shadowRoot?.querySelector('.toolbar-title');
     expect(toolbarTitle?.textContent?.trim()).toBe('Display Types');
@@ -80,13 +80,12 @@ describe('DisplayTypesView', () => {
     }));
   });
 
-  it('should dispatch prepare-new-display-type when addNew is called', async () => {
-    const prepareSpy = vi.fn();
-    element.addEventListener('prepare-new-display-type', prepareSpy);
+  it('should call controller.addNew when addNew is called', async () => {
+    const spy = vi.spyOn(element.controller, 'addNew');
 
     element.addNew();
     
-    expect(prepareSpy).toHaveBeenCalled();
+    expect(spy).toHaveBeenCalled();
   });
 
   it('should detect dirty state when fields are modified', async () => {
@@ -106,7 +105,7 @@ describe('DisplayTypesView', () => {
     
     // Fill in a name for a new device
     element.selectedId = null;
-    element.isAdding = true;
+    element.controller.isAdding = true;
     await element.updateComplete;
     
     const nameInput = element.shadowRoot?.querySelector('input[type="text"]') as HTMLInputElement;

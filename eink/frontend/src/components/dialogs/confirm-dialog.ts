@@ -1,16 +1,10 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement } from 'lit/decorators.js';
 import '../shared/base-dialog';
 import { commonStyles } from '../../styles/common-styles';
 import { BaseDialog } from '../shared/base-dialog';
-
-export interface ConfirmConfig {
-  title?: string;
-  message?: string;
-  confirmText?: string;
-  type?: 'primary' | 'danger';
-  buttons?: Array<{ text: string, value: any, type?: 'primary' | 'danger' | 'secondary' }>;
-}
+import { ConfirmDialogController, ConfirmConfig } from '../../controllers/ConfirmDialogController';
+export type { ConfirmConfig };
 
 /**
  * A reusable confirmation dialog component using base-dialog.
@@ -27,44 +21,35 @@ export class ConfirmDialog extends LitElement {
     `
   ];
 
-  @state() private _config: Required<ConfirmConfig> = {
-    title: 'Confirm',
-    message: 'Are you sure?',
-    confirmText: 'Confirm',
-    type: 'primary',
-    buttons: []
-  };
+  public controller = new ConfirmDialogController(this);
 
-  private _resolve: ((result: boolean) => void) | null = null;
-
-  show(config: ConfirmConfig): Promise<any> {
-    this._config = { ...this._config, ...config };
+  async show(config: ConfirmConfig): Promise<any> {
+    const promise = this.controller.show(config);
+    await this.updateComplete;
     (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).show();
-    return new Promise(resolve => {
-      this._resolve = resolve;
-    });
+    return promise;
   }
 
   private _handleChoice(value: any) {
-    this._resolve?.(value);
+    this.controller.handleChoice(value);
     (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).close();
   }
 
   render() {
     return html`
-      <base-dialog .title="${this._config.title}">
-        <p>${this._config.message}</p>
+      <base-dialog .title="${this.controller.config.title}">
+        <p>${this.controller.config.message}</p>
         <div slot="footer">
-          ${this._config.buttons && this._config.buttons.length > 0 
-            ? this._config.buttons.map(btn => html`
+          ${this.controller.config.buttons && this.controller.config.buttons.length > 0 
+            ? this.controller.config.buttons.map(btn => html`
                 <button class="${btn.type || 'primary'}" @click="${() => this._handleChoice(btn.value)}">
                   ${btn.text}
                 </button>
               `)
             : html`
                 <button class="secondary" @click="${() => this._handleChoice(false)}">Cancel</button>
-                <button class="${this._config.type === 'danger' ? 'danger' : 'primary'}" @click="${() => this._handleChoice(true)}">
-                  ${this._config.confirmText}
+                <button class="${this.controller.config.type === 'danger' ? 'danger' : 'primary'}" @click="${() => this._handleChoice(true)}">
+                  ${this.controller.config.confirmText}
                 </button>
               `
           }

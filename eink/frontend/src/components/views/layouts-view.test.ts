@@ -101,7 +101,7 @@ describe('LayoutsView', () => {
     
     await element.discard();
     
-    expect(mockState.activeLayout.name).toEqual(originalName);
+    expect(element.activeLayout.name).toEqual(originalName);
   });
 
   it('should dispatch delete-layout when requestDelete is called', async () => {
@@ -127,7 +127,7 @@ describe('LayoutsView', () => {
     expect(menu?.classList.contains('show')).toBe(true);
   });
 
-  it('should dispatch select-item when an item is clicked in the content pane', async () => {
+  it('should call controller.selectItem when an item is clicked in the content pane', async () => {
     // Add an item to active layout first
     element.activeLayout = {
         ...mockLayouts[0],
@@ -135,14 +135,11 @@ describe('LayoutsView', () => {
     };
     await element.updateComplete;
 
-    const spy = vi.fn();
-    element.addEventListener('select-item', spy);
+    const spy = vi.spyOn(element.controller, 'selectItem');
     
     const card = element.shadowRoot?.querySelector('.layout-item-card');
     card?.dispatchEvent(new MouseEvent('click'));
     
-    expect(spy).toHaveBeenCalledWith(expect.objectContaining({
-      detail: { id: 'item1' }
-    }));
+    expect(spy).toHaveBeenCalledWith('item1');
   });
 });

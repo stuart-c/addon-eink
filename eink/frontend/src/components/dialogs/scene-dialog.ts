@@ -1,9 +1,9 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, state, property } from 'lit/decorators.js';
+import { customElement } from 'lit/decorators.js';
 import { commonStyles } from '../../styles/common-styles';
 import '../shared/base-dialog';
 import { BaseDialog } from '../shared/base-dialog';
-import { Scene } from '../../services/HaApiClient';
+import { SceneDialogController } from '../../controllers/SceneDialogController';
 
 @customElement('scene-dialog')
 export class SceneDialog extends LitElement {
@@ -47,33 +47,16 @@ export class SceneDialog extends LitElement {
     `
   ];
 
-  @state() private _name = '';
-  @state() private _layout = '';
-  @property({ type: Array }) layouts: {id: string, name: string}[] = [];
-  @property({ type: Object }) scene: Scene | null = null;
+  private controller = new SceneDialogController(this);
 
-  async show(scene: Scene | null = null) {
-    this.scene = scene;
-    this._name = scene ? scene.name : '';
-    this._layout = scene ? scene.layout : (this.layouts.length > 0 ? this.layouts[0].id : '');
+  async show(scene: any = null, layouts: any[] = []) {
+    this.controller.initialise(scene, layouts);
     await this.updateComplete;
     (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).show();
   }
 
   private _handleSubmit() {
-    if (!this._name.trim() || !this._layout) return;
-    
-    const eventName = this.scene ? 'save' : 'create';
-    this.dispatchEvent(new CustomEvent(eventName, {
-      detail: { 
-        name: this._name,
-        layout: this._layout,
-        id: this.scene?.id
-      },
-      bubbles: true,
-      composed: true
-    }));
-    
+    this.controller.submit();
     (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).close();
   }
 
@@ -83,14 +66,14 @@ export class SceneDialog extends LitElement {
 
   render() {
     return html`
-      <base-dialog .title="${this.scene ? 'Edit Smart Scene' : 'Create New Smart Scene'}">
+      <base-dialog .title="${this.controller.scene ? 'Edit Smart Scene' : 'Create New Smart Scene'}">
         <div class="form-group">
           <label>Scene Name</label>
           <input 
             type="text" 
             placeholder="e.g. Movie Night" 
-            .value="${this._name}"
-            @input="${(e: InputEvent) => this._name = (e.target as HTMLInputElement).value}"
+            .value="${this.controller.name}"
+            @input="${(e: any) => { this.controller.name = e.target.value; this.requestUpdate(); }}"
             @keyup="${(e: KeyboardEvent) => e.key === 'Enter' && this._handleSubmit()}"
             autofocus
           >
@@ -99,17 +82,17 @@ export class SceneDialog extends LitElement {
         <div class="form-group">
           <label>Layout</label>
           <select 
-            .value="${this._layout}"
-            @change="${(e: Event) => this._layout = (e.target as HTMLSelectElement).value}"
-            ?disabled="${this.scene !== null}"
-            title="${this.scene ? 'Layout cannot be changed after creation' : ''}"
+            .value="${this.controller.layout}"
+            @change="${(e: any) => { this.controller.layout = e.target.value; this.requestUpdate(); }}"
+            ?disabled="${this.controller.scene !== null}"
+            title="${this.controller.scene ? 'Layout cannot be changed after creation' : ''}"
           >
-            ${this.layouts.length === 0 ? html`<option value="" disabled>No layouts available</option>` : ''}
-            ${this.layouts.map(l => html`
-              <option value="${l.id}" ?selected="${this._layout === l.id}">${l.name}</option>
+            ${this.controller.layouts.length === 0 ? html`<option value="" disabled>No layouts available</option>` : ''}
+            ${this.controller.layouts.map(l => html`
+              <option value="${l.id}" ?selected="${this.controller.layout === l.id}">${l.name}</option>
             `)}
           </select>
-          ${this.scene ? html`
+          ${this.controller.scene ? html`
             <div style="font-size: 11px; color: #888; margin-top: 4px;">
               <span class="material-icons" style="font-size: 12px; vertical-align: middle;">info</span>
               Layout is fixed after a scene is created.
@@ -119,9 +102,9 @@ export class SceneDialog extends LitElement {
 
         <div slot="footer" class="footer-actions">
           <button class="secondary" @click="${this._handleCancel}">Cancel</button>
-          <button class="primary" ?disabled="${!this._name.trim() || !this._layout}" @click="${this._handleSubmit}">
-            <span class="material-icons">${this.scene ? 'save' : 'add'}</span>
-            ${this.scene ? 'Save Changes' : 'Create Scene'}
+          <button class="primary" ?disabled="${!this.controller.name.trim() || !this.controller.layout}" @click="${this._handleSubmit}">
+            <span class="material-icons">${this.controller.scene ? 'save' : 'add'}</span>
+            ${this.controller.scene ? 'Save Changes' : 'Create Scene'}
           </button>
         </div>
       </base-dialog>
