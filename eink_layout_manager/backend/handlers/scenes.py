@@ -271,6 +271,43 @@ async def handle_scene_delete(request):
     return await scene_handler.delete(request)
 
 
+@response_schema("scene_slice_list")
+async def handle_scene_slice_list(request):
+    """Return a list of display slices created for a specified scene ID."""
+    scene_id = request.match_info["id"]
+    try:
+        scene_id = validate_id(scene_id)
+    except ValueError as e:
+        return web.json_response({"error": str(e)}, status=400)
+
+    from sqlalchemy import select
+
+    async with database.get_session() as session:
+        # 1. Verify scene exists
+        stmt = select(models.Scene).where(models.Scene.id == scene_id)
+        result = await session.execute(stmt)
+        if not result.scalars().first():
+            return web.json_response({"error": "Scene Not Found"}, status=404)
+
+        # 2. Fetch all slices associated with this scene
+        stmt = select(models.SceneDisplayImage).where(
+            models.SceneDisplayImage.scene_id == scene_id
+        )
+        result = await session.execute(stmt)
+        slices = result.scalars().all()
+
+        return web.json_response(
+            [
+                {
+                    "display_id": s.display_id,
+                    "image_id": s.image_id,
+                    "file_hash": s.file_hash,
+                }
+                for s in slices
+            ]
+        )
+
+
 async def handle_scene_slice_get(request):
     """Handle retrieval of a scene slice binary."""
     return await scene_handler.slice_get(request)
