@@ -37,6 +37,7 @@ export class NavigationController implements ReactiveController {
       this.isAddingNew = false;
       this.updateHash();
       this.host.requestUpdate();
+      this.host.dispatchEvent(new CustomEvent('state-changed'));
     }
   }
 
@@ -45,6 +46,7 @@ export class NavigationController implements ReactiveController {
       this.viewMode = mode;
       this.updateHash();
       this.host.requestUpdate();
+      this.host.dispatchEvent(new CustomEvent('state-changed'));
     }
   }
 
@@ -102,6 +104,7 @@ export class NavigationController implements ReactiveController {
     }
     this.updateHash();
     this.host.requestUpdate();
+    this.host.dispatchEvent(new CustomEvent('state-changed'));
   }
 
   public updateHash() {
@@ -161,6 +164,7 @@ export class NavigationController implements ReactiveController {
     }
 
     this.host.requestUpdate();
+    this.host.dispatchEvent(new CustomEvent('state-changed'));
     if (this.onHashApplied) this.onHashApplied();
   }
 }

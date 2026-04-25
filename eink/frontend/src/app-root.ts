@@ -187,13 +187,7 @@ export class AppRoot extends LitElement {
     });
 
     if (confirmed) {
-      this.state.updateActiveLayout({
-        items: this.state.activeLayout?.items.filter(i => i.id !== e.detail.id)
-      });
-      if (this.state.selectedItemId === e.detail.id) {
-        this.state.selectItem(null);
-      }
-      this.state.showMessage('Item deleted', 'success');
+      this.state.deleteLayoutItem(e.detail.id);
     }
   }
 

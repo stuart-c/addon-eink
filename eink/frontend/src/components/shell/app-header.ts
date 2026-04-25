@@ -179,7 +179,7 @@ export class AppHeader extends LitElement {
           ` : ''}
 
           <button class="secondary icon-button" @click="${() => this._dispatch('delete-item')}" ?disabled="${!this.canDelete || this.isSaving}" 
-            title="${this.activeSection === 'layouts' ? 'Delete Layout' : (this.activeSection === 'scenes' ? 'Delete Scene' : (this.activeSection === 'display-types' ? 'Delete Display Type' : 'Delete Item'))}">
+            title="Delete Current Item">
             <span class="material-icons" style="color: var(--danger-colour);">delete</span>
           </button>
           

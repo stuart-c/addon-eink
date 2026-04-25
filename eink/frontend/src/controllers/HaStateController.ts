@@ -165,8 +165,10 @@ export class HaStateController implements ReactiveController {
   async saveActiveLayout() {
     if (!this.activeLayout) return;
     
+    console.info(`[HaStateController] Saving layout... ID=${this.activeLayout.id}, isAddingNew=${this.isAddingNew}`);
     this.isSaving = true;
     this.host.requestUpdate();
+    this.dispatchEvent(new CustomEvent('state-changed'));
     
     try {
       let saved: Layout;
@@ -205,7 +207,7 @@ export class HaStateController implements ReactiveController {
       this.selectedDisplayTypeId = saved.id;
       await this.refresh();
       this.isSaving = false;
-      this.showMessage(`Display type "${saved.name}" saved!`, 'success');
+      this.showMessage('Settings applied', 'success');
     } catch (e: any) {
       this.showMessage(`Failed to save display type: ${e.message}`, 'error');
     } finally {
@@ -225,7 +227,7 @@ export class HaStateController implements ReactiveController {
       const oldIndex = this.displayTypes.findIndex(existing => existing.id === dt.id);
       await api.deleteItem('display_type', dt.id);
       await this.refresh();
-      this.showMessage(`Display type "${dt.name}" deleted.`, 'success');
+      this.showMessage('Settings applied', 'success');
       
       if (this.selectedDisplayTypeId === dt.id) {
         if (this.displayTypes.length > 0) {
@@ -248,7 +250,7 @@ export class HaStateController implements ReactiveController {
       const oldIndex = this.layouts.findIndex(l => l.id === layout.id);
       await api.deleteItem('layout', layout.id);
       console.info(`[HaStateController] layout deleted successfully: ${layout.id}`);
-      this.showMessage(`Layout "${layout.name}" deleted.`, 'success');
+      this.showMessage('Settings applied', 'success');
       await this.refresh();
       this.host.requestUpdate();
 
@@ -278,7 +280,7 @@ export class HaStateController implements ReactiveController {
         this.selectedImageId = null;
       }
       await this.refresh();
-      this.showMessage(`Image "${image.name}" deleted.`, 'success');
+      this.showMessage('Settings applied', 'success');
       return true;
     } catch (e: any) {
       this.showMessage(`Failed to delete image: ${e.message}`, 'error');
@@ -295,7 +297,7 @@ export class HaStateController implements ReactiveController {
       this.activeScene = result;
       await this.refresh();
       this.isSaving = false;
-      this.showMessage(`Scene "${name}" created!`, 'success');
+      this.showMessage('Settings applied', 'success');
       return result;
     } catch (e: any) {
       this.showMessage(`Failed to create scene: ${e.message}`, 'error');
@@ -317,7 +319,7 @@ export class HaStateController implements ReactiveController {
       if (this.activeScene?.id === id) {
         this.activeScene = this.scenes.find(s => s.id === id) || this.activeScene;
       }
-      this.showMessage('Scene updated!', 'success');
+      this.showMessage('Settings applied', 'success');
     } catch (e: any) {
       this.showMessage(`Failed to update scene: ${e.message}`, 'error');
     } finally {
@@ -330,6 +332,7 @@ export class HaStateController implements ReactiveController {
     if (!this.activeScene) return;
     this.activeScene = { ...this.activeScene, ...updates };
     this.host.requestUpdate();
+    this.dispatchEvent(new CustomEvent('state-changed'));
   }
 
   async saveActiveScene() {
@@ -340,7 +343,7 @@ export class HaStateController implements ReactiveController {
     try {
       await api.updateItem('scene', this.activeScene.id, this.activeScene);
       await this.refresh();
-      this.showMessage('Scene saved!', 'success');
+      this.showMessage('Settings applied', 'success');
     } catch (e: any) {
       this.showMessage(`Failed to save scene: ${e.message}`, 'error');
     } finally {
@@ -354,7 +357,7 @@ export class HaStateController implements ReactiveController {
       const oldIndex = this.scenes.findIndex(s => s.id === scene.id);
       await api.deleteItem('scene', scene.id);
       await this.refresh();
-      this.showMessage(`Scene "${scene.name}" deleted.`, 'success');
+      this.showMessage('Settings applied', 'success');
 
       if (this.activeScene?.id === scene.id) {
         if (this.scenes.length > 0) {
@@ -371,14 +374,17 @@ export class HaStateController implements ReactiveController {
     }
   }
 
-  showMessage(text: string, type: 'info' | 'success' | 'error' = 'info') {
-    console.info(`[HaStateController] showMessage: ${text} (${type})`);
+  public showMessage(text: string, type: AppMessage['type'] = 'info') {
     this.message = { text, type };
     this.host.requestUpdate();
-    setTimeout(() => {
+    this.dispatchEvent(new CustomEvent('state-changed'));
+
+    if (this._messageClearTimeout) clearTimeout(this._messageClearTimeout);
+    this._messageClearTimeout = setTimeout(() => {
       if (this.message?.text === text) {
         this.message = null;
         this.host.requestUpdate();
+        this.dispatchEvent(new CustomEvent('state-changed'));
       }
     }, 5000);
   }
@@ -391,6 +397,7 @@ export class HaStateController implements ReactiveController {
     this.isAddingNew = false;
     this.host.requestUpdate();
     this.navigation.updateHash();
+    this.dispatchEvent(new CustomEvent('state-changed'));
   }
 
   public prepareNewLayout() {
@@ -408,6 +415,7 @@ export class HaStateController implements ReactiveController {
     this.isAddingNew = true;
     this.host.requestUpdate();
     this.navigation.updateHash();
+    this.dispatchEvent(new CustomEvent('state-changed'));
   }
 
   switchScene(scene: Scene) {
@@ -416,6 +424,7 @@ export class HaStateController implements ReactiveController {
 
   public selectScene(id: string | null) {
     this.navigation.selectScene(id);
+    this.dispatchEvent(new CustomEvent('state-changed'));
   }
 
   discardChanges() {
@@ -423,12 +432,28 @@ export class HaStateController implements ReactiveController {
     this.activeLayout = JSON.parse(this._originalLayout);
     this.selectedItemId = null;
     this.host.requestUpdate();
+    this.dispatchEvent(new CustomEvent('state-changed'));
   }
 
   updateActiveLayout(updates: Partial<Layout>) {
     if (!this.activeLayout) return;
     this.activeLayout = { ...this.activeLayout, ...updates };
     this.host.requestUpdate();
+    this.dispatchEvent(new CustomEvent('state-changed'));
+  }
+
+  deleteLayoutItem(itemId: string) {
+    if (!this.activeLayout) return;
+    this.activeLayout = {
+      ...this.activeLayout,
+      items: this.activeLayout.items.filter(i => i.id !== itemId)
+    };
+    if (this.selectedItemId === itemId) {
+      this.selectedItemId = null;
+    }
+    this.showMessage('Item deleted', 'success');
+    this.host.requestUpdate();
+    this.dispatchEvent(new CustomEvent('state-changed'));
   }
 
   updateItem(itemId: string, updates: Partial<LayoutItem>) {
