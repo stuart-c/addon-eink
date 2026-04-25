@@ -63,9 +63,21 @@ if __name__ == "__main__":
     port_env = os.environ.get("INGRESS_PORT")
     port = int(port_env) if port_env and port_env.strip() else 8099
     # Configure logging
-    log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
+    log_level_raw = os.environ.get("LOG_LEVEL", "INFO").upper()
+    log_level_map = {
+        "TRACE": logging.DEBUG,
+        "DEBUG": logging.DEBUG,
+        "INFO": logging.INFO,
+        "NOTICE": logging.INFO,
+        "WARNING": logging.WARNING,
+        "ERROR": logging.ERROR,
+        "FATAL": logging.CRITICAL,
+        "CRITICAL": logging.CRITICAL,
+    }
+    log_level = log_level_map.get(log_level_raw, logging.INFO)
+
     logging.basicConfig(
-        level=getattr(logging, log_level, logging.INFO),
+        level=log_level,
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
 
