@@ -76,9 +76,7 @@ async def test_create_invalid_image(handler):
 
     with (
         patch("backend.database.get_session") as mock_get_session,
-        patch(
-            "PIL.Image.open", side_effect=UnidentifiedImageError("Bad image")
-        ),
+        patch("PIL.Image.open", side_effect=UnidentifiedImageError("Bad image")),
     ):
         mock_get_session.return_value.__aenter__.return_value = mock_session
         response = await handler.create(mock_request)

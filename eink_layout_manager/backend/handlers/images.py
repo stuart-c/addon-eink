@@ -8,8 +8,6 @@ from PIL import Image as PILImage, UnidentifiedImageError
 from sqlalchemy import select, func
 from aiohttp import web
 
-logger = logging.getLogger(__name__)
-
 from .base import BaseCRUDHandler
 from .. import database, models
 from ..utils.storage import get_storage_path
@@ -23,6 +21,8 @@ from ..utils.validation import (
     response_schema,
 )
 from ..utils.query import parse_sort_params, build_filters
+
+logger = logging.getLogger(__name__)
 
 
 class ImageHandler(BaseCRUDHandler):
@@ -39,15 +39,11 @@ class ImageHandler(BaseCRUDHandler):
             reader = await request.multipart()
             field = await reader.next()
             if not field or field.name != "file":
-                return web.json_response(
-                    {"error": 'Missing "file" field'}, status=400
-                )
+                return web.json_response({"error": 'Missing "file" field'}, status=400)
             filename = field.filename
             content = await field.read()
         except Exception as e:
-            return web.json_response(
-                {"error": f"Failed to read: {str(e)}"}, status=400
-            )
+            return web.json_response({"error": f"Failed to read: {str(e)}"}, status=400)
 
         image_id = uuid.uuid4().hex
         try:
@@ -55,9 +51,7 @@ class ImageHandler(BaseCRUDHandler):
 
             # Check for duplicate image by hash
             async with database.get_session() as session:
-                stmt = select(models.Image).where(
-                    models.Image.file_hash == file_hash
-                )
+                stmt = select(models.Image).where(models.Image.file_hash == file_hash)
                 result = await session.execute(stmt)
                 existing_image = result.scalar_one_or_none()
                 if existing_image:
@@ -98,9 +92,7 @@ class ImageHandler(BaseCRUDHandler):
                 {"error": "Invalid image file", "details": str(e)}, status=400
             )
         except Exception as e:
-            return web.json_response(
-                {"error": f"Failed to save: {str(e)}"}, status=500
-            )
+            return web.json_response({"error": f"Failed to save: {str(e)}"}, status=500)
 
         try:
             async with database.get_session() as session:
@@ -121,9 +113,7 @@ class ImageHandler(BaseCRUDHandler):
                 session.add(new_image)
                 await session.commit()
                 await session.refresh(new_image)
-                return web.json_response(
-                    image_model_to_dict(new_image), status=201
-                )
+                return web.json_response(image_model_to_dict(new_image), status=201)
         except Exception as e:
             if os.path.exists(file_path):
                 os.remove(file_path)
@@ -150,9 +140,7 @@ class ImageHandler(BaseCRUDHandler):
 
         filters = build_filters(self.model_class, request.query)
         # Images MUST be ACTIVE unless specified
-        if not any(
-            hasattr(f, "left") and f.left.name == "status" for f in filters
-        ):
+        if not any(hasattr(f, "left") and f.left.name == "status" for f in filters):
             filters.append(models.Image.status == "ACTIVE")
 
         try:
@@ -165,11 +153,7 @@ class ImageHandler(BaseCRUDHandler):
                 count_result = await session.execute(count_stmt)
                 total_count = count_result.scalar() or 0
 
-                stmt = (
-                    base_stmt.order_by(*order_by_clauses)
-                    .limit(limit)
-                    .offset(offset)
-                )
+                stmt = base_stmt.order_by(*order_by_clauses).limit(limit).offset(offset)
                 logger.info(f"Executing image list query: {stmt}")
                 result = await session.execute(stmt)
                 images = result.scalars().all()
@@ -177,9 +161,7 @@ class ImageHandler(BaseCRUDHandler):
 
                 summary_list = [image_model_to_summary_dict(i) for i in images]
                 total_pages = (
-                    (total_count + limit - 1) // limit
-                    if total_count > 0
-                    else 0
+                    (total_count + limit - 1) // limit if total_count > 0 else 0
                 )
 
                 return web.json_response(
@@ -239,9 +221,7 @@ class ImageHandler(BaseCRUDHandler):
                 return web.json_response({"error": "Not Found"}, status=404)
 
             thumb_storage_path = get_storage_path("thumbnail")
-            thumb_file_path = os.path.join(
-                thumb_storage_path, image.thumbnail_path
-            )
+            thumb_file_path = os.path.join(thumb_storage_path, image.thumbnail_path)
 
             if not os.path.exists(thumb_file_path):
                 return web.json_response({"error": "Not Found"}, status=404)
@@ -286,9 +266,7 @@ class ImageHandler(BaseCRUDHandler):
                 if kw_list:
                     counts.update(kw_list)
 
-            sorted_kws = sorted(
-                counts.items(), key=lambda x: (-x[1], x[0].lower())
-            )
+            sorted_kws = sorted(counts.items(), key=lambda x: (-x[1], x[0].lower()))
 
             ordered_keywords = [
                 {"keyword": kw, "count": count} for kw, count in sorted_kws

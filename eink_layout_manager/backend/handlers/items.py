@@ -67,9 +67,7 @@ class DisplayTypeHandler(BaseCRUDHandler):
         for layout in layouts:
             for layout_item in layout.items:
                 if layout_item.get("display_type_id") == item.id:
-                    raise web.HTTPConflict(
-                        reason=f"Display type in use: {layout.name}"
-                    )
+                    raise web.HTTPConflict(reason=f"Display type in use: {layout.name}")
 
 
 class LayoutHandler(BaseCRUDHandler):

@@ -92,10 +92,7 @@ class SceneHandler(BaseCRUDHandler):
                 displays = item.get("displays", [])
                 scene_display_ids.update(displays)
 
-            if (
-                layout_display_ids == scene_display_ids
-                and len(layout_display_ids) > 0
-            ):
+            if layout_display_ids == scene_display_ids and len(layout_display_ids) > 0:
                 return "active"
 
             return "draft"
@@ -132,8 +129,7 @@ class SceneHandler(BaseCRUDHandler):
                 for display_id in displays:
                     if display_id not in valid_display_ids:
                         raise ValidationError(
-                            f"Display '{display_id}' not in "
-                            f"layout '{layout_id}'"
+                            f"Display '{display_id}' not in " f"layout '{layout_id}'"
                         )
                     if display_id in seen_display_ids:
                         raise ValidationError(
@@ -162,22 +158,16 @@ class SceneHandler(BaseCRUDHandler):
         display_to_type = {}
         for layout_item in layout.items:
             if isinstance(layout_item, dict) and "id" in layout_item:
-                display_to_type[layout_item["id"]] = layout_item.get(
-                    "display_type_id"
-                )
+                display_to_type[layout_item["id"]] = layout_item.get("display_type_id")
 
         # 3. Fetch all needed display types to get palettes
         type_ids = {tid for tid in display_to_type.values() if tid}
         if not type_ids:
             return
 
-        stmt = select(models.DisplayType).where(
-            models.DisplayType.id.in_(type_ids)
-        )
+        stmt = select(models.DisplayType).where(models.DisplayType.id.in_(type_ids))
         result = await session.execute(stmt)
-        display_types = {
-            dt.id: dt.colour_type for dt in result.scalars().all()
-        }
+        display_types = {dt.id: dt.colour_type for dt in result.scalars().all()}
 
         # 4. Process scene items to find all image/palette pairs
         for item in scene.items:

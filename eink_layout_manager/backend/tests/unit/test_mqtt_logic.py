@@ -7,8 +7,7 @@ from backend import models
 
 @pytest.fixture
 def mock_app():
-    app = {}
-    app["client_session"] = AsyncMock()
+    app = {"client_session": AsyncMock()}
     return app
 
 

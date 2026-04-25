@@ -59,21 +59,15 @@ async def migrate_json_to_db():
                         continue
 
                     async with get_session() as session:
-                        stmt = select(model_class).where(
-                            model_class.id == item_id
-                        )
+                        stmt = select(model_class).where(model_class.id == item_id)
                         result = await session.execute(stmt)
                         if result.scalars().first():
-                            logger.debug(
-                                f"{resource_type} {item_id} already in DB"
-                            )
+                            logger.debug(f"{resource_type} {item_id} already in DB")
                         else:
                             item = model_class(**data)
                             session.add(item)
                             await session.commit()
-                            logger.info(
-                                f"Migrated {resource_type} {item_id} to DB"
-                            )
+                            logger.info(f"Migrated {resource_type} {item_id} to DB")
 
                     # Rename file to prevent re-migration
                     os.rename(file_path, file_path + ".migrated")
@@ -92,14 +86,10 @@ async def ensure_schema_up_to_date(conn):
     columns = [row[1] for row in result.fetchall()]
 
     if "description" not in columns:
-        await conn.execute(
-            text("ALTER TABLE images ADD COLUMN description VARCHAR")
-        )
+        await conn.execute(text("ALTER TABLE images ADD COLUMN description VARCHAR"))
 
     if "conversion" not in columns:
-        await conn.execute(
-            text("ALTER TABLE images ADD COLUMN conversion JSON")
-        )
+        await conn.execute(text("ALTER TABLE images ADD COLUMN conversion JSON"))
 
     if "brightness" not in columns:
         await conn.execute(
@@ -117,9 +107,7 @@ async def ensure_schema_up_to_date(conn):
         )
 
     if "thumbnail_path" not in columns:
-        await conn.execute(
-            text("ALTER TABLE images ADD COLUMN thumbnail_path VARCHAR")
-        )
+        await conn.execute(text("ALTER TABLE images ADD COLUMN thumbnail_path VARCHAR"))
 
     if "created_at" not in columns:
         await conn.execute(
@@ -138,9 +126,7 @@ async def ensure_schema_up_to_date(conn):
         )
 
     if "settings_hash" not in columns:
-        await conn.execute(
-            text("ALTER TABLE images ADD COLUMN settings_hash VARCHAR")
-        )
+        await conn.execute(text("ALTER TABLE images ADD COLUMN settings_hash VARCHAR"))
 
     # Populate missing settings_hash for existing images
     result = await conn.execute(
@@ -169,9 +155,7 @@ async def ensure_schema_up_to_date(conn):
                 try:
                     conversion = json.loads(conversion_raw)
                 except json.JSONDecodeError:
-                    conversion = (
-                        None  # Or handle as needed, but usually it's JSON
-                    )
+                    conversion = None  # Or handle as needed, but usually it's JSON
             else:
                 conversion = conversion_raw
 
@@ -201,9 +185,7 @@ async def ensure_schema_up_to_date(conn):
 
     if "status" not in columns:
         await conn.execute(
-            text(
-                "ALTER TABLE scenes ADD COLUMN status VARCHAR DEFAULT 'draft'"
-            )
+            text("ALTER TABLE scenes ADD COLUMN status VARCHAR DEFAULT 'draft'")
         )
 
     if "items" not in columns:
@@ -226,9 +208,7 @@ async def ensure_schema_up_to_date(conn):
         )
 
     if "scene_hash" not in columns:
-        await conn.execute(
-            text("ALTER TABLE scenes ADD COLUMN scene_hash VARCHAR")
-        )
+        await conn.execute(text("ALTER TABLE scenes ADD COLUMN scene_hash VARCHAR"))
 
     # Populate missing scene_hash for existing scenes
     result = await conn.execute(
@@ -301,9 +281,7 @@ async def ensure_schema_up_to_date(conn):
 
     if "status" not in columns:
         await conn.execute(
-            text(
-                "ALTER TABLE layouts ADD COLUMN status VARCHAR DEFAULT 'draft'"
-            )
+            text("ALTER TABLE layouts ADD COLUMN status VARCHAR DEFAULT 'draft'")
         )
 
     # Check 'image_palettes' table for recently added columns

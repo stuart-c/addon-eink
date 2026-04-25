@@ -111,9 +111,7 @@ async def test_image_list_sort_numeric(aiohttp_client, app, sample_images):
 
 
 @pytest.mark.asyncio
-async def test_image_list_sort_invalid_field(
-    aiohttp_client, app, sample_images
-):
+async def test_image_list_sort_invalid_field(aiohttp_client, app, sample_images):
     """Test that invalid fields are ignored and fallback to default."""
     client = await aiohttp_client(app)
     resp = await client.get("/api/image?sort=invalid:asc")

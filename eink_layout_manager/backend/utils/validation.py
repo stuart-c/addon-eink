@@ -83,9 +83,7 @@ def validate_read_only(data, schema_name, existing_data=None):
             if current_path in readonly_paths:
                 if existing_data is not None:
                     # Compare with existing value
-                    existing_val = _get_value_at_path(
-                        existing_data, current_path
-                    )
+                    existing_val = _get_value_at_path(existing_data, current_path)
                     # Use standard equality; works for strings, ints, and even
                     # dicts/lists
                     if value != existing_val:
@@ -114,9 +112,7 @@ def validate_read_only(data, schema_name, existing_data=None):
 
 # Base directory for data persistence
 # Moving one level up from utils/ to backend/ then to schemas/
-SCHEMAS_DIR = os.path.realpath(
-    os.path.join(os.path.dirname(__file__), "..", "schemas")
-)
+SCHEMAS_DIR = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", "schemas"))
 
 logger = logging.getLogger(__name__)
 
@@ -246,14 +242,12 @@ def response_schema(schema_name_or_func):
                     # Special case: don't loop if status_response fails
                     if response.status >= 400 and "status_response" in str(e):
                         logger.error(
-                            f"FATAL: status_response validation failed: "
-                            f"{str(e)}"
+                            f"FATAL: status_response validation failed: " f"{str(e)}"
                         )
                         return response
 
                     logger.error(
-                        f"Response validation failed for {actual_schema}: "
-                        f"{str(e)}"
+                        f"Response validation failed for {actual_schema}: " f"{str(e)}"
                     )
                     return web.json_response(
                         {

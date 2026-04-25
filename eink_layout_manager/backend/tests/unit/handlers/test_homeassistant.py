@@ -30,9 +30,7 @@ async def test_handle_device_list_no_token(aiohttp_client, app):
 
 
 @pytest.mark.asyncio
-async def test_handle_device_list_success(
-    aiohttp_client, app, mock_supervisor_token
-):
+async def test_handle_device_list_success(aiohttp_client, app, mock_supervisor_token):
     client = await aiohttp_client(app)
 
     # Mock data
@@ -117,9 +115,7 @@ async def test_handle_device_list_no_integration(
 
 
 @pytest.mark.asyncio
-async def test_handle_device_list_api_error(
-    aiohttp_client, app, mock_supervisor_token
-):
+async def test_handle_device_list_api_error(aiohttp_client, app, mock_supervisor_token):
     client = await aiohttp_client(app)
 
     from unittest.mock import MagicMock

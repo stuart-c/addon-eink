@@ -21,9 +21,7 @@ async def test_image_settings_hash_calculation(aiohttp_client, app):
     file_hash = hashlib.sha256(img_data).hexdigest()
 
     data = FormData()
-    data.add_field(
-        "file", img_data, filename="test.png", content_type="image/png"
-    )
+    data.add_field("file", img_data, filename="test.png", content_type="image/png")
 
     resp = await client.post("/api/image", data=data)
     assert resp.status == 201
@@ -68,9 +66,7 @@ async def test_image_settings_hash_calculation(aiohttp_client, app):
     assert new_hash == expected_hash
 
     # 3. Update non-hash-affecting field (e.g., name)
-    resp = await client.put(
-        f"/api/image/{image_id}", json={"name": "New Name"}
-    )
+    resp = await client.put(f"/api/image/{image_id}", json={"name": "New Name"})
     assert resp.status == 200
     renamed_image = await resp.json()
 

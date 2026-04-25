@@ -1,9 +1,7 @@
 from sqlalchemy.inspection import inspect
 
 
-def generic_model_to_dict(
-    model_instance, include_fields=None, exclude_fields=None
-):
+def generic_model_to_dict(model_instance, include_fields=None, exclude_fields=None):
     """
     Generic converter from SQLAlchemy model to dictionary.
 

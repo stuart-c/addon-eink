@@ -60,9 +60,7 @@ async def test_json_to_db_migration(tmp_path):
         async with database.get_session() as session:
             # Check DisplayType
             result = await session.execute(
-                select(models.DisplayType).where(
-                    models.DisplayType.id == "migrated_dt"
-                )
+                select(models.DisplayType).where(models.DisplayType.id == "migrated_dt")
             )
             dt = result.scalars().first()
             assert dt is not None
@@ -70,9 +68,7 @@ async def test_json_to_db_migration(tmp_path):
 
             # Check Layout
             result = await session.execute(
-                select(models.Layout).where(
-                    models.Layout.id == "migrated_layout"
-                )
+                select(models.Layout).where(models.Layout.id == "migrated_layout")
             )
             layout = result.scalars().first()
             assert layout is not None
@@ -81,13 +77,9 @@ async def test_json_to_db_migration(tmp_path):
 
         # 4. Verify files are renamed
         assert not os.path.exists(os.path.join(dt_path, "migrated_dt.json"))
-        assert os.path.exists(
-            os.path.join(dt_path, "migrated_dt.json.migrated")
-        )
+        assert os.path.exists(os.path.join(dt_path, "migrated_dt.json.migrated"))
 
-        assert not os.path.exists(
-            os.path.join(layout_path, "migrated_layout.json")
-        )
+        assert not os.path.exists(os.path.join(layout_path, "migrated_layout.json"))
         assert os.path.exists(
             os.path.join(layout_path, "migrated_layout.json.migrated")
         )

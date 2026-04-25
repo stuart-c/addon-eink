@@ -37,9 +37,7 @@ async def test_scene_migration_adds_hash_column(tmp_path):
             )
         )
         # Insert a scene without hash
-        items = [
-            {"id": "item1", "type": "image", "displays": ["d1"], "images": []}
-        ]
+        items = [{"id": "item1", "type": "image", "displays": ["d1"], "images": []}]
         await conn.execute(
             text(
                 "INSERT INTO scenes (id, name, layout_id, status, items) "
@@ -67,9 +65,7 @@ async def test_scene_migration_adds_hash_column(tmp_path):
         assert "scene_hash" in columns
 
         result = await conn.execute(
-            text(
-                "SELECT id, scene_hash, items FROM scenes WHERE id = 'scene1'"
-            )
+            text("SELECT id, scene_hash, items FROM scenes WHERE id = 'scene1'")
         )
         row = result.fetchone()
         assert row is not None
@@ -94,9 +90,7 @@ async def test_scene_model_updates_hash_on_save(tmp_path):
 
     # This requires a database session
     async with database.get_session() as session:
-        items = [
-            {"id": "item1", "type": "image", "displays": ["d1"], "images": []}
-        ]
+        items = [{"id": "item1", "type": "image", "displays": ["d1"], "images": []}]
         scene = models.Scene(
             id="test_scene_save",
             name="Test Scene Save",
