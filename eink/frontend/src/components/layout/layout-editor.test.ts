@@ -63,8 +63,8 @@ describe('LayoutEditor', () => {
     ];
     // 450 + 100 = 550 > 500
     
-    (element as any)._validateLayout();
-    expect((element as any)._invalidItemIds.has('item1')).toBe(true);
+    element.controller.validateLayout();
+    expect(element.items[0].invalid).toBe(true);
   });
 
   it('should detect overlap between two items', async () => {
@@ -75,9 +75,9 @@ describe('LayoutEditor', () => {
     // item1 is 10-110, 10-110
     // item2 is 50-150, 50-150 -> Overlap!
     
-    (element as any)._validateLayout();
-    expect((element as any)._invalidItemIds.has('item1')).toBe(true);
-    expect((element as any)._invalidItemIds.has('item2')).toBe(true);
+    element.controller.validateLayout();
+    expect(element.items[0].invalid).toBe(true);
+    expect(element.items[1].invalid).toBe(true);
   });
 
   it('should handle rotated items in overlap detection', async () => {
@@ -90,15 +90,15 @@ describe('LayoutEditor', () => {
       { id: 'item2', display_type_id: 'dt-oblong', x_mm: 210, y_mm: 0, orientation: 'portrait' } // 100x200 (rotated)
     ];
     
-    (element as any)._validateLayout();
-    expect((element as any)._invalidItemIds.has('item1')).toBe(false);
-    expect((element as any)._invalidItemIds.has('item2')).toBe(false);
+    element.controller.validateLayout();
+    expect(element.items[0].invalid).toBe(false);
+    expect(element.items[1].invalid).toBe(false);
     
     // Move rotated item to overlap
     element.items[1].x_mm = 150;
-    (element as any)._validateLayout();
-    expect((element as any)._invalidItemIds.has('item1')).toBe(true);
-    expect((element as any)._invalidItemIds.has('item2')).toBe(true);
+    element.controller.validateLayout();
+    expect(element.items[0].invalid).toBe(true);
+    expect(element.items[1].invalid).toBe(true);
   });
 
   it('should calculate scale based on container size', () => {
@@ -109,11 +109,11 @@ describe('LayoutEditor', () => {
       top: 0, left: 0, bottom: 1000, right: 1000, x: 0, y: 0, toJSON: () => {}
     });
     
-    (element as any)._updateScale();
+    element.controller.updateScale();
     // width_mm = 500, height_mm = 500
     // padding = 80 -> available = 920
     // scale = 920 / 500 = 1.84
-    expect((element as any)._scale).toBeCloseTo(1.84, 1);
+    expect(element.controller.scale).toBeCloseTo(1.84, 1);
   });
 
   it('should emit select-item event when box is clicked', async () => {

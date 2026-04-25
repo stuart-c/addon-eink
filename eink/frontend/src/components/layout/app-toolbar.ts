@@ -1,7 +1,7 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
 import { commonStyles } from '../../styles/common-styles';
-import { DisplayType, Layout } from '../../services/HaApiClient';
+import { AppToolbarController } from '../../controllers/AppToolbarController';
 import '../shared/hardware-preview';
 
 @customElement('app-toolbar')
@@ -154,27 +154,24 @@ export class AppToolbar extends LitElement {
     `
   ];
 
-  @property({ type: Array }) layouts: Layout[] = [];
-  @property({ type: Array }) displayTypes: DisplayType[] = [];
-  @property({ type: Object }) activeLayout: Layout | null = null;
+  @property({ type: Array }) layouts: any[] = [];
+  @property({ type: Array }) displayTypes: any[] = [];
+  @property({ type: Object }) activeLayout: any | null = null;
   @property({ type: Object }) mousePos: { x: number | null, y: number | null } = { x: null, y: null };
 
-  @state() private _showMenu = false;
-  @state() private _showDisplayMenu = false;
-
+  private controller = new AppToolbarController(this);
   private _handleGlobalClick?: (e: MouseEvent) => void;
 
   connectedCallback() {
     super.connectedCallback();
+    this._syncController();
     this._handleGlobalClick = (e: MouseEvent) => {
       const path = e.composedPath();
       const isDropdown = path.some(el => (el as HTMLElement).classList?.contains('dropdown'));
       
-      if (this._showMenu && !isDropdown) {
-        this._showMenu = false;
-      }
-      if (this._showDisplayMenu && !isDropdown) {
-        this._showDisplayMenu = false;
+      if ((this.controller.showMenu || this.controller.showDisplayMenu) && !isDropdown) {
+        this.controller.closeMenus();
+        this.requestUpdate();
       }
     };
     window.addEventListener('click', this._handleGlobalClick);
@@ -187,22 +184,29 @@ export class AppToolbar extends LitElement {
     }
   }
 
-  private _dispatch(name: string, detail?: any) {
-    this.dispatchEvent(new CustomEvent(name, { detail, bubbles: true, composed: true }));
-    this._showMenu = false;
-    this._showDisplayMenu = false;
+  protected updated() {
+    this._syncController();
+  }
+
+  private _syncController() {
+    this.controller.initialise({
+      layouts: this.layouts,
+      displayTypes: this.displayTypes,
+      activeLayout: this.activeLayout,
+      mousePos: this.mousePos
+    });
   }
 
   render() {
     return html`
       <div class="toolbar-actions">
         <div class="dropdown">
-          <button id="btn-add-display" class="settings-button" @click="${() => { this._showDisplayMenu = !this._showDisplayMenu; if (this._showDisplayMenu) this._showMenu = false; }}" title="Add Display Type">
+          <button id="btn-add-display" class="settings-button" @click="${() => { this.controller.toggleDisplayMenu(); this.requestUpdate(); }}" title="Add Display Type">
             <span class="material-icons">add_box</span>
           </button>
-          <div id="menu-display-types" class="dropdown-menu ${this._showDisplayMenu ? 'show' : ''}" style="min-width: 280px;">
-            ${this.displayTypes.map(dt => html`
-              <div class="display-type-item" @click="${() => this._dispatch('add-item-to-layout', dt)}">
+          <div id="menu-display-types" class="dropdown-menu ${this.controller.showDisplayMenu ? 'show' : ''}" style="min-width: 280px;">
+            ${this.controller.displayTypes.map(dt => html`
+              <div class="display-type-item" @click="${() => this.controller.dispatchAction('add-item-to-layout', dt)}">
                 <div class="display-type-preview">
                   <hardware-preview
                     .width_mm="${dt.width_mm}"
@@ -224,20 +228,20 @@ export class AppToolbar extends LitElement {
           </div>
         </div>
 
-        <button id="btn-layout-settings" class="settings-button" @click="${() => this._dispatch('edit-layout')}" title="Layout Settings">
+        <button id="btn-layout-settings" class="settings-button" @click="${() => this.controller.dispatchAction('edit-layout')}" title="Layout Settings">
           <span class="material-icons">settings</span>
         </button>
 
         <div class="dropdown">
-          <div id="trigger-layouts" class="dropdown-trigger ${this._showMenu ? 'active' : ''}" @click="${() => { this._showMenu = !this._showMenu; if (this._showMenu) this._showDisplayMenu = false; }}">
-            <span>${this.activeLayout?.name || 'Loading...'}</span>
+          <div id="trigger-layouts" class="dropdown-trigger ${this.controller.showMenu ? 'active' : ''}" @click="${() => { this.controller.toggleMenu(); this.requestUpdate(); }}">
+            <span>${this.controller.activeLayout?.name || 'Loading...'}</span>
             <div class="chevron">▼</div>
           </div>
-          <div id="menu-layouts" class="dropdown-menu ${this._showMenu ? 'show' : ''}">
-            ${this.layouts.map(l => html`
-              <div class="dropdown-item ${this.activeLayout?.id === l.id ? 'selected' : ''}" @click="${() => this._dispatch('switch-layout', l)}">
+          <div id="menu-layouts" class="dropdown-menu ${this.controller.showMenu ? 'show' : ''}">
+            ${this.controller.layouts.map(l => html`
+              <div class="dropdown-item ${this.controller.activeLayout?.id === l.id ? 'selected' : ''}" @click="${() => this.controller.dispatchAction('switch-layout', l)}">
                 ${l.name}
-                ${this.activeLayout?.id === l.id ? html`✓` : ''}
+                ${this.controller.activeLayout?.id === l.id ? html`✓` : ''}
               </div>
             `)}
           </div>
@@ -245,11 +249,11 @@ export class AppToolbar extends LitElement {
       </div>
 
       <div class="mouse-info">
-        ${this.mousePos.x !== null ? html`
-          <span class="pos-value">X: ${this.mousePos.x}mm, Y: ${this.mousePos.y}mm</span>
+        ${this.controller.mousePos.x !== null ? html`
+          <span class="pos-value">X: ${this.controller.mousePos.x}mm, Y: ${this.controller.mousePos.y}mm</span>
         ` : ''}
         <span class="canvas-dim">
-          Canvas: ${this.activeLayout?.canvas_width_mm}x${this.activeLayout?.canvas_height_mm}mm
+          Canvas: ${this.controller.activeLayout?.canvas_width_mm}x${this.controller.activeLayout?.canvas_height_mm}mm
         </span>
       </div>
     `;

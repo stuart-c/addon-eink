@@ -1,11 +1,11 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement } from 'lit/decorators.js';
 import { live } from 'lit/directives/live.js';
-import { Layout } from '../../services/HaApiClient';
 import '../shared/base-dialog';
 import '../shared/grid-snap-slider';
 import { commonStyles } from '../../styles/common-styles';
 import { BaseDialog } from '../shared/base-dialog';
+import { LayoutSettingsController } from '../../controllers/LayoutSettingsController';
 
 /**
  * A dialog component for configuring layout settings like canvas size and grid snapping.
@@ -19,17 +19,17 @@ export class LayoutSettingsDialog extends LitElement {
     `
   ];
 
-  @property({ type: Object }) settings: Partial<Layout> | null = null;
+  private controller = new LayoutSettingsController(this);
 
-  async show(settings: Layout) {
-    this.settings = JSON.parse(JSON.stringify(settings));
+  async show(settings: any) {
+    this.controller.initialise(settings);
     await this.updateComplete;
     (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).show();
   }
 
   private _handleSubmit(e: Event) {
     e.preventDefault();
-    this.dispatchEvent(new CustomEvent('save', { detail: { settings: this.settings } }));
+    this.controller.save();
     (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).close();
   }
 
@@ -42,8 +42,8 @@ export class LayoutSettingsDialog extends LitElement {
             <input 
               type="text" 
               required 
-              .value="${live(this.settings?.name || '')}" 
-              @input="${(e: any) => this.settings ? this.settings.name = e.target.value : null}"
+              .value="${live(this.controller.settings?.name || '')}" 
+              @input="${(e: any) => this.controller.updateSettings({ name: e.target.value })}"
             >
           </div>
 
@@ -53,8 +53,8 @@ export class LayoutSettingsDialog extends LitElement {
               <input 
                 type="number" 
                 required 
-                .value="${live(this.settings?.canvas_width_mm?.toString() || '')}" 
-                @input="${(e: any) => this.settings ? this.settings.canvas_width_mm = parseInt(e.target.value) : null}"
+                .value="${live(this.controller.settings?.canvas_width_mm?.toString() || '')}" 
+                @input="${(e: any) => this.controller.updateSettings({ canvas_width_mm: parseInt(e.target.value) })}"
               >
             </div>
             <div class="form-group">
@@ -62,8 +62,8 @@ export class LayoutSettingsDialog extends LitElement {
               <input 
                 type="number" 
                 required 
-                .value="${live(this.settings?.canvas_height_mm?.toString() || '')}" 
-                @input="${(e: any) => this.settings ? this.settings.canvas_height_mm = parseInt(e.target.value) : null}"
+                .value="${live(this.controller.settings?.canvas_height_mm?.toString() || '')}" 
+                @input="${(e: any) => this.controller.updateSettings({ canvas_height_mm: parseInt(e.target.value) })}"
               >
             </div>
           </div>
@@ -71,8 +71,8 @@ export class LayoutSettingsDialog extends LitElement {
           <div class="form-group">
             <label>Snap to Grid</label>
             <grid-snap-slider 
-              .value="${this.settings?.grid_snap_mm || 5}"
-              @change="${(e: any) => this.settings ? this.settings.grid_snap_mm = e.detail.value : null}"
+              .value="${this.controller.settings?.grid_snap_mm || 5}"
+              @change="${(e: any) => this.controller.updateSettings({ grid_snap_mm: e.detail.value })}"
             ></grid-snap-slider>
           </div>
 
