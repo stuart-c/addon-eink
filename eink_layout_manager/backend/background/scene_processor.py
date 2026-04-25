@@ -198,12 +198,8 @@ async def process_slice(
 
         # Output pixels
         is_portrait = panel.get("orientation") == "portrait"
-        out_w = (
-            panel["dt"].height_px if is_portrait else panel["dt"].width_px
-        )
-        out_h = (
-            panel["dt"].width_px if is_portrait else panel["dt"].height_px
-        )
+        out_w = panel["dt"].height_px if is_portrait else panel["dt"].width_px
+        out_h = panel["dt"].width_px if is_portrait else panel["dt"].height_px
 
         # Paths
         src_path = os.path.join(get_storage_path("image"), image_record.file_path)
