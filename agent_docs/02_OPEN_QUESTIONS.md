@@ -4,12 +4,28 @@ This file serves as a ledger of unknown design components. Agents should resolve
 
 ## Resolved Design Decisions
 
-- **Storage:** Metadata (Images, Display Types, Layouts, Scenes) is persisted in a **SQLite database** using SQLAlchemy and aiosqlite. Binary assets and thumbnails are stored on the local filesystem.
-- **Image Engine:** The backend utilises **Pillow (PIL)** for all image processing, including resizing, cropping, and thumbnail generation.
-- **Colour Depth and Dithering:** Handled via Pillow integration with support for hardware-specific colour types (e.g., `BWGBRY` for Spectra 6).
+- **Metadata Storage:** Images, Display Types, Layouts, and Scenes are persisted in a **SQLite database** using SQLAlchemy and aiosqlite. 
+- **Image Processing Engines:**
+    - **Pillow (PIL):** Used for metadata extraction, basic cropping, scaling, and thumbnail generation.
+    - **Node.js Canvas & epdoptimize:** A dedicated Node.js utility handles high-quality dithering and palette conversion.
+- **OpenDisplay Integration:** The backend interacts with the OpenDisplay integration using the `opendisplay.upload_image` service via the Home Assistant Core API.
+- **Scene Slicing:** Background scene processing automatically slices and tiles images for multi-display layouts, generating per-display assets.
+- **Asymmetrical Mat Support:** The `DisplayType` schema supports both symmetrical thickness and asymmetrical (horizontal/vertical) mat dimensions.
+- **Display Orientation Normalisation:** All `DisplayType` records are normalised to landscape orientation in the database to ensure consistency in dimension handling.
+
+## Out of Scope
+
+- **Scheduling & Automation:** Content rotation and scene scheduling are handled natively by Home Assistant Automations and are not implemented within the addon.
+- **Display Health Monitoring:** Monitoring of hardware status (battery, signal) is managed via Home Assistant sensor entities.
 
 ## Active Questions
 
-### Networking and Interaction
+### Latency and Feedback
 
-- **OpenDisplay Integration Details:** How specifically will our Python backend authenticate and interact with the OpenDisplay HA Integration? Are there existing wrappers available, or do we interact via standard HA Automations/Services API over REST/Websockets?
+- **Event-Driven Conversion Triggers:** How should frontend "save" actions trigger immediate backend processing to bypass the current 60-second polling lag?
+- **Processing Feedback:** What is the best way to signal "Conversion in Progress" vs "Conversion Failed" to the user in the UI?
+
+### Visual Truth
+
+- **Scene Preview Fidelity:** Should the UI move from CSS-based transforms to fetching the "final" processed slices from the backend for the scene editor preview?
+
