@@ -10,7 +10,30 @@ describe('HaStateController', () => {
             addController: vi.fn(),
             requestUpdate: vi.fn()
         };
-        controller = new HaStateController(mockHost);
+        const mockNavigation = {
+            activeSection: 'layouts',
+            viewMode: 'graphical',
+            selectedItemId: null,
+            selectedImageId: null,
+            selectedDisplayTypeId: null,
+            activeSceneId: null,
+            isAddingNew: false,
+            activeLayoutId: null,
+            setSection: vi.fn().mockImplementation(function(this: any, s: any) { 
+                this.activeSection = s;
+                mockHost.requestUpdate();
+            }),
+            setViewMode: vi.fn().mockImplementation(function(this: any, m: any) { 
+                this.viewMode = m;
+                mockHost.requestUpdate();
+            }),
+            selectItem: vi.fn(),
+            selectImage: vi.fn(),
+            selectDisplayType: vi.fn(),
+            selectScene: vi.fn(),
+            updateHash: vi.fn()
+        };
+        controller = new HaStateController(mockHost, mockNavigation as any);
     });
 
     it('initializes with default values', () => {

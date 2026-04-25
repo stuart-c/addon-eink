@@ -27,7 +27,7 @@ export default defineConfig({
     timeout: 15000,
   },
   webServer: process.env.CI ? undefined : {
-    command: `cd ../.. && export DATA_DIR=${DATA_DIR} && export MEDIA_DIR=${DATA_DIR}/media && export INGRESS_PORT=${INGRESS_PORT} && cd eink && PYTHONPATH=. backend/.venv/bin/python3 -m backend.main`,
+    command: `export DATA_DIR=${DATA_DIR} && export MEDIA_DIR=${path.join(DATA_DIR, 'media')} && export INGRESS_PORT=${INGRESS_PORT} && cd ${path.resolve(__dirname, '../..')} && cd eink && PYTHONPATH=. backend/.venv/bin/python3 -m backend.main`,
     url: `http://localhost:${INGRESS_PORT}/api/ping`,
     reuseExistingServer: true,
     stdout: 'pipe',

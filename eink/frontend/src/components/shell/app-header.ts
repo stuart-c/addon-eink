@@ -1,7 +1,8 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { commonStyles } from '../../styles/common-styles';
-import { type AppSection } from '../../controllers/HaStateController';
+import { type AppSection } from '../../controllers/NavigationController';
+import { type AppMessage } from '../../controllers/HaStateController';
 
 @customElement('app-header')
 export class AppHeader extends LitElement {
@@ -101,7 +102,7 @@ export class AppHeader extends LitElement {
 
   @property({ type: String }) activeSection: AppSection = 'layouts';
   @property({ type: Boolean }) connected = false;
-  @property({ type: String }) message = '';
+  @property({ type: Object }) message: string | AppMessage | null = null;
   @property({ type: Boolean }) isSaving = false;
   @property({ type: Boolean }) isDirty = false;
   @property({ type: Boolean }) canDelete = false;
@@ -155,10 +156,14 @@ export class AppHeader extends LitElement {
         </div>
 
         <div class="header-actions">
-          ${this.message ? html`<span class="message-badge">${this.message}</span>` : ''}
+          ${this.message 
+            ? (typeof this.message === 'string' 
+                ? html`<span class="message-badge info">${this.message}</span>`
+                : html`<span class="message-badge ${this.message.type}">${this.message.text}</span>`) 
+            : ''}
           
           ${this.activeSection !== 'images' ? html`
-          <button class="secondary icon-button" @click="${() => this._dispatch('toggle-view-mode')}" title="Switch to ${this.viewMode === 'graphical' ? 'YAML' : 'Graphical'} Mode">
+          <button class="secondary icon-button" @click="${() => this._dispatch('toggle-view-mode')}" title="${this.viewMode === 'graphical' ? 'Switch to YAML Mode' : 'Switch to Graphical Mode'}">
             <span class="material-icons">${this.viewMode === 'graphical' ? 'code' : 'dashboard'}</span>
           </button>
           ` : ''}
@@ -173,7 +178,8 @@ export class AppHeader extends LitElement {
           </button>
           ` : ''}
 
-          <button class="secondary icon-button" @click="${() => this._dispatch('delete-item')}" ?disabled="${!this.canDelete || this.isSaving}" title="Delete Current Item">
+          <button class="secondary icon-button" @click="${() => this._dispatch('delete-item')}" ?disabled="${!this.canDelete || this.isSaving}" 
+            title="${this.activeSection === 'layouts' ? 'Delete Layout' : (this.activeSection === 'scenes' ? 'Delete Scene' : (this.activeSection === 'display-types' ? 'Delete Display Type' : 'Delete Item'))}">
             <span class="material-icons" style="color: var(--danger-colour);">delete</span>
           </button>
           

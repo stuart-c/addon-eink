@@ -1,15 +1,16 @@
 import { ReactiveController, ReactiveControllerHost } from 'lit';
 import { api, DisplayType, Layout, LayoutItem, Image, Scene, HaDevice } from '../services/HaApiClient';
+import { NavigationController, AppSection, ViewMode } from './NavigationController';
 
 /**
  * A Lit Reactive Controller to manage the application state:
  * - Layouts collection
  * - Display Types collection
- * - Active Layout selection
  * - Backend connectivity
+ * Delegates navigation and selection state to NavigationController.
  */
-export type AppSection = 'display-types' | 'layouts' | 'images' | 'scenes';
-export type ViewMode = 'graphical' | 'yaml';
+
+export interface AppMessage { text: string; type: 'success' | 'error' | 'warning' | 'info'; }
 
 export class HaStateController implements ReactiveController {
   public connected = false;
@@ -18,20 +19,52 @@ export class HaStateController implements ReactiveController {
   public images: Image[] = [];
   public scenes: Scene[] = [];
   public haDevices: HaDevice[] = [];
-  public activeLayout: Layout | null = null;
-  public activeScene: Scene | null = null;
-  public selectedItemId: string | null = null;
-  public selectedImageId: string | null = null;
-  public selectedDisplayTypeId: string | null = null;
-  public isAddingNew = false;
-  public activeSection: AppSection = 'layouts';
-  public message: string = '';
+  public message: AppMessage | null = null;
   private _originalLayout: string | null = null;
   public isSaving = false;
-  public viewMode: ViewMode = 'graphical';
 
-  constructor(private host: ReactiveControllerHost) {
+  get activeSection() { return this.navigation.activeSection; }
+  set activeSection(v) { this.navigation.setSection(v); }
+
+  get viewMode() { return this.navigation.viewMode; }
+  set viewMode(v) { this.navigation.setViewMode(v); }
+
+  get selectedItemId() { return this.navigation.selectedItemId; }
+  set selectedItemId(v) { this.navigation.selectItem(v); }
+
+  get selectedImageId() { return this.navigation.selectedImageId; }
+  set selectedImageId(v) { this.navigation.selectImage(v); }
+
+  get selectedDisplayTypeId() { return this.navigation.selectedDisplayTypeId; }
+  set selectedDisplayTypeId(v) { this.navigation.selectDisplayType(v); }
+
+  get isAddingNew() { return this.navigation.isAddingNew; }
+  set isAddingNew(v) { this.navigation.isAddingNew = v; }
+
+  public activeLayout: Layout | null = null;
+  public activeScene: Scene | null = null;
+
+  constructor(private host: ReactiveControllerHost, public navigation: NavigationController) {
     this.host.addController(this);
+    this.navigation.onHashApplied = () => this._syncFromNavigation();
+  }
+
+  private _syncFromNavigation() {
+    const layout = this.layouts.find(l => l.id === this.navigation.activeLayoutId);
+    if (layout && this.activeLayout?.id !== layout.id) {
+      this.activeLayout = layout;
+      this._originalLayout = JSON.stringify(layout);
+    } else if (!this.navigation.activeLayoutId) {
+      this.activeLayout = null;
+      this._originalLayout = null;
+    }
+
+    const scene = this.scenes.find(s => s.id === this.navigation.activeSceneId);
+    if (scene && this.activeScene?.id !== scene.id) {
+      this.activeScene = scene;
+    } else if (!this.navigation.activeSceneId) {
+      this.activeScene = null;
+    }
   }
 
   get isDirty() {
@@ -40,7 +73,6 @@ export class HaStateController implements ReactiveController {
   }
 
   async hostConnected() {
-    window.addEventListener('hashchange', () => this._applyHash());
     await this.refresh();
   }
 
@@ -95,7 +127,7 @@ export class HaStateController implements ReactiveController {
     this.host.requestUpdate();
     console.info('[HaStateController] refresh complete - host update requested');
     this._ensureSelection();
-    this._applyHash();
+    this.navigation.updateHash();
   }
 
   /**
@@ -125,6 +157,7 @@ export class HaStateController implements ReactiveController {
     };
     const result = await api.createItem<Layout>('layout', defaultLayout);
     this.activeLayout = result;
+    this.navigation.activeLayoutId = result.id;
     this.layouts = [result];
     this._originalLayout = JSON.stringify(result);
   }
@@ -146,9 +179,10 @@ export class HaStateController implements ReactiveController {
       }
       
       this.activeLayout = saved;
+      this.navigation.activeLayoutId = saved.id;
       this._originalLayout = JSON.stringify(saved);
+      this.isAddingNew = false;
       await this.refresh();
-      this._updateHash();
     } catch (e: any) {
       this.showMessage(`Failed to save: ${e.message}`, 'error');
     } finally {
@@ -169,7 +203,6 @@ export class HaStateController implements ReactiveController {
         saved = await api.createItem('display_type', dt);
       }
       this.selectedDisplayTypeId = saved.id;
-      this._updateHash();
       await this.refresh();
       this.isSaving = false;
       this.showMessage(`Display type "${saved.name}" saved!`, 'success');
@@ -202,7 +235,6 @@ export class HaStateController implements ReactiveController {
           this.selectedDisplayTypeId = null;
         }
       }
-      this._updateHash();
       return true;
     } catch (e: any) {
       this.showMessage(`Failed to delete: ${e.message}`, 'error');
@@ -220,17 +252,18 @@ export class HaStateController implements ReactiveController {
       await this.refresh();
       this.host.requestUpdate();
 
-      if (this.activeLayout?.id === layout.id) {
-        if (this.layouts.length > 0) {
-          const newIndex = Math.min(oldIndex, this.layouts.length - 1);
-          this.activeLayout = this.layouts[newIndex];
-          this._originalLayout = JSON.stringify(this.activeLayout);
-        } else {
-          this.activeLayout = null;
-          this._originalLayout = null;
+      if (this.activeSection === 'layouts' && this.layouts.length > 0) {
+        if (this.activeLayout?.id === layout.id) {
+          if (this.layouts.length > 0) {
+            const newIndex = Math.min(oldIndex, this.layouts.length - 1);
+            this.activeLayout = this.layouts[newIndex];
+            this._originalLayout = JSON.stringify(this.activeLayout);
+          } else {
+            this.activeLayout = null;
+            this._originalLayout = null;
+          }
         }
       }
-      this._updateHash();
       return true;
     } catch (e: any) {
       this.showMessage(`Failed to delete: ${e.message}`, 'error');
@@ -246,7 +279,6 @@ export class HaStateController implements ReactiveController {
       }
       await this.refresh();
       this.showMessage(`Image "${image.name}" deleted.`, 'success');
-      this._updateHash();
       return true;
     } catch (e: any) {
       this.showMessage(`Failed to delete image: ${e.message}`, 'error');
@@ -261,7 +293,6 @@ export class HaStateController implements ReactiveController {
       const newScene: Omit<Scene, 'id'> = { name, layout };
       const result = await api.createItem<Scene>('scene', newScene);
       this.activeScene = result;
-      this._updateHash();
       await this.refresh();
       this.isSaving = false;
       this.showMessage(`Scene "${name}" created!`, 'success');
@@ -287,7 +318,6 @@ export class HaStateController implements ReactiveController {
         this.activeScene = this.scenes.find(s => s.id === id) || this.activeScene;
       }
       this.showMessage('Scene updated!', 'success');
-      this._updateHash();
     } catch (e: any) {
       this.showMessage(`Failed to update scene: ${e.message}`, 'error');
     } finally {
@@ -334,7 +364,6 @@ export class HaStateController implements ReactiveController {
           this.activeScene = null;
         }
       }
-      this._updateHash();
       return true;
     } catch (e: any) {
       this.showMessage(`Failed to delete scene: ${e.message}`, 'error');
@@ -342,23 +371,26 @@ export class HaStateController implements ReactiveController {
     }
   }
 
-  showMessage(text: string, _type: 'info' | 'success' | 'error' = 'info') {
-    console.info(`[HaStateController] showMessage: ${text} (${_type})`);
-    this.message = text;
+  showMessage(text: string, type: 'info' | 'success' | 'error' = 'info') {
+    console.info(`[HaStateController] showMessage: ${text} (${type})`);
+    this.message = { text, type };
     this.host.requestUpdate();
     setTimeout(() => {
-      this.message = '';
-      this.host.requestUpdate();
-    }, 3000);
+      if (this.message?.text === text) {
+        this.message = null;
+        this.host.requestUpdate();
+      }
+    }, 5000);
   }
 
   switchLayout(layout: Layout) {
     this.activeLayout = layout;
+    this.navigation.activeLayoutId = layout.id;
     this._originalLayout = JSON.stringify(layout);
     this.selectedItemId = null;
     this.isAddingNew = false;
     this.host.requestUpdate();
-    this._updateHash();
+    this.navigation.updateHash();
   }
 
   public prepareNewLayout() {
@@ -370,11 +402,12 @@ export class HaStateController implements ReactiveController {
       grid_snap_mm: 5,
       items: []
     };
+    this.navigation.activeLayoutId = '';
     this._originalLayout = null; // No baseline for new layout
     this.selectedItemId = null;
     this.isAddingNew = true;
     this.host.requestUpdate();
-    this._updateHash();
+    this.navigation.updateHash();
   }
 
   switchScene(scene: Scene) {
@@ -382,9 +415,7 @@ export class HaStateController implements ReactiveController {
   }
 
   public selectScene(id: string | null) {
-    this.activeScene = this.scenes.find(s => s.id === id) || null;
-    this.host.requestUpdate();
-    this._updateHash();
+    this.navigation.selectScene(id);
   }
 
   discardChanges() {
@@ -410,118 +441,25 @@ export class HaStateController implements ReactiveController {
   }
 
   setSection(section: AppSection) {
-    this.activeSection = section;
-    this.host.requestUpdate();
-    this._updateHash();
+    this.navigation.setSection(section);
   }
 
   public selectItem(itemId: string | null) {
-    this.selectedItemId = itemId;
-    this.host.requestUpdate();
-    this._updateHash();
+    this.navigation.selectItem(itemId);
   }
 
   public selectImage(imageId: string | null) {
-    this.selectedImageId = imageId;
-    this.host.requestUpdate();
-    this._updateHash();
+    this.navigation.selectImage(imageId);
   }
 
   public selectDisplayType(id: string | null) {
-    this.isAddingNew = (id === null);
-    this.selectedDisplayTypeId = id;
-    this.host.requestUpdate();
-    this._updateHash();
+    this.navigation.selectDisplayType(id);
   }
 
   public setViewMode(mode: ViewMode) {
-    this.viewMode = mode;
-    this.host.requestUpdate();
-    this._updateHash();
+    this.navigation.setViewMode(mode);
   }
 
-  private _updateHash() {
-    let hash = `#/${this.activeSection}`;
-    
-    if (this.activeSection === 'layouts' && this.activeLayout) {
-      hash += `/${this.activeLayout.id}`;
-      if (this.selectedItemId) {
-        hash += `/item/${this.selectedItemId}`;
-      }
-    } else if (this.activeSection === 'scenes' && this.activeScene) {
-      hash += `/${this.activeScene.id}`;
-    } else if (this.activeSection === 'images' && this.selectedImageId) {
-      hash += `/${this.selectedImageId}`;
-    } else if (this.activeSection === 'display-types' && this.selectedDisplayTypeId) {
-      hash += `/${this.selectedDisplayTypeId}`;
-    }
-
-    if (this.viewMode === 'yaml') {
-      hash += '?mode=yaml';
-    }
-
-    if (window.location.hash === hash) return;
-
-    window.location.hash = hash;
-  }
-
-  private _applyHash() {
-
-    const hash = window.location.hash || '#/layouts';
-    const [pathPart, queryPart] = hash.split('?');
-    const path = pathPart.substring(2); // Remove '#/'
-    const segments = path.split('/');
-    
-    const params = new URLSearchParams(queryPart || '');
-    const mode = params.get('mode') as ViewMode;
-    if (mode === 'yaml' || mode === 'graphical') {
-      this.viewMode = mode;
-    }
-
-    const section = segments[0] as AppSection;
-    if (['display-types', 'layouts', 'images', 'scenes'].includes(section)) {
-      if (this.activeSection !== section) {
-      this.activeSection = section;
-      this.isAddingNew = false; // Reset when switching sections
-    }
-    }
-
-    if (this.activeSection === 'layouts') {
-      const layoutId = segments[1];
-      if (layoutId) {
-        const layout = this.layouts.find(l => l.id === layoutId);
-        if (layout && this.activeLayout?.id !== layoutId) {
-          this.activeLayout = layout;
-          this._originalLayout = JSON.stringify(layout);
-        }
-      }
-      const newItemId = (segments[2] === 'item' && segments[3]) ? segments[3] : null;
-      if (this.selectedItemId !== newItemId) this.selectedItemId = newItemId;
-    } else if (this.activeSection === 'scenes') {
-      const sceneId = segments[1] || null;
-      if (this.activeScene?.id !== sceneId) {
-        const scene = sceneId ? this.scenes.find(s => s.id === sceneId) : null;
-        this.activeScene = scene || null;
-      }
-    } else if (this.activeSection === 'images') {
-      const imageId = segments[1] || null;
-      if (this.selectedImageId !== imageId) this.selectedImageId = imageId;
-    } else if (this.activeSection === 'display-types') {
-      const displayTypeId = segments[1] || null;
-      if (this.selectedDisplayTypeId !== displayTypeId) {
-        this.selectedDisplayTypeId = displayTypeId;
-        if (displayTypeId !== null) this.isAddingNew = false;
-      }
-    }
-
-    this._ensureSelection();
-    this.host.requestUpdate();
-  }
-
-  /**
-   * Selection safety: ensures an item is selected for the current section
-   * if items are available and none is currently active.
-   */
   private _ensureSelection() {
     if (!this.activeLayout && this.layouts.length > 0) {
       this.activeLayout = this.layouts[0];

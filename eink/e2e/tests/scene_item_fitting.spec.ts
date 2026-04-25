@@ -68,9 +68,8 @@ test.describe('Scene Item Fitting', () => {
     
     // 4. Verify auto-fit: Check that scaling factor is updated
     const scalingInput = dialog.locator('input[type="number"]').first();
-    const scalingValue = await scalingInput.inputValue();
-    
-    expect(parseInt(scalingValue)).not.toBe(100);
+    await expect(scalingInput).not.toHaveValue('100');
+    const autoFittedValue = await scalingInput.inputValue();
     
     // Check offsets are 0
     const offsetXInput = dialog.locator('input[type="number"]').nth(1);
@@ -87,6 +86,6 @@ test.describe('Scene Item Fitting', () => {
     await dialog.locator('button:has-text("FIT")').click();
     
     // Verify it returned to the auto-fitted value
-    await expect(scalingInput).toHaveValue(scalingValue);
+    await expect(scalingInput).toHaveValue(autoFittedValue);
   });
 });

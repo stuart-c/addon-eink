@@ -56,6 +56,7 @@ def setup_routes(app):
         static_dist = os.path.join(os.path.dirname(__file__), "static_dist")
 
     if os.path.exists(static_dist):
+        print(f"DEBUG: Serving static files from: {static_dist}")
         # Serve index.html at the root
         async def index(_):  # noqa: U101
             return web.FileResponse(os.path.join(static_dist, "index.html"))
