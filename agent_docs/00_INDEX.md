@@ -7,6 +7,7 @@ This directory contains resources for AI agents to continue the development of t
 - [`03_DEVELOPMENT.md`](03_DEVELOPMENT.md) - Detailed development process and decision log.
 - [`04_E2E_TESTS.md`](04_E2E_TESTS.md) - Comprehensive guide to end-to-end testing with Playwright.
 - [`05_PROJECT_REVIEW_TASKS.md`](05_PROJECT_REVIEW_TASKS.md) - Project review, critique, and proposed task list.
+- [`06_USER_FUNCTIONALITY.md`](06_USER_FUNCTIONALITY.md) - Detailed account of system functionality from a user's perspective.
 
 ## Agent Workflow Guidelines
 
