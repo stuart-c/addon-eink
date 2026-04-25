@@ -199,7 +199,7 @@ async def process_slice(
 
         # Paths
         src_path = os.path.join(get_storage_path("image"), image_record.file_path)
-        dest_filename = f"slice_{scene_id}_{display_id}_{image_id}.png"
+        dest_filename = f"slice_{scene_id}_{image_id}_{display_id}.png"
         dest_path = os.path.join(get_storage_path("scene_display"), dest_filename)
 
         # Palette
