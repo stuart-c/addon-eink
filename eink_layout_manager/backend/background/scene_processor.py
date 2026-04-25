@@ -177,13 +177,12 @@ async def process_slice(
         result = await session.execute(stmt)
         record = result.scalar_one_or_none()
 
-        if record:
-            if (
-                record.scene_hash == scene.scene_hash
-                and record.image_hash == image_record.settings_hash
-            ):
-                # Up to date
-                return
+        if record and (
+            record.scene_hash == scene.scene_hash
+            and record.image_hash == image_record.settings_hash
+        ):
+            # Up to date
+            return
 
         # Need to run conversion
         logger.info(

@@ -456,6 +456,13 @@ export class SceneItemSettingsDialog extends LitElement {
   @state() private _searchQuery = '';
   @state() private _previewCanvas: HTMLCanvasElement | null = null;
   private _updateTimer: any = null;
+  
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (this._updateTimer) {
+      clearTimeout(this._updateTimer);
+    }
+  }
 
   async show(item: any, layout: Layout, displayTypes: DisplayType[]) {
     this.item = item;
