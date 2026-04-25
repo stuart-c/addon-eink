@@ -53,6 +53,12 @@ Smart Scenes are the high-level configurations that determine the actual content
 3.  **Build Library**: Upload **Images** and customise their properties (dithering, contrast) for e-ink.
 4.  **Compose Scene**: Create a **Smart Scene**, select the Layout, and assign images to the displays or tiles.
 
+## 6. Home Assistant Integration
+The **Addon eInk** system is designed to work in tandem with Home Assistant, delegating system-wide orchestration and monitoring to the host platform.
+
+- **Scheduling & Automation**: Changing scenes or rotating content is handled via Home Assistant Automations and Scripts. This allows for complex, event-driven scene transitions (e.g., changing the display based on time of day, weather, or home occupancy). As such, internal scheduling is considered out of scope for this application.
+- **Display Monitoring**: Monitoring of physical device status (e.g., battery levels, connectivity, signal strength) is managed through Home Assistant sensors and entities. This provides a unified dashboard for all smart home hardware and is not implemented directly within the addon.
+
 ---
 
 ## Missing Functionality
@@ -61,7 +67,6 @@ The following gaps have been identified in the current system and represent oppo
 
 ### Visual Truth & High-Fidelity Feedback
 - **Scene-Level Live Preview**: Currently, the Scenes view shows boxes or placeholders. It lacks a true WISIWYG preview that renders the *actual processed images* as they will appear on the hardware.
-- **Display Health Dashboard**: No interface exists to monitor the physical battery level, signal strength, or online/offline status of the remote e-ink devices.
 
 ### Performance & Latency
 - **Event-Driven Conversion**: Image processing currently relies on a 60-second polling interval in the background. This should be replaced with an event-driven model that triggers processing immediately when an image or scene is updated.
@@ -71,7 +76,6 @@ The following gaps have been identified in the current system and represent oppo
 - **Batch Operations**: Users must upload, tag, or delete images one by one. Bulk operations are not yet implemented.
 - **Empty States**: Improving the onboarding experience with "getting started" guides or more descriptive prompts when no data exists.
 - **Dark Mode**: The application lacks a native dark mode theme.
-- **Built-in Scheduling**: While Home Assistant handles automations, the addon itself lacks a simple internal scheduler for rotating scenes or setting "Active" scene overrides.
 
 ### Connectivity
 - **MQTT UI Integration**: While the backend supports MQTT, the frontend lacks deep integration for direct device interaction or status reporting beyond what is exposed through Home Assistant.
