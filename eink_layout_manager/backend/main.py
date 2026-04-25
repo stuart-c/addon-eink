@@ -15,10 +15,6 @@ from backend.background.mqtt import (
     start_mqtt,
     stop_mqtt,
 )
-from backend.background.image_processor import (
-    schedule_image_processing,
-    stop_image_processing,
-)
 from backend.background.scene_processor import (
     schedule_scene_processing,
     stop_scene_processing,
@@ -43,11 +39,9 @@ def init_app():
     app.on_startup.append(on_startup)
     app.on_startup.append(schedule_image_cleanup)
     app.on_startup.append(start_mqtt)
-    app.on_startup.append(schedule_image_processing)
     app.on_startup.append(schedule_scene_processing)
     app.on_cleanup.append(stop_image_cleanup)
     app.on_cleanup.append(stop_mqtt)
-    app.on_cleanup.append(stop_image_processing)
     app.on_cleanup.append(stop_scene_processing)
     app.on_cleanup.append(on_cleanup)
 
@@ -55,7 +49,6 @@ def init_app():
     try:
         os.makedirs(get_storage_path("image"), exist_ok=True)
         os.makedirs(get_storage_path("thumbnail"), exist_ok=True)
-        os.makedirs(get_storage_path("conversion"), exist_ok=True)
         os.makedirs(get_storage_path("scene_display"), exist_ok=True)
     except ValueError as e:
         print(f"Error initialising storage: {str(e)}")

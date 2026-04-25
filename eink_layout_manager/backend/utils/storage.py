@@ -8,7 +8,7 @@ def get_storage_path(resource_type):
     """
     # Security: Whitelist allowed resource types to prevent
     # arbitrary directory creation
-    allowed_types = {"image", "thumbnail", "conversion", "scene_display"}
+    allowed_types = {"image", "thumbnail", "scene_display"}
     if resource_type not in allowed_types:
         raise ValueError(f"Invalid resource type: {resource_type}")
 
