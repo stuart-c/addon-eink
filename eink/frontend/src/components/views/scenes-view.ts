@@ -475,6 +475,7 @@ export class ScenesView extends BaseResourceView {
                 .highlightedIds="${highlightedDisplayIds}"
                 .usedIds="${usedDisplayIds}"
                 .previewSlices="${previewSlices}"
+                .hideNumber="${true}"
                 @selection-change="${(e: CustomEvent) => { this.controller.selectedDisplayIds = e.detail.ids; this.requestUpdate(); }}"
                 @box-click="${(e: CustomEvent) => this.controller.handleBoxClick(e.detail.id)}"
                 @edit-item="${(e: CustomEvent) => this._handleBoxEdit(e.detail.id)}"
