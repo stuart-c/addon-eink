@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, state, query } from 'lit/decorators.js';
 import { HaStateController } from './controllers/HaStateController';
+import { NavigationController } from './controllers/NavigationController';
 
 import './components/shell/app-header';
 import './components/layout/side-bar';
@@ -21,7 +22,8 @@ import { BaseResourceView } from './components/views/base-resource-view';
 
 @customElement('app-root')
 export class AppRoot extends LitElement {
-  private state = new HaStateController(this);
+  private navigation = new NavigationController(this);
+  private state = new HaStateController(this, this.navigation);
 
   static styles = css`
     :host {
@@ -185,13 +187,7 @@ export class AppRoot extends LitElement {
     });
 
     if (confirmed) {
-      this.state.updateActiveLayout({
-        items: this.state.activeLayout?.items.filter(i => i.id !== e.detail.id)
-      });
-      if (this.state.selectedItemId === e.detail.id) {
-        this.state.selectItem(null);
-      }
-      this.state.showMessage('Item deleted', 'success');
+      this.state.deleteLayoutItem(e.detail.id);
     }
   }
 
@@ -209,10 +205,10 @@ export class AppRoot extends LitElement {
         @discard-changes="${this._handleDiscard}"
         @delete-item="${this._onHeaderDeleteItem}"
         @add-item="${this._onHeaderAddItem}"
-        @toggle-view-mode="${() => this.state.setViewMode(this.state.viewMode === 'graphical' ? 'yaml' : 'graphical')}"
+        @toggle-view-mode="${() => this.navigation.setViewMode(this.state.viewMode === 'graphical' ? 'yaml' : 'graphical')}"
         @set-section="${async (e: CustomEvent) => {
           if (await this._requestNavigationConfirmation()) {
-            this.state.setSection(e.detail);
+            this.navigation.setSection(e.detail);
           }
         }}"
       ></app-header>

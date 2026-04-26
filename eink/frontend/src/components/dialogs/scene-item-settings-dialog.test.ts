@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import './scene-item-settings-dialog';
 import { SceneItemSettingsDialog } from './scene-item-settings-dialog';
 
@@ -45,9 +45,27 @@ describe('SceneItemSettingsDialog', () => {
   };
 
   beforeEach(async () => {
+    // Mock global Image for preview loading
+    // @ts-ignore
+    global.Image = class {
+      onload: any = null;
+      onerror: any = null;
+      set src(_: string) {
+        if (this.onload) setTimeout(() => this.onload(), 0);
+      }
+      get width() { return 100; }
+      get height() { return 100; }
+      crossOrigin: string = '';
+    };
+
     element = document.createElement('scene-item-settings-dialog') as SceneItemSettingsDialog;
     document.body.appendChild(element);
     await element.updateComplete;
+  });
+
+  afterEach(() => {
+    if (element.parentNode) document.body.removeChild(element);
+    vi.clearAllMocks();
   });
 
   it('populates initial image items', async () => {

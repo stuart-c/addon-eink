@@ -516,7 +516,7 @@ export class LayoutsView extends BaseResourceView {
       <layout-settings-dialog @save="${(e: CustomEvent) => {
         this.dispatchEvent(new CustomEvent('update-active-layout', { detail: e.detail.settings }));
         this._checkDirty();
-        this.showMessage(this.activeLayout?.id ? 'Settings applied' : 'Draft settings applied', 'success');
+        this.showMessage('Settings applied', 'success');
       }}"></layout-settings-dialog>
     `;
   }

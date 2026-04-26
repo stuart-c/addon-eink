@@ -460,6 +460,13 @@ export class SceneItemSettingsDialog extends LitElement {
   private _cachedPreviewData: any = null;
   private _lastPreviewSource: string = '';
 
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (this._updateTimer) {
+      clearTimeout(this._updateTimer);
+    }
+  }
+
   async show(item: any, layout: Layout, displayTypes: DisplayType[]) {
     this.item = item;
     this._layout = layout;
@@ -649,7 +656,7 @@ export class SceneItemSettingsDialog extends LitElement {
     this._offsetY = 0;
     
     // Automatically fill new image
-    this._fillImage();
+    this._applyImageFitting('fill', image);
 
     this._isAddingImage = false;
     this.requestUpdate();
@@ -818,10 +825,15 @@ export class SceneItemSettingsDialog extends LitElement {
     this._applyImageFitting('fill');
   }
 
-  private _applyImageFitting(mode: 'fit' | 'fill') {
-    if (!this._selectedImageId || !this.item || !this.item.displays || this.item.displays.length === 0) return;
-    const image = this._availableImages.find(i => i.id === this._selectedImageId);
-    if (!image) return;
+  private _applyImageFitting(mode: 'fit' | 'fill', imageToUse?: ImageMetadata) {
+    if (!this.item || !this.item.displays || this.item.displays.length === 0) return;
+    
+    let image = imageToUse;
+    if (!image && this._selectedImageId) {
+      image = this._availableImages.find(i => i.id === this._selectedImageId);
+    }
+    
+    if (!image || !image.dimensions || image.dimensions.width === 0 || image.dimensions.height === 0) return;
 
     const panelBB = this._panelBoundingBox;
     const firstDisplayId = this.item.displays[0];
@@ -849,7 +861,7 @@ export class SceneItemSettingsDialog extends LitElement {
     this._offsetY = Math.round((targetHeightPx - scaledHeight) / 2);
 
     // Update the item data
-    const img = this.item.images.find((i: any) => i.image_id === this._selectedImageId);
+    const img = this.item.images.find((i: any) => i.image_id === image!.id);
     if (img) {
       img.scaling_factor = this._scalingFactor;
       img.offset = { x: this._offsetX, y: this._offsetY };
