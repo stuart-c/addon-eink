@@ -115,7 +115,7 @@ test.describe('Scene Item Pips and Preview', () => {
     // We can't easily check the background-image content, but we can check if it's set
     // Actually, let's check the style attribute if possible, or just assume it works if no error
     // In our implementation, HardwarePreview renders the background-image
-    const panel = preview.locator('.display-panel');
+    const panel = preview.locator('.preview-display');
     await expect(panel).toHaveAttribute('style', /background-image: url/);
     await expect(panel).toHaveAttribute('style', /mockhash/);
 
