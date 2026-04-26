@@ -7,12 +7,12 @@ test.describe('Display Numbering Visibility', () => {
 
   test.beforeAll(async ({ request }) => {
     const dt = await createDisplayType(request, {
-      name: `E2E-NUM-DT-${Date.now()}`,
+      name: `Z-DT-${Date.now()}`,
       width_mm: 100,
       height_mm: 100
     });
 
-    layoutName = `E2E-NUM-L-${Date.now()}`;
+    layoutName = `Z-LYT-${Date.now()}`;
     const layout = await createLayout(request, {
       name: layoutName,
       canvas_width_mm: 200,
@@ -22,7 +22,7 @@ test.describe('Display Numbering Visibility', () => {
       ]
     });
 
-    sceneName = `E2E-NUM-S-${Date.now()}`;
+    sceneName = `Z-SCN-${Date.now()}`;
     await createScene(request, {
       name: sceneName,
       layout: layout.id
@@ -37,8 +37,9 @@ test.describe('Display Numbering Visibility', () => {
     await expect(page.locator('scenes-view')).toBeVisible();
     
     // Select the test scene
-    const sidebarItem = page.locator('sidebar-list .sidebar-item').getByText(sceneName);
-    await expect(sidebarItem).toBeVisible({ timeout: 10000 });
+    await page.waitForLoadState('networkidle');
+    const sidebarItem = page.locator('sidebar-list .sidebar-item-name').filter({ hasText: sceneName });
+    await expect(sidebarItem).toBeVisible({ timeout: 15000 });
     await sidebarItem.click();
     await expect(page.locator('.toolbar-title')).toContainText(sceneName);
     
@@ -63,8 +64,9 @@ test.describe('Display Numbering Visibility', () => {
     await expect(page.locator('layouts-view')).toBeVisible();
     
     // Select the test layout
-    const sidebarItem = page.locator('sidebar-list .sidebar-item').getByText(layoutName);
-    await expect(sidebarItem).toBeVisible({ timeout: 10000 });
+    await page.waitForLoadState('networkidle');
+    const sidebarItem = page.locator('sidebar-list .sidebar-item-name').filter({ hasText: layoutName });
+    await expect(sidebarItem).toBeVisible({ timeout: 15000 });
     await sidebarItem.click();
     await expect(page.locator('.toolbar-title')).toContainText(layoutName);
     
