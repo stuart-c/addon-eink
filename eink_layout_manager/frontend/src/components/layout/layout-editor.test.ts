@@ -64,7 +64,7 @@ describe('LayoutEditor', () => {
     // 450 + 100 = 550 > 500
     
     (element as any)._validateLayout();
-    expect(element.items[0].invalid).toBe(true);
+    expect((element as any)._invalidItemIds.has('item1')).toBe(true);
   });
 
   it('should detect overlap between two items', async () => {
@@ -76,8 +76,8 @@ describe('LayoutEditor', () => {
     // item2 is 50-150, 50-150 -> Overlap!
     
     (element as any)._validateLayout();
-    expect(element.items[0].invalid).toBe(true);
-    expect(element.items[1].invalid).toBe(true);
+    expect((element as any)._invalidItemIds.has('item1')).toBe(true);
+    expect((element as any)._invalidItemIds.has('item2')).toBe(true);
   });
 
   it('should handle rotated items in overlap detection', async () => {
@@ -91,14 +91,14 @@ describe('LayoutEditor', () => {
     ];
     
     (element as any)._validateLayout();
-    expect(element.items[0].invalid).toBe(false);
-    expect(element.items[1].invalid).toBe(false);
+    expect((element as any)._invalidItemIds.has('item1')).toBe(false);
+    expect((element as any)._invalidItemIds.has('item2')).toBe(false);
     
     // Move rotated item to overlap
     element.items[1].x_mm = 150;
     (element as any)._validateLayout();
-    expect(element.items[0].invalid).toBe(true);
-    expect(element.items[1].invalid).toBe(true);
+    expect((element as any)._invalidItemIds.has('item1')).toBe(true);
+    expect((element as any)._invalidItemIds.has('item2')).toBe(true);
   });
 
   it('should calculate scale based on container size', () => {
