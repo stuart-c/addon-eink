@@ -1,3 +1,20 @@
+## [0.3.1] - 2026-04-26
+
+## Changes
+
+## 🐛 Bug Fixes
+
+- Hide selection tick when previewing pip image @stuart-c-ai (#431)
+- fix(frontend): prevent layout preview blowout in scene item dialog @stuart-c-ai (#430)
+- fix: segregated ha-addons dispatch token @stuart-c-ai (#429)
+- fix: add missing column migration for scene\_display\_images table @stuart-c-ai (#428)
+- fix: scope GitHub app token to repository owner to allow cross-repo dispatch @stuart-c-ai (#427)
+
+## 🧰 Maintenance
+
+- chore: update release-drafter configuration to use type-based sections @stuart-c-ai (#432)
+
+
 ## [0.3.0] - 2026-04-26
 
 ## Changes
