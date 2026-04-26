@@ -12,15 +12,15 @@ test.describe('Display Numbering Visibility', () => {
       height_mm: 100
     });
 
+    layoutName = `Numbering Test Layout ${Date.now()}`;
     const layout = await createLayout(request, {
-      name: 'Numbering Test Layout',
+      name: layoutName,
       canvas_width_mm: 200,
       canvas_height_mm: 200,
       items: [
         { id: 'd1', display_type_id: dt.id, x_mm: 10, y_mm: 10, orientation: 'landscape' }
       ]
     });
-    layoutName = layout.name;
 
     sceneName = `Numbering Test Scene ${Date.now()}`;
     await createScene(request, {
