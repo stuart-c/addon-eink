@@ -4,6 +4,7 @@ bashio::log.info "Starting eInk Layout Manager frontend & backend..."
 
 export INGRESS_PORT=$(bashio::addon.ingress_port)
 export LOG_LEVEL=$(bashio::config 'log_level')
+export MEDIA_SUBDIRECTORY=$(bashio::config 'media_subdirectory')
 
 if bashio::services.available "mqtt"; then
     export MQTT_HOST=$(bashio::services mqtt "host")

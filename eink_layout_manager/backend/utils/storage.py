@@ -13,21 +13,23 @@ def get_storage_path(resource_type):
         raise ValueError(f"Invalid resource type: {resource_type}")
 
     if resource_type == "scene_display":
-        data_dir = os.environ.get("MEDIA_DIR", "/media/eink_layout_manager")
+        base_dir = os.environ.get("MEDIA_DIR", "/media")
+        subdir = os.environ.get(
+            "MEDIA_SUBDIRECTORY", "eink_layout_manager/scene_display"
+        )
+        path = os.path.join(base_dir, subdir)
     else:
-        data_dir = os.environ.get("DATA_DIR", "/data")
+        base_dir = os.environ.get("DATA_DIR", "/data")
+        path = os.path.join(base_dir, resource_type)
 
-    data_root_canonical = (
-        os.path.realpath(data_dir) if os.path.exists(data_dir) else data_dir
+    base_canonical = (
+        os.path.realpath(base_dir) if os.path.exists(base_dir) else base_dir
     )
 
-    path = os.path.join(data_dir, resource_type)
     real_path = os.path.realpath(path)
 
     # Security: Canonical path validation (only if base exists)
-    if os.path.exists(data_root_canonical) and not real_path.startswith(
-        data_root_canonical
-    ):
+    if os.path.exists(base_canonical) and not real_path.startswith(base_canonical):
         raise ValueError(f"Invalid storage path (traversal): {path}")
 
     os.makedirs(real_path, exist_ok=True)
