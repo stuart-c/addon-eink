@@ -1,0 +1,30 @@
+---
+name: Repository Updater
+
+# yamllint disable-line rule:truthy
+on:
+  repository_dispatch:
+    types: ["update"]
+
+permissions:
+  contents: read
+
+jobs:
+  information:
+    name: Gather information
+    runs-on: ubuntu-latest
+    outputs:
+      token: ${{ steps.app-token.outputs.token }}
+    steps:
+      - name: 🚀 Get GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+  workflows:
+    needs: information
+    uses: hassio-addons/workflows/.github/workflows/repository-updater.yaml@3846ae0fd09acec8ac1ac308ceacd052b9d01bec # v2.0.6
+    secrets:
+      UPDATER_TOKEN: ${{ needs.information.outputs.token }}
