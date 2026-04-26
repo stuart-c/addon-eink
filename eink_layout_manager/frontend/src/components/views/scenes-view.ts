@@ -1,6 +1,6 @@
 import { html, css, PropertyValues } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
-import { Scene } from '../../services/HaApiClient';
+import { api, Scene } from '../../services/HaApiClient';
 import { commonStyles } from '../../styles/common-styles';
 import { BaseResourceView } from './base-resource-view';
 import '../shared/section-layout';
@@ -178,6 +178,64 @@ export class ScenesView extends BaseResourceView {
         border-color: var(--primary-colour);
         box-shadow: var(--shadow-small);
       }
+
+      /* Pips Styles */
+      .item-pips {
+        display: flex;
+        gap: 4px;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px dashed var(--border-colour-light);
+        flex-wrap: wrap;
+      }
+      .pip {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--border-colour);
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 2px solid transparent;
+        position: relative;
+      }
+      .pip:hover {
+        background: var(--text-muted);
+        transform: scale(1.2);
+      }
+      .pip.selected {
+        background: var(--primary-colour);
+        box-shadow: 0 0 0 2px rgba(3, 169, 244, 0.3);
+        border-color: #fff;
+      }
+      .pip-tooltip {
+        position: fixed;
+        background: white;
+        border: 1px solid var(--border-colour);
+        border-radius: var(--border-radius);
+        padding: 6px;
+        box-shadow: var(--shadow-medium);
+        z-index: 1000;
+        pointer-events: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        transform: translate(-50%, -100%);
+        margin-top: -10px;
+      }
+      .pip-tooltip img {
+        width: 80px;
+        height: 80px;
+        object-fit: contain;
+        background: var(--bg-light);
+        border-radius: 2px;
+      }
+      .pip-tooltip span {
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--text-muted);
+        white-space: nowrap;
+      }
     `
   ];
 
@@ -188,8 +246,25 @@ export class ScenesView extends BaseResourceView {
   @state() private _selectedItemId: string | null = null;
   @state() private _hoveredItemId: string | null = null;
   @state() private _originalSceneJson: string | null = null;
+  @state() private _existingSlices: any[] = [];
+  @state() private _selectedPips: Record<string, string> = {}; // item_id -> image_id
+  @state() private _hoveredPip: { itemId: string, imageId: string, x: number, y: number } | null = null;
+  private _pollInterval: any = null;
+  
   @query('scene-dialog') private _sceneDialog!: SceneDialog;
   @query('scene-item-settings-dialog') private _itemSettingsDialog!: SceneItemSettingsDialog;
+  
+  connectedCallback() {
+    super.connectedCallback();
+    this._pollInterval = setInterval(() => this._fetchExistingSlices(), 5000);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (this._pollInterval) {
+      clearInterval(this._pollInterval);
+    }
+  }
 
   protected updated(changedProperties: PropertyValues) {
     super.updated(changedProperties);
@@ -204,6 +279,23 @@ export class ScenesView extends BaseResourceView {
     if (changedProperties.has('activeScene') || changedProperties.has('scenes')) {
       const dirty = this.isDirty;
       this.notifyDirty(dirty);
+      
+      if (changedProperties.has('activeScene')) {
+        this._fetchExistingSlices();
+        this._selectedPips = {};
+      }
+    }
+  }
+
+  private async _fetchExistingSlices() {
+    if (!this.activeScene) {
+      this._existingSlices = [];
+      return;
+    }
+    try {
+      this._existingSlices = await api.getSceneSlices(this.activeScene.id);
+    } catch (e) {
+      console.error('Failed to fetch scene slices', e);
     }
   }
 
@@ -424,6 +516,22 @@ export class ScenesView extends BaseResourceView {
     const highlightedItemId = this._hoveredItemId || this._selectedItemId;
     const highlightedDisplayIds = activeScene?.items?.find((i: any) => i.id === highlightedItemId)?.displays || [];
 
+    // Calculate preview slices for layout editor
+    const previewSlices: Record<string, string> = {};
+    if (activeScene) {
+      Object.entries(this._selectedPips).forEach(([itemId, imageId]) => {
+        const item = activeScene.items?.find((i: any) => i.id === itemId);
+        if (!item) return;
+        
+        item.displays?.forEach((dId: string) => {
+          const slice = this._existingSlices.find(s => s.display_id === dId && s.image_id === imageId);
+          if (slice) {
+            previewSlices[dId] = `/api/scene/${activeScene.id}/slice/${dId}/${imageId}?hash=${slice.file_hash}`;
+          }
+        });
+      });
+    }
+
     const listItems = scenes.map(scene => {
       const isSelected = !!(activeScene && scene.id === activeScene.id);
       const displayData = isSelected ? activeScene! : scene;
@@ -480,6 +588,7 @@ export class ScenesView extends BaseResourceView {
                 .selectedIds="${this._selectedDisplayIds}"
                 .highlightedIds="${highlightedDisplayIds}"
                 .usedIds="${usedDisplayIds}"
+                .previewSlices="${previewSlices}"
                 @selection-change="${(e: CustomEvent) => this._selectedDisplayIds = e.detail.ids}"
                 @box-click="${(e: CustomEvent) => this._handleBoxClick(e.detail.id)}"
                 @edit-item="${(e: CustomEvent) => this._handleBoxEdit(e.detail.id)}"
@@ -535,6 +644,8 @@ export class ScenesView extends BaseResourceView {
                         }).join(', ')} • ${item.type.charAt(0).toUpperCase() + item.type.slice(1)}
                       </div>
                     </div>
+                    
+                    ${this._renderItemPips(item)}
                   </div>
                 `)}
                 
@@ -594,7 +705,73 @@ export class ScenesView extends BaseResourceView {
           this.requestUpdate();
         }}"
       ></scene-item-settings-dialog>
+      
+      ${this._hoveredPip ? html`
+        <div class="pip-tooltip" style="left: ${this._hoveredPip.x}px; top: ${this._hoveredPip.y}px;">
+          <img src="/api/image/${this._hoveredPip.imageId}/thumbnail" alt="thumbnail" />
+          <span>${this.state.images.find(img => img.id === this._hoveredPip?.imageId)?.name || 'Unknown'}</span>
+        </div>
+      ` : ''}
     `;
+  }
+
+  private _renderItemPips(item: any) {
+    if (!item.images || item.images.length === 0) return '';
+
+    // An image is "available" if ALL its displays have a slice record
+    const availableImages = item.images.filter((sceneImg: any) => {
+      const imageId = sceneImg.image_id;
+      const requiredDisplays = item.displays || [];
+      const existingSlicesForImage = this._existingSlices.filter(s => s.image_id === imageId);
+      
+      return requiredDisplays.every((dId: string) => 
+        existingSlicesForImage.some(s => s.display_id === dId)
+      );
+    });
+
+    if (availableImages.length === 0) return '';
+
+    return html`
+      <div class="item-pips">
+        ${availableImages.map((sceneImg: any) => {
+          const imageId = sceneImg.image_id;
+          const isSelected = this._selectedPips[item.id] === imageId;
+          return html`
+            <div 
+              class="pip ${isSelected ? 'selected' : ''}"
+              title="Click to preview dithered version"
+              @click="${(e: Event) => {
+                e.stopPropagation();
+                this._togglePip(item.id, imageId);
+              }}"
+              @mouseenter="${(e: MouseEvent) => this._showPipTooltip(item.id, imageId, e)}"
+              @mouseleave="${() => this._hoveredPip = null}"
+            ></div>
+          `;
+        })}
+      </div>
+    `;
+  }
+
+  private _togglePip(itemId: string, imageId: string) {
+    const current = this._selectedPips[itemId];
+    if (current === imageId) {
+      const newPips = { ...this._selectedPips };
+      delete newPips[itemId];
+      this._selectedPips = newPips;
+    } else {
+      this._selectedPips = { ...this._selectedPips, [itemId]: imageId };
+    }
+  }
+
+  private _showPipTooltip(itemId: string, imageId: string, e: MouseEvent) {
+    const rect = (e.target as HTMLElement).getBoundingClientRect();
+    this._hoveredPip = {
+      itemId,
+      imageId,
+      x: rect.left + rect.width / 2,
+      y: rect.top
+    };
   }
 }
 

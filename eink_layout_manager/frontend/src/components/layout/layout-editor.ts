@@ -97,6 +97,7 @@ export class LayoutEditor extends LitElement {
   // Preview properties
   @property({ type: Object }) previewImage: HTMLCanvasElement | string | null = null;
   @property({ type: Object }) previewTotalSize: { width: number; height: number } = { width: 0, height: 0 };
+  @property({ type: Object }) previewSlices: Record<string, string> = {};
   
   @state() private _scale = 1;
 
@@ -419,9 +420,9 @@ export class LayoutEditor extends LitElement {
                     .used="${this.usedIds.includes(item.id)}"
                     .readOnly="${this.readOnly}"
                     .hideNumber="${this.hideNumber}"
-                    .previewImage="${this.previewImage}"
+                    .previewImage="${this.previewSlices[item.id] || this.previewImage}"
                     .previewOffset="${{ x: item.x_mm, y: item.y_mm }}"
-                    .previewTotalSize="${this.previewTotalSize}"
+                    .previewTotalSize="${this.previewSlices[item.id] ? { width: 0, height: 0 } : this.previewTotalSize}"
                     @mousedown="${() => this._handleBoxSelect(item.id)}"
                     @dblclick="${() => this._handleBoxEdit(item.id)}"
                     @mouseenter="${() => this._handleBoxHover(item.id)}"

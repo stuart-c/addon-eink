@@ -107,6 +107,12 @@ export interface HaDevice {
   manufacturer?: string;
 }
 
+export interface SceneSlice {
+  display_id: string;
+  image_id: string;
+  file_hash: string;
+}
+
 export interface PaginatedResponse<T> {
   items: T[];
   pagination: {
@@ -239,6 +245,12 @@ export class HaApiClient {
     } catch (e) {
       return false;
     }
+  }
+
+  // --- Scenes ---
+
+  async getSceneSlices(sceneId: string): Promise<SceneSlice[]> {
+    return this._fetch<SceneSlice[]>(`api/scene/${sceneId}/slice`);
   }
 
   // --- Home Assistant ---
