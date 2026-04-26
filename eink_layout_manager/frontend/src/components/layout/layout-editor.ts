@@ -144,7 +144,7 @@ export class LayoutEditor extends LitElement {
       rect = { width: bcr.width, height: bcr.height };
     }
 
-    const padding = this.noPadding ? 0 : 80;
+    const padding = this.noPadding ? 20 : 100; // Account for box shadows and padding
     const availableWidth = Math.max(0, (rect.width || 0) - padding);
     const availableHeight = Math.max(0, (rect.height || 0) - padding);
     
