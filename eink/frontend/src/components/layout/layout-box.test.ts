@@ -90,7 +90,7 @@ describe('LayoutBox', () => {
     await element.updateComplete;
     
     const icon = element.shadowRoot?.querySelector('.used-icon');
-    expect(icon).not.toBeNull();
+    expect(icon).toBeTruthy();
     expect(icon?.textContent).toBe('check_circle');
   });
 
@@ -100,6 +100,6 @@ describe('LayoutBox', () => {
     await element.updateComplete;
     
     const icon = element.shadowRoot?.querySelector('.used-icon');
-    expect(icon).toBeNull();
+    expect(icon).toBeFalsy();
   });
 });
