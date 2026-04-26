@@ -239,3 +239,5 @@ eink_layout_manager/frontend/.npm-cache/
 .npm-cache/
 node-env/
 .gh_token
+.gh_config/
+.gh_config/
