@@ -161,8 +161,16 @@ export class HaApiClient {
 
   // --- Generic CRUD ---
 
-  async getCollection<T>(resourceType: ResourceType): Promise<T[]> {
-    return this._fetch<T[]>(`api/${resourceType}`);
+  async getCollection<T>(resourceType: ResourceType, params: Record<string, any> = {}): Promise<T[]> {
+    const query = new URLSearchParams();
+    for (const [key, value] of Object.entries(params)) {
+      if (value !== undefined && value !== null && value !== '') {
+        query.append(key, value.toString());
+      }
+    }
+    const queryString = query.toString();
+    const endpoint = `api/${resourceType}${queryString ? `?${queryString}` : ''}`;
+    return this._fetch<T[]>(endpoint);
   }
 
   async getItem<T>(resourceType: ResourceType, id: string): Promise<T> {

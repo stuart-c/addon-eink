@@ -25,9 +25,11 @@ describe('ScenesView', () => {
     activeScene: mockScene,
     layouts: [mockLayout],
     displayTypes: [{ id: 'dt1', name: '7.5in' }],
+    sceneFilterLayoutId: 'layout1',
     updateScene: vi.fn(),
     updateActiveScene: vi.fn(),
     saveActiveScene: vi.fn(),
+    refreshScenes: vi.fn(),
     showMessage: vi.fn()
   };
 
