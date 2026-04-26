@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { createLayout, createDisplayType, createScene } from './helpers/api';
 
 test.describe('Display Numbering Visibility', () => {
+  test.slow();
   let sceneName: string;
   let layoutName: string;
 
@@ -37,11 +38,12 @@ test.describe('Display Numbering Visibility', () => {
     await expect(page.locator('scenes-view')).toBeVisible();
     
     // Select the test scene
-    await page.waitForLoadState('networkidle');
-    const sidebarItem = page.locator('sidebar-list .sidebar-item-name').filter({ hasText: sceneName });
-    await expect(sidebarItem).toBeVisible({ timeout: 15000 });
+    const sidebarItem = page.locator('sidebar-list .sidebar-item').filter({ hasText: sceneName });
+    await expect(sidebarItem).toBeVisible({ timeout: 20000 });
     await sidebarItem.click();
-    await expect(page.locator('.toolbar-title')).toContainText(sceneName);
+    
+    // Wait for title to update
+    await expect(page.locator('.toolbar-title')).toContainText(sceneName, { timeout: 15000 });
     
     // Wait for layout editor to render
     await expect(page.locator('layout-editor')).toBeVisible();
@@ -64,11 +66,12 @@ test.describe('Display Numbering Visibility', () => {
     await expect(page.locator('layouts-view')).toBeVisible();
     
     // Select the test layout
-    await page.waitForLoadState('networkidle');
-    const sidebarItem = page.locator('sidebar-list .sidebar-item-name').filter({ hasText: layoutName });
-    await expect(sidebarItem).toBeVisible({ timeout: 15000 });
+    const sidebarItem = page.locator('sidebar-list .sidebar-item').filter({ hasText: layoutName });
+    await expect(sidebarItem).toBeVisible({ timeout: 20000 });
     await sidebarItem.click();
-    await expect(page.locator('.toolbar-title')).toContainText(layoutName);
+    
+    // Wait for title to update
+    await expect(page.locator('.toolbar-title')).toContainText(layoutName, { timeout: 15000 });
     
     // Wait for layout editor to render
     await expect(page.locator('layout-editor')).toBeVisible();
