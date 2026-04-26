@@ -204,7 +204,7 @@ export class LayoutBox extends LitElement {
           </div>
         </div>
 
-        ${this.used ? html`
+        ${this.used && !this.previewImage ? html`
           <span class="material-icons used-icon">check_circle</span>
         ` : ''}
       </div>

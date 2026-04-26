@@ -83,4 +83,23 @@ describe('LayoutBox', () => {
     
     expect(spy).toHaveBeenCalled();
   });
+
+  it('should show check_circle when used is true and previewImage is null', async () => {
+    element.used = true;
+    element.previewImage = null;
+    await element.updateComplete;
+    
+    const icon = element.shadowRoot?.querySelector('.used-icon');
+    expect(icon).not.toBeNull();
+    expect(icon?.textContent).toBe('check_circle');
+  });
+
+  it('should hide check_circle when used is true but previewImage is present', async () => {
+    element.used = true;
+    element.previewImage = 'some-image-url';
+    await element.updateComplete;
+    
+    const icon = element.shadowRoot?.querySelector('.used-icon');
+    expect(icon).toBeNull();
+  });
 });
