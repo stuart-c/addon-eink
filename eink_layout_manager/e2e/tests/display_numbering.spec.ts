@@ -7,12 +7,12 @@ test.describe('Display Numbering Visibility', () => {
 
   test.beforeAll(async ({ request }) => {
     const dt = await createDisplayType(request, {
-      name: 'Numbering Test Display',
+      name: `E2E-NUM-DT-${Date.now()}`,
       width_mm: 100,
       height_mm: 100
     });
 
-    layoutName = `Numbering Test Layout ${Date.now()}`;
+    layoutName = `E2E-NUM-L-${Date.now()}`;
     const layout = await createLayout(request, {
       name: layoutName,
       canvas_width_mm: 200,
@@ -22,7 +22,7 @@ test.describe('Display Numbering Visibility', () => {
       ]
     });
 
-    sceneName = `Numbering Test Scene ${Date.now()}`;
+    sceneName = `E2E-NUM-S-${Date.now()}`;
     await createScene(request, {
       name: sceneName,
       layout: layout.id
@@ -38,6 +38,7 @@ test.describe('Display Numbering Visibility', () => {
     
     // Select the test scene
     const sidebarItem = page.locator('sidebar-list .sidebar-item').getByText(sceneName);
+    await expect(sidebarItem).toBeVisible({ timeout: 10000 });
     await sidebarItem.click();
     await expect(page.locator('.toolbar-title')).toContainText(sceneName);
     
@@ -63,6 +64,7 @@ test.describe('Display Numbering Visibility', () => {
     
     // Select the test layout
     const sidebarItem = page.locator('sidebar-list .sidebar-item').getByText(layoutName);
+    await expect(sidebarItem).toBeVisible({ timeout: 10000 });
     await sidebarItem.click();
     await expect(page.locator('.toolbar-title')).toContainText(layoutName);
     
