@@ -236,6 +236,21 @@ export class ScenesView extends BaseResourceView {
         color: var(--text-muted);
         white-space: nowrap;
       }
+
+      /* Sidebar Filtering */
+      .sidebar-container {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+      .sidebar-filter-header {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--border-colour);
+        background: white;
+      }
+      .filter-label {
+        margin-bottom: 8px;
+      }
     `
   ];
 
@@ -268,11 +283,18 @@ export class ScenesView extends BaseResourceView {
 
   protected updated(changedProperties: PropertyValues) {
     super.updated(changedProperties);
+    
     if (changedProperties.has('activeScene')) {
       this.notifyCanDelete(!!this.activeScene);
       this._selectedItemId = null;
       if (this.activeScene && (!this._originalSceneJson || JSON.parse(this._originalSceneJson).id !== this.activeScene.id)) {
         this.resetBaseline();
+      }
+      
+      // Sync layout filter with active scene
+      if (this.activeScene && this.activeScene.layout && this.state.sceneFilterLayoutId !== this.activeScene.layout) {
+        this.state.sceneFilterLayoutId = this.activeScene.layout;
+        this.state.refreshScenes({ layout: this.state.sceneFilterLayoutId });
       }
     }
     
@@ -500,9 +522,12 @@ export class ScenesView extends BaseResourceView {
   }
 
   render() {
-    const scenes = (this.state?.scenes || this.scenes || []) as Scene[];
     const activeScene = this.state?.activeScene || this.activeScene;
     const activeLayout = activeScene ? this.state?.layouts.find((l: any) => l.id === activeScene.layout) : null;
+    const scenes = (this.state?.scenes || this.scenes || []) as Scene[];
+    const filteredScenes = this.state.sceneFilterLayoutId
+      ? scenes.filter(s => s.layout === this.state.sceneFilterLayoutId)
+      : scenes;
     
     let usedDisplayIds: string[] = [];
     if (activeScene && activeScene.items) {
@@ -532,7 +557,7 @@ export class ScenesView extends BaseResourceView {
       });
     }
 
-    const listItems = scenes.map(scene => {
+    const listItems = filteredScenes.map(scene => {
       const isSelected = !!(activeScene && scene.id === activeScene.id);
       const displayData = isSelected ? activeScene! : scene;
       return {
@@ -545,7 +570,21 @@ export class ScenesView extends BaseResourceView {
 
     return html`
       <section-layout>
-        <div slot="left-bar">
+        <div slot="left-bar" class="sidebar-container">
+          <div class="sidebar-filter-header">
+            <label class="filter-label">Filter by Layout</label>
+            <select 
+              class="layout-select"
+              @change="${(e: Event) => {
+                this.state.sceneFilterLayoutId = (e.target as HTMLSelectElement).value;
+                this.state.refreshScenes({ layout: this.state.sceneFilterLayoutId });
+              }}"
+            >
+              ${this.state?.layouts.map(l => html`
+                <option value="${l.id}" ?selected="${this.state.sceneFilterLayoutId === l.id}">${l.name}</option>
+              `)}
+            </select>
+          </div>
           <sidebar-list
             .items="${listItems}"
             .selectedId="${activeScene?.id || null}"

@@ -29,6 +29,7 @@ export class HaStateController implements ReactiveController {
   private _originalLayout: string | null = null;
   public isSaving = false;
   public viewMode: ViewMode = 'graphical';
+  public sceneFilterLayoutId: string | null = null;
 
   constructor(private host: ReactiveControllerHost) {
     this.host.addController(this);
@@ -114,6 +115,24 @@ export class HaStateController implements ReactiveController {
       console.error('Image fetch failed', e);
     }
   }
+
+  /**
+   * Refreshes the scenes collection, optionally filtering by layout.
+   */
+  async refreshScenes(params: Record<string, any> = {}) {
+    if (!this.connected) {
+      this.connected = await api.ping();
+      if (!this.connected) return;
+    }
+
+    try {
+      this.scenes = await api.getCollection<Scene>('scene', params);
+      this.host.requestUpdate();
+    } catch (e: any) {
+      console.error('Scene fetch failed', e);
+    }
+  }
+
 
   private async createDefaultLayout() {
     const defaultLayout: Omit<Layout, 'id'> = {
