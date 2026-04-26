@@ -1,6 +1,6 @@
 import { html, css, PropertyValues } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
-import { Scene } from '../../services/HaApiClient';
+import { api, Scene } from '../../services/HaApiClient';
 import { commonStyles } from '../../styles/common-styles';
 import { BaseResourceView } from './base-resource-view';
 import '../shared/section-layout';
@@ -293,7 +293,7 @@ export class ScenesView extends BaseResourceView {
       return;
     }
     try {
-      this._existingSlices = await this.state.api.getSceneSlices(this.activeScene.id);
+      this._existingSlices = await api.getSceneSlices(this.activeScene.id);
     } catch (e) {
       console.error('Failed to fetch scene slices', e);
     }
