@@ -37,7 +37,7 @@ export class NavigationController implements ReactiveController {
       this.isAddingNew = false;
       this.updateHash();
       this.host.requestUpdate();
-      this.host.dispatchEvent(new CustomEvent('state-changed'));
+      (this.host as unknown as HTMLElement).dispatchEvent(new CustomEvent('state-changed'));
     }
   }
 
@@ -46,9 +46,10 @@ export class NavigationController implements ReactiveController {
       this.viewMode = mode;
       this.updateHash();
       this.host.requestUpdate();
-      this.host.dispatchEvent(new CustomEvent('state-changed'));
+      (this.host as unknown as HTMLElement).dispatchEvent(new CustomEvent('state-changed'));
     }
   }
+
 
   public selectLayout(id: string | null) {
     if (this.activeLayoutId !== id) {
@@ -104,7 +105,7 @@ export class NavigationController implements ReactiveController {
     }
     this.updateHash();
     this.host.requestUpdate();
-    this.host.dispatchEvent(new CustomEvent('state-changed'));
+    (this.host as unknown as HTMLElement).dispatchEvent(new CustomEvent('state-changed'));
   }
 
   public updateHash() {
@@ -164,7 +165,7 @@ export class NavigationController implements ReactiveController {
     }
 
     this.host.requestUpdate();
-    this.host.dispatchEvent(new CustomEvent('state-changed'));
+    (this.host as unknown as HTMLElement).dispatchEvent(new CustomEvent('state-changed'));
     if (this.onHashApplied) this.onHashApplied();
   }
 }

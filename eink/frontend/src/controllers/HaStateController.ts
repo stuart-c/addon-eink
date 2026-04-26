@@ -22,6 +22,7 @@ export class HaStateController implements ReactiveController {
   public message: AppMessage | null = null;
   private _originalLayout: string | null = null;
   public isSaving = false;
+  private _messageClearTimeout: any = null;
 
   get activeSection() { return this.navigation.activeSection; }
   set activeSection(v) { this.navigation.setSection(v); }
@@ -168,7 +169,7 @@ export class HaStateController implements ReactiveController {
     console.info(`[HaStateController] Saving layout... ID=${this.activeLayout.id}, isAddingNew=${this.isAddingNew}`);
     this.isSaving = true;
     this.host.requestUpdate();
-    this.dispatchEvent(new CustomEvent('state-changed'));
+    (this.host as unknown as HTMLElement).dispatchEvent(new CustomEvent('state-changed'));
     
     try {
       let saved: Layout;
@@ -332,7 +333,7 @@ export class HaStateController implements ReactiveController {
     if (!this.activeScene) return;
     this.activeScene = { ...this.activeScene, ...updates };
     this.host.requestUpdate();
-    this.dispatchEvent(new CustomEvent('state-changed'));
+    (this.host as unknown as HTMLElement).dispatchEvent(new CustomEvent('state-changed'));
   }
 
   async saveActiveScene() {
@@ -377,14 +378,14 @@ export class HaStateController implements ReactiveController {
   public showMessage(text: string, type: AppMessage['type'] = 'info') {
     this.message = { text, type };
     this.host.requestUpdate();
-    this.dispatchEvent(new CustomEvent('state-changed'));
+    (this.host as unknown as HTMLElement).dispatchEvent(new CustomEvent('state-changed'));
 
     if (this._messageClearTimeout) clearTimeout(this._messageClearTimeout);
     this._messageClearTimeout = setTimeout(() => {
       if (this.message?.text === text) {
         this.message = null;
         this.host.requestUpdate();
-        this.dispatchEvent(new CustomEvent('state-changed'));
+        (this.host as unknown as HTMLElement).dispatchEvent(new CustomEvent('state-changed'));
       }
     }, 5000);
   }
@@ -397,7 +398,7 @@ export class HaStateController implements ReactiveController {
     this.isAddingNew = false;
     this.host.requestUpdate();
     this.navigation.updateHash();
-    this.dispatchEvent(new CustomEvent('state-changed'));
+    (this.host as unknown as HTMLElement).dispatchEvent(new CustomEvent('state-changed'));
   }
 
   public prepareNewLayout() {
@@ -415,7 +416,7 @@ export class HaStateController implements ReactiveController {
     this.isAddingNew = true;
     this.host.requestUpdate();
     this.navigation.updateHash();
-    this.dispatchEvent(new CustomEvent('state-changed'));
+    (this.host as unknown as HTMLElement).dispatchEvent(new CustomEvent('state-changed'));
   }
 
   switchScene(scene: Scene) {
@@ -424,7 +425,7 @@ export class HaStateController implements ReactiveController {
 
   public selectScene(id: string | null) {
     this.navigation.selectScene(id);
-    this.dispatchEvent(new CustomEvent('state-changed'));
+    (this.host as unknown as HTMLElement).dispatchEvent(new CustomEvent('state-changed'));
   }
 
   discardChanges() {
@@ -432,14 +433,14 @@ export class HaStateController implements ReactiveController {
     this.activeLayout = JSON.parse(this._originalLayout);
     this.selectedItemId = null;
     this.host.requestUpdate();
-    this.dispatchEvent(new CustomEvent('state-changed'));
+    (this.host as unknown as HTMLElement).dispatchEvent(new CustomEvent('state-changed'));
   }
 
   updateActiveLayout(updates: Partial<Layout>) {
     if (!this.activeLayout) return;
     this.activeLayout = { ...this.activeLayout, ...updates };
     this.host.requestUpdate();
-    this.dispatchEvent(new CustomEvent('state-changed'));
+    (this.host as unknown as HTMLElement).dispatchEvent(new CustomEvent('state-changed'));
   }
 
   deleteLayoutItem(itemId: string) {
@@ -453,7 +454,7 @@ export class HaStateController implements ReactiveController {
     }
     this.showMessage('Item deleted', 'success');
     this.host.requestUpdate();
-    this.dispatchEvent(new CustomEvent('state-changed'));
+    (this.host as unknown as HTMLElement).dispatchEvent(new CustomEvent('state-changed'));
   }
 
   updateItem(itemId: string, updates: Partial<LayoutItem>) {
