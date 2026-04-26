@@ -4,7 +4,7 @@ All end-to-end testing in the `addon-eink` repository is performed using **Playw
 
 ## Test Structure
 
-The E2E tests are located in `eink_layout_manager/e2e/tests`. They are categorised into two main types:
+The E2E tests are located in `eink/e2e/tests`. They are categorised into two main types:
 
 ### 1. API Verification Tests
 Files prefixed with `api.` (e.g., `api.display_type.spec.ts`) focus on validating the backend REST API. These tests bypass the frontend and interact directly with the API endpoints.
@@ -41,7 +41,7 @@ This script handles:
 5.  Cleaning up the temporary instance and data upon completion.
 
 ### Troubleshooting
-- **Logs:** Test results and traces are stored in `eink_layout_manager/e2e/test-results`.
+- **Logs:** Test results and traces are stored in `eink/e2e/test-results`.
 - **Environment:** If tests fail due to missing dependencies, ensure you have run `./scripts/make_venv.sh` first.
 - **Port Conflicts:** If you see "Address already in use", ensure no orphan backend processes are running (see [Cleanup](#cleanup-orphaned-processes)).
 

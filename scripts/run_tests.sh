@@ -2,7 +2,7 @@
 set -e
 
 TOP_DIR=$( git rev-parse --show-toplevel )
-VENV_PATH="$TOP_DIR/eink_layout_manager/backend/.venv"
+VENV_PATH="$TOP_DIR/eink/backend/.venv"
 
 if [ ! -d "$VENV_PATH" ]; then
     echo "--- Virtual environment not found. Building... ---"
@@ -12,7 +12,7 @@ fi
 source "$VENV_PATH/bin/activate"
 
 echo "--- Installing Python Dependencies ---"
-cd "$TOP_DIR/eink_layout_manager/backend"
+cd "$TOP_DIR/eink/backend"
 pip install -q -r requirements.txt -r requirements_test.txt
 
 echo "--- Building and Testing Converter Tool ---"
@@ -27,7 +27,7 @@ echo "--- Running Backend Tests (Pytest) ---"
 pytest tests/
 
 echo "--- Installing Frontend Dependencies ---"
-cd "$TOP_DIR/eink_layout_manager/frontend"
+cd "$TOP_DIR/eink/frontend"
 # Use local cache directory to avoid permission issues in sandboxed environments
 export NPM_CONFIG_CACHE="$PWD/.npm-cache"
 npm install --no-audit

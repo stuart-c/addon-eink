@@ -19,11 +19,11 @@ We utilise **VS Code Dev Containers** to provide a consistent, reproducible deve
 
 ## Frontend Development
 
-The frontend UI is located in `eink_layout_manager/frontend`.
+The frontend UI is located in `eink/frontend`.
 
 - **Node.js Version Management:** The project uses **Node.js 24.15.0**.
 - **Virtual Environment Integration:** The Node.js version is strictly controlled within the local Python virtual environment using `nodeenv`. Running `./scripts/make_venv.sh` automatically installs and pins the correct Node.js version into the `.venv` directory.
-- **Usage:** Always ensure the virtual environment is activated (`source eink_layout_manager/backend/.venv/bin/activate`) before running development tasks. This ensures you are using the correct Node and npm versions as defined in the project standard.
+- **Usage:** Always ensure the virtual environment is activated (`source eink/backend/.venv/bin/activate`) before running development tasks. This ensures you are using the correct Node and npm versions as defined in the project standard.
 
 ## Workflow Patterns
 

@@ -1,14 +1,14 @@
 #!/bin/bash
 
 # Configuration
-IMAGE="ghcr.io/stuart-c/eink-layout-manager:dev"
-CONTAINER_NAME="eink-layout-manager-dev"
+IMAGE="ghcr.io/stuart-c/addon-eink:dev"
+CONTAINER_NAME="eink-dev"
 PORT=8099
 DATA_DIR="$(pwd)/.data"
 MEDIA_DIR="$(pwd)/.media"
 
-# Ensure we are in the project root (simple check for eink_layout_manager dir)
-if [ ! -d "eink_layout_manager" ]; then
+# Ensure we are in the project root (simple check for eink dir)
+if [ ! -d "eink" ]; then
     echo "Error: Please run this script from the project root directory."
     exit 1
 fi
@@ -37,7 +37,7 @@ docker pull $IMAGE
 
 # Check if port is already in use
 if lsof -Pi :$PORT -sTCP:LISTEN -t >/dev/null ; then
-    echo "⚠️ Warning: Port $PORT is already in use. The container might fail to start if it's not the existing eink-layout-manager-dev."
+    echo "⚠️ Warning: Port $PORT is already in use. The container might fail to start if it's not the existing eink-dev."
 fi
 
 echo "🧹 Cleaning up existing container: $CONTAINER_NAME"

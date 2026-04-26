@@ -2,7 +2,7 @@
 set -e
 
 TOP_DIR=$( git rev-parse --show-toplevel )
-VENV_PATH="$TOP_DIR/eink_layout_manager/backend/.venv"
+VENV_PATH="$TOP_DIR/eink/backend/.venv"
 
 echo "--- Creating Python Virtual Environment ---"
 if [ ! -d "$VENV_PATH" ]; then
@@ -27,11 +27,11 @@ pip install -q playwright pytest-playwright requests
 echo "--- Installing Playwright Browsers (Python) ---"
 playwright install chromium
 
-if [ -d "$TOP_DIR/eink_layout_manager/e2e" ]; then
+if [ -d "$TOP_DIR/eink/e2e" ]; then
     echo "--- Provisioning Node.js Playwright ---"
-    cd "$TOP_DIR/eink_layout_manager/e2e"
+    cd "$TOP_DIR/eink/e2e"
     # Use local cache directory to avoid permission issues
-    export NPM_CONFIG_CACHE="$TOP_DIR/eink_layout_manager/e2e/.npm-cache"
+    export NPM_CONFIG_CACHE="$TOP_DIR/eink/e2e/.npm-cache"
     npm install --no-audit
     npx playwright install chromium
     cd "$TOP_DIR"

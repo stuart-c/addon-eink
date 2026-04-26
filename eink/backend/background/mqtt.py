@@ -13,7 +13,7 @@ from .. import database, models
 
 # Home Assistant Discovery Prefix
 DISCOVERY_PREFIX = "homeassistant"
-BASE_TOPIC = "eink_layout_manager"
+BASE_TOPIC = "eink"
 
 logger = logging.getLogger("mqtt_manager")
 
@@ -21,7 +21,7 @@ logger = logging.getLogger("mqtt_manager")
 class MQTTManager:
     def __init__(self, app=None):
         mqtt_client_id = os.environ.get(
-            "MQTT_CLIENT_ID", f"eink_layout_manager_{uuid.uuid4().hex[:8]}"
+            "MQTT_CLIENT_ID", f"eink_{uuid.uuid4().hex[:8]}"
         )
         self.client = MQTTClient(mqtt_client_id)
         self.client.on_connect = self.on_connect
@@ -45,7 +45,7 @@ class MQTTManager:
         message = payload.decode()
         logger.info(f"Received message on {topic}: {message}")
 
-        # Topic format: eink_layout_manager/layout/{layout_id}/{command}/set
+        # Topic format: eink/layout/{layout_id}/{command}/set
         parts = topic.split("/")
         if len(parts) >= 5 and parts[1] == "layout" and parts[4] == "set":
             layout_id = parts[2]
@@ -88,7 +88,7 @@ class MQTTManager:
     async def publish_discovery(self, layout, scenes):
         layout_id = layout.id
         device = {
-            "identifiers": [f"eink_layout_manager_{layout_id}"],
+            "identifiers": [f"eink_{layout_id}"],
             "name": f"Layout: {layout.name}",
             "manufacturer": "eInk Layout Manager",
             "model": "Layout",
@@ -98,7 +98,7 @@ class MQTTManager:
         # 1. Last Updated Sensor
         sensor_config = {
             "name": "Last Updated",
-            "unique_id": f"eink_layout_manager_{layout_id}_last_updated",
+            "unique_id": f"eink_{layout_id}_last_updated",
             "state_topic": (f"{BASE_TOPIC}/layout/{layout_id}/last_updated/state"),
             "device": device,
             "device_class": "timestamp",
@@ -118,7 +118,7 @@ class MQTTManager:
         scene_options = [s.name for s in scenes]
         select_config = {
             "name": "Active Scene",
-            "unique_id": f"eink_layout_manager_{layout_id}_scene",
+            "unique_id": f"eink_{layout_id}_scene",
             "state_topic": f"{BASE_TOPIC}/layout/{layout_id}/scene/state",
             "command_topic": f"{BASE_TOPIC}/layout/{layout_id}/scene/set",
             "options": scene_options,
@@ -134,7 +134,7 @@ class MQTTManager:
         # 3. Refresh Button
         button_config = {
             "name": "Refresh",
-            "unique_id": f"eink_layout_manager_{layout_id}_refresh",
+            "unique_id": f"eink_{layout_id}_refresh",
             "command_topic": f"{BASE_TOPIC}/layout/{layout_id}/refresh/set",
             "device": device,
             "icon": "mdi:refresh",
@@ -339,7 +339,7 @@ class MQTTManager:
             "image": {
                 "media_content_id": (
                     f"media-source://media_source/local/"
-                    f"eink_layout_manager/scene_display/{filename}"
+                    f"eink/scene_display/{filename}"
                 ),
                 "media_content_type": "image/png",
             },

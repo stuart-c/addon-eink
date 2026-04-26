@@ -26,9 +26,9 @@ jobs:
     strategy:
       matrix:
         package:
-          - eink-layout-manager
-          - eink-layout-manager/amd64
-          - eink-layout-manager/aarch64
+          - addon-eink
+          - addon-eink/amd64
+          - addon-eink/aarch64
     steps:
       - name: Generate GitHub App Token
         id: app-token

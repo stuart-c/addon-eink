@@ -34,8 +34,8 @@ RUN mkdir /var/run/sshd \
 WORKDIR /workspaces/addon-eink
 
 # Copy requirements files to pre-install dependencies
-COPY eink_layout_manager/app/requirements.txt /tmp/pip-tmp/
-COPY eink_layout_manager/app/requirements_test.txt /tmp/pip-tmp/
+COPY eink/app/requirements.txt /tmp/pip-tmp/
+COPY eink/app/requirements_test.txt /tmp/pip-tmp/
 
 # Install dependencies
 RUN pip3 --disable-pip-version-check --no-cache-dir install \
@@ -43,8 +43,8 @@ RUN pip3 --disable-pip-version-check --no-cache-dir install \
     -r /tmp/pip-tmp/requirements_test.txt \
     && rm -rf /tmp/pip-tmp
 
-# Set PYTHONPATH to include the eink_layout_manager directory
-ENV PYTHONPATH="/workspaces/addon-eink/eink_layout_manager"
+# Set PYTHONPATH to include the eink directory
+ENV PYTHONPATH="/workspaces/addon-eink/eink"
 
 EXPOSE 22
 CMD ["/usr/sbin/sshd", "-D"]

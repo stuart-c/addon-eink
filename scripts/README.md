@@ -21,8 +21,8 @@ Run the script from the **project root directory**:
 
 ### What it does:
 
-1.  **Pulls the Image**: Fetches `ghcr.io/stuart-c/eink-layout-manager:dev` from the GitHub Container Registry.
-2.  **Cleanup**: Automatically stops and removes any previously running `eink-layout-manager-dev` container.
+1.  **Pulls the Image**: Fetches `ghcr.io/stuart-c/addon-eink:dev` from the GitHub Container Registry.
+2.  **Cleanup**: Automatically stops and removes any previously running `eink-dev` container.
 3.  **Starts Container**:
     - **Port**: Maps host port `8099` to container port `8099`.
     - **Persistence**: Maps `./.data` in the project root to `/data` in the container. Any database records or images created will be saved here.
@@ -54,7 +54,7 @@ This script runs the end-to-end integration tests using Playwright. **Running th
 ```
 
 > [!WARNING]
-> **Parallel Run Warning:** Running this script directly defaults to port `8099` and the `./eink_layout_manager/e2e/test_data_e2e` directory. Running multiple instances without overrides will cause test failures and data corruption.
+> **Parallel Run Warning:** Running this script directly defaults to port `8099` and the `./eink/e2e/test_data_e2e` directory. Running multiple instances without overrides will cause test failures and data corruption.
 >
 > **System Load:** E2E tests are resource-intensive. Check your system load average (e.g., using `uptime` or `top`) before starting parallel runs to ensure your machine can handle the extra processes.
 

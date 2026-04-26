@@ -1,7 +1,7 @@
 name: "eInk Layout Manager"
 version: "0.2.16"
-slug: "eink_layout_manager"
-image: "ghcr.io/stuart-c/eink-layout-manager"
+slug: "eink"
+image: "ghcr.io/stuart-c/addon-eink"
 description: "Manage multiple eInk displays with advanced layouts via OpenDisplay"
 arch:
   - aarch64
@@ -18,7 +18,7 @@ host_network: false
 hassio_api: true
 options:
   log_level: "info"
-  media_subdirectory: "eink_layout_manager/scene_display"
+  media_subdirectory: "eink/scene_display"
 schema:
   log_level: "match(^trace|debug|info|notice|warning|error|fatal|critical$)"
   media_subdirectory: "match(^[a-zA-Z0-9_\\-/]+$)"

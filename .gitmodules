@@ -1,3 +1,3 @@
-[submodule "eink_layout_manager/epdoptimize"]
-	path = eink_layout_manager/epdoptimize
+[submodule "eink/epdoptimize"]
+	path = eink/epdoptimize
 	url = https://github.com/Utzel-Butzel/epdoptimize.git

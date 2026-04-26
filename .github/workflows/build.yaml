@@ -68,11 +68,11 @@ jobs:
       - name: Build and push image
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
-          context: eink_layout_manager
+          context: eink
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
-            ghcr.io/${{ github.repository_owner }}/eink-layout-manager/${{ matrix.arch }}:${{ needs.prepare.outputs.version }}
-            ghcr.io/${{ github.repository_owner }}/eink-layout-manager/${{ matrix.arch }}:${{ needs.prepare.outputs.tag }}
+            ghcr.io/${{ github.repository_owner }}/addon-eink/${{ matrix.arch }}:${{ needs.prepare.outputs.version }}
+            ghcr.io/${{ github.repository_owner }}/addon-eink/${{ matrix.arch }}:${{ needs.prepare.outputs.tag }}
           build-args: |
             BUILD_FROM=${{ matrix.build_from }}
             BUILD_ARCH=${{ matrix.arch }}
@@ -88,9 +88,9 @@ jobs:
         if: matrix.arch == 'amd64' && github.event_name == 'pull_request'
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
-          context: eink_layout_manager
+          context: eink
           load: true
-          tags: eink-layout-manager:test
+          tags: addon-eink:test
           build-args: |
             BUILD_FROM=${{ matrix.build_from }}
             BUILD_ARCH=${{ matrix.arch }}
@@ -99,7 +99,7 @@ jobs:
 
       - name: Export image for E2E testing
         if: matrix.arch == 'amd64' && github.event_name == 'pull_request'
-        run: docker save eink-layout-manager:test | gzip > /tmp/eink-image.tar.gz
+        run: docker save addon-eink:test | gzip > /tmp/eink-image.tar.gz
 
       - name: Upload image artifact for E2E testing
         if: matrix.arch == 'amd64' && github.event_name == 'pull_request'
@@ -131,8 +131,8 @@ jobs:
       - name: Pull test image from registry
         if: github.event_name != 'pull_request'
         run: |
-          docker pull ghcr.io/${{ github.repository_owner }}/eink-layout-manager/amd64:${{ needs.prepare.outputs.version }}
-          docker tag ghcr.io/${{ github.repository_owner }}/eink-layout-manager/amd64:${{ needs.prepare.outputs.version }} eink-layout-manager:test
+          docker pull ghcr.io/${{ github.repository_owner }}/addon-eink/amd64:${{ needs.prepare.outputs.version }}
+          docker tag ghcr.io/${{ github.repository_owner }}/addon-eink/amd64:${{ needs.prepare.outputs.version }} addon-eink:test
 
       # On PR runs, download the image artifact exported by the build job.
       - name: Download image artifact
@@ -159,7 +159,7 @@ jobs:
             -e INGRESS_PORT=8099 \
             -e DATA_DIR=/data \
             -e MEDIA_DIR=/media \
-            eink-layout-manager:test
+            addon-eink:test
 
       - name: Set up Node.js
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
@@ -169,13 +169,13 @@ jobs:
       - name: Cache E2E npm dependencies
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
-          path: eink_layout_manager/e2e/node_modules
-          key: npm-e2e-${{ runner.os }}-${{ hashFiles('eink_layout_manager/e2e/package-lock.json', 'eink_layout_manager/e2e/package.json') }}
+          path: eink/e2e/node_modules
+          key: npm-e2e-${{ runner.os }}-${{ hashFiles('eink/e2e/package-lock.json', 'eink/e2e/package.json') }}
           restore-keys: npm-e2e-${{ runner.os }}-
 
       - name: Install E2E npm dependencies
         run: npm install
-        working-directory: eink_layout_manager/e2e
+        working-directory: eink/e2e
 
       - name: Wait for application to start
         run: |
@@ -196,14 +196,14 @@ jobs:
             -e CI=true \
             -e FORCE_COLOR=1 \
             mcr.microsoft.com/playwright:v1.59.1-noble \
-            /bin/bash -c "cd eink_layout_manager/e2e && npx playwright test"
+            /bin/bash -c "cd eink/e2e && npx playwright test"
 
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: playwright-report
-          path: eink_layout_manager/e2e/playwright-report/
+          path: eink/e2e/playwright-report/
           retention-days: 30
 
       - name: Stop application container
@@ -228,7 +228,7 @@ jobs:
         run: |
           VERSION="${{ needs.prepare.outputs.version }}"
           TAG="${{ needs.prepare.outputs.tag }}"
-          REPO="ghcr.io/${{ github.repository_owner }}/eink-layout-manager"
+          REPO="ghcr.io/${{ github.repository_owner }}/addon-eink"
           
           docker buildx imagetools create \
             --tag ${REPO}:${VERSION} \
@@ -260,11 +260,11 @@ jobs:
           RELEASE_BODY: ${{ github.event.release.body }}
         run: |
           VERSION="${{ needs.prepare.outputs.version }}"
-          CHANGELOG="eink_layout_manager/CHANGELOG.md"
+          CHANGELOG="eink/CHANGELOG.md"
           DATE=$(date +'%Y-%m-%d')
           
           # Update version in config.yaml
-          sed -i "s/^version:.*/version: \"$VERSION\"/" eink_layout_manager/config.yaml
+          sed -i "s/^version:.*/version: \"$VERSION\"/" eink/config.yaml
           
           # Update CHANGELOG.md
           # If the file doesn't exist, we'll create it with a header
@@ -284,7 +284,7 @@ jobs:
           # Commit changes
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add eink_layout_manager/config.yaml "$CHANGELOG"
+          git add eink/config.yaml "$CHANGELOG"
           git commit -m "chore: bump addon version to $VERSION and update changelog"
           # Pull latest changes before pushing (safety rebase)
           git pull --rebase origin main
