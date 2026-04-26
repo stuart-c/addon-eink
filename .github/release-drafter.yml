@@ -13,21 +13,22 @@ categories:
       - 'bug'
       - 'fix'
       - 'bugfix'
-  - title: '🐍 Python Changes'
+  - title: '📖 Documentation'
     labels:
-      - 'python'
-  - title: '🎨 Frontend Changes'
+      - 'documentation'
+      - 'docs'
+  - title: '⚙️ Refactoring'
     labels:
-      - 'frontend'
-  - title: '🐳 Docker Changes'
+      - 'refactor'
+  - title: '🧪 Testing'
     labels:
-      - 'docker'
-  - title: '🤖 GitHub Actions Changes'
-    labels:
-      - 'github_actions'
+      - 'test'
   - title: '🧰 Maintenance'
     labels:
       - 'chore'
+      - 'ci'
+      - 'style'
+      - 'dependencies'
 change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
 change-title-escapes: '\<*_&' # You can add # and @ disable mentions, and add ` to disable code blocks.
 version-resolver:
@@ -75,22 +76,41 @@ autolabeler:
   - label: 'chore'
     title:
       - '/^chore:/i'
-      - '/^ci:/i'
-      - '/^test:/i'
-      - '/^refactor:/i'
-      - '/^docs:/i'
     branch:
       - '/^chore\//i'
+  - label: 'ci'
+    title:
+      - '/^ci:/i'
+    branch:
       - '/^ci\//i'
+  - label: 'test'
+    title:
+      - '/^test:/i'
+    branch:
       - '/^test\//i'
+  - label: 'refactor'
+    title:
+      - '/^refactor:/i'
+    branch:
       - '/^refactor\//i'
+  - label: 'documentation'
+    title:
+      - '/^docs:/i'
+      - '/documentation/i'
+    branch:
       - '/^docs\//i'
+      - '/^documentation\//i'
+  - label: 'style'
+    title:
+      - '/^style:/i'
+    branch:
+      - '/^style\//i'
   - label: 'python'
     files:
-      - 'eink_layout_manager/backend/**/*.py'
+      - 'eink/backend/**/*.py'
   - label: 'frontend'
     files:
-      - 'eink_layout_manager/frontend/**/*'
+      - 'eink/frontend/**/*'
   - label: 'github_actions'
     files:
       - '.github/workflows/**/*'
