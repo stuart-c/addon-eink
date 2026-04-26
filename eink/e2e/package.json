@@ -1,5 +1,5 @@
 {
-  "name": "eink-layout-manager-e2e",
+  "name": "eink-e2e",
   "version": "1.0.0",
   "description": "Playwright E2E and API tests for eInk Layout Manager",
   "main": "index.js",

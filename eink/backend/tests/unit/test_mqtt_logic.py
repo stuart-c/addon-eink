@@ -17,7 +17,7 @@ async def test_mqtt_on_message_parsing():
     manager._handle_layout_update = AsyncMock()
 
     # Test scene set
-    topic = "eink_layout_manager/layout/layout1/scene/set"
+    topic = "eink/layout/layout1/scene/set"
     payload = b"Evening Scene"
     manager.on_message(None, topic, payload, 0, None)
 
@@ -28,7 +28,7 @@ async def test_mqtt_on_message_parsing():
     assert manager.layout_states["layout1"]["current_scene"] == "Evening Scene"
 
     # Test refresh set
-    topic = "eink_layout_manager/layout/layout1/refresh/set"
+    topic = "eink/layout/layout1/refresh/set"
     payload = b"press"
     manager.on_message(None, topic, payload, 0, None)
     manager._handle_layout_update.assert_called_with("layout1")

@@ -27,7 +27,7 @@ jobs:
         uses: reviewdog/action-flake8@b65981e158319f08cb7d0132f28bc0081e110adc # v3.15.2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          workdir: eink_layout_manager/backend
+          workdir: eink/backend
           fail_level: any
 
       - name: black Lint
@@ -36,5 +36,5 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-check
           level: error
-          workdir: eink_layout_manager/backend
+          workdir: eink/backend
           fail_level: any

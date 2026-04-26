@@ -47,9 +47,9 @@ def setup_routes(app):
     app.router.add_get("/api/homeassistant/device", homeassistant.handle_device_list)
 
     # Static Lit frontend files
-    # Try new structure first (eink_layout_manager/frontend/dist)
+    # Try new structure first (eink/frontend/dist)
     # Then fallback to Docker/Legacy structure
-    # (eink_layout_manager/backend/static_dist)
+    # (eink/backend/static_dist)
     root_dir = os.path.dirname(os.path.dirname(__file__))
     static_dist = os.path.join(root_dir, "frontend", "dist")
     if not os.path.exists(static_dist):

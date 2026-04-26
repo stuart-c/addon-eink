@@ -18,7 +18,7 @@ def test_get_storage_path_scene_display_default(tmp_path):
         del os.environ["MEDIA_SUBDIRECTORY"]
 
     path = get_storage_path("scene_display")
-    expected = os.path.join(str(tmp_path), "eink_layout_manager/scene_display")
+    expected = os.path.join(str(tmp_path), "eink/scene_display")
     # Join handles slashes, but we check canonical path
     assert os.path.realpath(path) == os.path.realpath(expected)
     assert os.path.exists(path)

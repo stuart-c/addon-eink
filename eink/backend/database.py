@@ -26,7 +26,7 @@ except ImportError:
 def get_db_url():
     """Construct the database URL from environment or defaults."""
     data_dir = os.environ.get("DATA_DIR", "/data")
-    db_path = os.path.join(data_dir, "eink_layout_manager.db")
+    db_path = os.path.join(data_dir, "eink.db")
     return f"sqlite+aiosqlite:///{db_path}"
 
 
@@ -314,6 +314,21 @@ async def ensure_schema_up_to_date(conn):
 async def init_db():
     """Initialise the database engine and create tables."""
     global _engine, _session_factory
+
+    data_dir = os.environ.get("DATA_DIR", "/data")
+    db_path = os.path.join(data_dir, "eink.db")
+    old_db_path = os.path.join(data_dir, "eink_layout_manager.db")
+
+    # Migrate old database file if it exists and new one doesn't
+    if os.path.exists(old_db_path) and not os.path.exists(db_path):
+        import logging
+
+        logger = logging.getLogger(__name__)
+        try:
+            os.rename(old_db_path, db_path)
+            logger.info(f"Renamed legacy database {old_db_path} to {db_path}")
+        except Exception as e:
+            logger.error(f"Failed to rename legacy database: {e}")
 
     url = get_db_url()
     _engine = create_async_engine(url, echo=False)

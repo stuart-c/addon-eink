@@ -15,16 +15,16 @@
 				"python.defaultInterpreterPath": "/usr/local/bin/python",
 				"python.testing.pytestEnabled": true,
 				"python.testing.pytestArgs": [
-					"eink_layout_manager/app/tests"
+					"eink/app/tests"
 				],
 				"editor.formatOnSave": true,
 				"python.analysis.extraPaths": [
-					"eink_layout_manager"
+					"eink"
 				]
 			}
 		}
 	},
 	"remoteUser": "vscode",
-	"postCreateCommand": "cd eink_layout_manager/app/static && npm install",
+	"postCreateCommand": "cd eink/app/static && npm install",
 	"postStartCommand": "sudo service ssh start"
 }

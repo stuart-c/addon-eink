@@ -12,6 +12,7 @@ export INGRESS_PORT="${INGRESS_PORT:-$GENERATED_PORT}"
 # Create a temporary data directory in the project root
 TEMP_DATA_DIR=$(mktemp -d -p "$TOP_DIR" .data_verify_XXXXXX)
 export DATA_DIR="$TEMP_DATA_DIR"
+export MEDIA_DIR="$TEMP_DATA_DIR/media"
 
 echo "--- 🛠️  Setup: Using Port $INGRESS_PORT and Data Dir $DATA_DIR ---"
 

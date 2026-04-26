@@ -18,7 +18,7 @@ async def db_setup(tmp_path):
 async def test_init_db_creates_file(tmp_path):
     """Test that init_db creates the database file."""
     os.environ["DATA_DIR"] = str(tmp_path)
-    db_file = os.path.join(str(tmp_path), "eink_layout_manager.db")
+    db_file = os.path.join(str(tmp_path), "eink.db")
 
     # Ensure it doesn't exist yet
     if os.path.exists(db_file):
