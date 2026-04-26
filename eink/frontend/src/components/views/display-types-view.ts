@@ -1,5 +1,5 @@
 import { html, css } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
 import { live } from 'lit/directives/live.js';
 import type { DisplayType } from '../../services/HaApiClient';
 import { commonStyles } from '../../styles/common-styles';
@@ -8,6 +8,8 @@ import '../shared/empty-view';
 import '../shared/hardware-preview';
 import '../shared/section-layout';
 import '../shared/sidebar-list';
+import { DisplayTypesViewController } from '../../controllers/DisplayTypesViewController';
+import { HaStateController } from '../../controllers/HaStateController';
 import '../layout/yaml-editor';
 
 /**
@@ -196,22 +198,12 @@ export class DisplayTypesView extends BaseResourceView {
     `
   ];
 
-  @property({ type: Object }) displayType?: DisplayType;
+  @property({ type: Object }) state!: HaStateController;
   @property({ type: Array }) displayTypes: DisplayType[] = [];
   @property({ type: String }) selectedId: string | null = null;
-  @property({ type: Boolean }) isNew = true;
   @property({ type: String }) viewMode: 'graphical' | 'yaml' = 'graphical';
-  @property({ type: Boolean }) isAdding = false;
 
-  @state() private _isDirtyState = false;
-
-  get isDirty() {
-    return this._isDirtyState;
-  }
-
-  get canDelete() {
-    return !this.isNew && !!this.displayType;
-  }
+  public controller = new DisplayTypesViewController(this);
 
   private _PRESETS = [
     { name: 'White', colour: '#ffffff' },
@@ -220,147 +212,35 @@ export class DisplayTypesView extends BaseResourceView {
     { name: 'Silver', colour: '#c0c0c0' }
   ];
 
-  private _getDefaultDisplayType(): DisplayType {
-    return {
-      id: '',
-      name: '',
-      width_mm: 0,
-      height_mm: 0,
-      panel_width_mm: 0,
-      panel_height_mm: 0,
-      width_px: 0,
-      height_px: 0,
-      colour_type: 'MONO',
-      frame: { border_width_mm: 0, colour: '#000000' },
-      mat: { colour: '#ffffff' }
-    };
-  }
-
-  protected willUpdate(changedProperties: Map<string | number | symbol, unknown>) {
-    if (changedProperties.has('selectedId') || changedProperties.has('displayTypes') || changedProperties.has('isAdding')) {
-      this._syncSelection();
-    }
-    if (changedProperties.has('displayType') || changedProperties.has('displayTypes') || changedProperties.has('isNew')) {
-      this._updateDirtyState();
-      this.notifyCanDelete(!this.isNew && !!this.displayType);
+  protected updated(changedProperties: Map<string | number | symbol, unknown>) {
+    super.updated(changedProperties);
+    if (changedProperties.has('state') || changedProperties.has('displayTypes')) {
+      this.controller.resetBaseline();
     }
   }
 
-  private _syncSelection() {
-    const found = this.selectedId ? this.displayTypes.find(dt => dt.id === this.selectedId) : null;
-    
-    if (found) {
-      if (this.displayType?.id !== found.id || this.isNew) {
-        this.displayType = JSON.parse(JSON.stringify(found));
-        this.isNew = false;
-      }
-    } else {
-      if (this.isAdding) {
-        if (!this.isNew || !this.displayType || this.displayType.id !== '') {
-          this.displayType = this._getDefaultDisplayType();
-          this.isNew = true;
-        }
-      } else {
-        this.displayType = undefined;
-        this.isNew = true;
-      }
-    }
+  get isDirty() {
+    return this.controller.isDirty;
   }
 
-  private _isDirty(): boolean {
-    if (!this.displayType) return false;
-    if (this.isNew) {
-      const defaultValue = this._getDefaultDisplayType();
-      return JSON.stringify(this.displayType) !== JSON.stringify(defaultValue);
-    }
-    const original = this.displayTypes.find(dt => dt.id === this.displayType?.id);
-    if (!original) return true;
-    return JSON.stringify(this.displayType) !== JSON.stringify(original);
-  }
-
-  private _updateDirtyState() {
-    const dirty = this._isDirty();
-    if (this._isDirtyState !== dirty) {
-      this._isDirtyState = dirty;
-      this.notifyDirty(dirty);
-    }
+  get canDelete() {
+    return this.controller.canDelete;
   }
 
   public save() {
-     const form = this.shadowRoot?.querySelector('form');
-     if (form?.checkValidity()) {
-       this._handleSubmit(new Event('submit'));
-     } else {
-       form?.reportValidity();
-     }
+    this.controller.save();
   }
 
   public discard() {
-    this.displayType = undefined;
-    this._syncSelection();
-    this._updateDirtyState();
-    this.requestUpdate();
+    this.controller.discard();
   }
 
   public addNew() {
-    this.dispatchEvent(new CustomEvent('prepare-new-display-type', { bubbles: true, composed: true }));
-  }
-
-  private async _handleSelect(id: string | null) {
-    if (id === null && this.isAdding) return;
-    if (id !== null && id === this.selectedId && !this.isAdding) return;
-
-    const performSwitch = () => {
-      this.dispatchEvent(new CustomEvent('select-display-type', {
-        detail: { id },
-        bubbles: true,
-        composed: true
-      }));
-    };
-
-    if (this._isDirty()) {
-      this._requestConfirmation(
-        {
-          title: 'Unsaved Changes',
-          message: `You have unsaved changes to "${this.displayType?.name}". What would you like to do?`,
-          buttons: [
-            { text: 'Save', value: 'save', type: 'primary' },
-            { text: 'Discard', value: 'discard', type: 'danger' },
-            { text: 'Cancel', value: 'cancel', type: 'secondary' }
-          ]
-        },
-        async (choice: string) => {
-          if (choice === 'save') {
-            const form = this.shadowRoot?.querySelector('form');
-            if (form?.checkValidity()) {
-              this._handleSubmit(new Event('submit'));
-              performSwitch();
-            } else {
-              form?.reportValidity();
-            }
-          } else if (choice === 'discard') {
-            performSwitch();
-          }
-        }
-      );
-    } else {
-      performSwitch();
-    }
+    this.controller.addNew();
   }
 
   public requestDelete() {
-    if (!this.displayType || this.isNew) return;
-    this.dispatchEvent(new CustomEvent('delete-display-type', { detail: this.displayType }));
-  }
-
-  private _handleSubmit(e: Event) {
-    e.preventDefault();
-    if (!this.displayType) return;
-    
-    this.dispatchEvent(new CustomEvent('save', { detail: { displayType: this.displayType } }));
-    this.isNew = false;
-    this.requestUpdate();
-    this._updateDirtyState();
+    this.controller.requestDelete();
   }
 
   private _renderColourPicker(label: string, value: string, onUpdate: (colour: string) => void) {
@@ -373,7 +253,7 @@ export class DisplayTypesView extends BaseResourceView {
               class="swatch ${value.toLowerCase() === p.colour.toLowerCase() ? 'selected' : ''}" 
               style="background: ${p.colour}"
               title="${p.name}"
-              @click="${() => onUpdate(p.colour)}"
+              @click="${() => { onUpdate(p.colour); this.requestUpdate(); }}"
             ></div>
           `)}
         </div>
@@ -381,7 +261,7 @@ export class DisplayTypesView extends BaseResourceView {
           <input 
             type="color" 
             .value="${live(value)}" 
-            @input="${(e: any) => { onUpdate(e.target.value); this._updateDirtyState(); }}"
+            @input="${(e: any) => { onUpdate(e.target.value); this.requestUpdate(); }}"
           >
           <div class="hex-value">${value}</div>
         </div>
@@ -394,11 +274,13 @@ export class DisplayTypesView extends BaseResourceView {
   }
 
   render() {
-    const frameW = this.displayType?.width_mm || 0;
-    const frameH = this.displayType?.height_mm || 0;
-    const border = this.displayType?.frame?.border_width_mm || 0;
-    const panelW = this.displayType?.panel_width_mm || 0;
-    const panelH = this.displayType?.panel_height_mm || 0;
+    if (!this.controller.activeType) return html`<empty-view title="Display Types" icon="settings_input_component" message="Manage your hardware display types here."></empty-view>`;
+
+    const frameW = this.controller.activeType.width_mm || 0;
+    const frameH = this.controller.activeType.height_mm || 0;
+    const border = this.controller.activeType.frame?.border_width_mm || 0;
+    const panelW = this.controller.activeType.panel_width_mm || 0;
+    const panelH = this.controller.activeType.panel_height_mm || 0;
 
     const matW = frameW - (2 * border);
     const matH = frameH - (2 * border);
@@ -410,7 +292,7 @@ export class DisplayTypesView extends BaseResourceView {
       ? maxPreviewDim / Math.max(frameW, frameH) 
       : 1;
 
-    const listItems = this.displayTypes.map(dt => ({
+    const listItems = this.controller.displayTypes.map(dt => ({
       id: dt.id,
       name: dt.name,
       iconHtml: html`
@@ -434,19 +316,19 @@ export class DisplayTypesView extends BaseResourceView {
         <div slot="left-bar">
           <sidebar-list
             .items="${listItems}"
-            .selectedId="${this.displayType?.id && !this.isNew ? this.displayType.id : null}"
-            @select="${(e: CustomEvent) => this._handleSelect(e.detail.item.id)}"
+            .selectedId="${this.selectedId}"
+            @select="${(e: CustomEvent) => this.controller.selectType(e.detail.item.id)}"
           ></sidebar-list>
         </div>
 
         <div slot="right-top-bar" class="toolbar-content">
           <div class="toolbar-title">
-            ${this.isAdding ? 'Create New Display Type' : (this.displayType && !this.isNew ? this.displayType.name : 'Display Types')}
+            ${this.controller.isAdding ? 'Create New Display Type' : (this.controller.activeType ? this.controller.activeType.name : 'Display Types')}
           </div>
         </div>
 
-        <div slot="right-main" class="${!this.displayType ? '' : 'editor-layout'}">
-          ${!this.displayType ? html`
+        <div slot="right-main" class="${!this.controller.activeType ? '' : 'editor-layout'}">
+          ${!this.controller.activeType ? html`
             <empty-view
               title="Display Types"
               icon="settings_input_component"
@@ -454,14 +336,14 @@ export class DisplayTypesView extends BaseResourceView {
             ></empty-view>
           ` : html`
             ${this.viewMode === 'graphical' ? html`
-              <form id="display-type-form" @submit="${this._handleSubmit}" @input="${() => { this.requestUpdate(); this._updateDirtyState(); }}">
+              <form id="display-type-form" @submit="${(e: any) => { e.preventDefault(); this.controller.save(); }}">
                 <div class="form-group">
                   <label>Identifier/Name</label>
                   <input 
                     type="text" 
                     required 
-                    .value="${live(this.displayType?.name || '')}"
-                    @input="${(e: any) => this.displayType!.name = e.target.value}"
+                    .value="${live(this.controller.activeType.name)}"
+                    @input="${(e: any) => this.controller.updateActiveType({ name: e.target.value })}"
                     placeholder="e.g. Living Room Display"
                   >
                 </div>
@@ -470,30 +352,30 @@ export class DisplayTypesView extends BaseResourceView {
                 <div class="row">
                   <div class="form-group">
                     <label>Frame Outer Width (mm)</label>
-                    <input type="number" required .value="${live(this.displayType?.width_mm || 0)}" @input="${(e: any) => this.displayType!.width_mm = parseInt(e.target.value)}">
+                    <input type="number" required .value="${live(this.controller.activeType.width_mm)}" @input="${(e: any) => this.controller.updateActiveType({ width_mm: parseInt(e.target.value) })}">
                   </div>
                   <div class="form-group">
                     <label>Frame Outer Height (mm)</label>
-                    <input type="number" required .value="${live(this.displayType?.height_mm || 0)}" @input="${(e: any) => this.displayType!.height_mm = parseInt(e.target.value)}">
+                    <input type="number" required .value="${live(this.controller.activeType.height_mm)}" @input="${(e: any) => this.controller.updateActiveType({ height_mm: parseInt(e.target.value) })}">
                   </div>
                   <div class="form-group">
                     <label>Frame Border Width (mm)</label>
-                    <input type="number" required .value="${live(this.displayType?.frame?.border_width_mm || 0)}" @input="${(e: any) => this.displayType!.frame.border_width_mm = parseInt(e.target.value)}">
+                    <input type="number" required .value="${live(this.controller.activeType.frame.border_width_mm)}" @input="${(e: any) => this.controller.updateActiveType({ frame: { ...this.controller.activeType!.frame, border_width_mm: parseInt(e.target.value) } })}">
                   </div>
                 </div>
 
                 <div class="row">
                   <div class="form-group">
                     <label>Display Panel Width (mm)</label>
-                    <input type="number" required .value="${live(this.displayType?.panel_width_mm || 0)}" @input="${(e: any) => this.displayType!.panel_width_mm = parseInt(e.target.value)}">
+                    <input type="number" required .value="${live(this.controller.activeType.panel_width_mm)}" @input="${(e: any) => this.controller.updateActiveType({ panel_width_mm: parseInt(e.target.value) })}">
                   </div>
                   <div class="form-group">
                     <label>Display Panel Height (mm)</label>
-                    <input type="number" required .value="${live(this.displayType?.panel_height_mm || 0)}" @input="${(e: any) => this.displayType!.panel_height_mm = parseInt(e.target.value)}">
+                    <input type="number" required .value="${live(this.controller.activeType.panel_height_mm)}" @input="${(e: any) => this.controller.updateActiveType({ panel_height_mm: parseInt(e.target.value) })}">
                   </div>
                   <div class="form-group">
                     <label>Colour Type</label>
-                    <select .value="${live(this.displayType?.colour_type || 'MONO')}" @change="${(e: any) => { this.displayType!.colour_type = e.target.value; this.requestUpdate(); this._updateDirtyState(); }}">
+                    <select .value="${live(this.controller.activeType.colour_type)}" @change="${(e: any) => this.controller.updateActiveType({ colour_type: e.target.value })}">
                       <option value="MONO">MONO (B/W)</option>
                       <option value="BWR">BWR (Red)</option>
                       <option value="BWY">BWY (Yellow)</option>
@@ -507,19 +389,19 @@ export class DisplayTypesView extends BaseResourceView {
                 <div class="row">
                   <div class="form-group">
                     <label>Resolution Width (px)</label>
-                    <input type="number" required .value="${live(this.displayType?.width_px || 0)}" @input="${(e: any) => this.displayType!.width_px = parseInt(e.target.value)}">
+                    <input type="number" required .value="${live(this.controller.activeType.width_px)}" @input="${(e: any) => this.controller.updateActiveType({ width_px: parseInt(e.target.value) })}">
                   </div>
                   <div class="form-group">
                     <label>Resolution Height (px)</label>
-                    <input type="number" required .value="${live(this.displayType?.height_px || 0)}" @input="${(e: any) => this.displayType!.height_px = parseInt(e.target.value)}">
+                    <input type="number" required .value="${live(this.controller.activeType.height_px)}" @input="${(e: any) => this.controller.updateActiveType({ height_px: parseInt(e.target.value) })}">
                   </div>
                   <div class="form-group"></div>
                 </div>
 
                 <div class="section-header">Aesthetics</div>
                 <div class="row">
-                  ${this._renderColourPicker('Frame Colour', this.displayType.frame.colour, (c) => { this.displayType!.frame.colour = c; this.requestUpdate(); })}
-                  ${this._renderColourPicker('Mat Colour', this.displayType.mat.colour, (c) => { this.displayType!.mat.colour = c; this.requestUpdate(); })}
+                  ${this._renderColourPicker('Frame Colour', this.controller.activeType.frame.colour, (c) => this.controller.updateActiveType({ frame: { ...this.controller.activeType!.frame, colour: c } }))}
+                  ${this._renderColourPicker('Mat Colour', this.controller.activeType.mat.colour, (c) => this.controller.updateActiveType({ mat: { ...this.controller.activeType!.mat, colour: c } }))}
                 </div>
 
                 <div style="display: none;">
@@ -528,13 +410,9 @@ export class DisplayTypesView extends BaseResourceView {
               </form>
             ` : html`
               <yaml-editor
-                .data="${this.displayType}"
+                .data="${this.controller.activeType}"
                 .schemaName="DisplayType"
-                @data-update="${(e: CustomEvent) => {
-                  this.displayType = e.detail;
-                  this.requestUpdate();
-                  this._updateDirtyState();
-                }}"
+                @data-update="${(e: CustomEvent) => this.controller.updateActiveType(e.detail)}"
               ></yaml-editor>
             `}
 
@@ -546,13 +424,13 @@ export class DisplayTypesView extends BaseResourceView {
               <div class="preview-body">
                 <div class="preview-canvas">
                   <hardware-preview
-                    .width_mm="${this.displayType.width_mm}"
-                    .height_mm="${this.displayType.height_mm}"
-                    .border_width_mm="${this.displayType.frame.border_width_mm}"
-                    .panel_width_mm="${this.displayType.panel_width_mm}"
-                    .panel_height_mm="${this.displayType.panel_height_mm}"
-                    .frame_colour="${this.displayType.frame.colour}"
-                    .mat_colour="${this.displayType.mat.colour}"
+                    .width_mm="${this.controller.activeType.width_mm}"
+                    .height_mm="${this.controller.activeType.height_mm}"
+                    .border_width_mm="${this.controller.activeType.frame.border_width_mm}"
+                    .panel_width_mm="${this.controller.activeType.panel_width_mm}"
+                    .panel_height_mm="${this.controller.activeType.panel_height_mm}"
+                    .frame_colour="${this.controller.activeType.frame.colour}"
+                    .mat_colour="${this.controller.activeType.mat.colour}"
                     .scale="${scale}"
                   ></hardware-preview>
                 </div>

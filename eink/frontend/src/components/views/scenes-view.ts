@@ -10,8 +10,9 @@ import '../layout/layout-editor';
 import '../layout/yaml-editor';
 import '../dialogs/scene-dialog';
 import { SceneDialog } from '../dialogs/scene-dialog';
-import '../dialogs/scene-item-settings-dialog';
 import { SceneItemSettingsDialog } from '../dialogs/scene-item-settings-dialog';
+import { ScenesViewController } from '../../controllers/ScenesViewController';
+import { HaStateController } from '../../controllers/HaStateController';
 
 /**
  * A view component for managing Smart Scenes.
@@ -239,18 +240,16 @@ export class ScenesView extends BaseResourceView {
     `
   ];
 
+  @property({ type: Object }) state!: HaStateController;
   @property({ type: Array }) scenes: Scene[] = [];
   @property({ type: Object }) activeScene: Scene | null = null;
   @property({ type: String }) viewMode: 'graphical' | 'yaml' = 'graphical';
-  @state() private _selectedDisplayIds: string[] = [];
-  @state() private _selectedItemId: string | null = null;
-  @state() private _hoveredItemId: string | null = null;
-  @state() private _originalSceneJson: string | null = null;
   @state() private _existingSlices: any[] = [];
   @state() private _selectedPips: Record<string, string> = {}; // item_id -> image_id
   @state() private _hoveredPip: { itemId: string, imageId: string, x: number, y: number } | null = null;
   private _pollInterval: any = null;
-  
+
+  public controller = new ScenesViewController(this);
   @query('scene-dialog') private _sceneDialog!: SceneDialog;
   @query('scene-item-settings-dialog') private _itemSettingsDialog!: SceneItemSettingsDialog;
   
@@ -268,18 +267,10 @@ export class ScenesView extends BaseResourceView {
 
   protected updated(changedProperties: PropertyValues) {
     super.updated(changedProperties);
-    if (changedProperties.has('activeScene')) {
-      this.notifyCanDelete(!!this.activeScene);
-      this._selectedItemId = null;
-      if (this.activeScene && (!this._originalSceneJson || JSON.parse(this._originalSceneJson).id !== this.activeScene.id)) {
-        this.resetBaseline();
-      }
+    if (changedProperties.has('state')) {
+      this.controller.resetBaseline();
     }
-    
     if (changedProperties.has('activeScene') || changedProperties.has('scenes')) {
-      const dirty = this.isDirty;
-      this.notifyDirty(dirty);
-      
       if (changedProperties.has('activeScene')) {
         this._fetchExistingSlices();
         this._selectedPips = {};
@@ -299,210 +290,62 @@ export class ScenesView extends BaseResourceView {
     }
   }
 
-  public resetBaseline() {
-    this._originalSceneJson = this.activeScene ? JSON.stringify(this.activeScene) : null;
-    this.notifyDirty(false);
+  public get isDirty() {
+    return this.controller.isDirty;
+  }
+
+  public get canDelete() {
+    return this.controller.canDelete;
   }
 
   public async save() {
-    if (!this.activeScene) return;
-    await this.state.saveActiveScene();
-    this.resetBaseline();
+    await this.controller.save();
   }
 
   public discard() {
-    if (!this._originalSceneJson) return;
-    this.state.activeScene = JSON.parse(this._originalSceneJson);
-    this.resetBaseline();
-    this.requestUpdate();
+    this.controller.discard();
   }
 
   public addNew() {
-    this._sceneDialog.show();
+    this._sceneDialog.show(null, this.state.layouts);
   }
 
   public async requestDelete() {
-    if (!this.activeScene) return;
-    this.dispatchEvent(new CustomEvent('delete-scene', {
-      detail: { scene: this.activeScene },
-      bubbles: true,
-      composed: true
-    }));
-  }
-
-  get isDirty() {
-    if (!this.activeScene || !this._originalSceneJson) return false;
-    return JSON.stringify(this.activeScene) !== this._originalSceneJson;
-  }
-  get canDelete() { return !!this.activeScene; }
-
-  private async _handleSelect(sceneId: string) {
-    if (this.activeScene?.id === sceneId) return;
-
-    const performSwitch = () => {
-      const scene = this.state.scenes.find((s: any) => s.id === sceneId);
-      if (!scene) return;
-      
-      this._selectedDisplayIds = [];
-      this._selectedItemId = null;
-      this.dispatchEvent(new CustomEvent('select-scene', {
-        detail: { scene },
-        bubbles: true,
-        composed: true
-      }));
-    };
-
-    if (this.isDirty) {
-      this._requestConfirmation(
-        {
-          title: 'Unsaved Changes',
-          message: `You have unsaved changes to "${this.activeScene?.name}". What would you like to do?`,
-          buttons: [
-            { text: 'Save', value: 'save', type: 'primary' },
-            { text: 'Discard', value: 'discard', type: 'danger' },
-            { text: 'Cancel', value: 'cancel', type: 'secondary' }
-          ]
-        },
-        async (choice: string) => {
-          if (choice === 'save') {
-            await this.save();
-            performSwitch();
-          } else if (choice === 'discard') {
-            this.discard();
-            performSwitch();
-          }
-        }
-      );
-    } else {
-      performSwitch();
-    }
-  }
-
-  private _handleItemClick(id: string) {
-    this._selectedItemId = id;
-  }
-
-  private _handleBoxClick(displayId: string) {
-    const activeScene = this.state?.activeScene || this.activeScene;
-    if (!activeScene) return;
-
-    const item = activeScene.items?.find((i: any) => i.displays?.includes(displayId));
-    if (item) {
-      this._selectedItemId = item.id;
-    }
-  }
-
-  private _handleBoxHover(displayId: string) {
-    const activeScene = this.state?.activeScene || this.activeScene;
-    if (!activeScene) return;
-
-    const item = activeScene.items?.find((i: any) => i.displays?.includes(displayId));
-    this._hoveredItemId = item ? item.id : null;
+    await this.controller.requestDelete();
   }
 
   private _handleItemDoubleClick(item: any) {
-    const activeScene = this.state?.activeScene || this.activeScene;
-    if (!activeScene) return;
-    
-    const layout = this.state.layouts.find((l: any) => l.id === activeScene.layout);
+    const layout = this.state.layouts.find((l: any) => l.id === this.state.activeScene?.layout);
     if (!layout) return;
 
-    this._selectedItemId = item.id;
+    this.controller.selectedItemId = item.id;
     this._itemSettingsDialog.show(item, layout, this.state.displayTypes);
   }
 
   private _handleEditItem(id?: string) {
-    const activeScene = this.state?.activeScene || this.activeScene;
-    if (!activeScene) return;
-    
-    const itemId = id || this._selectedItemId;
+    const itemId = id || this.controller.selectedItemId;
     if (!itemId) return;
 
-    const item = activeScene.items?.find((i: any) => i.id === itemId);
-    const layout = this.state.layouts.find((l: any) => l.id === activeScene.layout);
+    const item = this.state.activeScene?.items?.find((i: any) => i.id === itemId);
+    const layout = this.state.layouts.find((l: any) => l.id === this.state.activeScene?.layout);
     
     if (item && layout) {
-      this._selectedItemId = itemId;
+      this.controller.selectedItemId = itemId;
       this._itemSettingsDialog.show(item, layout, this.state.displayTypes);
     }
   }
 
   private _handleBoxEdit(displayId: string) {
-    const activeScene = this.state?.activeScene || this.activeScene;
-    if (!activeScene) return;
-
-    const item = activeScene.items?.find((i: any) => i.displays?.includes(displayId));
+    const item = this.state.activeScene?.items?.find((i: any) => i.displays?.includes(displayId));
     if (item) {
       this._handleEditItem(item.id);
     }
   }
 
-  private async _handleCreateSingleDisplayItems() {
-    const activeScene = this.state?.activeScene || this.activeScene;
-    if (!activeScene || this._selectedDisplayIds.length === 0) return;
-
-    const newItems = this._selectedDisplayIds.map(displayId => ({
-      id: crypto.randomUUID(),
-      type: 'image' as const,
-      displays: [displayId],
-      images: []
-    }));
-
-    const existingItems = activeScene.items || [];
-    this.state.updateActiveScene({
-      items: [...existingItems, ...newItems]
-    });
-
-    this._selectedDisplayIds = [];
-    this.showMessage(`Added ${newItems.length} display item(s)`, 'success');
-  }
-
-  private async _handleCreateMultiDisplayItem() {
-    const activeScene = this.state?.activeScene || this.activeScene;
-    if (!activeScene || this._selectedDisplayIds.length <= 1) return;
-
-    const newItem = {
-      id: crypto.randomUUID(),
-      type: 'tile' as const,
-      displays: [...this._selectedDisplayIds],
-      images: []
-    };
-
-    const existingItems = activeScene.items || [];
-    this.state.updateActiveScene({
-      items: [...existingItems, newItem]
-    });
-
-    this._selectedDisplayIds = [];
-    this.showMessage('Added multi-display tile item', 'success');
-  }
-
-  private _handleDeleteItem() {
-    const activeScene = this.state?.activeScene || this.activeScene;
-    if (!activeScene || !this._selectedItemId) return;
-
-    this._requestConfirmation(
-      {
-        title: 'Delete Scene Item?',
-        message: 'Are you sure you want to remove this item from the scene?',
-        confirmText: 'Delete',
-        type: 'danger'
-      },
-      async (confirmed: boolean) => {
-        if (confirmed) {
-          const items = activeScene.items?.filter((i: any) => i.id !== this._selectedItemId) || [];
-          this.state.updateActiveScene({ items });
-          this._selectedItemId = null;
-          this.showMessage('Scene item removed', 'success');
-        }
-      }
-    );
-  }
-
   render() {
-    const scenes = (this.state?.scenes || this.scenes || []) as Scene[];
-    const activeScene = this.state?.activeScene || this.activeScene;
-    const activeLayout = activeScene ? this.state?.layouts.find((l: any) => l.id === activeScene.layout) : null;
+    const scenes = this.scenes || [];
+    const activeScene = this.activeScene;
+    const activeLayout = activeScene ? this.state.layouts.find((l: any) => l.id === activeScene.layout) : null;
     
     let usedDisplayIds: string[] = [];
     if (activeScene && activeScene.items) {
@@ -513,7 +356,7 @@ export class ScenesView extends BaseResourceView {
       });
     }
 
-    const highlightedItemId = this._hoveredItemId || this._selectedItemId;
+    const highlightedItemId = this.controller.hoveredItemId || this.controller.selectedItemId;
     const highlightedDisplayIds = activeScene?.items?.find((i: any) => i.id === highlightedItemId)?.displays || [];
 
     // Calculate preview slices for layout editor
@@ -549,7 +392,7 @@ export class ScenesView extends BaseResourceView {
           <sidebar-list
             .items="${listItems}"
             .selectedId="${activeScene?.id || null}"
-            @select="${(e: CustomEvent) => this._handleSelect(e.detail.item.id)}"
+            @select="${(e: CustomEvent) => this.controller.handleSelect(e.detail.item.id)}"
           ></sidebar-list>
         </div>
 
@@ -574,7 +417,10 @@ export class ScenesView extends BaseResourceView {
             slot="right-main"
             .data="${activeScene}"
             .schemaName="Scene"
-            @data-update="${(e: CustomEvent) => this.state.updateActiveScene(e.detail)}"
+            @data-update="${(e: CustomEvent) => {
+              this.state.updateActiveScene(e.detail);
+              this.controller.resetBaseline();
+            }}"
           ></yaml-editor>
         ` : (activeScene && activeLayout ? html`
           <div slot="right-main" class="workspace">
@@ -585,16 +431,16 @@ export class ScenesView extends BaseResourceView {
                 .items="${activeLayout.items}"
                 .displayTypes="${this.state.displayTypes}"
                 .readOnly="${true}"
-                .selectedIds="${this._selectedDisplayIds}"
+                .selectedIds="${this.controller.selectedDisplayIds}"
                 .highlightedIds="${highlightedDisplayIds}"
                 .usedIds="${usedDisplayIds}"
                 .previewSlices="${previewSlices}"
                 .hideNumber="${true}"
-                @selection-change="${(e: CustomEvent) => this._selectedDisplayIds = e.detail.ids}"
-                @box-click="${(e: CustomEvent) => this._handleBoxClick(e.detail.id)}"
+                @selection-change="${(e: CustomEvent) => { this.controller.selectedDisplayIds = e.detail.ids; this.requestUpdate(); }}"
+                @box-click="${(e: CustomEvent) => this.controller.handleBoxClick(e.detail.id)}"
                 @edit-item="${(e: CustomEvent) => this._handleBoxEdit(e.detail.id)}"
-                @box-hover="${(e: CustomEvent) => this._handleBoxHover(e.detail.id)}"
-                @box-unhover="${() => this._hoveredItemId = null}"
+                @box-hover="${(e: CustomEvent) => this.controller.handleBoxHover(e.detail.id)}"
+                @box-unhover="${() => { this.controller.hoveredItemId = null; this.requestUpdate(); }}"
               ></layout-editor>
             </div>
             
@@ -605,16 +451,16 @@ export class ScenesView extends BaseResourceView {
                   <button 
                     class="secondary icon-button" 
                     title="New Single Display" 
-                    ?disabled="${this._selectedDisplayIds.length < 1}"
-                    @click="${() => this._handleCreateSingleDisplayItems()}"
+                    ?disabled="${this.controller.selectedDisplayIds.length < 1}"
+                    @click="${() => this.controller.createSingleDisplayItems()}"
                   >
                     <span class="material-icons">add_photo_alternate</span>
                   </button>
                   <button 
                     class="secondary icon-button" 
                     title="New Multi-Display (Tiled)"
-                    ?disabled="${this._selectedDisplayIds.length < 2}"
-                    @click="${() => this._handleCreateMultiDisplayItem()}"
+                    ?disabled="${this.controller.selectedDisplayIds.length < 2}"
+                    @click="${() => this.controller.createMultiDisplayItem()}"
                   >
                     <span class="material-icons">grid_view</span>
                   </button>
@@ -624,11 +470,11 @@ export class ScenesView extends BaseResourceView {
               <div class="content-list">
                 ${activeScene.items?.map((item: any, index: number) => html`
                   <div 
-                    class="placeholder-item ${this._selectedItemId === item.id ? 'selected' : ''} ${this._hoveredItemId === item.id ? 'hovered' : ''}"
-                    @click="${() => this._handleItemClick(item.id)}"
+                    class="placeholder-item ${this.controller.selectedItemId === item.id ? 'selected' : ''} ${this.controller.hoveredItemId === item.id ? 'hovered' : ''}"
+                    @click="${() => this.controller.handleItemClick(item.id)}"
                     @dblclick="${() => this._handleItemDoubleClick(item)}"
-                    @mouseenter="${() => this._hoveredItemId = item.id}"
-                    @mouseleave="${() => this._hoveredItemId = null}"
+                    @mouseenter="${() => { this.controller.hoveredItemId = item.id; this.requestUpdate(); }}"
+                    @mouseleave="${() => { this.controller.hoveredItemId = null; this.requestUpdate(); }}"
                   >
                     <div class="placeholder-item-icon">
                       <span class="material-icons">
@@ -663,7 +509,7 @@ export class ScenesView extends BaseResourceView {
                   <button 
                     class="secondary icon-button" 
                     title="Edit Item"
-                    ?disabled="${!this._selectedItemId}"
+                    ?disabled="${!this.controller.selectedItemId}"
                     @click="${() => this._handleEditItem()}"
                   >
                     <span class="material-icons">edit</span>
@@ -671,8 +517,8 @@ export class ScenesView extends BaseResourceView {
                   <button 
                     class="danger icon-button" 
                     title="Delete Item"
-                    ?disabled="${!this._selectedItemId}"
-                    @click="${() => this._handleDeleteItem()}"
+                    ?disabled="${!this.controller.selectedItemId}"
+                    @click="${() => this.controller.deleteItem()}"
                   >
                     <span class="material-icons">delete</span>
                   </button>
@@ -695,11 +541,9 @@ export class ScenesView extends BaseResourceView {
         @save="${(e: CustomEvent) => this.state.updateScene(e.detail.id, { name: e.detail.name, layout: e.detail.layout })}"
       ></scene-dialog>
       <scene-item-settings-dialog
-        @delete="${() => this._handleDeleteItem()}"
+        @delete="${() => this.controller.deleteItem()}"
         @save-item="${(e: CustomEvent) => {
-          const activeScene = this.state?.activeScene || this.activeScene;
-          if (!activeScene) return;
-          const items = activeScene.items?.map((item: any) => 
+          const items = this.activeScene?.items?.map((item: any) => 
             item.id === e.detail.item.id ? e.detail.item : item
           ) || [];
           this.state.updateActiveScene({ items });

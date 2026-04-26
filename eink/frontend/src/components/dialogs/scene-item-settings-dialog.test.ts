@@ -78,7 +78,7 @@ describe('SceneItemSettingsDialog', () => {
     await element.show(item, mockLayout as any, mockDisplayTypes as any);
     await element.updateComplete;
 
-    expect((element as any)._selectedImageId).toBe('img1');
+    expect(element.controller.selectedImageId).toBe('img1');
 
     const deleteBtn = element.shadowRoot?.querySelector('button[title="Delete Image"]') as HTMLButtonElement;
     expect(deleteBtn !== null).toBe(true);
@@ -87,7 +87,7 @@ describe('SceneItemSettingsDialog', () => {
     deleteBtn.click();
     await element.updateComplete;
 
-    expect(element.item.images.length).toBe(0);
+    expect(element.controller.item.images.length).toBe(0);
     expect(element.shadowRoot?.querySelectorAll('.image-item').length).toBe(0);
   });
 
@@ -100,8 +100,8 @@ describe('SceneItemSettingsDialog', () => {
     rangeInput.dispatchEvent(new Event('input'));
     await element.updateComplete;
 
-    expect((element as any)._scalingFactor).toBe(150);
-    expect(element.item.images[0].scaling_factor).toBe(150);
+    expect(element.controller.scalingFactor).toBe(150);
+    expect(element.controller.item.images[0].scaling_factor).toBe(150);
   });
 
   it('fits image correctly and centers it', async () => {
@@ -129,9 +129,9 @@ describe('SceneItemSettingsDialog', () => {
     // offsetX = (1000 - 500) / 2 = 250
     // offsetY = (500 - 500) / 2 = 0
     
-    expect((element as any)._scalingFactor).toBe(500);
-    expect((element as any)._offsetX).toBe(250);
-    expect((element as any)._offsetY).toBe(0);
+    expect(element.controller.scalingFactor).toBe(500);
+    expect(element.controller.offsetX).toBe(250);
+    expect(element.controller.offsetY).toBe(0);
   });
 
   it('fills image correctly and centers it', async () => {
@@ -159,9 +159,9 @@ describe('SceneItemSettingsDialog', () => {
     // offsetX = (1000 - 1000) / 2 = 0
     // offsetY = (500 - 1000) / 2 = -250
     
-    expect((element as any)._scalingFactor).toBe(1000);
-    expect((element as any)._offsetX).toBe(0);
-    expect((element as any)._offsetY).toBe(-250);
+    expect(element.controller.scalingFactor).toBe(1000);
+    expect(element.controller.offsetX).toBe(0);
+    expect(element.controller.offsetY).toBe(-250);
   });
 
   it('updates background color', async () => {
@@ -169,7 +169,7 @@ describe('SceneItemSettingsDialog', () => {
     await element.updateComplete;
 
     // Check default color
-    expect((element as any)._backgroundColor).toBe('#ffffff');
+    expect(element.controller.backgroundColor).toBe('#ffffff');
 
     // Click Black swatch
     const blackBtn = element.shadowRoot?.querySelector('button[title="Black"]') as HTMLButtonElement;
@@ -177,7 +177,7 @@ describe('SceneItemSettingsDialog', () => {
     blackBtn.click();
     await element.updateComplete;
 
-    expect((element as any)._backgroundColor).toBe('#000000');
+    expect(element.controller.backgroundColor).toBe('#000000');
     expect((mockItem.images[0] as any).background_color).toBe('#000000');
 
     // Use custom color picker
@@ -187,7 +187,7 @@ describe('SceneItemSettingsDialog', () => {
     colorInput.dispatchEvent(new Event('input'));
     await element.updateComplete;
 
-    expect((element as any)._backgroundColor).toBe('#ff0000');
+    expect(element.controller.backgroundColor).toBe('#ff0000');
     expect((mockItem.images[0] as any).background_color).toBe('#ff0000');
   });
 });

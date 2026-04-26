@@ -1,7 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { commonStyles } from '../../styles/common-styles';
-import { DisplayType, Layout } from '../../services/HaApiClient';
+import { SideBarController } from '../../controllers/SideBarController';
 
 @customElement('side-bar')
 export class SideBar extends LitElement {
@@ -66,12 +66,18 @@ export class SideBar extends LitElement {
     `
   ];
 
-  @property({ type: Array }) displayTypes: DisplayType[] = [];
-  @property({ type: Object }) activeLayout: Layout | null = null;
+  @property({ type: Array }) displayTypes: any[] = [];
+  @property({ type: Object }) activeLayout: any | null = null;
   @property({ type: String }) selectedItemId: string | null = null;
 
-  private _dispatch(name: string, detail?: any) {
-    this.dispatchEvent(new CustomEvent(name, { detail, bubbles: true, composed: true }));
+  private controller = new SideBarController(this);
+
+  protected updated() {
+    this.controller.initialise({
+      displayTypes: this.displayTypes,
+      activeLayout: this.activeLayout,
+      selectedItemId: this.selectedItemId
+    });
   }
 
   render() {
@@ -81,13 +87,13 @@ export class SideBar extends LitElement {
           <span class="material-icons">layers</span>
           Layout Items
         </div>
-        ${(this.activeLayout?.items || []).map((item, index) => {
-          const dt = this.displayTypes.find(t => t.id === item.display_type_id);
+        ${(this.controller.activeLayout?.items || []).map((item, index) => {
+          const dt = this.controller.displayTypes.find(t => t.id === item.display_type_id);
           return html`
             <div 
-              class="list-item ${this.selectedItemId === item.id ? 'selected' : ''}" 
-              @click="${() => this._dispatch('select-item', { id: item.id })}"
-              @dblclick="${() => this._dispatch('edit-item', { id: item.id })}"
+              class="list-item ${this.controller.selectedItemId === item.id ? 'selected' : ''}" 
+              @click="${() => this.controller.selectItem(item.id)}"
+              @dblclick="${() => this.controller.editItem(item.id)}"
             >
               <div class="item-details">
                 <div class="item-info">
@@ -95,7 +101,7 @@ export class SideBar extends LitElement {
                   <span class="item-meta">Pos: ${item.x_mm}, ${item.y_mm} | Orient: ${item.orientation}</span>
                 </div>
                 <div class="item-actions">
-                  <button class="secondary" title="Settings" @click="${(e: Event) => { e.stopPropagation(); this._dispatch('edit-item', { id: item.id }); }}">
+                  <button class="secondary" title="Settings" @click="${(e: Event) => { e.stopPropagation(); this.controller.editItem(item.id); }}">
                     <span class="material-icons" style="font-size: 16px;">settings</span>
                   </button>
                 </div>

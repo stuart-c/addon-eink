@@ -129,15 +129,13 @@ describe('ImagesView', () => {
     expect(element.canDelete).toBe(true);
   });
 
-  it('should dispatch delete-image when requestDelete is called', () => {
-    const spy = vi.fn();
-    element.addEventListener('delete-image', spy);
+  it('should call controller.deleteImage when requestDelete is called', () => {
+    const spy = vi.spyOn(element.controller, 'deleteImage');
     
     element.selectedImageId = 'img1';
     element.requestDelete();
     
-    expect(spy).toHaveBeenCalled();
-    expect(spy.mock.calls[0][0].detail).toEqual({ image: mockImages[0] });
+    expect(spy).toHaveBeenCalledWith(mockImages[0]);
   });
 
   it('should render range sliders for dimensions', () => {

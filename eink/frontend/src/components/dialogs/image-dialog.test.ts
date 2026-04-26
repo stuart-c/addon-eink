@@ -141,9 +141,9 @@ describe('ImageDialog', () => {
     await element.show();
     await element.updateComplete;
 
-    // Simulate an upload by manually setting the private state
+    // Simulate an upload by manually setting the controller state
     const uploadedImage: Image = { ...mockImage, id: 'new-img' };
-    (element as any)._uploadedImage = uploadedImage;
+    element.controller.uploadedImage = uploadedImage;
     await element.updateComplete;
 
     const cancelBtn = Array.from(element.shadowRoot?.querySelectorAll('button') || [])

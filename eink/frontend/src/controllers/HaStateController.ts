@@ -169,8 +169,8 @@ export class HaStateController implements ReactiveController {
         saved = await api.createItem('display_type', dt);
       }
       this.selectedDisplayTypeId = saved.id;
-      this._updateHash();
       await this.refresh();
+      this._updateHash();
       this.isSaving = false;
       this.showMessage(`Display type "${saved.name}" saved!`, 'success');
     } catch (e: any) {
@@ -261,8 +261,8 @@ export class HaStateController implements ReactiveController {
       const newScene: Omit<Scene, 'id'> = { name, layout };
       const result = await api.createItem<Scene>('scene', newScene);
       this.activeScene = result;
-      this._updateHash();
       await this.refresh();
+      this._updateHash();
       this.isSaving = false;
       this.showMessage(`Scene "${name}" created!`, 'success');
       return result;
