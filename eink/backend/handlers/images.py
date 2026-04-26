@@ -8,8 +8,6 @@ from PIL import Image as PILImage, UnidentifiedImageError
 from sqlalchemy import select, func
 from aiohttp import web
 
-logger = logging.getLogger(__name__)
-
 from .base import BaseCRUDHandler
 from .. import database, models
 from ..utils.storage import get_storage_path
@@ -23,6 +21,8 @@ from ..utils.validation import (
     response_schema,
 )
 from ..utils.query import parse_sort_params, build_filters
+
+logger = logging.getLogger(__name__)
 
 
 class ImageHandler(BaseCRUDHandler):

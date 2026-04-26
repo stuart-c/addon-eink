@@ -8,7 +8,8 @@ describe('NavigationController', () => {
     beforeEach(() => {
         mockHost = {
             addController: vi.fn(),
-            requestUpdate: vi.fn()
+            requestUpdate: vi.fn(),
+            dispatchEvent: vi.fn(),
         };
         // Mock window.location.hash
         window.location.hash = '';

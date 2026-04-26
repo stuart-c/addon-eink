@@ -8,7 +8,8 @@ describe('HaStateController', () => {
     beforeEach(() => {
         mockHost = {
             addController: vi.fn(),
-            requestUpdate: vi.fn()
+            requestUpdate: vi.fn(),
+            dispatchEvent: vi.fn(),
         };
         const mockNavigation = {
             activeSection: 'layouts',
