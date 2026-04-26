@@ -248,7 +248,6 @@ jobs:
         with:
           app-id: ${{ vars.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
-          owner: ${{ github.repository_owner }}
 
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -291,10 +290,19 @@ jobs:
           git pull --rebase origin main
           git push origin HEAD:refs/heads/main
 
+      - name: Generate GitHub App Token for Dispatch
+        id: dispatch-token
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ha-addons
+
       - name: 🚀 Dispatch Repository Updater update signal
         uses: peter-evans/repository-dispatch@ff45666b9427631e3450c54a1bcbee4d9ff4d7c0 # v3.0.0
         with:
-          token: ${{ steps.app-token.outputs.token }}
+          token: ${{ steps.dispatch-token.outputs.token }}
           repository: stuart-c/ha-addons
           event-type: update
           client-payload: '{"app": "eink"}'
