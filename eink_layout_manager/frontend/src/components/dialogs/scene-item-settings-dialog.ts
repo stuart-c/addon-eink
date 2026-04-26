@@ -228,6 +228,7 @@ export class SceneItemSettingsDialog extends LitElement {
         justify-content: center;
         position: relative;
         overflow: hidden;
+        min-width: 0;
       }
 
       .preview-placeholder {
@@ -456,6 +457,8 @@ export class SceneItemSettingsDialog extends LitElement {
   @state() private _searchQuery = '';
   @state() private _previewCanvas: HTMLCanvasElement | null = null;
   private _updateTimer: any = null;
+  private _cachedPreviewData: any = null;
+  private _lastPreviewSource: string = '';
 
   async show(item: any, layout: Layout, displayTypes: DisplayType[]) {
     this.item = item;
@@ -720,6 +723,12 @@ export class SceneItemSettingsDialog extends LitElement {
       return { width: 0, height: 0, items: [], minX: 0, minY: 0 };
     }
 
+    // Cache based on item state and layout
+    const sourceKey = `${this.item.id}-${JSON.stringify(this.item.displays)}-${this._layout.id}`;
+    if (this._cachedPreviewData && this._lastPreviewSource === sourceKey) {
+      return this._cachedPreviewData;
+    }
+
     const visibleItems = this._layout.items.filter(i => this.item.displays.includes(i.id));
     if (visibleItems.length === 0) {
       return { width: 0, height: 0, items: [], minX: 0, minY: 0 };
@@ -754,7 +763,9 @@ export class SceneItemSettingsDialog extends LitElement {
       y_mm: item.y_mm - minY
     }));
 
-    return { width, height, items: adjustedItems, minX, minY };
+    this._cachedPreviewData = { width, height, items: adjustedItems, minX, minY };
+    this._lastPreviewSource = sourceKey;
+    return this._cachedPreviewData;
   }
 
   private get _panelBoundingBox() {
