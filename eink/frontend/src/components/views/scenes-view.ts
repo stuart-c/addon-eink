@@ -329,7 +329,7 @@ export class ScenesView extends BaseResourceView {
   }
 
   public addNew() {
-    this._sceneDialog.show();
+    this._sceneDialog.show(null, this.state.layouts);
   }
 
   public async requestDelete() {
