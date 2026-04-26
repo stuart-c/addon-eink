@@ -184,7 +184,7 @@ export class LayoutEditor extends LitElement {
                     .mat_colour="${dt.mat?.colour}"
                     ?selected="${this.selectedIds.includes(item.id)}"
                     ?highlighted="${this.highlightedIds.includes(item.id)}"
-                    ?invalid="${item.invalid}"
+                    ?invalid="${this.controller.invalidItemIds.has(item.id)}"
                     .used="${this.usedIds.includes(item.id)}"
                     .readOnly="${this.readOnly}"
                     .hideNumber="${this.hideNumber}"

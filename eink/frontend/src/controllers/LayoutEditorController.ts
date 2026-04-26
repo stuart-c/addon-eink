@@ -21,6 +21,7 @@ export class LayoutEditorController extends BaseViewController {
   public previewImage: HTMLCanvasElement | string | null = null;
   public previewTotalSize: { width: number; height: number } = { width: 0, height: 0 };
   public scale = 1;
+  public invalidItemIds = new Set<string>();
 
   public initialise(props: Partial<LayoutEditorController>) {
     Object.assign(this, props);
@@ -127,7 +128,7 @@ export class LayoutEditorController extends BaseViewController {
   }
 
   public validateLayout() {
-    this.items.forEach(i => i.invalid = false);
+    const newInvalidIds = new Set<string>();
     for (let i = 0; i < this.items.length; i++) {
       const item1 = this.items[i];
       const dt1 = this.displayTypes.find(t => t.id === item1.display_type_id);
@@ -137,7 +138,7 @@ export class LayoutEditorController extends BaseViewController {
       const h1 = isPortrait1 ? dt1.width_mm : dt1.height_mm;
 
       if (item1.x_mm < 0 || item1.y_mm < 0 || item1.x_mm + w1 > this.width_mm || item1.y_mm + h1 > this.height_mm) {
-        item1.invalid = true;
+        newInvalidIds.add(item1.id);
       }
       for (let j = i + 1; j < this.items.length; j++) {
         const item2 = this.items[j];
@@ -149,10 +150,26 @@ export class LayoutEditorController extends BaseViewController {
 
         if (item1.x_mm < item2.x_mm + w2 && item1.x_mm + w1 > item2.x_mm &&
             item1.y_mm < item2.y_mm + h2 && item1.y_mm + h1 > item2.y_mm) {
-          item1.invalid = true;
-          item2.invalid = true;
+          newInvalidIds.add(item1.id);
+          newInvalidIds.add(item2.id);
         }
       }
+    }
+    
+    let changed = false;
+    if (this.invalidItemIds.size !== newInvalidIds.size) {
+      changed = true;
+    } else {
+      for (const id of newInvalidIds) {
+        if (!this.invalidItemIds.has(id)) {
+           changed = true;
+           break;
+        }
+      }
+    }
+    if (changed) {
+      this.invalidItemIds = newInvalidIds;
+      this.host.requestUpdate();
     }
   }
 
