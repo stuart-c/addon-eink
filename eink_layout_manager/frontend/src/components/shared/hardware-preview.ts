@@ -73,24 +73,33 @@ export class HardwarePreview extends LitElement {
       height: ${panelH * this.scale}px;
     `;
 
-    if (this.previewImage && this.previewTotalSize.width > 0) {
-      // Calculate background position to align with the total preview area
-      // previewOffset is the top-left of this display's FRAME in the total area.
-      // We need to account for the border and mat offset to find the top-left of the DISPLAY PANEL.
-      const displayLeftInArea = this.previewOffset.x + border + matL;
-      const displayTopInArea = this.previewOffset.y + border + matT;
+    if (this.previewImage) {
+      if (this.previewTotalSize.width > 0) {
+        // Calculate background position to align with the total preview area
+        // previewOffset is the top-left of this display's FRAME in the total area.
+        // We need to account for the border and mat offset to find the top-left of the DISPLAY PANEL.
+        const displayLeftInArea = this.previewOffset.x + border + matL;
+        const displayTopInArea = this.previewOffset.y + border + matT;
 
-      const bgPosX = -displayLeftInArea * this.scale;
-      const bgPosY = -displayTopInArea * this.scale;
-      const bgSizeW = this.previewTotalSize.width * this.scale;
-      const bgSizeH = this.previewTotalSize.height * this.scale;
+        const bgPosX = -displayLeftInArea * this.scale;
+        const bgPosY = -displayTopInArea * this.scale;
+        const bgSizeW = this.previewTotalSize.width * this.scale;
+        const bgSizeH = this.previewTotalSize.height * this.scale;
 
-      displayStyle += `
-        background-image: url(${typeof this.previewImage === 'string' ? this.previewImage : (this.previewImage as HTMLCanvasElement).toDataURL()});
-        background-position: ${bgPosX}px ${bgPosY}px;
-        background-size: ${bgSizeW}px ${bgSizeH}px;
-        background-repeat: no-repeat;
-      `;
+        displayStyle += `
+          background-image: url(${typeof this.previewImage === 'string' ? this.previewImage : (this.previewImage as HTMLCanvasElement).toDataURL()});
+          background-position: ${bgPosX}px ${bgPosY}px;
+          background-size: ${bgSizeW}px ${bgSizeH}px;
+          background-repeat: no-repeat;
+        `;
+      } else {
+        // Simple slice - cover the entire panel
+        displayStyle += `
+          background-image: url(${typeof this.previewImage === 'string' ? this.previewImage : (this.previewImage as HTMLCanvasElement).toDataURL()});
+          background-size: 100% 100%;
+          background-repeat: no-repeat;
+        `;
+      }
     }
 
     return html`
