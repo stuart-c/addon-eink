@@ -100,6 +100,7 @@ export class LayoutEditor extends LitElement {
   @property({ type: Object }) previewSlices: Record<string, string> = {};
   
   @state() private _scale = 1;
+  @state() private _invalidItemIds = new Set<string>();
 
   private _resizeObserver: ResizeObserver;
 
@@ -263,7 +264,7 @@ export class LayoutEditor extends LitElement {
   }
 
   private _validateLayout() {
-    this.items.forEach(i => i.invalid = false);
+    const invalidIds = new Set<string>();
 
     for (let i = 0; i < this.items.length; i++) {
       const item1 = this.items[i];
@@ -276,7 +277,7 @@ export class LayoutEditor extends LitElement {
 
       // Check boundary overlap
       if (item1.x_mm < 0 || item1.y_mm < 0 || item1.x_mm + w1 > this.width_mm || item1.y_mm + h1 > this.height_mm) {
-        item1.invalid = true;
+        invalidIds.add(item1.id);
       }
       for (let j = i + 1; j < this.items.length; j++) {
         const item1_check = this.items[i];
@@ -300,10 +301,27 @@ export class LayoutEditor extends LitElement {
           item1_check.y_mm < item2.y_mm + h2 &&
           item1_check.y_mm + h1_check > item2.y_mm
         ) {
-          item1_check.invalid = true;
-          item2.invalid = true;
+          invalidIds.add(item1_check.id);
+          invalidIds.add(item2.id);
         }
       }
+    }
+    
+    // Only trigger a re-render if the set of invalid items changed
+    let changed = false;
+    if (this._invalidItemIds.size !== invalidIds.size) {
+      changed = true;
+    } else {
+      for (const id of invalidIds) {
+        if (!this._invalidItemIds.has(id)) {
+          changed = true;
+          break;
+        }
+      }
+    }
+    
+    if (changed) {
+      this._invalidItemIds = invalidIds;
     }
   }
 
@@ -416,7 +434,7 @@ export class LayoutEditor extends LitElement {
                     .mat_colour="${dt.mat?.colour}"
                     ?selected="${this.selectedIds.includes(item.id)}"
                     ?highlighted="${this.highlightedIds.includes(item.id)}"
-                    ?invalid="${item.invalid}"
+                    ?invalid="${this._invalidItemIds.has(item.id)}"
                     .used="${this.usedIds.includes(item.id)}"
                     .readOnly="${this.readOnly}"
                     .hideNumber="${this.hideNumber}"
