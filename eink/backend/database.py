@@ -296,6 +296,31 @@ async def ensure_schema_up_to_date(conn):
             )
         )
 
+    # Check 'scene_display_images' table for recently added columns
+    result = await conn.execute(text("PRAGMA table_info(scene_display_images)"))
+    columns = [row[1] for row in result.fetchall()]
+
+    if "file_hash" not in columns:
+        await conn.execute(
+            text("ALTER TABLE scene_display_images ADD COLUMN file_hash VARCHAR")
+        )
+
+    if "created_at" not in columns:
+        await conn.execute(
+            text(
+                "ALTER TABLE scene_display_images ADD COLUMN created_at DATETIME "
+                "DEFAULT CURRENT_TIMESTAMP"
+            )
+        )
+
+    if "updated_at" not in columns:
+        await conn.execute(
+            text(
+                "ALTER TABLE scene_display_images ADD COLUMN updated_at DATETIME "
+                "DEFAULT CURRENT_TIMESTAMP"
+            )
+        )
+
     # Cleanup: Remove palette from conversion settings (migrating to preview-only)
     await conn.execute(
         text(
