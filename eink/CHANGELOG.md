@@ -1,3 +1,12 @@
+## [0.3.4] - 2026-04-26
+
+## Changes
+
+## 🐛 Bug Fixes
+
+- fix: Add missing URL @stuart-c (#433)
+
+
 ## [0.3.3] - 2026-04-26
 
 ## Changes
