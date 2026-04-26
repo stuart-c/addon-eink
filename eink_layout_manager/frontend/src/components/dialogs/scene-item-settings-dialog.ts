@@ -8,7 +8,7 @@ import '../layout/layout-editor';
 import { 
   ditherImage, 
   getDefaultPalettes 
-} from '../../lib/epdoptimize/index';
+} from 'epdoptimize';
 
 /**
  * A dialog component for editing the settings of an item in a scene.

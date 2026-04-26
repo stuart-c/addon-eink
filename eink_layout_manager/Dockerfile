@@ -2,9 +2,11 @@ ARG BUILD_FROM="ghcr.io/home-assistant/base-python:3.13-alpine3.23"
 
 # Stage 0: Node.js Frontend Build
 FROM node:24.15-alpine AS node-builder
-WORKDIR /frontend
-COPY frontend .
-RUN npm install && npm run build
+WORKDIR /app
+COPY epdoptimize ./epdoptimize
+COPY frontend ./frontend
+RUN cd epdoptimize && npm install && npm run build
+RUN cd frontend && npm install && npm run build
 
 # Stage 1: Build stage
 FROM $BUILD_FROM AS builder
@@ -30,7 +32,7 @@ RUN \
 
 # Install converter dependencies
 WORKDIR /converter
-COPY epdoptimize /epdoptimize
+COPY --from=node-builder /app/epdoptimize /epdoptimize
 COPY converter/package.json converter/package-lock.json* ./
 RUN npm install
 COPY converter .
@@ -84,7 +86,7 @@ COPY backend /backend
 COPY --from=builder /converter /converter
 
 # Copy built frontend assets from node-builder
-COPY --from=node-builder /frontend/dist /backend/static_dist
+COPY --from=node-builder /app/frontend/dist /backend/static_dist
 
 # Cleanup development/test files to keep image small
 RUN rm -rf /backend/tests /backend/requirements_test.txt
