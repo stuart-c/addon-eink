@@ -108,6 +108,8 @@ class Scene(Base):
     __filterable_fields__ = {
         "title": "name",
         "layout": "layout_id",
+        "scene_id": "id",
+        "id": "id",
     }
     __sortable_fields__ = {
         "name": "name",
