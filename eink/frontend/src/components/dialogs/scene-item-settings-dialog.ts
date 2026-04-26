@@ -125,6 +125,7 @@ export class SceneItemSettingsDialog extends LitElement {
         flex-direction: column;
         height: 100%;
         border-right: 1px solid var(--border-colour);
+        min-width: 0;
       }
 
       .column:last-child {
@@ -152,6 +153,7 @@ export class SceneItemSettingsDialog extends LitElement {
         flex: 1;
         overflow-y: auto;
         padding: 1rem;
+        min-width: 0;
       }
 
       .column-footer {
