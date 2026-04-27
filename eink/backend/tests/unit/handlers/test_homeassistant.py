@@ -59,19 +59,16 @@ async def test_handle_device_list_success(aiohttp_client, app, mock_supervisor_t
 
     mock_session = MagicMock()
     mock_session.close = AsyncMock()
+    mock_ws = AsyncMock()
 
-    # Mock responses
-    mock_entries_resp = AsyncMock()
-    mock_entries_resp.status = 200
-    mock_entries_resp.json.return_value = entries_data
-    mock_entries_resp.__aenter__.return_value = mock_entries_resp
+    mock_ws.receive_json.side_effect = [
+        {"type": "auth_required"},
+        {"type": "auth_ok"},
+        {"success": True, "result": entries_data},
+        {"success": True, "result": devices_data}
+    ]
 
-    mock_devices_resp = AsyncMock()
-    mock_devices_resp.status = 200
-    mock_devices_resp.json.return_value = devices_data
-    mock_devices_resp.__aenter__.return_value = mock_devices_resp
-
-    mock_session.get.side_effect = [mock_entries_resp, mock_devices_resp]
+    mock_session.ws_connect.return_value.__aenter__.return_value = mock_ws
 
     # Inject mock session into app
     app["client_session"] = mock_session
@@ -100,11 +97,14 @@ async def test_handle_device_list_no_integration(
 
     mock_session = MagicMock()
     mock_session.close = AsyncMock()
-    mock_entries_resp = AsyncMock()
-    mock_entries_resp.status = 200
-    mock_entries_resp.json.return_value = entries_data
-    mock_entries_resp.__aenter__.return_value = mock_entries_resp
-    mock_session.get.return_value = mock_entries_resp
+
+    mock_ws = AsyncMock()
+    mock_ws.receive_json.side_effect = [
+        {"type": "auth_required"},
+        {"type": "auth_ok"},
+        {"success": True, "result": entries_data}
+    ]
+    mock_session.ws_connect.return_value.__aenter__.return_value = mock_ws
 
     app["client_session"] = mock_session
 
@@ -122,10 +122,14 @@ async def test_handle_device_list_api_error(aiohttp_client, app, mock_supervisor
 
     mock_session = MagicMock()
     mock_session.close = AsyncMock()
-    mock_entries_resp = AsyncMock()
-    mock_entries_resp.status = 502
-    mock_entries_resp.__aenter__.return_value = mock_entries_resp
-    mock_session.get.return_value = mock_entries_resp
+
+    mock_ws = AsyncMock()
+    mock_ws.receive_json.side_effect = [
+        {"type": "auth_required"},
+        {"type": "auth_ok"},
+        {"success": False, "result": []}
+    ]
+    mock_session.ws_connect.return_value.__aenter__.return_value = mock_ws
 
     app["client_session"] = mock_session
 
