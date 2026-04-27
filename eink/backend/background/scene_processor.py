@@ -293,3 +293,46 @@ async def stop_scene_processing(app):
         task.cancel()
         with contextlib.suppress(asyncio.CancelledError):
             await task
+
+
+async def update_all_scene_queues():
+    """Update the scene queue for all active scenes."""
+    try:
+        from ..handlers.scenes import scene_handler
+
+        async with database.get_session() as session:
+            stmt = select(models.Scene).where(models.Scene.status == "active")
+            result = await session.execute(stmt)
+            scenes = result.scalars().all()
+
+            for scene in scenes:
+                await scene_handler._update_scene_queue(scene, session)
+
+            await session.commit()
+    except Exception as e:
+        logger.error(f"Error updating scene queues: {str(e)}")
+
+
+async def schedule_scene_queue_update(app):
+    """Start the periodic scene queue update task."""
+
+    async def queue_loop():
+        try:
+            while True:
+                await update_all_scene_queues()
+                await asyncio.sleep(600)  # 10 minutes
+        except asyncio.CancelledError:
+            logger.info("Scene queue update task cancelled")
+        except Exception as e:
+            logger.error(f"Scene queue update task crashed: {str(e)}")
+
+    app["scene_queue_task"] = asyncio.create_task(queue_loop())
+
+
+async def stop_scene_queue_update(app):
+    """Stop the background scene queue update task."""
+    task = app.get("scene_queue_task")
+    if task:
+        task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await task

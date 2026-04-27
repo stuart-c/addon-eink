@@ -18,6 +18,8 @@ from backend.background.mqtt import (
 from backend.background.scene_processor import (
     schedule_scene_processing,
     stop_scene_processing,
+    schedule_scene_queue_update,
+    stop_scene_queue_update,
 )
 
 
@@ -40,9 +42,11 @@ def init_app():
     app.on_startup.append(schedule_image_cleanup)
     app.on_startup.append(start_mqtt)
     app.on_startup.append(schedule_scene_processing)
+    app.on_startup.append(schedule_scene_queue_update)
     app.on_cleanup.append(stop_image_cleanup)
     app.on_cleanup.append(stop_mqtt)
     app.on_cleanup.append(stop_scene_processing)
+    app.on_cleanup.append(stop_scene_queue_update)
     app.on_cleanup.append(on_cleanup)
 
     # Data directory setup
