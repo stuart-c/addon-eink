@@ -18,6 +18,21 @@ fi
 # Ensure /data is writable by the addon user (it's a mounted volume)
 chown -R addon:addon /data
 
+if [ -n "$MEDIA_SUBDIRECTORY" ]; then
+    MEDIA_TOP_DIR=$(echo "$MEDIA_SUBDIRECTORY" | cut -d '/' -f 1)
+    
+    # Ensure the top-level directory exists and is owned by the addon user 
+    # so that the backend can create subdirectories and migrate legacy data
+    mkdir -p "/media/$MEDIA_TOP_DIR"
+    chown -R addon:addon "/media/$MEDIA_TOP_DIR"
+    
+    # Also ensure legacy directory is owned by addon user if it exists
+    # so the backend can move files from it
+    if [ -d "/media/eink_layout_manager" ]; then
+        chown -R addon:addon "/media/eink_layout_manager"
+    fi
+fi
+
 # Run the python backend as the addon user
 export PYTHONPATH=/
 exec s6-setuidgid addon python3 -m backend.main
