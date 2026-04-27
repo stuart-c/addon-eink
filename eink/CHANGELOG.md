@@ -1,3 +1,12 @@
+## [0.4.0] - 2026-04-27
+
+## Changes
+
+## 🚀 Features
+
+- feat(addon): change log\_level configuration to a dropdown @stuart-c-ai (#436)
+
+
 ## [0.3.7] - 2026-04-27
 
 ## Changes
