@@ -1,4 +1,5 @@
 import os
+import aiohttp
 import logging
 from aiohttp import web
 from ..utils.validation import response_schema
@@ -17,66 +18,79 @@ async def handle_device_list(request):
         return web.json_response([])
 
     session = request.app["client_session"]
-    # Supervisor API uses the HOST address for the core API
-    # Standard endpoint for addons to talk to HA Core
-    base_url = "http://supervisor/core/api"
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json",
-    }
+    ws_url = "ws://supervisor/core/websocket"
 
     try:
-        # 1. Fetch config entries to find OpenDisplay entry ID
-        entries_url = f"{base_url}/config/config_entries/get_entries"
-        async with session.get(entries_url, headers=headers) as resp:
-            if resp.status != 200:
-                logger.error(f"Failed to fetch config entries: {resp.status}")
+        async with session.ws_connect(ws_url) as ws:
+            # 1. Wait for auth_required
+            msg = await ws.receive_json()
+            if msg.get("type") != "auth_required":
+                logger.error(f"Unexpected message from HA websocket: {msg}")
+                return web.json_response(
+                    {"error": "Failed to authenticate with Home Assistant"},
+                    status=502,
+                )
+            
+            # 2. Send auth
+            await ws.send_json({"type": "auth", "access_token": token})
+            auth_ok = await ws.receive_json()
+            if auth_ok.get("type") != "auth_ok":
+                logger.error(f"Authentication failed: {auth_ok}")
+                return web.json_response(
+                    {"error": "Authentication failed with Home Assistant"},
+                    status=502,
+                )
+            
+            # 3. Request config entries
+            await ws.send_json({"id": 1, "type": "config_entries/get"})
+            entries_msg = await ws.receive_json()
+            if not entries_msg.get("success"):
+                logger.error(f"Failed to get config entries: {entries_msg}")
                 return web.json_response(
                     {"error": "Failed to fetch config entries from HA"},
                     status=502,
                 )
-
-            entries = await resp.json()
+            
+            entries = entries_msg.get("result", [])
             opendisplay_entry_ids = [
                 entry["entry_id"]
                 for entry in entries
                 if entry.get("domain") == "opendisplay"
             ]
 
-        if not opendisplay_entry_ids:
-            logger.info("No OpenDisplay integration found in Home Assistant")
-            return web.json_response([])
+            if not opendisplay_entry_ids:
+                logger.info("No OpenDisplay integration found in Home Assistant")
+                return web.json_response([])
 
-        # 2. Fetch device registry
-        registry_url = f"{base_url}/config/device_registry/list"
-        async with session.get(registry_url, headers=headers) as resp:
-            if resp.status != 200:
-                logger.error(f"Failed to fetch device registry: {resp.status}")
+            # 4. Request device registry
+            await ws.send_json({"id": 2, "type": "config/device_registry/list"})
+            devices_msg = await ws.receive_json()
+            if not devices_msg.get("success"):
+                logger.error(f"Failed to get device registry: {devices_msg}")
                 return web.json_response(
                     {"error": "Failed to fetch device registry from HA"},
                     status=502,
                 )
-
-            devices = await resp.json()
-
-        # 3. Filter devices
-        filtered_devices = []
-        for device in devices:
-            # Check if any of the device's config entries match OpenDisplay
-            device_entries = device.get("config_entries", [])
-            if any(eid in opendisplay_entry_ids for eid in device_entries):
-                filtered_devices.append(
-                    {
-                        "id": device["id"],
-                        "name": device.get("name_by_user")
-                        or device.get("name")
-                        or "Unknown Device",
-                        "model": device.get("model"),
-                        "manufacturer": device.get("manufacturer"),
-                    }
-                )
-
-        return web.json_response(filtered_devices)
+            
+            devices = devices_msg.get("result", [])
+            
+            # 5. Filter Devices
+            filtered_devices = []
+            for device in devices:
+                device_entries = device.get("config_entries", [])
+                if any(eid in opendisplay_entry_ids for eid in device_entries):
+                    filtered_devices.append(
+                        {
+                            "id": device["id"],
+                            "name": device.get("name_by_user")
+                            or device.get("name")
+                            or "Unknown Device",
+                            "model": device.get("model"),
+                            "manufacturer": device.get("manufacturer"),
+                        }
+                    )
+            
+            return web.json_response(filtered_devices)
 
     except Exception as e:
         logger.exception("Error fetching devices from Home Assistant")
