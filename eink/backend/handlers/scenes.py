@@ -53,12 +53,14 @@ class SceneHandler(BaseCRUDHandler):
         return data
 
     async def post_create(self, item, session):
-        """Update image palettes after creation."""
+        """Update image palettes and queue processing after creation."""
         await self._update_image_palettes(item, session)
+        await self._update_scene_queue(item, session)
 
     async def post_update(self, item, session):
-        """Update image palettes after update."""
+        """Update image palettes and queue processing after update."""
         await self._update_image_palettes(item, session)
+        await self._update_scene_queue(item, session)
 
     async def _calculate_scene_status(self, items, layout_id):
         """
@@ -204,6 +206,83 @@ class SceneHandler(BaseCRUDHandler):
                                 filename="",
                             )
                         )
+
+    async def _update_scene_queue(self, scene, session):
+        """
+        Identify what needs creating/updating for this scene and populate the
+        scene_queue table.
+        """
+        from sqlalchemy import select, delete
+
+        # 1. Clear existing queue for this scene
+        stmt = delete(models.SceneQueue).where(models.SceneQueue.scene_id == scene.id)
+        await session.execute(stmt)
+
+        if scene.status != "active":
+            return
+
+        # 2. Identify all display/image combinations in the scene
+        if not scene.items:
+            return
+
+        image_ids = set()
+        for item in scene.items:
+            for img in item.get("images", []):
+                if img.get("image_id"):
+                    image_ids.add(img["image_id"])
+
+        if not image_ids:
+            return
+
+        # 3. Fetch current Image records to get their settings_hash
+        stmt = select(models.Image).where(models.Image.id.in_(image_ids))
+        result = await session.execute(stmt)
+        images = {img.id: img for img in result.scalars().all()}
+
+        # 4. Fetch existing SceneDisplayImage records to check hashes
+        stmt = select(models.SceneDisplayImage).where(
+            models.SceneDisplayImage.scene_id == scene.id
+        )
+        result = await session.execute(stmt)
+        records = {(r.display_id, r.image_id): r for r in result.scalars().all()}
+
+        # 5. Identify work needed
+        to_queue = set()
+        for item in scene.items:
+            if item.get("type") not in ("image", "tile"):
+                continue
+
+            display_ids = item.get("displays", [])
+            item_images = item.get("images", [])
+
+            for img_meta in item_images:
+                image_id = img_meta.get("image_id")
+                if not image_id or image_id not in images:
+                    continue
+
+                image_record = images[image_id]
+
+                for display_id in display_ids:
+                    record = records.get((display_id, image_id))
+
+                    needs_work = False
+                    if not record or not record.file_hash:
+                        needs_work = True
+                    elif record.scene_hash != scene.scene_hash:
+                        needs_work = True
+                    elif record.image_hash != image_record.settings_hash:
+                        needs_work = True
+
+                    if needs_work:
+                        to_queue.add((display_id, image_id))
+
+        # 6. Populate the queue
+        for display_id, image_id in to_queue:
+            session.add(
+                models.SceneQueue(
+                    scene_id=scene.id, display_id=display_id, image_id=image_id
+                )
+            )
 
     async def slice_get(self, request):
         """Custom endpoint for scene slice retrieval."""
