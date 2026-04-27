@@ -21,5 +21,13 @@ options:
   log_level: "info"
   media_subdirectory: "eink/scene_display"
 schema:
-  log_level: "match(^trace|debug|info|notice|warning|error|fatal|critical$)"
+  log_level:
+    - trace
+    - debug
+    - info
+    - notice
+    - warning
+    - error
+    - fatal
+    - critical
   media_subdirectory: "match(^[a-zA-Z0-9_\\-/]+$)"
