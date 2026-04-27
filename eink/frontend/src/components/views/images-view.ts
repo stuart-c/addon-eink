@@ -568,7 +568,7 @@ export class ImagesView extends BaseResourceView {
       >
         <div class="thumbnail-container">
           <img 
-            src="/api/image/${image.id}/thumbnail" 
+            src="api/image/${image.id}/thumbnail" 
             alt="${image.name}"
             loading="lazy"
           >
