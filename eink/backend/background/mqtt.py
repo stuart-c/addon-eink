@@ -336,13 +336,16 @@ class MQTTManager:
 
         payload = {
             "device_id": device_id,
-            "image": (
-                f"media-source://media_source/local/"
-                f"eink/scene_display/{filename}"
-            ),
-            "dither_mode": "None",
+            "image": {
+                "media_content_id": (
+                    f"media-source://media_source/local/"
+                    f"eink/scene_display/{filename}"
+                ),
+                "media_content_type": "image/png",
+            },
+            "dither_mode": "none",
             "rotation": 0,
-            "fit_mode": "Crop",
+            "fit_mode": "crop",
         }
 
         try:
