@@ -103,5 +103,5 @@ async def test_handle_layout_update_logic(mock_app):
         assert data["device_id"] == device_id
         assert filename in data["image"]["media_content_id"]
         assert data["dither_mode"] == "none"
-        assert data["rotation"] == 0
+        assert data["rotation"] == 90
         assert data["fit_mode"] == "crop"

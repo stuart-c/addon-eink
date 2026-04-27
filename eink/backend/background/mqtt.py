@@ -344,7 +344,7 @@ class MQTTManager:
                 "media_content_type": "image/png",
             },
             "dither_mode": "none",
-            "rotation": 0,
+            "rotation": 90,
             "fit_mode": "crop",
         }
 
