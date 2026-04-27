@@ -29,6 +29,7 @@ export class HaStateController implements ReactiveController {
   private _originalLayout: string | null = null;
   public isSaving = false;
   public viewMode: ViewMode = 'graphical';
+  public sceneFilterLayoutId: string | null = null;
 
   constructor(private host: ReactiveControllerHost) {
     this.host.addController(this);
@@ -114,6 +115,24 @@ export class HaStateController implements ReactiveController {
       console.error('Image fetch failed', e);
     }
   }
+
+  /**
+   * Refreshes the scenes collection, optionally filtering by layout.
+   */
+  async refreshScenes(params: Record<string, any> = {}) {
+    if (!this.connected) {
+      this.connected = await api.ping();
+      if (!this.connected) return;
+    }
+
+    try {
+      this.scenes = await api.getCollection<Scene>('scene', params);
+      this.host.requestUpdate();
+    } catch (e: any) {
+      console.error('Scene fetch failed', e);
+    }
+  }
+
 
   private async createDefaultLayout() {
     const defaultLayout: Omit<Layout, 'id'> = {
@@ -533,7 +552,12 @@ export class HaStateController implements ReactiveController {
       }
     }
     if (!this.activeScene && this.scenes.length > 0) {
-      this.activeScene = this.scenes[0];
+      const availableScenes = this.sceneFilterLayoutId 
+        ? this.scenes.filter(s => s.layout === this.sceneFilterLayoutId)
+        : this.scenes;
+      if (availableScenes.length > 0) {
+        this.activeScene = availableScenes[0];
+      }
     }
   }
 }
