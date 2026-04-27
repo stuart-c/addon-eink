@@ -352,7 +352,8 @@ class MQTTManager:
                     text = await resp.text()
                     logger.error(
                         f"Failed to call HA service for device {device_id}: "
-                        f"{resp.status} - {text}"
+                        f"{resp.status} - {text}\n"
+                        f"Payload: {payload}"
                     )
                 else:
                     logger.info(
