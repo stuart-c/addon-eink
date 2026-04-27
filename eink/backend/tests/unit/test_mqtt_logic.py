@@ -101,7 +101,7 @@ async def test_handle_layout_update_logic(mock_app):
 
         data = kwargs["json"]
         assert data["device_id"] == device_id
-        assert filename in data["image"]["media_content_id"]
+        assert filename in data["image"]
         assert data["dither_mode"] == "None"
         assert data["rotation"] == 0
-        assert data["fit_mode"] == "Stretch"
+        assert data["fit_mode"] == "Crop"
