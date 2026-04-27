@@ -1,14 +1,11 @@
-import { LitElement, html, css, PropertyValues } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { LitElement, html, css } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import { commonStyles } from '../../styles/common-styles';
-import { Layout, DisplayType, Image as ImageMetadata, api } from '../../services/HaApiClient';
+import { Layout, DisplayType } from '../../services/HaApiClient';
 import '../shared/base-dialog';
 import { BaseDialog } from '../shared/base-dialog';
 import '../layout/layout-editor';
-import { 
-  ditherImage, 
-  getDefaultPalettes 
-} from '../../lib/epdoptimize/index';
+import { SceneItemSettingsController } from '../../controllers/SceneItemSettingsController';
 
 /**
  * A dialog component for editing the settings of an item in a scene.
@@ -446,442 +443,57 @@ export class SceneItemSettingsDialog extends LitElement {
     `
   ];
 
-  @property({ type: Object }) item: any = null;
-  @state() private _selectedImageId: string | null = null;
-  @state() private _scalingFactor = 100.0;
-  @state() private _offsetX = 0;
-  @state() private _offsetY = 0;
-  @state() private _backgroundColor = '#ffffff';
-  @state() private _layout: Layout | null = null;
-  @state() private _displayTypes: DisplayType[] = [];
-  @state() private _isAddingImage = false;
-  @state() private _availableImages: ImageMetadata[] = [];
-  @state() private _searchQuery = '';
-  @state() private _previewCanvas: HTMLCanvasElement | null = null;
-  private _updateTimer: any = null;
-  private _cachedPreviewData: any = null;
-  private _lastPreviewSource: string = '';
+  public controller = new SceneItemSettingsController(this);
 
   async show(item: any, layout: Layout, displayTypes: DisplayType[]) {
-    this.item = item;
-    this._layout = layout;
-    this._displayTypes = displayTypes;
-    this._isAddingImage = false;
-
-    // Fetch images if not already loaded to get names for the sidebar
-    if (this._availableImages.length === 0) {
-      try {
-        this._availableImages = await api.getImages();
-      } catch (e) {
-        console.error('Failed to fetch images', e);
-      }
-    }
-
-    // Set initial values from item if available
-    if (item.images && item.images.length > 0) {
-      this._selectedImageId = item.images[0].image_id;
-      this._scalingFactor = item.images[0].scaling_factor || 100;
-      this._offsetX = item.images[0].offset?.x || 0;
-      this._offsetY = item.images[0].offset?.y || 0;
-      this._backgroundColor = item.images[0].background_color || '#ffffff';
-    } else {
-      this._selectedImageId = null;
-      this._backgroundColor = '#ffffff';
-    }
+    await this.controller.show(item, layout, displayTypes);
     await this.updateComplete;
     (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).show();
-    this._triggerUpdate();
   }
 
-  private _triggerUpdate() {
-    if (this._updateTimer) {
-      clearTimeout(this._updateTimer);
+  protected updated(changedProperties: Map<string, any>) {
+    super.updated(changedProperties);
+    
+    const propertiesToTriggerUpdate = [
+      'controller.selectedImageId', 'controller.scalingFactor', 'controller.offsetX', 
+      'controller.offsetY', 'controller.backgroundColor'
+    ];
+
+    if ([...changedProperties.keys()].some(p => propertiesToTriggerUpdate.includes(p))) {
+      this.controller.triggerUpdate();
     }
-    this._updateTimer = setTimeout(() => this._updatePreview(), 250);
-  }
-
-  private async _updatePreview() {
-    if (!this._selectedImageId || !this.item || !this._previewData.width) {
-      this._previewCanvas = null;
-      return;
-    }
-
-    const image = this._availableImages.find(i => i.id === this._selectedImageId);
-    if (!image) return;
-
-    // Load source image
-    const imgElement = new Image();
-    imgElement.crossOrigin = 'anonymous';
-    imgElement.src = `api/image/${image.id}/file`;
-    await new Promise((resolve, reject) => {
-      imgElement.onload = resolve;
-      imgElement.onerror = reject;
-    });
-
-    // Reference display type for DPI
-    const firstDisplayId = this.item.displays[0];
-    const layoutBox = this._layout?.items.find(i => i.id === firstDisplayId);
-    const dt = this._displayTypes.find(t => t.id === layoutBox?.display_type_id);
-    if (!dt || !dt.width_mm || !dt.width_px) return;
-
-    const pxPerMm = dt.width_px / dt.panel_width_mm;
-    const canvasWidthPx = Math.round(this._previewData.width * pxPerMm);
-    const canvasHeightPx = Math.round(this._previewData.height * pxPerMm);
-
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = canvasWidthPx;
-    tempCanvas.height = canvasHeightPx;
-    const ctx = tempCanvas.getContext('2d');
-    if (!ctx) return;
-
-    // Draw background
-    ctx.fillStyle = this._backgroundColor;
-    ctx.fillRect(0, 0, canvasWidthPx, canvasHeightPx);
-
-    // Apply adjustments if present in image metadata
-    const brightness = image.brightness ?? 1.0;
-    const contrast = image.contrast ?? 1.0;
-    const saturation = image.saturation ?? 1.0;
-    ctx.filter = `brightness(${brightness}) contrast(${contrast}) saturate(${saturation})`;
-
-    // Calculate image dimensions with scaling
-    const scaledWidth = (image.dimensions.width * this._scalingFactor) / 100;
-    const scaledHeight = (image.dimensions.height * this._scalingFactor) / 100;
-
-    // Account for relative offset between display areas and frame area
-    const frameBB = this._previewData;
-    const panelBB = this._panelBoundingBox;
-    const relX = (panelBB.minX - frameBB.minX) * pxPerMm;
-    const relY = (panelBB.minY - frameBB.minY) * pxPerMm;
-
-    // Draw image with offset
-    ctx.drawImage(
-      imgElement, 
-      relX + this._offsetX, 
-      relY + this._offsetY, 
-      scaledWidth, 
-      scaledHeight
-    );
-    ctx.filter = 'none';
-
-    // Dither
-    const ditherCanvas = document.createElement('canvas');
-    ditherCanvas.width = canvasWidthPx;
-    ditherCanvas.height = canvasHeightPx;
-
-    const palette = this._getPaletteForDisplays();
-    const options = {
-      ditheringType: image.conversion?.ditheringType || 'errorDiffusion',
-      errorDiffusionMatrix: image.conversion?.errorDiffusionMatrix || 'floydSteinberg',
-      serpentine: image.conversion?.serpentine ?? false,
-      palette,
-      processingPreset: image.conversion?.processingPreset || ''
-    };
-
-    try {
-      await ditherImage(tempCanvas, ditherCanvas, options as any);
-      this._previewCanvas = ditherCanvas;
-    } catch (e) {
-      console.error('Failed to dither preview', e);
-      this._previewCanvas = tempCanvas; // Fallback to raw canvas
-    }
-  }
-
-  private _getPaletteForDisplays(): string[] {
-    const displayTypeIds = new Set(
-      this._layout?.items
-        .filter(i => this.item.displays.includes(i.id))
-        .map(i => i.display_type_id)
-    );
-
-    const palettes: Set<string> = new Set();
-    displayTypeIds.forEach(id => {
-      const dt = this._displayTypes.find(t => t.id === id);
-      if (dt) {
-        if (dt.colour_type === 'BWGBRY') palettes.add('spectra6');
-        else if (dt.colour_type === 'BWR') palettes.add('acep'); // fallback or BWR palette if exists
-        else palettes.add('default');
-      }
-    });
-
-    // For now, just take the first palette identified
-    const paletteName = palettes.values().next().value || 'default';
-    return getDefaultPalettes(paletteName);
   }
 
   private _getImageName(imageId: string) {
-    const img = this._availableImages.find(i => i.id === imageId);
+    const img = this.controller.availableImages.find(i => i.id === imageId);
     return img ? img.name : imageId;
   }
 
-  private async _toggleAddImage() {
-    this._isAddingImage = !this._isAddingImage;
-    if (this._isAddingImage && this._availableImages.length === 0) {
-      try {
-        this._availableImages = await api.getImages();
-      } catch (e) {
-        console.error('Failed to fetch images', e);
-      }
-    }
-  }
-
-  private _selectImage(image: ImageMetadata) {
-    if (!this.item.images) {
-      this.item.images = [];
-    }
-    
-    // Check if image already exists
-    if (this.item.images.find((img: any) => img.image_id === image.id)) {
-      this._isAddingImage = false;
-      this._selectedImageId = image.id;
-      return;
-    }
-
-    const newImage = {
-      image_id: image.id,
-      scaling_factor: 100,
-      offset: { x: 0, y: 0 },
-      background_color: '#ffffff'
-    };
-    
-    this.item.images = [...this.item.images, newImage];
-    this._selectedImageId = image.id;
-    this._scalingFactor = 100;
-    this._offsetX = 0;
-    this._offsetY = 0;
-    
-    // Automatically fill new image
-    this._fillImage();
-
-    this._isAddingImage = false;
-    this.requestUpdate();
-  }
-
-  protected updated(changedProperties: PropertyValues) {
-    if (
-      changedProperties.has('_selectedImageId') || 
-      changedProperties.has('_scalingFactor') || 
-      changedProperties.has('_offsetX') || 
-      changedProperties.has('_offsetY') ||
-      changedProperties.has('_backgroundColor')
-    ) {
-      this._triggerUpdate();
-    }
-  }
-
-  private _moveImage(dx: number, dy: number, reset = false) {
-    if (reset) {
-      this._offsetX = 0;
-      this._offsetY = 0;
-    } else {
-      this._offsetX += dx;
-      this._offsetY += dy;
-    }
-
-    if (this._selectedImageId) {
-      const img = this.item.images.find((i: any) => i.image_id === this._selectedImageId);
-      if (img) {
-        img.offset.x = this._offsetX;
-        img.offset.y = this._offsetY;
-      }
-    }
-    this.requestUpdate();
-  }
-
-  private _updateBackgroundColor(color: string) {
-    this._backgroundColor = color;
-    if (this._selectedImageId) {
-      const img = this.item.images.find((i: any) => i.image_id === this._selectedImageId);
-      if (img) {
-        img.background_color = color;
-      }
-    }
-    this.requestUpdate();
-  }
-
-  private _handleOk() {
-    this.dispatchEvent(new CustomEvent('save-item', {
-      detail: { item: this.item },
-      bubbles: true,
-      composed: true
-    }));
-    (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).close();
-  }
-
-  private _handleCancel() {
-    (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).close();
-  }
-
-  private _handleDeleteItem() {
-    this.dispatchEvent(new CustomEvent('delete', {
-      bubbles: true,
-      composed: true
-    }));
-    (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).close();
-  }
-
-  private get _previewData() {
-    if (!this._layout || !this.item || !this.item.displays || this.item.displays.length === 0) {
-      return { width: 0, height: 0, items: [], minX: 0, minY: 0 };
-    }
-
-    // Cache based on item state and layout
-    const sourceKey = `${this.item.id}-${JSON.stringify(this.item.displays)}-${this._layout.id}`;
-    if (this._cachedPreviewData && this._lastPreviewSource === sourceKey) {
-      return this._cachedPreviewData;
-    }
-
-    const visibleItems = this._layout.items.filter(i => this.item.displays.includes(i.id));
-    if (visibleItems.length === 0) {
-      return { width: 0, height: 0, items: [], minX: 0, minY: 0 };
-    }
-
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
-
-    const itemsWithDimensions = visibleItems.map(item => {
-      const dt = this._displayTypes.find(t => t.id === item.display_type_id);
-      if (!dt) return { item, w: 0, h: 0 };
-      const isPortrait = item.orientation === 'portrait';
-      const w = isPortrait ? dt.height_mm : dt.width_mm;
-      const h = isPortrait ? dt.width_mm : dt.height_mm;
-      
-      minX = Math.min(minX, item.x_mm);
-      minY = Math.min(minY, item.y_mm);
-      maxX = Math.max(maxX, item.x_mm + w);
-      maxY = Math.max(maxY, item.y_mm + h);
-      
-      return { item, w, h };
-    });
-
-    const width = Math.max(1, maxX - minX);
-    const height = Math.max(1, maxY - minY);
-
-    const adjustedItems = itemsWithDimensions.map(({ item }) => ({
-      ...item,
-      x_mm: item.x_mm - minX,
-      y_mm: item.y_mm - minY
-    }));
-
-    this._cachedPreviewData = { width, height, items: adjustedItems, minX, minY };
-    this._lastPreviewSource = sourceKey;
-    return this._cachedPreviewData;
-  }
-
-  private get _panelBoundingBox() {
-    if (!this._layout || !this.item || !this.item.displays || this.item.displays.length === 0) {
-      return { width: 0, height: 0, minX: 0, minY: 0 };
-    }
-
-    const visibleItems = this._layout.items.filter(i => this.item.displays.includes(i.id));
-    if (visibleItems.length === 0) {
-      return { width: 0, height: 0, minX: 0, minY: 0 };
-    }
-
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
-
-    visibleItems.forEach(item => {
-      const dt = this._displayTypes.find(t => t.id === item.display_type_id);
-      if (!dt) return;
-
-      const isPortrait = item.orientation === 'portrait';
-      const frameW = isPortrait ? dt.height_mm : dt.width_mm;
-      const frameH = isPortrait ? dt.width_mm : dt.height_mm;
-      const panelW = isPortrait ? dt.panel_height_mm : dt.panel_width_mm;
-      const panelH = isPortrait ? dt.panel_width_mm : dt.panel_height_mm;
-
-      const panelX = item.x_mm + (frameW - panelW) / 2;
-      const panelY = item.y_mm + (frameH - panelH) / 2;
-
-      minX = Math.min(minX, panelX);
-      minY = Math.min(minY, panelY);
-      maxX = Math.max(maxX, panelX + panelW);
-      maxY = Math.max(maxY, panelY + panelH);
-    });
-
-    return { 
-      width: Math.max(0, maxX - minX), 
-      height: Math.max(0, maxY - minY),
-      minX, 
-      minY 
-    };
-  }
-
-  private _fitImage() {
-    this._applyImageFitting('fit');
-  }
-
-  private _fillImage() {
-    this._applyImageFitting('fill');
-  }
-
-  private _applyImageFitting(mode: 'fit' | 'fill') {
-    if (!this._selectedImageId || !this.item || !this.item.displays || this.item.displays.length === 0) return;
-    const image = this._availableImages.find(i => i.id === this._selectedImageId);
-    if (!image) return;
-
-    const panelBB = this._panelBoundingBox;
-    const firstDisplayId = this.item.displays[0];
-    const layoutBox = this._layout?.items.find(i => i.id === firstDisplayId);
-    const dt = this._displayTypes.find(t => t.id === layoutBox?.display_type_id);
-    if (!dt || !dt.width_mm || !dt.width_px) return;
-
-    const pxPerMm = dt.width_px / dt.panel_width_mm;
-    const targetWidthPx = panelBB.width * pxPerMm;
-    const targetHeightPx = panelBB.height * pxPerMm;
-
-    const scaleW = targetWidthPx / image.dimensions.width;
-    const scaleH = targetHeightPx / image.dimensions.height;
-    
-    if (mode === 'fit') {
-      this._scalingFactor = parseFloat((Math.min(scaleW, scaleH) * 100).toFixed(1));
-    } else {
-      this._scalingFactor = parseFloat((Math.max(scaleW, scaleH) * 100).toFixed(1));
-    }
-
-    const scaledWidth = (image.dimensions.width * this._scalingFactor) / 100;
-    const scaledHeight = (image.dimensions.height * this._scalingFactor) / 100;
-
-    this._offsetX = Math.round((targetWidthPx - scaledWidth) / 2);
-    this._offsetY = Math.round((targetHeightPx - scaledHeight) / 2);
-
-    // Update the item data
-    const img = this.item.images.find((i: any) => i.image_id === this._selectedImageId);
-    if (img) {
-      img.scaling_factor = this._scalingFactor;
-      img.offset = { x: this._offsetX, y: this._offsetY };
-    }
-    this.requestUpdate();
-  }
 
   render() {
     return html`
       <base-dialog title="Item Settings">
-        <div class="dialog-content ${this._isAddingImage ? 'adding-image' : ''}">
+        <div class="dialog-content ${this.controller.isAddingImage ? 'adding-image' : ''}">
           <!-- Left Column: Images -->
           <div class="column">
             <div class="column-header">
               <div class="column-title">Images</div>
-              <button class="icon-button" title="Add Image" @click="${this._toggleAddImage}">
-                <span class="material-icons">${this._isAddingImage ? 'close' : 'add'}</span>
+              <button class="icon-button" title="Add Image" @click="${() => this.controller.toggleAddImage()}">
+                <span class="material-icons">${this.controller.isAddingImage ? 'close' : 'add'}</span>
               </button>
             </div>
             <div class="column-body">
               <div class="image-list">
-                ${(this.item?.images || []).map((img: any) => html`
+                ${(this.controller.item?.images || []).map((img: any) => html`
                   <div 
-                    class="image-item ${this._selectedImageId === img.image_id ? 'selected' : ''}"
+                    class="image-item ${this.controller.selectedImageId === img.image_id ? 'selected' : ''}"
                     @click="${() => {
-                      this._selectedImageId = img.image_id;
-                      this._scalingFactor = img.scaling_factor;
-                      this._offsetX = img.offset.x;
-                      this._offsetY = img.offset.y;
-                      this._backgroundColor = img.background_color || '#ffffff';
+                      this.controller.selectedImageId = img.image_id;
+                      this.controller.scalingFactor = img.scaling_factor;
+                      this.controller.offsetX = img.offset.x;
+                      this.controller.offsetY = img.offset.y;
+                      this.controller.backgroundColor = img.background_color || '#ffffff';
+                      this.requestUpdate();
                     }}"
                   >
                     <div class="image-thumbnail">
@@ -890,7 +502,7 @@ export class SceneItemSettingsDialog extends LitElement {
                     <div class="image-name">${this._getImageName(img.image_id)}</div>
                   </div>
                 `)}
-                ${(!this.item?.images || this.item.images.length === 0) ? html`
+                ${(!this.controller.item?.images || this.controller.item.images.length === 0) ? html`
                   <div style="text-align: center; color: #ccc; padding: 2rem 0; font-size: 12px;">
                     No images added to this item yet.
                   </div>
@@ -901,10 +513,10 @@ export class SceneItemSettingsDialog extends LitElement {
               <button 
                 class="icon-button danger" 
                 title="Delete Image"
-                ?disabled="${!this._selectedImageId}"
+                ?disabled="${!this.controller.selectedImageId}"
                 @click="${() => {
-                  this.item.images = this.item.images.filter((img: any) => img.image_id !== this._selectedImageId);
-                  this._selectedImageId = this.item.images.length > 0 ? this.item.images[0].image_id : null;
+                  this.controller.item.images = this.controller.item.images.filter((img: any) => img.image_id !== this.controller.selectedImageId);
+                  this.controller.selectedImageId = this.controller.item.images.length > 0 ? this.controller.item.images[0].image_id : null;
                   this.requestUpdate();
                 }}"
               >
@@ -913,7 +525,7 @@ export class SceneItemSettingsDialog extends LitElement {
             </div>
           </div>
 
-          ${this._isAddingImage ? html`
+          ${this.controller.isAddingImage ? html`
             <!-- Center + Right replacement: Image Library Grid -->
             <div class="column">
               <div class="column-header">
@@ -923,19 +535,19 @@ export class SceneItemSettingsDialog extends LitElement {
                 <input 
                   type="text" 
                   placeholder="Search images..." 
-                  .value="${this._searchQuery}"
-                  @input="${(e: any) => this._searchQuery = e.target.value}"
+                  .value="${this.controller.searchQuery}"
+                  @input="${(e: any) => { this.controller.searchQuery = e.target.value; this.requestUpdate(); }}"
                 >
               </div>
               <div class="column-body">
                 <div class="image-grid">
-                  ${this._availableImages
-                    .filter(img => !this._searchQuery || 
-                           img.name.toLowerCase().includes(this._searchQuery.toLowerCase()) ||
-                           img.artist?.toLowerCase().includes(this._searchQuery.toLowerCase()) ||
-                           img.collection?.toLowerCase().includes(this._searchQuery.toLowerCase()))
+                  ${this.controller.availableImages
+                    .filter(img => !this.controller.searchQuery || 
+                           img.name.toLowerCase().includes(this.controller.searchQuery.toLowerCase()) ||
+                           img.artist?.toLowerCase().includes(this.controller.searchQuery.toLowerCase()) ||
+                           img.collection?.toLowerCase().includes(this.controller.searchQuery.toLowerCase()))
                     .map(image => html`
-                      <div class="image-card" data-image-id="${image.id}" @click="${() => this._selectImage(image)}">
+                      <div class="image-card" data-image-id="${image.id}" @click="${() => this.controller.selectImage(image)}">
                         <div class="thumbnail-container">
                           <img src="api/image/${image.id}/thumbnail" alt="${image.name}" loading="lazy">
                         </div>
@@ -955,17 +567,17 @@ export class SceneItemSettingsDialog extends LitElement {
             <div class="column">
               <div class="column-body" style="padding: 0;">
                 <div class="preview-container">
-                  ${this._layout ? html`
+                  ${this.controller.layout ? html`
                     <layout-editor
-                      .width_mm="${this._previewData.width}"
-                      .height_mm="${this._previewData.height}"
-                      .items="${this._previewData.items}"
-                      .displayTypes="${this._displayTypes}"
+                      .width_mm="${this.controller.previewData.width}"
+                      .height_mm="${this.controller.previewData.height}"
+                      .items="${this.controller.previewData.items}"
+                      .displayTypes="${this.controller.displayTypes}"
                       .readOnly="${true}"
                       .noPadding="${true}"
                       .hideNumber="${true}"
-                      .previewImage="${this._previewCanvas}"
-                      .previewTotalSize="${{ width: this._previewData.width, height: this._previewData.height }}"
+                      .previewImage="${this.controller.previewCanvas}"
+                      .previewTotalSize="${{ width: this.controller.previewData.width, height: this.controller.previewData.height }}"
                     ></layout-editor>
                   ` : html`
                     <div class="preview-placeholder">
@@ -989,10 +601,10 @@ export class SceneItemSettingsDialog extends LitElement {
                         Scaling Factor
                       </div>
                       <div class="scaling-icons">
-                        <button class="icon-button" title="Fit to Panel" @click="${this._fitImage}">
+                        <button class="icon-button" title="Fit to Panel" @click="${() => { this.controller.fitImage(); this.requestUpdate(); }}">
                           <span class="material-icons">fit_screen</span>
                         </button>
-                        <button class="icon-button" title="Fill Panel" @click="${this._fillImage}">
+                        <button class="icon-button" title="Fill Panel" @click="${() => { this.controller.fillImage(); this.requestUpdate(); }}">
                           <span class="material-icons">filter_center_focus</span>
                         </button>
                       </div>
@@ -1004,13 +616,14 @@ export class SceneItemSettingsDialog extends LitElement {
                       min="1" 
                       max="500" 
                       step="0.1"
-                      .value="${this._scalingFactor}"
+                      .value="${this.controller.scalingFactor.toString()}"
                       @input="${(e: any) => {
-                        this._scalingFactor = parseFloat(e.target.value);
-                        if (this._selectedImageId) {
-                          const img = this.item.images.find((i: any) => i.image_id === this._selectedImageId);
-                          if (img) img.scaling_factor = this._scalingFactor;
+                        this.controller.scalingFactor = parseFloat(e.target.value);
+                        if (this.controller.selectedImageId) {
+                          const img = this.controller.item.images.find((i: any) => i.image_id === this.controller.selectedImageId);
+                          if (img) img.scaling_factor = this.controller.scalingFactor;
                         }
+                        this.requestUpdate();
                       }}"
                       style="flex: 1;"
                     >
@@ -1018,13 +631,14 @@ export class SceneItemSettingsDialog extends LitElement {
                       <input 
                         type="number" 
                         step="0.1"
-                        .value="${this._scalingFactor}"
+                        .value="${this.controller.scalingFactor.toString()}"
                         @input="${(e: any) => {
-                          this._scalingFactor = parseFloat(e.target.value);
-                          if (this._selectedImageId) {
-                            const img = this.item.images.find((i: any) => i.image_id === this._selectedImageId);
-                            if (img) img.scaling_factor = this._scalingFactor;
+                          this.controller.scalingFactor = parseFloat(e.target.value);
+                          if (this.controller.selectedImageId) {
+                            const img = this.controller.item.images.find((i: any) => i.image_id === this.controller.selectedImageId);
+                            if (img) img.scaling_factor = this.controller.scalingFactor;
                           }
+                          this.requestUpdate();
                         }}"
                       >
                       <span class="unit-label">%</span>
@@ -1045,13 +659,14 @@ export class SceneItemSettingsDialog extends LitElement {
                         <div class="input-with-unit narrow-input">
                           <input 
                             type="number" 
-                            .value="${this._offsetX}"
+                            .value="${this.controller.offsetX.toString()}"
                             @input="${(e: any) => {
-                              this._offsetX = parseInt(e.target.value);
-                              if (this._selectedImageId) {
-                                const img = this.item.images.find((i: any) => i.image_id === this._selectedImageId);
-                                if (img) img.offset.x = this._offsetX;
+                              this.controller.offsetX = parseInt(e.target.value);
+                              if (this.controller.selectedImageId) {
+                                const img = this.controller.item.images.find((i: any) => i.image_id === this.controller.selectedImageId);
+                                if (img) img.offset.x = this.controller.offsetX;
                               }
+                              this.requestUpdate();
                             }}"
                           >
                           <span class="unit-label">px</span>
@@ -1062,13 +677,14 @@ export class SceneItemSettingsDialog extends LitElement {
                         <div class="input-with-unit narrow-input">
                           <input 
                             type="number" 
-                            .value="${this._offsetY}"
+                            .value="${this.controller.offsetY.toString()}"
                             @input="${(e: any) => {
-                              this._offsetY = parseInt(e.target.value);
-                              if (this._selectedImageId) {
-                                const img = this.item.images.find((i: any) => i.image_id === this._selectedImageId);
-                                if (img) img.offset.y = this._offsetY;
+                              this.controller.offsetY = parseInt(e.target.value);
+                              if (this.controller.selectedImageId) {
+                                const img = this.controller.item.images.find((i: any) => i.image_id === this.controller.selectedImageId);
+                                if (img) img.offset.y = this.controller.offsetY;
                               }
+                              this.requestUpdate();
                             }}"
                           >
                           <span class="unit-label">px</span>
@@ -1077,11 +693,11 @@ export class SceneItemSettingsDialog extends LitElement {
                     </div>
                     <!-- D-Pad -->
                     <div class="dpad" style="margin: 0;">
-                      <button class="dpad-btn up" title="Move Up" @click="${() => this._moveImage(0, -10)}"><span class="material-icons">keyboard_arrow_up</span></button>
-                      <button class="dpad-btn left" title="Move Left" @click="${() => this._moveImage(-10, 0)}"><span class="material-icons">keyboard_arrow_left</span></button>
-                      <button class="dpad-btn reset" title="Reset Offset" @click="${() => this._moveImage(0, 0, true)}"><span class="material-icons">restart_alt</span></button>
-                      <button class="dpad-btn right" title="Move Right" @click="${() => this._moveImage(10, 0)}"><span class="material-icons">keyboard_arrow_right</span></button>
-                      <button class="dpad-btn down" title="Move Down" @click="${() => this._moveImage(0, 10)}"><span class="material-icons">keyboard_arrow_down</span></button>
+                      <button class="dpad-btn up" title="Move Up" @click="${() => this.controller.moveImage(0, -10)}"><span class="material-icons">keyboard_arrow_up</span></button>
+                      <button class="dpad-btn left" title="Move Left" @click="${() => this.controller.moveImage(-10, 0)}"><span class="material-icons">keyboard_arrow_left</span></button>
+                      <button class="dpad-btn reset" title="Reset Offset" @click="${() => this.controller.moveImage(0, 0, true)}"><span class="material-icons">restart_alt</span></button>
+                      <button class="dpad-btn right" title="Move Right" @click="${() => this.controller.moveImage(10, 0)}"><span class="material-icons">keyboard_arrow_right</span></button>
+                      <button class="dpad-btn down" title="Move Down" @click="${() => this.controller.moveImage(0, 10)}"><span class="material-icons">keyboard_arrow_down</span></button>
                     </div>
                   </div>
                 </div>
@@ -1090,37 +706,37 @@ export class SceneItemSettingsDialog extends LitElement {
                 <div class="controls-group">
                   <div class="controls-group-title">
                     <span class="material-icons">palette</span>
-                    Background Color
+                    Background Colour
                   </div>
                   <div class="color-selector">
                     <button 
-                      class="color-swatch ${this._backgroundColor.toLowerCase() === '#ffffff' ? 'selected' : ''}" 
+                      class="color-swatch ${this.controller.backgroundColor.toLowerCase() === '#ffffff' ? 'selected' : ''}" 
                       style="background: #ffffff;"
                       title="White"
-                      @click="${() => this._updateBackgroundColor('#ffffff')}"
+                      @click="${() => this.controller.updateBackgroundColor('#ffffff')}"
                     ></button>
                     <button 
-                      class="color-swatch ${this._backgroundColor.toLowerCase() === '#000000' ? 'selected' : ''}" 
+                      class="color-swatch ${this.controller.backgroundColor.toLowerCase() === '#000000' ? 'selected' : ''}" 
                       style="background: #000000;"
                       title="Black"
-                      @click="${() => this._updateBackgroundColor('#000000')}"
+                      @click="${() => this.controller.updateBackgroundColor('#000000')}"
                     ></button>
                     <input 
                       type="color" 
                       class="custom-color-input" 
-                      .value="${this._backgroundColor}"
-                      @input="${(e: any) => this._updateBackgroundColor(e.target.value)}"
-                      title="Custom Color"
+                      .value="${this.controller.backgroundColor}"
+                      @input="${(e: any) => this.controller.updateBackgroundColor(e.target.value)}"
+                      title="Custom Colour"
                     >
                   </div>
                 </div>
               </div>
               <div class="column-footer">
                 <button class="secondary" @click="${() => { 
-                  this._offsetX = 0; 
-                  this._offsetY = 0; 
-                  if (this._selectedImageId) {
-                    const img = this.item.images.find((i: any) => i.image_id === this._selectedImageId);
+                  this.controller.offsetX = 0; 
+                  this.controller.offsetY = 0; 
+                  if (this.controller.selectedImageId) {
+                    const img = this.controller.item.images.find((i: any) => i.image_id === this.controller.selectedImageId);
                     if (img) img.offset = { x: 0, y: 0 };
                   }
                   this.requestUpdate();
@@ -1131,9 +747,15 @@ export class SceneItemSettingsDialog extends LitElement {
         </div>
 
         <div slot="footer" class="footer-actions" style="display: flex; width: 100%;">
-          <button class="danger" style="margin-right: auto;" @click="${this._handleDeleteItem}">Delete Item</button>
-          <button class="secondary" @click="${this._handleCancel}">Cancel</button>
-          <button class="primary" @click="${this._handleOk}">Save Changes</button>
+          <button class="danger" style="margin-right: auto;" @click="${() => {
+            this.dispatchEvent(new CustomEvent('delete', { bubbles: true, composed: true }));
+            (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).close();
+          }}">Delete Item</button>
+          <button class="secondary" @click="${() => (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).close()}">Cancel</button>
+          <button class="primary" @click="${() => {
+            this.dispatchEvent(new CustomEvent('save-item', { detail: { item: this.controller.item }, bubbles: true, composed: true }));
+            (this.shadowRoot?.querySelector('base-dialog') as BaseDialog).close();
+          }}">Save Changes</button>
         </div>
       </base-dialog>
     `;

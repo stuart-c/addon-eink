@@ -1,5 +1,5 @@
 import { html, css } from 'lit';
-import { customElement, property, state, query } from 'lit/decorators.js';
+import { customElement, property, query } from 'lit/decorators.js';
 import type { Layout, DisplayType } from '../../services/HaApiClient';
 import { commonStyles } from '../../styles/common-styles';
 import { BaseResourceView } from './base-resource-view';
@@ -9,6 +9,8 @@ import '../layout/layout-editor';
 import '../layout/yaml-editor';
 import '../dialogs/layout-settings-dialog';
 import { LayoutSettingsDialog } from '../dialogs/layout-settings-dialog';
+import { LayoutsViewController } from '../../controllers/LayoutsViewController';
+import { HaStateController } from '../../controllers/HaStateController';
 
 /**
  * A view component for managing Canvas Layouts.
@@ -214,24 +216,25 @@ export class LayoutsView extends BaseResourceView {
     `
   ];
 
+  @property({ type: Object }) state!: HaStateController;
   @property({ type: Array }) layouts: Layout[] = [];
   @property({ type: Array }) displayTypes: DisplayType[] = [];
   @property({ type: Object }) activeLayout: Layout | null = null;
   @property({ type: String }) selectedItemId: string | null = null;
   @property({ type: String }) viewMode: 'graphical' | 'yaml' = 'graphical';
   @property({ type: Boolean }) isSaving = false;
-  @property({ type: Boolean }) isAdding = false;
+  @property({ type: Boolean, reflect: true }) isAdding = false;
 
-  @state() private _originalLayoutJson: string | null = null;
-  @state() private _showDisplayMenu = false;
+  public controller = new LayoutsViewController(this);
   @query('layout-settings-dialog') private _layoutSettingsDialog!: LayoutSettingsDialog;
 
   private _handleGlobalClick = (e: MouseEvent) => {
-    if (!this._showDisplayMenu) return;
+    if (!this.controller.showDisplayMenu) return;
     const path = e.composedPath();
     const isDropdown = path.some(el => (el as HTMLElement).classList?.contains('dropdown'));
     if (!isDropdown) {
-      this._showDisplayMenu = false;
+      this.controller.showDisplayMenu = false;
+      this.requestUpdate();
     }
   };
 
@@ -248,59 +251,28 @@ export class LayoutsView extends BaseResourceView {
   protected updated(changedProperties: Map<string | number | symbol, unknown>) {
     super.updated(changedProperties);
     if (changedProperties.has('activeLayout')) {
-      const oldLayout = changedProperties.get('activeLayout') as Layout | null;
-      // Only reset baseline if ID changed or we have no baseline yet
-      if (!this._originalLayoutJson || !oldLayout || (this.activeLayout && oldLayout.id !== this.activeLayout.id)) {
-        this.resetBaseline();
-      }
-      this.notifyDirty(this.isDirty);
-      this.notifyCanDelete(!!this.activeLayout && !!this.activeLayout.id);
+      this.controller.resetBaseline();
     }
   }
 
-  get isDirty() {
-    if (!this.activeLayout) return false;
-    return JSON.stringify(this.activeLayout) !== this._originalLayoutJson;
+  public get isDirty() {
+    return this.controller.isDirty;
   }
 
-  get canDelete() {
-    return !!this.activeLayout && !!this.activeLayout.id;
-  }
-
-  public resetBaseline() {
-    this._originalLayoutJson = this.activeLayout ? JSON.stringify(this.activeLayout) : null;
-    this.notifyDirty(false);
-  }
-
-  private _onSelectionChange(e: CustomEvent) {
-    this.dispatchEvent(new CustomEvent('select-item', { detail: { id: e.detail.ids[0] || null } }));
-  }
-
-  private _onItemUpdate(id: string, updates: any) {
-    this.dispatchEvent(new CustomEvent('update-item', { detail: { id, updates } }));
-    this._checkDirty();
-  }
-
-  private _checkDirty() {
-    this.notifyDirty(this.isDirty);
+  public get canDelete() {
+    return this.controller.canDelete;
   }
 
   public async save() {
-    if (!this.activeLayout) return;
-    await this.state.saveActiveLayout();
-    this.resetBaseline();
+    await this.controller.save();
   }
 
   public async discard() {
-    if (this._originalLayoutJson) {
-      this.state.activeLayout = JSON.parse(this._originalLayoutJson);
-      this.resetBaseline();
-      this.requestUpdate();
-    }
+    await this.controller.discard();
   }
 
   public async addNew() {
-    this.dispatchEvent(new CustomEvent('prepare-new-layout', { bubbles: true, composed: true }));
+    this.controller.addNew();
     const draft: Partial<Layout> = {
       id: '',
       name: 'New Layout',
@@ -313,63 +285,7 @@ export class LayoutsView extends BaseResourceView {
   }
 
   public async requestDelete() {
-    if (!this.activeLayout) return;
-    this.dispatchEvent(new CustomEvent('delete-layout', { detail: { layout: this.activeLayout } }));
-  }
-
-  private async _handleSelect(id: string) {
-    if (this.activeLayout?.id === id) return;
-
-    const performSwitch = () => {
-      const layout = this.layouts.find(l => l.id === id);
-      if (!layout) return;
-      this.dispatchEvent(new CustomEvent('switch-layout', { detail: layout }));
-    };
-
-    if (this.isDirty) {
-      this._requestConfirmation(
-        {
-          title: 'Unsaved Changes',
-          message: `You have unsaved changes to "${this.activeLayout?.name}". What would you like to do?`,
-          buttons: [
-            { text: 'Save', value: 'save', type: 'primary' },
-            { text: 'Discard', value: 'discard', type: 'danger' },
-            { text: 'Cancel', value: 'cancel', type: 'secondary' }
-          ]
-        },
-        async (choice: string) => {
-          if (choice === 'save') {
-             await this.save();
-             performSwitch();
-          } else if (choice === 'discard') {
-             await this.discard();
-             performSwitch();
-          }
-        }
-      );
-    } else {
-      performSwitch();
-    }
-  }
-
-  private _onAddItemToLayout(dt: DisplayType) {
-    const id = Math.random().toString(36).substr(2, 9);
-    const newItem = {
-      id,
-      display_type_id: dt.id,
-      x_mm: 50,
-      y_mm: 50,
-      orientation: 'landscape' as 'landscape' | 'portrait'
-    };
-    
-    if (this.activeLayout) {
-      const updates = {
-        items: [...(this.activeLayout.items || []), newItem]
-      };
-      this.dispatchEvent(new CustomEvent('update-active-layout', { detail: updates }));
-      this.dispatchEvent(new CustomEvent('select-item', { detail: { id } }));
-    }
-    this._showDisplayMenu = false;
+    this.controller.requestDelete();
   }
 
   render() {
@@ -389,8 +305,8 @@ export class LayoutsView extends BaseResourceView {
         <div slot="left-bar">
           <sidebar-list
             .items="${listItems}"
-            .selectedId="${this.activeLayout?.id || null}"
-            @select="${(e: CustomEvent) => this._handleSelect(e.detail.item.id)}"
+            .selectedId="${this.state.activeLayout?.id || null}"
+            @select="${(e: CustomEvent) => this.controller.handleSelect(e.detail.item.id)}"
           ></sidebar-list>
         </div>
 
@@ -414,8 +330,8 @@ export class LayoutsView extends BaseResourceView {
             .data="${this.activeLayout}"
             .schemaName="Layout"
             @data-update="${(e: CustomEvent) => {
-              this.dispatchEvent(new CustomEvent('update-active-layout', { detail: e.detail }));
-              this._checkDirty();
+              this.state.updateActiveLayout(e.detail);
+              this.controller.checkDirty();
             }}"
           ></yaml-editor>
         ` : (this.activeLayout ? html`
@@ -427,8 +343,8 @@ export class LayoutsView extends BaseResourceView {
                 .items="${this.activeLayout.items}"
                 .displayTypes="${this.displayTypes}"
                 .selectedIds="${this.selectedItemId ? [this.selectedItemId] : []}"
-                @selection-change="${this._onSelectionChange}"
-                @item-update="${(e: CustomEvent) => this._onItemUpdate(e.detail.id, e.detail.updates)}"
+                @selection-change="${(e: CustomEvent) => this.controller.selectItem(e.detail.ids[0] || null)}"
+                @item-update="${(e: CustomEvent) => this.controller.updateItem(e.detail.id, e.detail.updates)}"
                 @edit-item="${(e: CustomEvent) => this.dispatchEvent(new CustomEvent('edit-item', { detail: { id: e.detail.id } }))}"
                 @delete-item="${(e: CustomEvent) => this.dispatchEvent(new CustomEvent('delete-item', { detail: { id: e.detail.id } }))}"
               ></layout-editor>
@@ -439,12 +355,12 @@ export class LayoutsView extends BaseResourceView {
                 <div class="pane-title">Layout Items</div>
                 <div class="pane-toolbar">
                   <div class="dropdown">
-                    <button id="btn-add-display" class="secondary icon-button" title="Add Display" @click="${() => this._showDisplayMenu = !this._showDisplayMenu}">
+                    <button id="btn-add-display" class="secondary icon-button" title="Add Display" @click="${() => { this.controller.showDisplayMenu = !this.controller.showDisplayMenu; this.requestUpdate(); }}">
                       <span class="material-icons">add</span>
                     </button>
-                    <div id="menu-display-types" class="dropdown-menu ${this._showDisplayMenu ? 'show' : ''}">
+                    <div id="menu-display-types" class="dropdown-menu ${this.controller.showDisplayMenu ? 'show' : ''}">
                       ${this.displayTypes.map(dt => html`
-                        <div class="display-type-item" @click="${() => this._onAddItemToLayout(dt)}">
+                        <div class="display-type-item" @click="${() => this.controller.addItemToLayout(dt)}">
                           <div class="display-type-info">
                             <span class="display-type-name">${dt.name}</span>
                             <span class="display-type-meta">${dt.width_mm}x${dt.height_mm}mm | ${dt.colour_type}</span>
@@ -462,7 +378,7 @@ export class LayoutsView extends BaseResourceView {
                   return html`
                     <div 
                       class="layout-item-card ${this.selectedItemId === item.id ? 'selected' : ''}"
-                      @click="${() => this.dispatchEvent(new CustomEvent('select-item', { detail: { id: item.id } }))}"
+                      @click="${() => this.controller.selectItem(item.id)}"
                       @dblclick="${() => this.dispatchEvent(new CustomEvent('edit-item', { detail: { id: item.id } }))}"
                     >
                       <span class="material-icons item-icon">settings_input_component</span>
@@ -514,8 +430,8 @@ export class LayoutsView extends BaseResourceView {
       </section-layout>
 
       <layout-settings-dialog @save="${(e: CustomEvent) => {
-        this.dispatchEvent(new CustomEvent('update-active-layout', { detail: e.detail.settings }));
-        this._checkDirty();
+        this.state.updateActiveLayout(e.detail.settings);
+        this.controller.checkDirty();
         this.showMessage(this.activeLayout?.id ? 'Settings applied' : 'Draft settings applied', 'success');
       }}"></layout-settings-dialog>
     `;

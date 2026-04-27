@@ -8,12 +8,8 @@ import '../shared/empty-view';
 import '../shared/range-slider';
 import '../shared/keyword-input';
 
-type SortField = 'name' | 'artist' | 'collection' | 'width' | 'height';
-
-interface SortConfig {
-  field: SortField;
-  direction: 'asc' | 'desc';
-}
+import { ImagesViewController, SortField, SortConfig } from '../../controllers/ImagesViewController';
+import { HaStateController } from '../../controllers/HaStateController';
 
 /**
  * A view component for managing the Image Library.
@@ -262,8 +258,13 @@ export class ImagesView extends BaseResourceView {
     `
   ];
 
+  @property({ type: Object }) state!: HaStateController;
   @property({ type: Array }) images: Image[] = [];
   @property({ type: String }) selectedImageId: string | null = null;
+
+  public controller = new ImagesViewController(this);
+  @state() private _draggedIndex: number | null = null;
+  @state() private _dragOverIndex: number | null = null;
 
   protected willUpdate(changedProperties: Map<string | number | symbol, unknown>) {
     if (changedProperties.has('selectedImageId')) {
@@ -294,83 +295,12 @@ export class ImagesView extends BaseResourceView {
   public requestDelete() {
     const image = this.images.find(img => img.id === this.selectedImageId);
     if (image) {
-      this.dispatchEvent(new CustomEvent('delete-image', {
-        detail: { image },
-        bubbles: true,
-        composed: true
-      }));
+      this.controller.deleteImage(image);
     }
   }
 
   get canDelete() {
     return !!this.selectedImageId;
-  }
-
-  @state() private _filterTitle = '';
-  @state() private _filterDescription = '';
-  @state() private _filterArtist = '';
-  @state() private _filterCollection = '';
-  @state() private _minWidth = 0;
-  @state() private _maxWidth = 4000;
-  @state() private _minHeight = 0;
-  @state() private _maxHeight = 4000;
-  @state() private _keywords: string[] = [];
-  @state() private _sortFields: SortConfig[] = [{ field: 'name', direction: 'asc' }];
-  @state() private _isAddMenuOpen = false;
-  @state() private _draggedIndex: number | null = null;
-  @state() private _dragOverIndex: number | null = null;
-  private _debounceTimer: any = null;
-
-  private _triggerFilterChange(immediate = false) {
-    if (this._debounceTimer) {
-      clearTimeout(this._debounceTimer);
-    }
-
-    const trigger = () => {
-      const sort = this._sortFields
-        .map(s => `${s.field}:${s.direction}`)
-        .join(',');
-
-      const filters = {
-        title: this._filterTitle,
-        description: this._filterDescription,
-        artist: this._filterArtist,
-        collection: this._filterCollection,
-        min_width: this._minWidth > 0 ? this._minWidth : undefined,
-        max_width: this._maxWidth < 4000 ? this._maxWidth : undefined,
-        min_height: this._minHeight > 0 ? this._minHeight : undefined,
-        max_height: this._maxHeight < 4000 ? this._maxHeight : undefined,
-        keyword: this._keywords.length > 0 ? this._keywords.join(',') : undefined,
-        sort: sort || undefined
-      };
-
-      this.dispatchEvent(new CustomEvent('filter-change', {
-        detail: filters,
-        bubbles: true,
-        composed: true
-      }));
-    };
-
-    if (immediate) {
-      trigger();
-    } else {
-      this._debounceTimer = setTimeout(trigger, 300);
-    }
-  }
-
-  private _resetFilters() {
-    this._filterTitle = '';
-    this._filterDescription = '';
-    this._filterArtist = '';
-    this._filterCollection = '';
-    this._minWidth = 0;
-    this._maxWidth = 4000;
-    this._minHeight = 0;
-    this._maxHeight = 4000;
-    this._keywords = [];
-    this._sortFields = [{ field: 'name', direction: 'asc' }];
-    this._isAddMenuOpen = false;
-    this._triggerFilterChange(true);
   }
 
   render() {
@@ -388,10 +318,10 @@ export class ImagesView extends BaseResourceView {
               <input 
                 type="text" 
                 placeholder="Search by title..."
-                .value="${this._filterTitle}"
+                .value="${this.controller.filterTitle}"
                 @input="${(e: any) => { 
-                  this._filterTitle = e.target.value;
-                  this._triggerFilterChange();
+                  this.controller.filterTitle = e.target.value;
+                  this.controller.triggerFilterChange();
                 }}"
               >
             </div>
@@ -400,10 +330,10 @@ export class ImagesView extends BaseResourceView {
               <input 
                 type="text" 
                 placeholder="Search description..."
-                .value="${this._filterDescription}"
+                .value="${this.controller.filterDescription}"
                 @input="${(e: any) => {
-                  this._filterDescription = e.target.value;
-                  this._triggerFilterChange();
+                  this.controller.filterDescription = e.target.value;
+                  this.controller.triggerFilterChange();
                 }}"
               >
             </div>
@@ -412,10 +342,10 @@ export class ImagesView extends BaseResourceView {
               <input 
                 type="text" 
                 placeholder="Artist"
-                .value="${this._filterArtist}"
+                .value="${this.controller.filterArtist}"
                 @input="${(e: any) => {
-                  this._filterArtist = e.target.value;
-                  this._triggerFilterChange();
+                  this.controller.filterArtist = e.target.value;
+                  this.controller.triggerFilterChange();
                 }}"
               >
             </div>
@@ -424,10 +354,10 @@ export class ImagesView extends BaseResourceView {
               <input 
                 type="text" 
                 placeholder="Collection"
-                .value="${this._filterCollection}"
+                .value="${this.controller.filterCollection}"
                 @input="${(e: any) => {
-                  this._filterCollection = e.target.value;
-                  this._triggerFilterChange();
+                  this.controller.filterCollection = e.target.value;
+                  this.controller.triggerFilterChange();
                 }}"
               >
             </div>
@@ -443,24 +373,24 @@ export class ImagesView extends BaseResourceView {
               label="Width"
               .min="${0}"
               .max="${4000}"
-              .valueLow="${this._minWidth}"
-              .valueHigh="${this._maxWidth}"
+              .valueLow="${this.controller.minWidth}"
+              .valueHigh="${this.controller.maxWidth}"
               @range-change="${(e: CustomEvent) => {
-                this._minWidth = e.detail.low;
-                this._maxWidth = e.detail.high;
-                this._triggerFilterChange(true);
+                this.controller.minWidth = e.detail.low;
+                this.controller.maxWidth = e.detail.high;
+                this.controller.triggerFilterChange(true);
               }}"
             ></range-slider>
             <range-slider
               label="Height"
               .min="${0}"
               .max="${4000}"
-              .valueLow="${this._minHeight}"
-              .valueHigh="${this._maxHeight}"
+              .valueLow="${this.controller.minHeight}"
+              .valueHigh="${this.controller.maxHeight}"
               @range-change="${(e: CustomEvent) => {
-                this._minHeight = e.detail.low;
-                this._maxHeight = e.detail.high;
-                this._triggerFilterChange(true);
+                this.controller.minHeight = e.detail.low;
+                this.controller.maxHeight = e.detail.high;
+                this.controller.triggerFilterChange(true);
               }}"
             ></range-slider>
           </div>
@@ -474,11 +404,11 @@ export class ImagesView extends BaseResourceView {
             <div class="form-group">
               <label>Keywords</label>
               <keyword-input
-                .keywords="${this._keywords}"
+                .keywords="${this.controller.keywords}"
                 .validate="${true}"
                 @keywords-changed="${(e: CustomEvent) => {
-                  this._keywords = e.detail.keywords;
-                  this._triggerFilterChange(true);
+                  this.controller.keywords = e.detail.keywords;
+                  this.controller.triggerFilterChange(true);
                 }}"
               ></keyword-input>
             </div>
@@ -492,23 +422,23 @@ export class ImagesView extends BaseResourceView {
             </div>
             
             <div class="sort-list">
-              ${this._sortFields.map((sort, index) => this._renderSortItem(sort, index))}
+              ${this.controller.sortFields.map((sort, index) => this._renderSortItem(sort, index))}
             </div>
 
             <div class="add-sort-container">
               <button 
                 class="secondary add-sort-button" 
                 ?disabled="${this._getAvailableFields().length === 0}"
-                @click="${() => this._isAddMenuOpen = !this._isAddMenuOpen}"
+                @click="${() => { this.controller.isAddMenuOpen = !this.controller.isAddMenuOpen; this.requestUpdate(); }}"
               >
                 <span class="material-icons" style="font-size: 16px;">add</span>
                 Add Sort Field
               </button>
               
-              ${this._isAddMenuOpen ? html`
+              ${this.controller.isAddMenuOpen ? html`
                 <div class="add-sort-menu">
                   ${this._getAvailableFields().map(field => html`
-                    <div class="add-sort-item" @click="${() => this._addSortField(field)}">
+                    <div class="add-sort-item" @click="${() => this.controller.addSortField(field)}">
                       ${this._getFieldLabel(field)}
                     </div>
                   `)}
@@ -519,7 +449,7 @@ export class ImagesView extends BaseResourceView {
 
           <!-- Reset -->
           <div class="reset-button">
-            <button class="secondary" style="width: 100%;" @click="${this._resetFilters}">
+            <button class="secondary" style="width: 100%;" @click="${() => this.controller.resetFilters()}">
               <span class="material-icons">filter_alt_off</span>
               Reset Filters
             </button>
@@ -539,10 +469,7 @@ export class ImagesView extends BaseResourceView {
             ></empty-view>
           ` : html`
             <div class="image-grid">
-              ${this.images.map(image => {
-                console.debug('[ImagesView] Rendering image:', image.name);
-                return this._renderImage(image);
-              })}
+              ${this.images.map(image => this._renderImage(image))}
             </div>
           `}
         </div>
@@ -626,12 +553,12 @@ export class ImagesView extends BaseResourceView {
         <span class="material-icons drag-handle">drag_indicator</span>
         <span class="field-label">${this._getFieldLabel(sort.field)}</span>
         <div class="sort-actions">
-          <div class="sort-action" @click="${() => this._toggleSortDirection(index)}">
+          <div class="sort-action" @click="${() => this.controller.toggleSortDirection(index)}">
             <span class="material-icons">
               ${sort.direction === 'asc' ? 'north' : 'south'}
             </span>
           </div>
-          <div class="sort-action remove" @click="${() => this._removeSortField(index)}">
+          <div class="sort-action remove" @click="${() => this.controller.removeSortField(index)}">
             <span class="material-icons">close</span>
           </div>
         </div>
@@ -652,29 +579,8 @@ export class ImagesView extends BaseResourceView {
 
   private _getAvailableFields(): SortField[] {
     const allFields: SortField[] = ['name', 'artist', 'collection', 'width', 'height'];
-    const activeFields = this._sortFields.map(s => s.field);
+    const activeFields = this.controller.sortFields.map(s => s.field);
     return allFields.filter(f => !activeFields.includes(f));
-  }
-
-  private _addSortField(field: SortField) {
-    this._sortFields = [...this._sortFields, { field, direction: 'asc' }];
-    this._isAddMenuOpen = false;
-    this._triggerFilterChange(true);
-  }
-
-  private _removeSortField(index: number) {
-    this._sortFields = this._sortFields.filter((_, i) => i !== index);
-    this._triggerFilterChange(true);
-  }
-
-  private _toggleSortDirection(index: number) {
-    const newFields = [...this._sortFields];
-    newFields[index] = {
-      ...newFields[index],
-      direction: newFields[index].direction === 'asc' ? 'desc' : 'asc'
-    };
-    this._sortFields = newFields;
-    this._triggerFilterChange(true);
   }
 
   private _onDragStart(e: DragEvent, index: number) {
@@ -702,12 +608,8 @@ export class ImagesView extends BaseResourceView {
     
     if (this._draggedIndex === null || this._draggedIndex === index) return;
 
-    const newFields = [...this._sortFields];
-    const item = newFields.splice(this._draggedIndex, 1)[0];
-    newFields.splice(index, 0, item);
-    this._sortFields = newFields;
+    this.controller.reorderSortFields(this._draggedIndex, index);
     this._draggedIndex = null;
-    this._triggerFilterChange(true);
   }
 }
 
