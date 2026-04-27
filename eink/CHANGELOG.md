@@ -1,3 +1,12 @@
+## [0.3.7] - 2026-04-27
+
+## Changes
+
+## 🐛 Bug Fixes
+
+- fix(addon): declare MQTT service dependency in addon configuration @stuart-c-ai (#435)
+
+
 ## [0.3.6] - 2026-04-27
 
 ## Changes
