@@ -22,15 +22,7 @@ options:
   log_level: "info"
   media_subdirectory: "eink/scene_display"
 schema:
-  log_level:
-    - trace
-    - debug
-    - info
-    - notice
-    - warning
-    - error
-    - fatal
-    - critical
+  log_level: "list(trace|debug|info|notice|warning|error|fatal|critical)"
   media_subdirectory: "match(^[a-zA-Z0-9_\\-/]+$)"
 services:
   - "mqtt:want"
