@@ -311,3 +311,33 @@ async def handle_scene_slice_list(request):
 async def handle_scene_slice_get(request):
     """Handle retrieval of a scene slice binary."""
     return await scene_handler.slice_get(request)
+
+
+@response_schema("scene_queue_count")
+async def handle_scene_queue_count(request):
+    """Return the number of items in the queue for a specified scene ID."""
+    scene_id = request.match_info["scene_id"]
+    try:
+        scene_id = validate_id(scene_id)
+    except ValueError as e:
+        return web.json_response({"error": str(e)}, status=400)
+
+    from sqlalchemy import select, func
+
+    async with database.get_session() as session:
+        # 1. Verify scene exists
+        stmt = select(models.Scene).where(models.Scene.id == scene_id)
+        result = await session.execute(stmt)
+        if not result.scalars().first():
+            return web.json_response({"error": "Scene Not Found"}, status=404)
+
+        # 2. Count queue items
+        stmt = (
+            select(func.count())
+            .select_from(models.SceneQueue)
+            .where(models.SceneQueue.scene_id == scene_id)
+        )
+        result = await session.execute(stmt)
+        count = result.scalar()
+
+        return web.json_response({"count": count})

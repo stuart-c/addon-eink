@@ -203,3 +203,12 @@ class SceneDisplayImage(Base):
     filename = Column(String, nullable=False)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+
+class SceneQueue(Base):
+    __tablename__ = "scene_queue"
+
+    scene_id = Column(String, primary_key=True)
+    image_id = Column(String, primary_key=True)
+    display_id = Column(String, primary_key=True)
+    created_at = Column(DateTime, server_default=func.now())
