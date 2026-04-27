@@ -1,3 +1,12 @@
+## [0.4.2] - 2026-04-27
+
+## Changes
+
+## 🐛 Bug Fixes
+
+- fix(addon): use correct Home Assistant schema list syntax for `log_level` @stuart-c-ai (#438)
+
+
 ## [0.4.1] - 2026-04-27
 
 ## Changes
