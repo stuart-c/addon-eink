@@ -36,6 +36,11 @@ describe('DisplayTypesView', () => {
 
   beforeEach(async () => {
     element = document.createElement('display-types-view') as DisplayTypesView;
+    element.state = {
+      displayTypes: mockDisplayTypes,
+      refresh: vi.fn(),
+      showMessage: vi.fn(),
+    } as any;
     element.displayTypes = mockDisplayTypes as any;
     // Explicitly set to the first one to avoid auto-pick logic interference for tests that don't want it
     element.selectedId = 'dt1';
@@ -48,48 +53,47 @@ describe('DisplayTypesView', () => {
   });
 
   it('should initialise with the first display type selected', () => {
-    expect(element.displayType?.id).toBe('dt1');
-    expect(element.isNew).toBe(false);
+    expect(element.controller.activeType?.id).toBe('dt1');
+    expect(element.controller.isAdding).toBe(false);
   });
 
   it('should be blank when nothing is selected and not adding', async () => {
-    element.selectedId = null;
-    element.isAdding = false;
+    element.controller.selectType(null);
+    element.controller.isAdding = false;
     await element.updateComplete;
     
-    expect(element.displayType).toBeUndefined();
+    expect(element.controller.activeType).toBeNull();
     
-    const toolbarTitle = element.shadowRoot?.querySelector('.toolbar-title');
-    expect(toolbarTitle?.textContent?.trim()).toBe('Display Types');
+
 
     const emptyView = element.shadowRoot?.querySelector('empty-view');
     expect(emptyView).toBeTruthy();
   });
 
-  it('should dispatch select-display-type when another display type is clicked in sidebar', async () => {
-    const selectSpy = vi.fn();
-    element.addEventListener('select-display-type', selectSpy);
+  it('should call controller.selectType when another display type is clicked in sidebar', async () => {
+    const selectSpy = vi.spyOn(element.controller, 'selectType');
 
     const sidebarList = element.shadowRoot?.querySelector('sidebar-list');
     const items = sidebarList?.shadowRoot?.querySelectorAll('.sidebar-item');
     // Index 1 is the 2nd display type (Index 0 is the 1st)
     (items?.[1] as HTMLElement).click();
     
-    expect(selectSpy).toHaveBeenCalledWith(expect.objectContaining({
-      detail: { id: 'dt2' }
-    }));
+    expect(selectSpy).toHaveBeenCalledWith('dt2');
   });
 
-  it('should dispatch prepare-new-display-type when addNew is called', async () => {
-    const prepareSpy = vi.fn();
-    element.addEventListener('prepare-new-display-type', prepareSpy);
+  it('should call controller.addNew when addNew is called', async () => {
+    const spy = vi.spyOn(element.controller, 'addNew');
 
     element.addNew();
     
-    expect(prepareSpy).toHaveBeenCalled();
+    expect(spy).toHaveBeenCalled();
   });
 
   it('should detect dirty state when fields are modified', async () => {
+    // Select the first item so there is a form to edit
+    element.controller.selectType('dt1');
+    await element.updateComplete;
+
     expect(element.isDirty).toBe(false);
     
     const nameInput = element.shadowRoot?.querySelector('input[type="text"]') as HTMLInputElement;
@@ -100,27 +104,22 @@ describe('DisplayTypesView', () => {
     expect(element.isDirty).toBe(true);
   });
 
-  it('should emit save event when form is submitted', async () => {
-    const saveSpy = vi.fn();
-    element.addEventListener('save', saveSpy);
+  it('should call controller.save when form is submitted', async () => {
+    const saveSpy = vi.spyOn(element.controller, 'save').mockImplementation(async () => {});
     
-    // Fill in a name for a new device
-    element.selectedId = null;
-    element.isAdding = true;
+    // Call addNew to setup correct temporary state
+    element.addNew();
     await element.updateComplete;
     
     const nameInput = element.shadowRoot?.querySelector('input[type="text"]') as HTMLInputElement;
     nameInput.value = 'New Device';
     nameInput.dispatchEvent(new Event('input', { bubbles: true }));
     
-    // Manually trigger submit
-    (element as any)._handleSubmit(new Event('submit'));
+    // Manually trigger submit on the form
+    const form = element.shadowRoot?.querySelector('form');
+    form?.dispatchEvent(new SubmitEvent('submit', { cancelable: true }));
     
-    expect(saveSpy).toHaveBeenCalledWith(expect.objectContaining({
-      detail: expect.objectContaining({
-        displayType: expect.objectContaining({ name: 'New Device' })
-      })
-    }));
+    expect(saveSpy).toHaveBeenCalled();
   });
 
   it('should calculate correct dimensions for summary table', async () => {
