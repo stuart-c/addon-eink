@@ -55,6 +55,11 @@ test.describe('Scene Item Pips and Preview', () => {
     await page.locator('button[title="Scenes"]').click();
     await expect(page.locator('scenes-view')).toBeVisible();
     
+    // Select the layout filter so our scene appears
+    const dropdown = page.locator('.layout-select');
+    await expect(dropdown).toBeVisible();
+    await dropdown.selectOption(layoutId);
+    
     // Select our test scene
     const sidebarItem = page.locator('sidebar-list .sidebar-item').getByText(sceneName);
     await sidebarItem.click();

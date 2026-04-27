@@ -4,6 +4,7 @@ import { createLayout, createDisplayType, createScene } from './helpers/api';
 test.describe('Smart Scene Items interaction', () => {
   let sceneName: string;
   let layoutName: string;
+  let layoutId: string;
 
   test.beforeAll(async ({ request }) => {
     // 1. Create a display type
@@ -23,6 +24,7 @@ test.describe('Smart Scene Items interaction', () => {
       ]
     });
     layoutName = layout.name;
+    layoutId = layout.id;
 
     // 3. Create a scene
     sceneName = `Item Test Scene ${Date.now()}`;
@@ -37,6 +39,11 @@ test.describe('Smart Scene Items interaction', () => {
     await page.locator('button[title="Scenes"]').click();
     await expect(page.locator('scenes-view')).toBeVisible();
     
+    // Select the layout filter so our scene appears
+    const dropdown = page.locator('.layout-select');
+    await expect(dropdown).toBeVisible();
+    await dropdown.selectOption(layoutId);
+    
     // Select our test scene
     const sidebarItem = page.locator('sidebar-list .sidebar-item').getByText(sceneName);
     await sidebarItem.click();
@@ -46,8 +53,10 @@ test.describe('Smart Scene Items interaction', () => {
   test('should support item selection and opening settings dialog', async ({ page }) => {
     // 1. Add an item first
     // Select the display in layout-editor
-    await page.locator('layout-box[data-id="d1"]').dispatchEvent('mousedown');
-    await expect(page.locator('layout-box[data-id="d1"]')).toHaveAttribute('selected', '');
+    const box = page.locator('layout-box[data-id="d1"]');
+    await box.waitFor({ state: 'visible' });
+    await box.dispatchEvent('mousedown');
+    await expect(box).toHaveAttribute('selected', '');
     
     // Click "New Single Display"
     await page.locator('button[title="New Single Display"]').click();
