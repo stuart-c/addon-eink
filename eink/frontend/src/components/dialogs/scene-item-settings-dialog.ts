@@ -512,7 +512,7 @@ export class SceneItemSettingsDialog extends LitElement {
     // Load source image
     const imgElement = new Image();
     imgElement.crossOrigin = 'anonymous';
-    imgElement.src = `/api/image/${image.id}/file`;
+    imgElement.src = `api/image/${image.id}/file`;
     await new Promise((resolve, reject) => {
       imgElement.onload = resolve;
       imgElement.onerror = reject;
@@ -885,7 +885,7 @@ export class SceneItemSettingsDialog extends LitElement {
                     }}"
                   >
                     <div class="image-thumbnail">
-                      <img src="/api/image/${img.image_id}/thumbnail" style="width: 100%; height: 100%; object-fit: contain;">
+                      <img src="api/image/${img.image_id}/thumbnail" style="width: 100%; height: 100%; object-fit: contain;">
                     </div>
                     <div class="image-name">${this._getImageName(img.image_id)}</div>
                   </div>
@@ -937,7 +937,7 @@ export class SceneItemSettingsDialog extends LitElement {
                     .map(image => html`
                       <div class="image-card" data-image-id="${image.id}" @click="${() => this._selectImage(image)}">
                         <div class="thumbnail-container">
-                          <img src="/api/image/${image.id}/thumbnail" alt="${image.name}" loading="lazy">
+                          <img src="api/image/${image.id}/thumbnail" alt="${image.name}" loading="lazy">
                         </div>
                         <div class="image-info">
                           <p class="grid-image-name" title="${image.name}">${image.name}</p>

@@ -551,7 +551,7 @@ export class ScenesView extends BaseResourceView {
         item.displays?.forEach((dId: string) => {
           const slice = this._existingSlices.find(s => s.display_id === dId && s.image_id === imageId);
           if (slice) {
-            previewSlices[dId] = `/api/scene/${activeScene.id}/slice/${dId}/${imageId}?hash=${slice.file_hash}`;
+            previewSlices[dId] = `api/scene/${activeScene.id}/slice/${dId}/${imageId}?hash=${slice.file_hash}`;
           }
         });
       });
@@ -749,7 +749,7 @@ export class ScenesView extends BaseResourceView {
       
       ${this._hoveredPip ? html`
         <div class="pip-tooltip" style="left: ${this._hoveredPip.x}px; top: ${this._hoveredPip.y}px;">
-          <img src="/api/image/${this._hoveredPip.imageId}/thumbnail" alt="thumbnail" />
+          <img src="api/image/${this._hoveredPip.imageId}/thumbnail" alt="thumbnail" />
           <span>${this.state.images.find(img => img.id === this._hoveredPip?.imageId)?.name || 'Unknown'}</span>
         </div>
       ` : ''}
