@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SceneQueueCount",
+  "description": "Count of items in the scene queue",
+  "type": "object",
+  "properties": {
+    "count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of items in the queue for this scene"
+    }
+  },
+  "required": ["count"]
+}
