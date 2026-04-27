@@ -1,5 +1,4 @@
 import os
-import aiohttp
 import logging
 from aiohttp import web
 from ..utils.validation import response_schema
@@ -30,7 +29,7 @@ async def handle_device_list(request):
                     {"error": "Failed to authenticate with Home Assistant"},
                     status=502,
                 )
-            
+
             # 2. Send auth
             await ws.send_json({"type": "auth", "access_token": token})
             auth_ok = await ws.receive_json()
@@ -40,7 +39,7 @@ async def handle_device_list(request):
                     {"error": "Authentication failed with Home Assistant"},
                     status=502,
                 )
-            
+
             # 3. Request config entries
             await ws.send_json({"id": 1, "type": "config_entries/get"})
             entries_msg = await ws.receive_json()
@@ -50,7 +49,7 @@ async def handle_device_list(request):
                     {"error": "Failed to fetch config entries from HA"},
                     status=502,
                 )
-            
+
             entries = entries_msg.get("result", [])
             opendisplay_entry_ids = [
                 entry["entry_id"]
@@ -71,9 +70,9 @@ async def handle_device_list(request):
                     {"error": "Failed to fetch device registry from HA"},
                     status=502,
                 )
-            
+
             devices = devices_msg.get("result", [])
-            
+
             # 5. Filter Devices
             filtered_devices = []
             for device in devices:
@@ -89,7 +88,7 @@ async def handle_device_list(request):
                             "manufacturer": device.get("manufacturer"),
                         }
                     )
-            
+
             return web.json_response(filtered_devices)
 
     except Exception as e:
