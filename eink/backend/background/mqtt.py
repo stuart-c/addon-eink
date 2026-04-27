@@ -336,16 +336,10 @@ class MQTTManager:
 
         payload = {
             "device_id": device_id,
-            "image": {
-                "media_content_id": (
-                    f"media-source://media_source/local/"
-                    f"eink/scene_display/{filename}"
-                ),
-                "media_content_type": "image/png",
-            },
-            "dither_mode": "None",
-            "rotation": 0,
-            "fit_mode": "Stretch",
+            "image": (
+                f"media-source://media_source/local/"
+                f"eink/scene_display/{filename}"
+            ),
         }
 
         try:
