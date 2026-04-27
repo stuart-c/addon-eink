@@ -116,7 +116,13 @@ async def test_scene_save_populates_queue(aiohttp_client, app):
                 "id": "comp-1",
                 "type": "image",
                 "displays": ["display-1"],
-                "images": [{"image_id": "img-1", "scaling_factor": 1.0, "offset": {"x": 0, "y": 0}}],
+                "images": [
+                    {
+                        "image_id": "img-1",
+                        "scaling_factor": 1.0,
+                        "offset": {"x": 0, "y": 0},
+                    }
+                ],
             }
         ],
     }
@@ -141,7 +147,7 @@ async def test_scene_save_populates_queue(aiohttp_client, app):
     }
     resp = await client.put(f"/api/scene/{scene_id}", json=update_data)
     assert resp.status == 200
-    
+
     resp = await client.get(f"/api/scene/{scene_id}/queue")
     assert (await resp.json())["count"] == 1
 
@@ -151,7 +157,7 @@ async def test_scene_save_populates_queue(aiohttp_client, app):
         stmt = select(models.Scene).where(models.Scene.id == scene_id)
         result = await session.execute(stmt)
         scene_db = result.scalar_one()
-        
+
         # Add SceneDisplayImage record
         sdi = models.SceneDisplayImage(
             scene_id=scene_id,
@@ -160,7 +166,7 @@ async def test_scene_save_populates_queue(aiohttp_client, app):
             file_hash="out-hash",
             scene_hash=scene_db.scene_hash,
             image_hash=img.settings_hash,
-            filename="slice.png"
+            filename="slice.png",
         )
         session.add(sdi)
         await session.commit()
@@ -168,7 +174,7 @@ async def test_scene_save_populates_queue(aiohttp_client, app):
     # 6. Save scene again - should now have 0 in queue as it's up to date
     resp = await client.put(f"/api/scene/{scene_id}", json=update_data)
     assert resp.status == 200
-    
+
     resp = await client.get(f"/api/scene/{scene_id}/queue")
     assert (await resp.json())["count"] == 0
 
@@ -185,6 +191,6 @@ async def test_scene_save_populates_queue(aiohttp_client, app):
     # Save scene - should be in queue again
     resp = await client.put(f"/api/scene/{scene_id}", json=update_data)
     assert resp.status == 200
-    
+
     resp = await client.get(f"/api/scene/{scene_id}/queue")
     assert (await resp.json())["count"] == 1
