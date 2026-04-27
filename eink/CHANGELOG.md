@@ -1,3 +1,12 @@
+## [0.3.6] - 2026-04-27
+
+## Changes
+
+## 🐛 Bug Fixes
+
+- fix(addon): grant addon user access to media directory @stuart-c-ai (#434)
+
+
 ## [0.3.5] - 2026-04-26
 
 ## Changes
