@@ -4,7 +4,7 @@ import logging
 import hashlib
 import json
 import os
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from .. import database, models
 from ..utils.storage import get_storage_path
 
@@ -23,25 +23,42 @@ def get_palette_for_display(display_type):
 
 async def check_for_scene_work():
     """
-    Check for active scenes that need their display images generated or updated.
+    Check for queued scenes that need their display images generated or updated.
     """
     try:
         async with database.get_session() as session:
-            # 1. Get all active scenes
-            stmt = select(models.Scene).where(models.Scene.status == "active")
+            # 1. Get all scene_ids that have pending work
+            stmt = select(models.SceneQueue.scene_id).distinct()
+            result = await session.execute(stmt)
+            scene_ids = result.scalars().all()
+
+            if not scene_ids:
+                return
+
+            # 2. Get those scenes
+            stmt = select(models.Scene).where(models.Scene.id.in_(scene_ids))
             result = await session.execute(stmt)
             scenes = result.scalars().all()
 
             for scene in scenes:
-                await process_scene(scene, session)
+                # Fetch specific queued combos for this scene
+                q_stmt = select(models.SceneQueue).where(
+                    models.SceneQueue.scene_id == scene.id
+                )
+                q_result = await session.execute(q_stmt)
+                queued_items = q_result.scalars().all()
+                queued_combos = {(q.display_id, q.image_id) for q in queued_items}
+
+                if queued_combos:
+                    await process_scene(scene, queued_combos, session)
 
     except Exception as e:
         logger.error(f"Error during scene work check: {str(e)}")
         return 0
 
 
-async def process_scene(scene, session):
-    """Process a single scene: check all items/displays/images."""
+async def process_scene(scene, queued_combos, session):
+    """Process a single scene: check all items/displays/images against the queue."""
     try:
         # Load layout
         stmt = select(models.Layout).where(models.Layout.id == scene.layout_id)
@@ -131,6 +148,9 @@ async def process_scene(scene, session):
                     continue
 
                 for panel in item_panels:
+                    if (panel["id"], image_id) not in queued_combos:
+                        continue
+
                     await process_slice(
                         scene,
                         panel,
@@ -162,7 +182,7 @@ async def process_slice(
         display_id = panel["id"]
         image_id = image_record.id
 
-        # Check if work is needed
+        # Fetch existing record if it exists (for updating)
         stmt = select(models.SceneDisplayImage).where(
             models.SceneDisplayImage.scene_id == scene_id,
             models.SceneDisplayImage.display_id == display_id,
@@ -170,15 +190,6 @@ async def process_slice(
         )
         result = await session.execute(stmt)
         record = result.scalar_one_or_none()
-
-        if (
-            record
-            and record.file_hash
-            and record.scene_hash == scene.scene_hash
-            and record.image_hash == image_record.settings_hash
-        ):
-            # Up to date
-            return
 
         # Need to run conversion
         logger.info(
@@ -259,6 +270,14 @@ async def process_slice(
         record.image_hash = image_record.settings_hash
         record.file_hash = file_hash
         record.filename = dest_filename
+
+        # Remove the successfully processed item from the queue
+        del_stmt = delete(models.SceneQueue).where(
+            models.SceneQueue.scene_id == scene_id,
+            models.SceneQueue.display_id == display_id,
+            models.SceneQueue.image_id == image_id,
+        )
+        await session.execute(del_stmt)
 
         await session.commit()
         logger.debug(f"Successfully updated slice {dest_filename}")
