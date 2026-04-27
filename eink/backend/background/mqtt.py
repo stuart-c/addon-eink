@@ -340,6 +340,9 @@ class MQTTManager:
                 f"media-source://media_source/local/"
                 f"eink/scene_display/{filename}"
             ),
+            "dither_mode": "None",
+            "rotation": 0,
+            "fit_mode": "Crop",
         }
 
         try:
