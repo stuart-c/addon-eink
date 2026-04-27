@@ -5,6 +5,7 @@ from unittest.mock import patch, AsyncMock
 from sqlalchemy import select
 from backend import database, models
 from backend.background.scene_processor import check_for_scene_work
+from backend.handlers.scenes import scene_handler
 
 
 @pytest.fixture
@@ -106,6 +107,9 @@ async def test_scene_processor_identifies_work(db_setup, tmp_path):
         session.add(scene)
         await session.commit()
         await session.refresh(scene)
+
+        await scene_handler._update_scene_queue(scene, session)
+        await session.commit()
 
     # Mock the subprocess call
     with patch("asyncio.create_subprocess_exec") as mock_exec:
@@ -244,6 +248,9 @@ async def test_scene_processor_retriggers_if_file_hash_empty(db_setup, tmp_path)
             filename="old.png",
         )
         session.add(record)
+        await session.commit()
+
+        await scene_handler._update_scene_queue(scene, session)
         await session.commit()
 
     # Mock the subprocess call
