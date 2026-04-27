@@ -30,7 +30,7 @@ def setup_routes(app):
     )
     app.router.add_get("/api/scene/{id}/slice", scenes.handle_scene_slice_list)
     app.router.add_get(
-        "/api/scene/{scene_id}/queue", scenes.handle_scene_queue_count
+        "/api/scene/{id}/queue", scenes.handle_scene_queue_count
     )
     app.router.add_post("/api/scene", scenes.handle_scene_create)
     app.router.add_put("/api/scene/{id}", scenes.handle_scene_update)

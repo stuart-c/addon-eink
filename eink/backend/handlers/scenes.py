@@ -316,7 +316,7 @@ async def handle_scene_slice_get(request):
 @response_schema("scene_queue_count")
 async def handle_scene_queue_count(request):
     """Return the number of items in the queue for a specified scene ID."""
-    scene_id = request.match_info["scene_id"]
+    scene_id = request.match_info["id"]
     try:
         scene_id = validate_id(scene_id)
     except ValueError as e:
