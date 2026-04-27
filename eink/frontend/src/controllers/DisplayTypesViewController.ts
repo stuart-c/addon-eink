@@ -102,7 +102,7 @@ export class DisplayTypesViewController extends BaseViewController {
          // Auto-select the first newly saved one if we were adding
          this.editingItemId = this.state.displayTypes[this.state.displayTypes.length -1].id;
       }
-      this.showMessage('Display types saved successfully', 'success');
+      this.showMessage(`Display type "${this.activeType?.name || ''}" saved!`, 'success');
     } catch (err: any) {
       this.showMessage(err.message || 'Failed to save display types', 'error');
     }

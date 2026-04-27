@@ -12,6 +12,26 @@ export abstract class BaseResourceView extends LitElement {
     */
   @property({ type: Object }) state!: HaStateController;
 
+  private _lastIsDirty = false;
+  private _lastCanDelete = false;
+
+  public abstract get isDirty(): boolean;
+  public abstract get canDelete(): boolean;
+
+  protected updated(changedProperties: Map<string | number | symbol, unknown>) {
+    super.updated(changedProperties);
+    
+    if (this.isDirty !== this._lastIsDirty) {
+      this._lastIsDirty = this.isDirty;
+      this.notifyDirty(this.isDirty);
+    }
+
+    if (this.canDelete !== this._lastCanDelete) {
+      this._lastCanDelete = this.canDelete;
+      this.notifyCanDelete(this.canDelete);
+    }
+  }
+
   /**
    * Dispatches a 'dirty-state-change' event to notify the shell that the view has unsaved changes.
    */

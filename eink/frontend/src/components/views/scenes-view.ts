@@ -291,7 +291,6 @@ export class ScenesView extends BaseResourceView {
       this.state.sceneFilterLayoutId = this.activeScene.layout;
       this.state.refreshScenes({ layout: this.state.sceneFilterLayoutId });
     }
-    }
     if (changedProperties.has('activeScene') || changedProperties.has('scenes')) {
       if (changedProperties.has('activeScene')) {
         this._fetchExistingSlices();
