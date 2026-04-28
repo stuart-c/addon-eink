@@ -256,6 +256,14 @@ async def ensure_schema_up_to_date(conn):
             )
         )
 
+    if "panel_orientation" not in columns:
+        await conn.execute(
+            text(
+                "ALTER TABLE display_types ADD COLUMN panel_orientation VARCHAR "
+                "DEFAULT 'landscape'"
+            )
+        )
+
     # Check 'layouts' table for recently added columns
     result = await conn.execute(text("PRAGMA table_info(layouts)"))
     columns = [row[1] for row in result.fetchall()]

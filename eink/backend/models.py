@@ -126,6 +126,7 @@ class DisplayType(Base):
 
     id = Column(String, primary_key=True)
     name = Column(String, nullable=False)
+    panel_orientation = Column(String, nullable=False, default="landscape")
     width_mm = Column(Integer, nullable=False)
     height_mm = Column(Integer, nullable=False)
     panel_width_mm = Column(Integer, nullable=False)

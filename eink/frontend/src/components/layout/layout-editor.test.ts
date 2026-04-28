@@ -30,6 +30,7 @@ describe('LayoutEditor', () => {
   const mockDisplayTypes = [
     { 
         id: 'dt1', 
+        panel_orientation: 'landscape',
         width_mm: 100, 
         height_mm: 100,
         panel_width_mm: 90,

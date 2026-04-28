@@ -9,6 +9,7 @@ describe('DisplayTypesView', () => {
     {
       id: 'dt1',
       name: 'Display 1',
+      panel_orientation: 'landscape',
       width_mm: 200,
       height_mm: 150,
       panel_width_mm: 180,
@@ -22,6 +23,7 @@ describe('DisplayTypesView', () => {
     {
       id: 'dt2',
       name: 'Display 2',
+      panel_orientation: 'landscape',
       width_mm: 100,
       height_mm: 100,
       panel_width_mm: 80,
