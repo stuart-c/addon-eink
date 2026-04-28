@@ -6,6 +6,7 @@
 export interface DisplayType {
   id: string;
   name: string;
+  panel_orientation: 'landscape' | 'portrait';
   width_mm: number;
   height_mm: number;
   panel_width_mm: number;

@@ -22,6 +22,7 @@ describe('LayoutsView', () => {
     {
       id: 'dt1',
       name: 'Display Type 1',
+      panel_orientation: 'landscape',
       width_mm: 100,
       height_mm: 60,
       panel_width_mm: 90,

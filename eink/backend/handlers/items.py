@@ -17,6 +17,7 @@ class DisplayTypeHandler(BaseCRUDHandler):
             include_fields={
                 "id",
                 "name",
+                "panel_orientation",
                 "width_mm",
                 "height_mm",
                 "panel_width_mm",

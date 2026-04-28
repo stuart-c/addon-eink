@@ -30,6 +30,7 @@ describe('SceneItemSettingsDialog', () => {
   const mockDisplayTypes = [{ 
     id: 'dt1', 
     name: '7.5in', 
+    panel_orientation: 'landscape',
     width_px: 800, height_px: 480,
     width_mm: 160, height_mm: 100,
     colour_type: 'BW'
@@ -108,6 +109,7 @@ describe('SceneItemSettingsDialog', () => {
     const customDisplayTypes = [{ 
       id: 'dt1', 
       name: 'Custom', 
+      panel_orientation: 'landscape',
       width_px: 1000, height_px: 500,
       width_mm: 100, height_mm: 50,
       panel_width_mm: 100, panel_height_mm: 50,

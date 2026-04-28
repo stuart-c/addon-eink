@@ -224,6 +224,7 @@ export class DisplayTypesView extends BaseResourceView {
     return {
       id: '',
       name: '',
+      panel_orientation: 'landscape',
       width_mm: 0,
       height_mm: 0,
       panel_width_mm: 0,
@@ -455,15 +456,24 @@ export class DisplayTypesView extends BaseResourceView {
           ` : html`
             ${this.viewMode === 'graphical' ? html`
               <form id="display-type-form" @submit="${this._handleSubmit}" @input="${() => { this.requestUpdate(); this._updateDirtyState(); }}">
-                <div class="form-group">
-                  <label>Identifier/Name</label>
-                  <input 
-                    type="text" 
-                    required 
-                    .value="${live(this.displayType?.name || '')}"
-                    @input="${(e: any) => this.displayType!.name = e.target.value}"
-                    placeholder="e.g. Living Room Display"
-                  >
+                <div class="row">
+                  <div class="form-group">
+                    <label>Identifier/Name</label>
+                    <input 
+                      type="text" 
+                      required 
+                      .value="${live(this.displayType?.name || '')}"
+                      @input="${(e: any) => this.displayType!.name = e.target.value}"
+                      placeholder="e.g. Living Room Display"
+                    >
+                  </div>
+                  <div class="form-group">
+                    <label>Panel Orientation</label>
+                    <select .value="${live(this.displayType?.panel_orientation || 'landscape')}" @change="${(e: any) => { this.displayType!.panel_orientation = e.target.value; this.requestUpdate(); this._updateDirtyState(); }}">
+                      <option value="landscape">Landscape</option>
+                      <option value="portrait">Portrait</option>
+                    </select>
+                  </div>
                 </div>
 
                 <div class="section-header">Device Dimensions</div>
