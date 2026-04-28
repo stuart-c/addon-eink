@@ -386,6 +386,7 @@ export class ImagesView extends BaseResourceView {
             <div class="form-group">
               <label>Title / Name</label>
               <input 
+                id="filter-title"
                 type="text" 
                 placeholder="Search by title..."
                 .value="${this._filterTitle}"
@@ -398,6 +399,7 @@ export class ImagesView extends BaseResourceView {
             <div class="form-group">
               <label>Description</label>
               <input 
+                id="filter-description"
                 type="text" 
                 placeholder="Search description..."
                 .value="${this._filterDescription}"
@@ -410,6 +412,7 @@ export class ImagesView extends BaseResourceView {
             <div class="form-group">
               <label>Artist</label>
               <input 
+                id="filter-artist"
                 type="text" 
                 placeholder="Artist"
                 .value="${this._filterArtist}"
@@ -422,6 +425,7 @@ export class ImagesView extends BaseResourceView {
             <div class="form-group">
               <label>Collection</label>
               <input 
+                id="filter-collection"
                 type="text" 
                 placeholder="Collection"
                 .value="${this._filterCollection}"

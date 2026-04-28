@@ -747,6 +747,7 @@ export class ImageDialog extends LitElement {
                     <div class="form-group" style="margin-bottom: 0;">
                       <label>Name</label>
                       <input 
+                        id="image-name-input"
                         type="text" 
                         placeholder="Optional - defaults to filename"
                         .value="${this._imageName}"
@@ -757,6 +758,7 @@ export class ImageDialog extends LitElement {
                     <div class="form-group" style="margin-bottom: 0;">
                       <label>Artist</label>
                       <input 
+                        id="image-artist-input"
                         type="text" 
                         placeholder="Who created this?"
                         .value="${this._artist}"
@@ -767,6 +769,7 @@ export class ImageDialog extends LitElement {
                     <div class="form-group" style="margin-bottom: 0;">
                       <label>Collection</label>
                       <input 
+                        id="image-collection-input"
                         type="text" 
                         placeholder="e.g. Landscapes, Personal"
                         .value="${this._collection}"
@@ -785,6 +788,7 @@ export class ImageDialog extends LitElement {
                     <div class="form-group" style="margin-bottom: 0;">
                       <label>Description</label>
                       <textarea 
+                        id="image-description-textarea"
                         placeholder="Describe the image..."
                         .value="${this._description}"
                         @input="${(e: InputEvent) => this._description = (e.target as HTMLTextAreaElement).value}"
@@ -819,7 +823,7 @@ export class ImageDialog extends LitElement {
                       </select>
                     </div>
 
-                    <button class="suggest-button" @click="${this._handleSuggestSettings}">
+                    <button id="btn-suggest" class="primary suggest-button" @click="${this._handleSuggestSettings}">
                       <span class="material-icons">auto_awesome</span>
                       Suggest Settings
                     </button>
@@ -1017,6 +1021,7 @@ export class ImageDialog extends LitElement {
         <div slot="footer" class="footer-actions">
           ${this._editingImage ? html`
             <button 
+              id="btn-delete-confirm"
               class="danger" 
               style="margin-right: auto;" 
               @click="${this._handleDelete}"
@@ -1026,12 +1031,15 @@ export class ImageDialog extends LitElement {
             </button>
           ` : ''}
           <button 
+            id="btn-cancel"
             class="secondary" 
             @click="${this._handleCancel}"
           >
             Cancel
           </button>
           <button 
+            id="btn-image-save"
+            class="primary"
             ?disabled="${this._isUploading || !this._uploadedImage || !this._imageName.trim()}"
             @click="${this._handleSave}"
           >
