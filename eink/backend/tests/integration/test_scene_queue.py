@@ -1,6 +1,8 @@
+import os
 import pytest
 from sqlalchemy import select
 from backend import models, database
+from backend.utils.storage import get_storage_path
 
 
 @pytest.mark.asyncio
@@ -170,6 +172,11 @@ async def test_scene_save_populates_queue(aiohttp_client, app):
         )
         session.add(sdi)
         await session.commit()
+
+    # Create dummy file to pass the existence check in update_scene_queue
+    path = os.path.join(get_storage_path("scene_display"), "slice.png")
+    with open(path, "w") as f:
+        f.write("dummy")
 
     # 6. Save scene again - should now have 0 in queue as it's up to date
     resp = await client.put(f"/api/scene/{scene_id}", json=update_data)
