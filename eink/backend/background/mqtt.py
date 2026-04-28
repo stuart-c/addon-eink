@@ -8,7 +8,7 @@ import random
 from datetime import datetime
 
 from gmqtt import Client as MQTTClient
-from sqlalchemy import select, update
+from sqlalchemy import select
 
 from .. import database, models
 

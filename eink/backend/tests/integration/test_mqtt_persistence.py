@@ -5,11 +5,12 @@ from sqlalchemy import select
 from backend import database, models
 from backend.background.mqtt import MQTTManager
 
+
 @pytest.mark.asyncio
 async def test_mqtt_persistence_saves_to_db(aiohttp_client, app):
     """Test that MQTT layout updates are saved to the database."""
     await aiohttp_client(app)
-    
+
     async with database.get_session() as session:
         # Create a Layout
         layout = models.Layout(
@@ -21,7 +22,7 @@ async def test_mqtt_persistence_saves_to_db(aiohttp_client, app):
             status="active",
         )
         session.add(layout)
-        
+
         # Create a Scene
         scene = models.Scene(
             id="test-scene",
@@ -41,19 +42,22 @@ async def test_mqtt_persistence_saves_to_db(aiohttp_client, app):
 
     # Verify database state
     async with database.get_session() as session:
-        stmt = select(models.LayoutState).where(models.LayoutState.layout_id == "test-layout")
+        stmt = select(models.LayoutState).where(
+            models.LayoutState.layout_id == "test-layout"
+        )
         result = await session.execute(stmt)
         state = result.scalar_one_or_none()
-        
+
         assert state is not None
         assert state.scene_id == "test-scene"
         assert isinstance(state.last_change_date, datetime)
+
 
 @pytest.mark.asyncio
 async def test_mqtt_persistence_loads_from_db(aiohttp_client, app):
     """Test that MQTTManager loads state from the database on startup."""
     await aiohttp_client(app)
-    
+
     async with database.get_session() as session:
         # Create a Layout
         layout = models.Layout(
@@ -65,7 +69,7 @@ async def test_mqtt_persistence_loads_from_db(aiohttp_client, app):
             status="active",
         )
         session.add(layout)
-        
+
         # Create a Scene
         scene = models.Scene(
             id="persist-scene",
@@ -74,19 +78,19 @@ async def test_mqtt_persistence_loads_from_db(aiohttp_client, app):
             status="active",
         )
         session.add(scene)
-        
+
         # Add pre-existing state
         state = models.LayoutState(
             layout_id="persist-layout",
             scene_id="persist-scene",
-            last_change_date=datetime.now()
+            last_change_date=datetime.now(),
         )
         session.add(state)
         await session.commit()
 
     manager = MQTTManager(app=MagicMock())
     manager.client = MagicMock()
-    
+
     # Mock run_loop dependencies
     # We use a side effect to stop the loop after one iteration
     async def stop_loop(*args, **kwargs):
