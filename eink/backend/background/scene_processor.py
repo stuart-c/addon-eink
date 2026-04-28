@@ -21,12 +21,7 @@ def get_palette_for_display(display_type):
     return "default"
 
 
-queue_update_event = asyncio.Event()
-
-
-def trigger_scene_processing():
-    """Signal the background task that the queue has been potentially updated."""
-    queue_update_event.set()
+from .events import trigger_scene_processing, queue_update_event
 
 
 async def check_for_scene_work():
@@ -325,25 +320,98 @@ async def stop_scene_processing(app):
             await task
 
 
+async def update_scene_queue(scene, session):
+    """
+    Identify what needs creating/updating for this scene and populate the
+    scene_queue table.
+    """
+    # 1. Clear existing queue for this scene
+    stmt = delete(models.SceneQueue).where(models.SceneQueue.scene_id == scene.id)
+    await session.execute(stmt)
+
+    if scene.status != "active":
+        return
+
+    # 2. Identify all display/image combinations in the scene
+    if not scene.items:
+        return
+
+    image_ids = set()
+    for item in scene.items:
+        for img in item.get("images", []):
+            if img.get("image_id"):
+                image_ids.add(img["image_id"])
+
+    if not image_ids:
+        return
+
+    # 3. Fetch current Image records to get their settings_hash
+    stmt = select(models.Image).where(models.Image.id.in_(image_ids))
+    result = await session.execute(stmt)
+    images = {img.id: img for img in result.scalars().all()}
+
+    # 4. Fetch existing SceneDisplayImage records to check hashes
+    stmt = select(models.SceneDisplayImage).where(
+        models.SceneDisplayImage.scene_id == scene.id
+    )
+    result = await session.execute(stmt)
+    records = {(r.display_id, r.image_id): r for r in result.scalars().all()}
+
+    # 5. Identify work needed
+    to_queue = set()
+    for item in scene.items:
+        if item.get("type") not in ("image", "tile"):
+            continue
+
+        display_ids = item.get("displays", [])
+        item_images = item.get("images", [])
+
+        for img_meta in item_images:
+            image_id = img_meta.get("image_id")
+            if not image_id or image_id not in images:
+                continue
+
+            image_record = images[image_id]
+
+            for display_id in display_ids:
+                record = records.get((display_id, image_id))
+
+                needs_work = False
+                if (
+                    not record
+                    or not record.file_hash
+                    or record.scene_hash != scene.scene_hash
+                    or record.image_hash != image_record.settings_hash
+                ):
+                    needs_work = True
+
+                if needs_work:
+                    to_queue.add((display_id, image_id))
+
+    # 6. Populate the queue
+    for display_id, image_id in to_queue:
+        session.add(
+            models.SceneQueue(
+                scene_id=scene.id, display_id=display_id, image_id=image_id
+            )
+        )
+
+    if to_queue:
+        trigger_scene_processing()
+
+
 async def update_all_scene_queues():
     """Update the scene queue for all active scenes."""
     try:
-        from ..handlers.scenes import scene_handler
-
         async with database.get_session() as session:
             stmt = select(models.Scene).where(models.Scene.status == "active")
             result = await session.execute(stmt)
             scenes = result.scalars().all()
 
             for scene in scenes:
-                await scene_handler._update_scene_queue(scene, session)
+                await update_scene_queue(scene, session)
 
             await session.commit()
-
-            stmt = select(models.SceneQueue).limit(1)
-            result = await session.execute(stmt)
-            if result.scalars().first():
-                trigger_scene_processing()
 
     except Exception as e:
         logger.error(f"Error updating scene queues: {str(e)}")

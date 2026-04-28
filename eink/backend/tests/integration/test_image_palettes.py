@@ -1,6 +1,7 @@
 import pytest
 from sqlalchemy import select
 from backend import models
+from backend.database import get_session
 
 
 @pytest.mark.asyncio
@@ -70,7 +71,6 @@ async def test_image_palette_population_on_scene_create(aiohttp_client, app):
     assert resp.status == 201, await resp.text()
 
     # 4. Verify image_palettes table
-    from backend.database import get_session
 
     async with get_session() as session:
         stmt = select(models.ImagePalette).where(
@@ -152,7 +152,6 @@ async def test_image_palette_no_duplicates(aiohttp_client, app):
     await client.put(f"/api/scene/{scene_id}", json=scene_data)
 
     # Verify only one entry exists
-    from backend.database import get_session
 
     async with get_session() as session:
         stmt = select(models.ImagePalette).where(

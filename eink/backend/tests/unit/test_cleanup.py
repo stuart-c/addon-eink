@@ -1,13 +1,13 @@
 import pytest
 from datetime import datetime, timedelta
 from unittest.mock import patch
-from backend import models
+from backend import models, database
+from backend.background.cleanup import cleanup_expired_images
 
 
 @pytest.mark.asyncio
 async def test_cleanup_expired_images_logic(app):
     """Test that only UPLOADED images older than 12 hours are deleted."""
-    from backend import database
 
     await database.init_db()
 
@@ -67,7 +67,6 @@ async def test_cleanup_expired_images_logic(app):
     with patch(
         "backend.background.cleanup.delete_image_files_and_record"
     ) as mock_delete:
-        from backend.background.cleanup import cleanup_expired_images
 
         deleted_count = await cleanup_expired_images()
 

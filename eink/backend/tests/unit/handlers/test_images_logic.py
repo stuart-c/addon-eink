@@ -1,5 +1,6 @@
 import pytest
 import hashlib
+import json
 from unittest.mock import MagicMock, AsyncMock, patch
 from PIL import UnidentifiedImageError
 from backend.handlers.images import ImageHandler
@@ -48,7 +49,6 @@ async def test_create_duplicate_detection(handler):
         response = await handler.create(mock_request)
 
         assert response.status == 409
-        import json
 
         data = json.loads(response.body.decode())
         assert data["error"] == "Duplicate image"
@@ -82,7 +82,6 @@ async def test_create_invalid_image(handler):
         response = await handler.create(mock_request)
 
         assert response.status == 400
-        import json
 
         data = json.loads(response.body.decode())
         assert data["error"] == "Invalid image file"

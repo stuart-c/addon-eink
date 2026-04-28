@@ -1,5 +1,6 @@
 import pytest
 from jsonschema import ValidationError
+from ....utils import validation
 from ....utils.validation import get_readonly_fields, validate_read_only
 
 
@@ -34,7 +35,6 @@ def test_validate_read_only_pass():
 
 def test_validate_read_only_fail_top_level(monkeypatch):
     # Mock load_schema to use a simple schema
-    from ....utils import validation
 
     def mock_load_schema(name):
         return {"properties": {"id": {"readOnly": True}, "name": {}}}
@@ -47,7 +47,6 @@ def test_validate_read_only_fail_top_level(monkeypatch):
 
 
 def test_validate_read_only_fail_nested(monkeypatch):
-    from ....utils import validation
 
     def mock_load_schema(name):
         return {
@@ -64,7 +63,6 @@ def test_validate_read_only_fail_nested(monkeypatch):
 
 
 def test_validate_read_only_comparison_pass(monkeypatch):
-    from ....utils import validation
 
     def mock_load_schema(name):
         return {"properties": {"id": {"readOnly": True}, "name": {}}}
@@ -80,7 +78,6 @@ def test_validate_read_only_comparison_pass(monkeypatch):
 
 
 def test_validate_read_only_comparison_fail(monkeypatch):
-    from ....utils import validation
 
     def mock_load_schema(name):
         return {"properties": {"id": {"readOnly": True}, "name": {}}}

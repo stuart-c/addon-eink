@@ -1,6 +1,6 @@
 import os
 import pytest
-from unittest.mock import patch, AsyncMock
+from unittest.mock import patch, AsyncMock, MagicMock
 
 
 @pytest.fixture
@@ -55,7 +55,6 @@ async def test_handle_device_list_success(aiohttp_client, app, mock_supervisor_t
     ]
 
     # Create a mock session
-    from unittest.mock import MagicMock
 
     mock_session = MagicMock()
     mock_session.close = AsyncMock()
@@ -65,7 +64,7 @@ async def test_handle_device_list_success(aiohttp_client, app, mock_supervisor_t
         {"type": "auth_required"},
         {"type": "auth_ok"},
         {"success": True, "result": entries_data},
-        {"success": True, "result": devices_data}
+        {"success": True, "result": devices_data},
     ]
 
     mock_session.ws_connect.return_value.__aenter__.return_value = mock_ws
@@ -90,8 +89,6 @@ async def test_handle_device_list_no_integration(
 ):
     client = await aiohttp_client(app)
 
-    from unittest.mock import MagicMock
-
     # Mock data - no opendisplay
     entries_data = [{"entry_id": "entry_2", "domain": "other"}]
 
@@ -102,7 +99,7 @@ async def test_handle_device_list_no_integration(
     mock_ws.receive_json.side_effect = [
         {"type": "auth_required"},
         {"type": "auth_ok"},
-        {"success": True, "result": entries_data}
+        {"success": True, "result": entries_data},
     ]
     mock_session.ws_connect.return_value.__aenter__.return_value = mock_ws
 
@@ -118,8 +115,6 @@ async def test_handle_device_list_no_integration(
 async def test_handle_device_list_api_error(aiohttp_client, app, mock_supervisor_token):
     client = await aiohttp_client(app)
 
-    from unittest.mock import MagicMock
-
     mock_session = MagicMock()
     mock_session.close = AsyncMock()
 
@@ -127,7 +122,7 @@ async def test_handle_device_list_api_error(aiohttp_client, app, mock_supervisor
     mock_ws.receive_json.side_effect = [
         {"type": "auth_required"},
         {"type": "auth_ok"},
-        {"success": False, "result": []}
+        {"success": False, "result": []},
     ]
     mock_session.ws_connect.return_value.__aenter__.return_value = mock_ws
 
