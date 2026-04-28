@@ -208,10 +208,27 @@ async def process_slice(
         draw_w = (image_record.width * image_meta.get("scaling_factor", 100)) / 100
         draw_h = (image_record.height * image_meta.get("scaling_factor", 100)) / 100
 
-        # Output pixels
-        is_portrait = panel.get("orientation") == "portrait"
-        out_w = panel["dt"].height_px if is_portrait else panel["dt"].width_px
-        out_h = panel["dt"].width_px if is_portrait else panel["dt"].height_px
+        # 211: Output pixels
+        panel_portrait = panel["dt"].panel_orientation == "portrait"
+
+        # Determine panel's native pixel dimensions
+        # Note: The DB currently stores width_px as the larger dimension
+        # regardless of panel_orientation because the DisplayTypeHandler
+        # enforces landscape.
+        if panel_portrait:
+            out_w = panel["dt"].height_px
+            out_h = panel["dt"].width_px
+        else:
+            out_w = panel["dt"].width_px
+            out_h = panel["dt"].height_px
+
+        # Determine if we need to rotate to match the layout's orientation
+        layout_orientation = panel.get("orientation", "landscape")
+        rotation = 0
+        if layout_orientation != panel["dt"].panel_orientation:
+            # If layout is portrait but panel is landscape, we need a 90 deg rotation.
+            # If layout is landscape but panel is portrait, we also need a 90 deg rotation.
+            rotation = 90
 
         # Paths
         src_path = os.path.join(get_storage_path("image"), image_record.file_path)
@@ -237,6 +254,7 @@ async def process_slice(
             "contrast": image_record.contrast,
             "saturation": image_record.saturation,
             "conversion": image_record.conversion,
+            "rotation": rotation,
         }
 
         # Call node converter

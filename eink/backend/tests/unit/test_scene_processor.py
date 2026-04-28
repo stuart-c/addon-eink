@@ -283,3 +283,110 @@ async def test_scene_processor_retriggers_if_file_hash_empty(db_setup, tmp_path)
                 result = await session.execute(stmt)
                 updated_record = result.scalar_one()
                 assert updated_record.file_hash is not None
+
+
+@pytest.mark.asyncio
+async def test_scene_processor_rotation(db_setup, tmp_path):
+    """Test that scene_processor calculates rotation correctly when orientations mismatch."""
+
+    async with database.get_session() as session:
+        # 1. Setup Display Type (Landscape panel)
+        dt = models.DisplayType(
+            id="dt-landscape",
+            name="Native Landscape",
+            panel_orientation="landscape",
+            width_px=800,
+            height_px=480,
+            panel_width_mm=160,
+            panel_height_mm=100,
+            width_mm=160,
+            height_mm=100,
+            colour_type="BW",
+            frame={},
+            mat={},
+        )
+        session.add(dt)
+
+        # 2. Setup Layout using it as PORTRAIT
+        layout = models.Layout(
+            id="layout-p",
+            name="Portrait Layout",
+            canvas_width_mm=100,
+            canvas_height_mm=160,
+            items=[
+                {
+                    "id": "d1",
+                    "display_type_id": "dt-landscape",
+                    "x_mm": 0,
+                    "y_mm": 0,
+                    "orientation": "portrait",  # MISMATCH!
+                }
+            ],
+            status="active",
+        )
+        session.add(layout)
+
+        # 3. Setup Image
+        img = models.Image(
+            id="img1",
+            name="I",
+            file_path="t.png",
+            width=100,
+            height=100,
+            file_type="png",
+            status="ACTIVE",
+            file_hash="h1",
+        )
+        session.add(img)
+        await session.commit()
+        await session.refresh(img)
+
+        # 4. Setup Scene
+        scene = models.Scene(
+            id="scene1",
+            name="S",
+            layout_id="layout-p",
+            status="active",
+            items=[
+                {
+                    "id": "item1",
+                    "type": "image",
+                    "displays": ["d1"],
+                    "images": [
+                        {
+                            "image_id": "img1",
+                            "scaling_factor": 100,
+                            "offset": {"x": 0, "y": 0},
+                        }
+                    ],
+                }
+            ],
+        )
+        session.add(scene)
+        await session.commit()
+        await session.refresh(scene)
+        await scene_handler._update_scene_queue(scene, session)
+        await session.commit()
+
+    # Mock converter
+    with patch("asyncio.create_subprocess_exec") as mock_exec:
+        mock_process = AsyncMock()
+        mock_process.communicate.return_value = (b"Done", b"")
+        mock_process.returncode = 0
+        mock_exec.return_value = mock_process
+
+        with patch(
+            "backend.background.scene_processor.get_storage_path",
+            return_value=str(tmp_path),
+        ):
+            await check_for_scene_work()
+
+            assert mock_exec.call_count == 1
+            args, _ = mock_exec.call_args
+            config = json.loads(args[2])
+
+            # Output dimensions should match NATIVE panel (landscape)
+            assert config["width"] == 800
+            assert config["height"] == 480
+            # Rotation should be 90 because landscape panel used as portrait
+            assert config["rotation"] == 90

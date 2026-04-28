@@ -22,7 +22,8 @@ async function main() {
     const { 
         src, dest, palette, brightness, contrast, saturation, conversion,
         width, height, background_color,
-        draw_x, draw_y, draw_w, draw_h
+        draw_x, draw_y, draw_w, draw_h,
+        rotation
     } = config;
 
     if (!src || !dest || !palette) {
@@ -45,7 +46,13 @@ async function main() {
             sourceCtx.fillRect(0, 0, finalWidth, finalHeight);
         }
 
-        // 2. Draw image with scaling and offset
+        // 2. Draw image with scaling, offset, and optional rotation
+        sourceCtx.save();
+        if (rotation === 90) {
+            sourceCtx.translate(finalWidth, 0);
+            sourceCtx.rotate(Math.PI / 2);
+        }
+
         sourceCtx.drawImage(
             img,
             draw_x ?? 0,
@@ -53,6 +60,7 @@ async function main() {
             draw_w ?? img.width,
             draw_h ?? img.height
         );
+        sourceCtx.restore();
 
         const destCanvas = createCanvas(finalWidth, finalHeight);
 
