@@ -274,40 +274,53 @@ class MQTTManager:
                     )
                     return
 
-                # 5. Group slices to find items
-                display_images = {}  # display_id -> set(image_id)
+                # 5. Map slices for easy lookup
                 slice_map = {}  # (display_id, image_id) -> filename
                 for s in slices:
-                    display_images.setdefault(s.display_id, set()).add(s.image_id)
                     slice_map[(s.display_id, s.image_id)] = s.filename
 
-                # Group displays by their image set (reconstructing clusters/items)
-                image_set_to_displays = {}  # frozenset(image_ids) -> [display_id, ...]
-                for d_id, i_ids in display_images.items():
-                    key = frozenset(i_ids)
-                    image_set_to_displays.setdefault(key, []).append(d_id)
-
-                # 6. For each cluster, pick a random image and call HA
+                # 6. For each item in the scene, pick a random image and call HA
                 import random
 
-                for i_ids, d_ids in image_set_to_displays.items():
-                    chosen_image_id = random.choice(list(i_ids))
+                if not scene.items:
+                    logger.warning(f"No items found in scene {scene.id}")
+                    return
 
-                    for d_id in d_ids:
+                # Map layout items for easy device_id lookup
+                display_to_device = {
+                    item.get("id"): item.get("device_id")
+                    for item in layout.items
+                    if item.get("id")
+                }
+
+                for item in scene.items:
+                    if item.get("type") not in ("image", "tile"):
+                        continue
+
+                    # Get available images for this item
+                    item_image_ids = [
+                        img.get("image_id")
+                        for img in item.get("images", [])
+                        if img.get("image_id")
+                    ]
+                    if not item_image_ids:
+                        continue
+
+                    # Pick ONE random image for this entire scene item
+                    chosen_image_id = random.choice(item_image_ids)
+
+                    # Update every display in this item
+                    for d_id in item.get("displays", []):
                         filename = slice_map.get((d_id, chosen_image_id))
                         if not filename:
+                            logger.warning(
+                                f"No slice found for display {d_id} "
+                                f"and image {chosen_image_id} "
+                                f"in scene {scene.id}"
+                            )
                             continue
 
-                        # Find device_id from layout
-                        device_id = next(
-                            (
-                                item.get("device_id")
-                                for item in layout.items
-                                if item.get("id") == d_id
-                            ),
-                            None,
-                        )
-
+                        device_id = display_to_device.get(d_id)
                         if device_id:
                             await self._call_ha_upload(device_id, filename)
                         else:

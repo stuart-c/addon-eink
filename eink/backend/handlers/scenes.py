@@ -265,15 +265,13 @@ class SceneHandler(BaseCRUDHandler):
                 for display_id in display_ids:
                     record = records.get((display_id, image_id))
 
-                    needs_work = False
-                    if not record or not record.file_hash:
-                        needs_work = True
-                    elif record.scene_hash != scene.scene_hash:
-                        needs_work = True
-                    elif record.image_hash != image_record.settings_hash:
-                        needs_work = True
-
-                    if needs_work:
+                    if (
+                        not record
+                        or not record.file_hash
+                        # Only check hashes if record exists (short-circuited)
+                        or record.scene_hash != scene.scene_hash
+                        or (record.image_hash != image_record.settings_hash)
+                    ):
                         to_queue.add((display_id, image_id))
 
         # 6. Populate the queue
