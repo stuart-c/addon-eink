@@ -265,13 +265,16 @@ export class ScenesView extends BaseResourceView {
   @state() private _selectedPips: Record<string, string> = {}; // item_id -> image_id
   @state() private _hoveredPip: { itemId: string, imageId: string, x: number, y: number } | null = null;
   private _pollInterval: any = null;
+  private _lastQueueCount: number = 0;
+  private _lastQueueCheck: number = 0;
+  private _lastSliceCheck: number = 0;
   
   @query('scene-dialog') private _sceneDialog!: SceneDialog;
   @query('scene-item-settings-dialog') private _itemSettingsDialog!: SceneItemSettingsDialog;
   
   connectedCallback() {
     super.connectedCallback();
-    this._pollInterval = setInterval(() => this._fetchExistingSlices(), 5000);
+    this._pollInterval = setInterval(() => this._pollRoutine(), 5000);
   }
 
   disconnectedCallback() {
@@ -303,6 +306,10 @@ export class ScenesView extends BaseResourceView {
       this.notifyDirty(dirty);
       
       if (changedProperties.has('activeScene')) {
+        this._lastQueueCount = 0;
+        this._lastQueueCheck = 0;
+        this._lastSliceCheck = 0;
+        this._fetchQueueCount();
         this._fetchExistingSlices();
         this._selectedPips = {};
       }
@@ -314,10 +321,41 @@ export class ScenesView extends BaseResourceView {
       this._existingSlices = [];
       return;
     }
+    this._lastSliceCheck = Date.now();
     try {
       this._existingSlices = await api.getSceneSlices(this.activeScene.id);
     } catch (e) {
       console.error('Failed to fetch scene slices', e);
+    }
+  }
+
+  private async _fetchQueueCount() {
+    if (!this.activeScene) return;
+    this._lastQueueCheck = Date.now();
+    try {
+      const resp = await api.getSceneQueueCount(this.activeScene.id);
+      if (this._lastQueueCount > resp.count) {
+        this._fetchExistingSlices();
+      }
+      this._lastQueueCount = resp.count;
+    } catch (e) {
+      console.error('Failed to fetch queue count', e);
+    }
+  }
+
+  private _pollRoutine() {
+    if (!this.activeScene) return;
+    const now = Date.now();
+    const tenMinutes = 10 * 60 * 1000;
+
+    if (this._lastQueueCount > 0) {
+      this._fetchQueueCount();
+    } else if (now - this._lastQueueCheck >= tenMinutes) {
+      this._fetchQueueCount();
+    }
+
+    if (now - this._lastSliceCheck >= tenMinutes) {
+      this._fetchExistingSlices();
     }
   }
 
@@ -330,6 +368,7 @@ export class ScenesView extends BaseResourceView {
     if (!this.activeScene) return;
     await this.state.saveActiveScene();
     this.resetBaseline();
+    this._fetchQueueCount();
   }
 
   public discard() {

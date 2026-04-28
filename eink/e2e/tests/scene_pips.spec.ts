@@ -71,6 +71,11 @@ test.describe('Scene Item Pips and Preview', () => {
     // So let's mock the slice API to return EMPTY first, then return the slice
     
     // 1. Initially no pip
+    let queueCount = 1; // Set queue to 1 so the frontend polls it frequently
+    await page.route(`**/api/scene/${sceneId}/queue`, async route => {
+      await route.fulfill({ json: { count: queueCount } });
+    });
+
     await page.route(`**/api/scene/${sceneId}/slice`, async route => {
       await route.fulfill({ json: [] });
     });
@@ -87,6 +92,9 @@ test.describe('Scene Item Pips and Preview', () => {
         json: [{ display_id: displayId, image_id: imageId, file_hash: 'mockhash' }] 
       });
     });
+
+    // 3. Decrement queue count to trigger the frontend to fetch slices
+    queueCount = 0;
 
     // Wait for poll (or we could trigger a refresh by switching scenes, but let's wait)
     // Actually, let's just wait for the pip to appear (poll is 5s)

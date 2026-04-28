@@ -261,6 +261,10 @@ export class HaApiClient {
     return this._fetch<SceneSlice[]>(`api/scene/${sceneId}/slice`);
   }
 
+  async getSceneQueueCount(sceneId: string): Promise<{ count: number }> {
+    return this._fetch<{ count: number }>(`api/scene/${sceneId}/queue`);
+  }
+
   // --- Home Assistant ---
 
   async getHaDevices(): Promise<HaDevice[]> {
