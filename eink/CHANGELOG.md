@@ -1,3 +1,12 @@
+## [0.9.0] - 2026-04-28
+
+## Changes
+
+## 🚀 Features
+
+- feat: add file existence check to scene queue validation @stuart-c-ai (#458)
+
+
 ## [0.8.0] - 2026-04-28
 
 ## Changes
