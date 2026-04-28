@@ -51,12 +51,6 @@ async function main() {
         if (rotation === 90) {
             sourceCtx.translate(finalWidth, 0);
             sourceCtx.rotate(Math.PI / 2);
-        } else if (rotation === 180) {
-            sourceCtx.translate(finalWidth, finalHeight);
-            sourceCtx.rotate(Math.PI);
-        } else if (rotation === 270 || rotation === -90) {
-            sourceCtx.translate(0, finalHeight);
-            sourceCtx.rotate(-Math.PI / 2);
         }
 
         sourceCtx.drawImage(
