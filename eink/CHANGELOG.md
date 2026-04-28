@@ -1,3 +1,16 @@
+## [0.7.1] - 2026-04-28
+
+## Changes
+
+## 🐛 Bug Fixes
+
+- Fix: Handle scene items independently for MQTT updates @stuart-c-ai (#453)
+
+## ⚙️ Refactoring
+
+- Refactor: Move backend imports to top level @stuart-c-ai (#454)
+
+
 ## [0.7.0] - 2026-04-28
 
 ## Changes
