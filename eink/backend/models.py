@@ -212,3 +212,11 @@ class SceneQueue(Base):
     image_id = Column(String, primary_key=True)
     display_id = Column(String, primary_key=True)
     created_at = Column(DateTime, server_default=func.now())
+
+
+class LayoutState(Base):
+    __tablename__ = "layout_states"
+
+    layout_id = Column(String, primary_key=True)
+    scene_id = Column(String, nullable=True)
+    last_change_date = Column(DateTime, server_default=func.now())

@@ -8,7 +8,7 @@ import random
 from datetime import datetime
 
 from gmqtt import Client as MQTTClient
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from .. import database, models
 
@@ -168,6 +168,11 @@ class MQTTManager:
         if layout_id not in self.layout_states:
             current_scene = scenes[0].name if scenes else "None"
             self.layout_states[layout_id] = {"current_scene": current_scene}
+            # Persist default state
+            if scenes:
+                asyncio.create_task(
+                    self._save_layout_state(layout_id, scenes[0].id, timestamp)
+                )
 
         self.client.publish(
             f"{BASE_TOPIC}/layout/{layout_id}/scene/state",
@@ -179,7 +184,24 @@ class MQTTManager:
         while self.running:
             try:
                 async with database.get_session() as session:
-                    # Get all active layouts
+                    # 0. Load existing states from DB if not already loaded
+                    if not self.layout_states:
+                        state_stmt = select(models.LayoutState)
+                        state_result = await session.execute(state_stmt)
+                        for state in state_result.scalars().all():
+                            # Find scene name for scene_id
+                            if state.scene_id:
+                                scene_stmt = select(models.Scene).where(
+                                    models.Scene.id == state.scene_id
+                                )
+                                scene_res = await session.execute(scene_stmt)
+                                scene = scene_res.scalar_one_or_none()
+                                if scene:
+                                    self.layout_states[state.layout_id] = {
+                                        "current_scene": scene.name
+                                    }
+
+                    # 1. Get all active layouts
                     stmt = select(models.Layout).where(models.Layout.status == "active")
                     result = await session.execute(stmt)
                     layouts = result.scalars().all()
@@ -250,7 +272,8 @@ class MQTTManager:
                     return
 
                 # 3. Update states and timestamp
-                timestamp = datetime.now().isoformat()
+                timestamp_dt = datetime.now()
+                timestamp = timestamp_dt.isoformat()
                 self.client.publish(
                     f"{BASE_TOPIC}/layout/{layout_id}/last_updated/state",
                     timestamp,
@@ -261,6 +284,9 @@ class MQTTManager:
                     scene.name,
                     retain=True,
                 )
+
+                # Persist to DB
+                await self._save_layout_state(layout_id, scene.id, timestamp_dt)
 
                 # 4. Query SceneDisplayImage for all available images in this scene
                 slice_stmt = select(models.SceneDisplayImage).where(
@@ -377,6 +403,33 @@ class MQTTManager:
                     )
         except Exception as e:
             logger.error(f"Error calling HA service for device {device_id}: {e}")
+
+    async def _save_layout_state(self, layout_id, scene_id, timestamp):
+        """Save layout state to the database."""
+        try:
+            async with database.get_session() as session:
+                # Use upsert logic
+                stmt = select(models.LayoutState).where(
+                    models.LayoutState.layout_id == layout_id
+                )
+                result = await session.execute(stmt)
+                state = result.scalar_one_or_none()
+
+                if state:
+                    state.scene_id = scene_id
+                    state.last_change_date = timestamp
+                else:
+                    state = models.LayoutState(
+                        layout_id=layout_id,
+                        scene_id=scene_id,
+                        last_change_date=timestamp,
+                    )
+                    session.add(state)
+
+                await session.commit()
+                logger.debug(f"Saved layout state for {layout_id}")
+        except Exception as e:
+            logger.error(f"Failed to save layout state for {layout_id}: {e}")
 
     async def stop(self):
         self.running = False
