@@ -1,14 +1,13 @@
 import os
 from aiohttp import web
 from jsonschema import ValidationError
-from sqlalchemy import select, delete, func
+from sqlalchemy import select, func
 
 from .base import BaseCRUDHandler
 from .. import models, database
 from ..utils.converters import scene_model_to_dict
 from ..utils.storage import get_storage_path
 from ..utils.validation import response_schema, validate_id  # noqa: F401
-from ..background.events import trigger_scene_processing
 from ..background.scene_processor import update_scene_queue
 
 

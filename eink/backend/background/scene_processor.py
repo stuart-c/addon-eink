@@ -1,3 +1,4 @@
+from .events import trigger_scene_processing, queue_update_event
 import asyncio
 import contextlib
 import logging
@@ -19,9 +20,6 @@ def get_palette_for_display(display_type):
     elif ct == "BWR":
         return "acep"  # acep is used as fallback for BWR in frontend
     return "default"
-
-
-from .events import trigger_scene_processing, queue_update_event
 
 
 async def check_for_scene_work():
