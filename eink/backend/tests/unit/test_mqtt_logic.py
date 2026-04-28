@@ -88,7 +88,11 @@ async def test_handle_layout_update_logic(mock_app):
     res_slices = MagicMock()
     res_slices.scalars.return_value.all.return_value = [mock_slice]
 
-    mock_session.execute.side_effect = [res_layout, res_scene, res_slices]
+    # 3.5 LayoutState query (from _save_layout_state)
+    res_state = MagicMock()
+    res_state.scalar_one_or_none.return_value = None
+
+    mock_session.execute.side_effect = [res_layout, res_scene, res_state, res_slices]
 
     with (
         patch(
