@@ -53,7 +53,19 @@ async def test_handle_layout_update_logic(mock_app):
         items=[{"id": display_id, "device_id": device_id}],
         status="active",
     )
-    mock_scene = models.Scene(id="scene_id_1", name=scene_name, layout_id=layout_id)
+    mock_scene = models.Scene(
+        id="scene_id_1",
+        name=scene_name,
+        layout_id=layout_id,
+        items=[
+            {
+                "id": "item1",
+                "type": "image",
+                "displays": [display_id],
+                "images": [{"image_id": image_id}],
+            }
+        ],
+    )
     mock_slice = models.SceneDisplayImage(
         scene_id="scene_id_1",
         display_id=display_id,
