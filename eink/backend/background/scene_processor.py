@@ -401,6 +401,14 @@ async def update_scene_queue(scene, session):
                 ):
                     needs_work = True
 
+                if not needs_work and record.filename:
+                    # Check if file exists on disk
+                    path = os.path.join(
+                        get_storage_path("scene_display"), record.filename
+                    )
+                    if not os.path.exists(path):
+                        needs_work = True
+
                 if needs_work:
                     to_queue.add((display_id, image_id))
 
