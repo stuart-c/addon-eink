@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import uuid
+import random
 from datetime import datetime
 
 from gmqtt import Client as MQTTClient
@@ -280,8 +281,6 @@ class MQTTManager:
                     slice_map[(s.display_id, s.image_id)] = s.filename
 
                 # 6. For each item in the scene, pick a random image and call HA
-                import random
-
                 if not scene.items:
                     logger.warning(f"No items found in scene {scene.id}")
                     return

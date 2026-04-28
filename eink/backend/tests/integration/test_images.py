@@ -3,6 +3,9 @@ import os
 import pytest
 import aiohttp
 from PIL import Image as PILImage
+from sqlalchemy import select, update
+from datetime import datetime
+from backend import database, models
 
 
 @pytest.mark.asyncio
@@ -61,8 +64,6 @@ async def test_image_upload_success(aiohttp_client, app, tmp_path):
     assert "file_hash" not in result
 
     # 5. Verify file exists on disk
-    from backend import database, models
-    from sqlalchemy import select
 
     async with database.get_session() as session:
         stmt = select(models.Image).where(models.Image.id == result["id"])
@@ -187,8 +188,6 @@ async def test_image_upload_with_thumbnail(aiohttp_client, app, tmp_path):
         assert field not in result
 
     # 5. Verify thumbnail file exists on disk
-    from backend import database, models
-    from sqlalchemy import select
 
     async with database.get_session() as session:
         stmt = select(models.Image).where(models.Image.id == result["id"])
@@ -232,8 +231,6 @@ async def test_image_delete_success(aiohttp_client, app, tmp_path):
     image_id = result["id"]
 
     # Retrieve full record from DB to get internal path for file verification
-    from backend import database, models
-    from sqlalchemy import select
 
     async with database.get_session() as session:
         stmt = select(models.Image).where(models.Image.id == image_id)
@@ -411,8 +408,6 @@ async def test_image_list_success(aiohttp_client, app):
     image_id = (await upload_resp.json())["id"]
 
     # 2.5 Manually set status to ACTIVE so it appears in filtered list
-    from backend import database, models
-    from sqlalchemy import update
 
     async with database.get_session() as session:
         await session.execute(
@@ -472,8 +467,6 @@ async def test_image_list_pagination(aiohttp_client, app):
         image_ids.append((await resp.json())["id"])
 
     # 1.5 Manually set ALL images to ACTIVE
-    from backend import database, models
-    from sqlalchemy import update
 
     async with database.get_session() as session:
         await session.execute(
@@ -543,9 +536,6 @@ async def test_image_timestamps_stored_but_not_exposed(aiohttp_client, app):
     assert "updated_at" not in result
 
     # 3. Verify database DOES have timestamps
-    from backend import database, models
-    from sqlalchemy import select
-    from datetime import datetime
 
     async with database.get_session() as session:
         stmt = select(models.Image).where(models.Image.id == image_id)

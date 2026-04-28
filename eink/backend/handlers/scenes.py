@@ -1,11 +1,14 @@
 import os
 from aiohttp import web
 from jsonschema import ValidationError
+from sqlalchemy import select, func
+
 from .base import BaseCRUDHandler
 from .. import models, database
 from ..utils.converters import scene_model_to_dict
 from ..utils.storage import get_storage_path
 from ..utils.validation import response_schema, validate_id  # noqa: F401
+from ..background.scene_processor import update_scene_queue
 
 
 class SceneHandler(BaseCRUDHandler):
@@ -72,8 +75,6 @@ class SceneHandler(BaseCRUDHandler):
         if not items or not layout_id:
             return "draft"
 
-        from sqlalchemy import select
-
         async with database.get_session() as session:
             stmt = select(models.Layout).where(models.Layout.id == layout_id)
             result = await session.execute(stmt)
@@ -109,8 +110,6 @@ class SceneHandler(BaseCRUDHandler):
         """
         if not items:
             return
-
-        from sqlalchemy import select
 
         async with database.get_session() as session:
             stmt = select(models.Layout).where(models.Layout.id == layout_id)
@@ -149,8 +148,6 @@ class SceneHandler(BaseCRUDHandler):
         """
         if not scene.items or not scene.layout_id:
             return
-
-        from sqlalchemy import select
 
         # 1. Fetch the layout to get display mappings
         stmt = select(models.Layout).where(models.Layout.id == scene.layout_id)
@@ -212,80 +209,7 @@ class SceneHandler(BaseCRUDHandler):
         Identify what needs creating/updating for this scene and populate the
         scene_queue table.
         """
-        from sqlalchemy import select, delete
-
-        # 1. Clear existing queue for this scene
-        stmt = delete(models.SceneQueue).where(models.SceneQueue.scene_id == scene.id)
-        await session.execute(stmt)
-
-        if scene.status != "active":
-            return
-
-        # 2. Identify all display/image combinations in the scene
-        if not scene.items:
-            return
-
-        image_ids = set()
-        for item in scene.items:
-            for img in item.get("images", []):
-                if img.get("image_id"):
-                    image_ids.add(img["image_id"])
-
-        if not image_ids:
-            return
-
-        # 3. Fetch current Image records to get their settings_hash
-        stmt = select(models.Image).where(models.Image.id.in_(image_ids))
-        result = await session.execute(stmt)
-        images = {img.id: img for img in result.scalars().all()}
-
-        # 4. Fetch existing SceneDisplayImage records to check hashes
-        stmt = select(models.SceneDisplayImage).where(
-            models.SceneDisplayImage.scene_id == scene.id
-        )
-        result = await session.execute(stmt)
-        records = {(r.display_id, r.image_id): r for r in result.scalars().all()}
-
-        # 5. Identify work needed
-        to_queue = set()
-        for item in scene.items:
-            if item.get("type") not in ("image", "tile"):
-                continue
-
-            display_ids = item.get("displays", [])
-            item_images = item.get("images", [])
-
-            for img_meta in item_images:
-                image_id = img_meta.get("image_id")
-                if not image_id or image_id not in images:
-                    continue
-
-                image_record = images[image_id]
-
-                for display_id in display_ids:
-                    record = records.get((display_id, image_id))
-
-                    if (
-                        not record
-                        or not record.file_hash
-                        # Only check hashes if record exists (short-circuited)
-                        or record.scene_hash != scene.scene_hash
-                        or (record.image_hash != image_record.settings_hash)
-                    ):
-                        to_queue.add((display_id, image_id))
-
-        # 6. Populate the queue
-        for display_id, image_id in to_queue:
-            session.add(
-                models.SceneQueue(
-                    scene_id=scene.id, display_id=display_id, image_id=image_id
-                )
-            )
-
-        if to_queue:
-            from ..background.scene_processor import trigger_scene_processing
-
-            trigger_scene_processing()
+        await update_scene_queue(scene, session)
 
     async def slice_get(self, request):
         """Custom endpoint for scene slice retrieval."""
@@ -299,8 +223,6 @@ class SceneHandler(BaseCRUDHandler):
             image_id = validate_id(image_id)
         except ValueError as e:
             return web.json_response({"error": str(e)}, status=400)
-
-        from sqlalchemy import select
 
         async with database.get_session() as session:
             stmt = select(models.SceneDisplayImage).where(
@@ -362,8 +284,6 @@ async def handle_scene_slice_list(request):
     except ValueError as e:
         return web.json_response({"error": str(e)}, status=400)
 
-    from sqlalchemy import select
-
     async with database.get_session() as session:
         # 1. Verify scene exists
         stmt = select(models.Scene).where(models.Scene.id == scene_id)
@@ -403,8 +323,6 @@ async def handle_scene_queue_count(request):
         scene_id = validate_id(scene_id)
     except ValueError as e:
         return web.json_response({"error": str(e)}, status=400)
-
-    from sqlalchemy import select, func
 
     async with database.get_session() as session:
         # 1. Verify scene exists

@@ -1,6 +1,11 @@
 import pytest
 from sqlalchemy import func
-from backend.utils.query import parse_image_sort_params, build_image_filters
+from backend.utils.query import (
+    parse_image_sort_params,
+    build_image_filters,
+    parse_sort_params,
+    build_filters,
+)
 from backend import models
 
 
@@ -109,7 +114,6 @@ def test_build_image_filters_keywords():
 
 def test_parse_sort_params_generic():
     """Test parse_sort_params with generic models."""
-    from backend.utils.query import parse_sort_params
 
     # Test with Scene (default name:asc)
     result = parse_sort_params(models.Scene, "")
@@ -126,7 +130,6 @@ def test_parse_sort_params_generic():
 
 def test_build_filters_generic():
     """Test build_filters with generic models."""
-    from backend.utils.query import build_filters
 
     # Test with Scene (filtering by layout_id)
     params = {"layout": "layout1"}

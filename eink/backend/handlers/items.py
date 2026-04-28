@@ -1,4 +1,5 @@
 from aiohttp import web
+from sqlalchemy import select
 from .base import BaseCRUDHandler
 from .. import models
 from ..utils.converters import generic_model_to_dict
@@ -60,8 +61,6 @@ class DisplayTypeHandler(BaseCRUDHandler):
 
     async def pre_delete(self, item, session):
         """Referential Integrity: Don't delete display_type if used in any layout."""
-        from sqlalchemy import select
-
         result = await session.execute(select(models.Layout))
         layouts = result.scalars().all()
         for layout in layouts:
@@ -116,8 +115,6 @@ class LayoutHandler(BaseCRUDHandler):
 
     async def pre_delete(self, item, session):
         """Referential Integrity: Don't delete layout if used in any scene."""
-        from sqlalchemy import select
-
         stmt = select(models.Scene).where(models.Scene.layout_id == item.id)
         result = await session.execute(stmt)
         scene = result.scalars().first()

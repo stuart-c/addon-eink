@@ -1,6 +1,7 @@
 """Tests for database status migrations."""
 
 import pytest
+import os
 from sqlalchemy import text, select
 from backend import database, models
 
@@ -8,8 +9,6 @@ from backend import database, models
 @pytest.mark.asyncio
 async def test_ready_to_active_status_migration(tmp_path):
     """Test that READY images are migrated to ACTIVE status."""
-    import os
-
     os.environ["DATA_DIR"] = str(tmp_path)
 
     # 1. Initialize DB once to create schema

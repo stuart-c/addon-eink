@@ -1,6 +1,7 @@
 import pytest
 import os
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import create_async_engine
 from backend import database
 
 
@@ -12,7 +13,6 @@ async def test_migration_adds_missing_columns(tmp_path):
     db_url = database.get_db_url()
 
     # 2. Pre-create the table with only partial columns
-    from sqlalchemy.ext.asyncio import create_async_engine
 
     engine = create_async_engine(db_url)
 

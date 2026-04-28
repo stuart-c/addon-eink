@@ -6,6 +6,7 @@ import os
 
 import pytest
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import create_async_engine
 
 from backend import database, models
 
@@ -18,7 +19,6 @@ async def test_scene_migration_adds_hash_column(tmp_path):
     db_url = database.get_db_url()
 
     # 2. Pre-create the table without scene_hash
-    from sqlalchemy.ext.asyncio import create_async_engine
 
     engine = create_async_engine(db_url)
 

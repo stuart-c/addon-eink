@@ -8,6 +8,7 @@ from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy import text, select
 import logging
 import json
+import hashlib
 
 
 class Base(DeclarativeBase):
@@ -137,8 +138,6 @@ async def ensure_schema_up_to_date(conn):
     )
     rows = result.fetchall()
     if rows:
-        import hashlib
-
         for row in rows:
             (
                 img_id,
@@ -216,8 +215,6 @@ async def ensure_schema_up_to_date(conn):
     )
     rows = result.fetchall()
     if rows:
-        import hashlib
-
         for row in rows:
             scene_id, items_raw = row
 
@@ -346,8 +343,6 @@ async def init_db():
 
     # Migrate old database file if it exists and new one doesn't
     if os.path.exists(old_db_path) and not os.path.exists(db_path):
-        import logging
-
         logger = logging.getLogger(__name__)
         try:
             os.rename(old_db_path, db_path)
