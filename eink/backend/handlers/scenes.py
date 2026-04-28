@@ -284,6 +284,11 @@ class SceneHandler(BaseCRUDHandler):
                 )
             )
 
+        if to_queue:
+            from ..background.scene_processor import trigger_scene_processing
+
+            trigger_scene_processing()
+
     async def slice_get(self, request):
         """Custom endpoint for scene slice retrieval."""
         scene_id = request.match_info["scene_id"]

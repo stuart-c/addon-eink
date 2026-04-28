@@ -21,6 +21,14 @@ def get_palette_for_display(display_type):
     return "default"
 
 
+queue_update_event = asyncio.Event()
+
+
+def trigger_scene_processing():
+    """Signal the background task that the queue has been potentially updated."""
+    queue_update_event.set()
+
+
 async def check_for_scene_work():
     """
     Check for queued scenes that need their display images generated or updated.
@@ -295,8 +303,11 @@ async def schedule_scene_processing(app):
     async def processing_loop():
         try:
             while True:
+                queue_update_event.clear()
                 await check_for_scene_work()
-                await asyncio.sleep(60)
+
+                with contextlib.suppress(asyncio.TimeoutError):
+                    await asyncio.wait_for(queue_update_event.wait(), timeout=60)
         except asyncio.CancelledError:
             logger.info("Scene processing task cancelled")
         except Exception as e:
@@ -328,6 +339,12 @@ async def update_all_scene_queues():
                 await scene_handler._update_scene_queue(scene, session)
 
             await session.commit()
+
+            stmt = select(models.SceneQueue).limit(1)
+            result = await session.execute(stmt)
+            if result.scalars().first():
+                trigger_scene_processing()
+
     except Exception as e:
         logger.error(f"Error updating scene queues: {str(e)}")
 
